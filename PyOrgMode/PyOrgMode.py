@@ -460,6 +460,17 @@ class OrgNode(OrgPlugin):
         self.regexp = re.compile(regexp_string)
         heading = self.regexp.findall(line)
         if heading: # We have a heading
+            # Build the regexp for finding TODO items
+            if self.todo_list:
+                separator = ""
+                regexp_string = "^(\*+)\s*("
+                for todo_keyword in self.todo_list:
+                    regexp_string += separator
+                    separator = "|"
+                    regexp_string += todo_keyword
+                regexp_string += ")\s*(\[.*\])?\s*(.*)$"
+                self.regexp_todo = re.compile(regexp_string)
+                todo = self.regexp_todo.findall(line)
 
             if current.parent :
                 current.parent.append(current)
