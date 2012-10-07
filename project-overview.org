@@ -1,0 +1,299 @@
+#+AUTHOR: Mark Wolf
+#+EMAIL: mark.wolf.music@gmail.com
+
+Most important concept: OrgMode web interface
+
+* About this file
+* Why (Purpose)
+  - Current systems are not accessible everywhere
+  - Org-mode is a great conceptual system
+    - Simple system
+    - Flexible enough to accomodate lots of complexity
+    - Headings (** style) are a nice organizational structure
+    - Very steep learning curve
+    - Keyboard shortcuts should be optional
+  - Want to get benefits of org-mode without the need to learn org-mode
+  - Let individuals run their own cloud if desired
+  - Find a way to determine what stuff is
+    - Then find a way to turn that into income
+* What (Outcome) - It should (be)...
+  - Open source
+  - Modular
+  - Flexible
+    - Allow quick addition of plugins for different inbox sources
+  - Intuitive
+  - Accessible without an internet connection
+  - Cross platform
+    - Server
+    - Clients
+  - Optimized for GTD use
+    - Able to handle content that is not GTD structured
+  - Valuable from day 0
+  - Provide all currently actionable items
+  - Hide currently non-actionable items
+  - Scalable to enterprise level needs
+  - Able to merge offline changes into database
+    - Include some form of version control
+  - Unify as many inboxes as possible
+  - Provide tutorials for how to maximize value
+    - Not require tutorials to be useable
+  - An interface with others, even if they're not using this application
+* [1/8] People to brainstorm with
+  - [X] Emily Prettyman
+  - [ ] Don Grantham
+  - [ ] David Allen Co.
+  - [ ] r/GTD
+  - [ ] Jill McKeague
+  - [ ] Joe Merrell
+  - [ ] Mike Grammes
+  - [ ] Ryan Cousins
+
+* Development priorities
+** High (crucial for any level of functionality)
+   - Django models
+   - Org-mode importer plugin
+   - View (Basic HTML) for TODO list
+   - view (Basic HTML) for daily agenda
+** Medium (Things I need for my own use)
+   - IMAP/POP import plugin
+   - GMail import plugin
+   - Google calendar import plugin
+   - Google voice import plugin
+** Low (Things that other will need)
+   - Google tasks import plugin (Emily)
+* New messaging protocol
+  - My inbox is not messages but a disorganized todo list
+  - New protocol should be independent of OrgWolf application
+  - Messages should include TODO information
+    - Current e-mail format (SMTP?) with extra pieces?
+      - Find out what the current format of SMTP messages is
+    - New format entirely?
+  - The sender should not have to worry whether the recipient has this capability
+    - Fail to standard e-mail
+  - Messaging could use non-email forms for some recipients
+    - eg. a friend only uses SMS so send a text instead
+    - Once set, this should be transparent to the sender
+  - The recipient should have total control over the status, deadline, etc.
+    - The sender can ask for:
+      - Status (NEXT, DFRD, HARD)
+      - Deadline
+      - Scheduled date (for deferred)
+    - Regardless of status is shows up as "in" for approval
+    - Recipient can then change parameters as necessary
+      - Should this be communicated back to the sender?
+  - The standard defines some basic TODO states
+    - Can individual implementations add their own?
+    - Would this lead to fragmentation problems?
+  - Add sent messages to [waiting for] list
+  - Allow for encryption and signing (GPG?)
+    - Required by individual implementation?
+  - Sender can ask for return receipt?
+    - Sender can ask to be kept informed of all decisions/changes?
+  - Group messages (similar to Facebook messenger)
+* Mobile apps/Usage portals
+** Web application (django)
+   - Quick add tasks
+     - How to implement without javascript?
+** Mobile clients
+   - Sync dismissals across devices
+   - Dictate to inbox or todo list
+     - Try and transcribe voice dictations
+   - Keep local copy for offline use
+     - How should we manage conlicting changes?
+   - Capture voicemail in inbox
+   - Make it easy to capture ad-hoc ideas
+   - Alarms with varying intensity)
+     - Notification
+     - Wake-up alarm
+     - System checks morning alarm against daily calendar
+   - Document scanning
+     - Send image to inbox
+     - Can be cropped/stored later
+     - System can try and predict cropping while item sits in inbox
+   - Take notes after a call
+     - New NEXT items
+     - New DFRD items
+   - RESTfull
+*** Android app
+    - Google Cloud Message
+    - Capture widget
+*** iOS app
+    - Apple Push Notification
+*** Blackberry app
+*** Windows Phone
+*** Palm Pilot
+** Desktop client
+   - System tray pop-up
+     - NEXT list?
+     - Daily agenda?
+   - Data available offline
+     - eg. on an airplane
+** Embedded clients
+   - Smart notepad
+   - Wall-mounted touchscreen
+   - In-vehicle device
+     - Voice dictation?
+     - How do we connect to server?
+     - Simply tell mobile client you're in the car?
+
+** Communication formats
+   - JSON
+   - XML
+   - Plain text
+   - HTML
+** Communication protocols
+   - SSH
+   - SSL
+* Modes and Mindsets
+  - A person needs different tools depending on how she's thinking
+  - These may correspond to different Django templates
+    - Hide the un-used items or just ghost them
+  - How does she switch modes?
+  - Reminders to visit modes (like Org Mode)
+** Org Mode
+   - Create the structures for the rest of this
+   - Equivalent to writing a .emacs file
+** Background Mode
+   - I'm focused on something else but make sure nothing blows up
+   - eg. Emily is teaching
+** Open/creative Mode
+   - Creative thinking
+   - Minimal distraction
+** Process Mode
+   - Sort through inbox
+   - Decide what "stuff" is
+** Do Mode
+   - Work through items on a to-do list
+** Weekly-Review Mode
+   - Tied in to weekly review workflow?
+* Django Models
+  - Material could be part of more than 1 project
+  - Version control
+  - Project categories?
+    - eg. workout calendar
+    - or is this just a project
+** GTD
+   - (how to handle errands, as tool or as location?)
+   - (contexts as a sequence of if...then statements)
+     - eg. if my students are not in the room then I can do these things
+   - class Node:
+     - get_children()
+     - contact = ManyToMany(OtherPerson)
+     - scope = ManyToMany(Scope)
+     - text
+     - parent
+       - (a project is a Node with parent=root)
+       - (material could be part of more than 1 project)
+     - (labels?)
+   - class ActionNode(Node):
+     - (what-is-it criteria)
+       - todo_state = ForeignKey(TodoState)
+     - (scheduling criteria)
+       - deadline
+       - closed_date
+       - scheduled
+       - repeating
+	 - repeat_strict (repeat from when completed or when scheduled)
+     - (selection criteria)
+       - mental_energy (high/low)
+       - priority (A/B/C)
+       - time_available (high/low)
+       - tools_required = ManyToMany(Tools)
+	 - (should "tools" really be "items"?)
+       - location_required = ForeignKey(Location)
+	 - (should this be ManyToMany?)
+   - class Tool:
+     - name
+   - class Location:
+     - GPS_info
+     - tools_available
+   - class OtherPerson:
+   - class TodoState:
+     - (make distinction between someday and maybe?)
+     - actionable = BooleanField(default=True)
+     - name = CharField()
+     - display = CharField()
+   - class Scope:
+     - (Career, personal, etc.)
+** Users
+   - dones = ManyToMany(GTD.TodoState)
+   - todos = ManyToMany(GTD.TodoState)
+** Workflows
+*** Weekly review workflow
+* Django Views
+** Todo lists
+** Agenda views
+* Django Templates
+* Plugins
+  - OAuth
+** Source of "in"
+   - E-mail
+     - GMail
+     - Yahoo mail
+     - Any IMAP/POP inbox
+     - How to handle labels/folders
+   - Facebook
+     - Especially invitations
+   - Calendars
+     - Lotus Notes
+     - Google calendar
+   - Google tasks
+   - Text messaging
+     - Google voice
+     - Generic text messaging
+   - Voicemail
+     - Google voice
+   - Fax
+   - Twitter
+   - News aggregators
+     - Google reader
+     - Reddit
+     - Tumblr
+   - Browser bookmarks
+   - LinkedIn
+** Outlets for "out"
+   - E-mail
+     - IMAP/POP folders
+     - Directly send mail with SMTP
+   - Voice calls connected directly
+     - Google voice
+   - People
+     - Google contacts
+   - Calendars
+     - Lotus Notes
+   - Google tasks
+     - Allow use as list manager?
+   - Text messaging
+     - Google voice
+     - Generic text messaging
+   - Content to consume
+     - Cable providers
+     - Netflix
+   - Fax
+   - Postal address lookup
+   - LinkedIn
+** Org-mode input/output
+   - Per-user directories to hold org-mode files
+   - Modify ('write-file) lisp command to save to OrgWolf API
+     - Use .emacs file?
+   - Read/write using named pipes
+   - iNotify for reading changed org-mode files
+   - Custom .emacs files for SSH access
+* Reference Material
+  - Key is to make sure there's action in it!!
+  - Version control
+  - Purging
+  - Allow processing of images and notes off-line
+  - Scan and send immediately to "in"
+  - Cut/crop/modify scanned images later
+  - How to handle storage requirements?
+    - Freenet style distributed storage?
+  - How to handle support material
+  - Desktop clients for reference material
+    - Similar to SparkleShare
+    - MacOS
+    - Windows
+    - GNU/Linux
+  - How to handle specific life-span material
+    - Current info folder
+    - Expiration dates
