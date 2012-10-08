@@ -172,49 +172,82 @@ Most important concept: OrgMode web interface
   - Project categories?
     - eg. workout calendar
     - or is this just a project
-** GTD
-   - (how to handle errands, as tool or as location?)
-   - (contexts as a sequence of if...then statements)
+** NEXT GTD
+   - how to handle errands, as tool or as location?
+   - contexts as a sequence of if...then statements
      - eg. if my students are not in the room then I can do these things
-   - class Node:
-     - get_children()
-     - contact = ManyToMany(OtherPerson)
-     - scope = ManyToMany(Scope)
-     - text
-     - parent
-       - (a project is a Node with parent=root)
-       - (material could be part of more than 1 project)
-     - (labels?)
-   - class ActionNode(Node):
-     - (what-is-it criteria)
-       - todo_state = ForeignKey(TodoState)
-     - (scheduling criteria)
-       - deadline
-       - closed_date
-       - scheduled
-       - repeating
-	 - repeat_strict (repeat from when completed or when scheduled)
-     - (selection criteria)
-       - mental_energy (high/low)
-       - priority (A/B/C)
-       - time_available (high/low)
-       - tools_required = ManyToMany(Tools)
-	 - (should "tools" really be "items"?)
-       - location_required = ForeignKey(Location)
-	 - (should this be ManyToMany?)
-   - class Tool:
-     - name
-   - class Location:
-     - GPS_info
-     - tools_available
-   - class OtherPerson:
-   - class TodoState:
-     - (make distinction between someday and maybe?)
-     - actionable = BooleanField(default=True)
-     - name = CharField()
-     - display = CharField()
-   - class Scope:
-     - (Career, personal, etc.)
+     - could be handled with tags?
+   - [ ] Doc strings
+   - [ ] validate this model
+*** [15/15] class Node:
+    - [X] get_children()
+    - [X] scope = ManyToMany(Scope)
+    - [X] parent
+      - a project is a Node with parent=root
+      - material could be part of more than 1 project
+    - what-is-it criteria
+    - [X] todo_state = ForeignKey(TodoState)
+    - scheduling criteria
+    - [X] deadline
+    - [X] closed_date
+    - [X] scheduled
+    - [X] repeating (both value and unit)
+      - [X] repeat_strict (repeat from when completed or when scheduled)
+    - selection criteria
+    - [X] tag_string
+    - [X] mental_energy (high/low)
+    - [X] priority (A/B/C)
+    - [X] time_needed (high/low)
+    - tools, locations, and people are all tags
+    - [X] add_context_item()
+    - [X] rm_context_item()
+    - [X] get_context_items()
+*** [4/4] class Tag:
+    - [X] display
+    - [X] value
+    - [X] owner
+      - No owner means it's a built-in tag
+    - [X] public
+*** [0/0] class Tool(Tag):
+*** [3/3] class Location(Tag):
+    - [X] GPS_info
+    - [X] tools_available
+    - [X] tools_unavailable
+*** [4/4] class Contact(Tag):
+    - [X] f_name
+    - [X] l_name
+    - (display)
+      - Automagically determine from f_name + l_name
+    - (tag_string)
+    - (owner)
+    - [X] auth.user
+    - [X] messaging.contact
+*** [4/4] class TodoState:
+    - make distinction between someday and maybe?
+    - [X] actionable = BooleanField(default=True)
+    - [X] done
+    - [X] abbreviation = CharField()
+    - [X] display_text = CharField()
+*** [3/3] class Scope:
+    - [X] owner
+    - [X] display
+    - [X] public
+*** [7/7] class Context:
+    - [X] tools_available
+    - [X] tools_unavailable
+    - [X] locations_available
+    - [X] locations_unavailable
+    - [X] people_available
+    - [X] people_unavailable
+    - [X] get_actions_list
+*** [3/3] class Project:
+    - [X] title
+    - [X] owner
+    - [X] other_users
+    - (description will be first child node)
+*** [/] class Priority
+    - priority_value (0-100, 0 is highest)
+    - owner
 ** Users
    - dones = ManyToMany(GTD.TodoState)
    - todos = ManyToMany(GTD.TodoState)
