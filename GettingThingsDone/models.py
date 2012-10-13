@@ -2,10 +2,12 @@ from django.db import models
 from django.contrib.auth.models import User
 
 class TodoState(models.Model):
-    abbreviation = models.CharField(max_length=10)
+    abbreviation = models.CharField(max_length=10, unique=True)
     display_text = models.CharField(max_length=30)
     actionable = models.BooleanField(default=True)
     done = models.BooleanField(default=False)
+    def __unicode__(self):
+        return self.abbreviation + ' - ' + self.display_text
 
 class Tag(models.Model):
     display = models.CharField(max_length=100)
@@ -57,24 +59,31 @@ class Node(models.Model):
     Django model that holds some sort of divisional heading. Similar to orgmode '*** Heading'
     syntax. It can have todo states associated with it as well as scheduling and other information. Each Node object must be associated with a project. A project is a Node with no parent (a top level Node)
     """
-    text = models.TextField()
+    owner = models.ForeignKey(User)
+    title = models.TextField()
     todo_state = models.ForeignKey('TodoState', blank=True, null=True)
     # Determine where this heading is
     parent = models.ForeignKey('self', blank=True, null=True, related_name='child_heading_set')
     project = models.ManyToManyField('Project', related_name='project_heading_set') # should this be ForeignKey?
     # Scheduling details
-    scheduled_date = models.DateField(blank=True, null=True)
-    closed_date = models.DateField(blank=True, null=True)
-    deadline_date = models.DateField(blank=True, null=True)
-    scheduled_datetime = models.DateTimeField(blank=True, null=True)
-    closed_datetime = models.DateTimeField(blank=True, null=True)
-    deadline_datetime = models.DateTimeField(blank=True, null=True)
+    scheduled = models.DateTimeField(blank=True, null=True)
+    scheduled_time_specific = models.BooleanField()
+    deadline = models.DateTimeField(blank=True, null=True)
+    deadline_time_specific = models.BooleanField()
+    opened = models.DateTimeField(auto_now_add=True, blank=True, null=True)
+    closed = models.DateTimeField(blank=True, null=True)
     repeating_number = models.IntegerField(blank=True, null=True)
-    repeating_unit = models.CharField(max_length=1, blank=True, null=True)
+    repeating_unit = models.CharField(max_length=1, blank=True, null=True,
+                                      choices=(('d', 'Day'),
+                                               ('w', 'Week'),
+                                               ('m', 'Month'),
+                                               ('y', 'Year')))
+    # Strict mode has the repeat happen from when the original event was scheduled
+    # rather than from when it was last completed.
     repeating_strict_mode = models.NullBooleanField(default=True)
     # Selection criteria
     priority = models.ForeignKey('Priority', blank=True, null=True)
-    tag_string = models.TextField() # Org-mode style string (eg ":comp:home:RN:")
+    tag_string = models.TextField(blank=True, null=True) # Org-mode style string (eg ":comp:home:RN:")
     energy = models.CharField(max_length=2, blank=True, null=True,
                               choices=(('High', 'HI'),
                                        ('Low', 'LO'))
@@ -83,7 +92,7 @@ class Node(models.Model):
                                    choices=(('High', 'HI'),
                                             ('Low', 'LO'))
                                    )
-    scope = models.ManyToManyField('Scope')
+    scope = models.ManyToManyField('Scope', blank=True)
     # Methods retrieve statuses of this object
     def is_todo(self):
         if self.todo_state:
@@ -125,6 +134,13 @@ class Node(models.Model):
     def get_children(self):
         """Returns a list of Node objects with this Node as its parent."""
         return []
+    def __unicode__(self):
+        try:
+            todo_abbrev = self.todo_state.abbreviation
+        except AttributeError:
+            return self.title
+        else:
+            return "[" + todo_abbrev + "] " + self.title
 
 class Project(models.Model):
     """
@@ -135,10 +151,12 @@ class Project(models.Model):
     with a few extra method attributes specific only to projects.
     """
     title = models.TextField()
-    owner = models.ManyToManyField('auth.User', related_name='owned_project_set')
+    owner = models.ForeignKey('auth.User', related_name='owned_project_set')
     other_users = models.ManyToManyField('auth.User', related_name='other_project_set')
     def get_num_actions(self):
         pass
+    def __unicode__(self):
+        return self.title
     # TODO: brainstorm more methods
 
 class Text(models.Model):
@@ -146,5 +164,9 @@ class Text(models.Model):
     Holds the text component associated with a Node object.
     """
     # TODO: Add support for lists, tables, etc.
-    parent = models.ForeignKey('Node', related_name='attached_text')
-
+    text = models.TextField()
+    owner = models.ForeignKey('auth.User')
+    parent = models.ForeignKey('Node', related_name='attached_text', blank=True, null=True)
+    project = models.ManyToManyField('Project')
+    def __unicode__(self):
+        return self.text

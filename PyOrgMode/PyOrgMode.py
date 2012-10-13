@@ -445,8 +445,9 @@ class OrgNode(OrgPlugin):
         self.done_list = ['DONE']
         self.keepindent = False # If the line starts by an indent, it is not a node
     def _treat(self,current,line):
+        # Target: "^(\*+)\s*(TODO|DONE)?\s*(\[.*\])?\s*(.*?(?=:\S+:)?)\s*(:\S+:)?$"
         # Build regexp
-        regexp_string = "^(\*+)\s*"
+        r = "^(\*+)\s*"  # Opening stars
         if self.todo_list:
             separator = ""
             re_todos = "("
@@ -455,12 +456,15 @@ class OrgNode(OrgPlugin):
                 separator = "|"
                 re_todos += todo_keyword
             re_todos += ")?\s*"
-            regexp_string += re_todos
-        regexp_string += "(\[.*\])?\s*(.*)$"
+            r += re_todos # Todo keywords
+        r += "(\[.*\])?\s*" # Priorities
+        r += "(.*?(?=:\S+:)?)\s*" # Generic heading text
+        r += "(:\S+:)?$" # Tags
+        regexp_string = r
         self.regexp = re.compile(regexp_string)
         heading = self.regexp.findall(line)
-        if heading: # We have a heading
 
+        if heading: # We have a heading
             if current.parent :
                 current.parent.append(current)
   
@@ -476,15 +480,13 @@ class OrgNode(OrgPlugin):
             # Creating a new node and assigning parameters
             current = OrgNode.Element() 
             current.level = len(heading[0][0])
-            current.heading = re.sub(":([\w]+):","",heading[0][3]) # Remove tags
+            current.heading = heading[0][3]
             current.priority = heading[0][2].strip('[#]')
             current.parent = parent
+            current.tags = heading[0][4]
             if heading[0][1]:
                 current.todo = heading[0][1]
       
-            # Looking for tags
-            heading_without_links = re.sub(" \[(.+)\]","",heading[0][2])
-            current.tags = re.findall(":([\w]+):",heading_without_links)
         else:
             self.treated = False
         return current
@@ -522,8 +524,8 @@ class OrgNode(OrgPlugin):
                     output = output + "[#" + self.priority + "] "
                 output = output + self.heading
   
-                for tag in self.tags:
-                    output= output + ":" + tag + ":"
+                if self.tags:
+                    output += " " + self.tags
   
                 output = output + "\n"
     
