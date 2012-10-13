@@ -50,10 +50,23 @@ Most important concept: OrgMode web interface
 
 * Development priorities
 ** High (crucial for any level of functionality)
-   - Django models
-   - Org-mode importer plugin
-   - View (Basic HTML) for TODO list
-   - view (Basic HTML) for daily agenda
+*** DONE Write django models
+    CLOSED: [2012-10-11 Thu 14:17]
+*** DONE [4/4]Write org-mode importer plugin
+    CLOSED: [2012-10-13 Sat 00:53]
+    - [X] Node structure
+    - [X] Dates
+      - [X] scheduled
+      - [X] deadline
+      - [X] closed
+      - [X] repeating
+    - [X] text
+    - [X] tags
+*** ACTN Get orgmode plugin to recognize changes to current database
+*** NEXT Write URL scheme for todo list and agenda
+*** NEXT Write view (Basic HTML) for TODO list
+*** NEXT view (Basic HTML) for daily agenda
+*** ACTN Modify plugin to take current user in to account
 ** Medium (Things I need for my own use)
    - IMAP/POP import plugin
    - GMail import plugin
@@ -172,7 +185,8 @@ Most important concept: OrgMode web interface
   - Project categories?
     - eg. workout calendar
     - or is this just a project
-** NEXT GTD
+** DONE GTD
+   CLOSED: [2012-10-11 Thu 14:19]
    - how to handle errands, as tool or as location?
    - contexts as a sequence of if...then statements
      - eg. if my students are not in the room then I can do these things
