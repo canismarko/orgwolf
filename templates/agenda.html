@@ -1,0 +1,32 @@
+{% extends 'base.html' %}
+{% block content %}
+<h3>Today</h3>
+<h4>Day Specific</h4>
+<table>
+  {% for node in day_specific_nodes %}
+  <tr>
+    <td>{{ node.todo_state.abbreviation }}</td>
+    <td>{{ node.title }}</td>
+  </tr>
+  {% endfor %}
+</table>
+<table>
+  {% for node in time_specific_nodes %}
+  <tr>
+    <td>{{ node.scheduled.time }}</td>
+    <td>{{ node.title }}</td>
+  </tr>
+{% endfor %}
+</table>
+<h3>Upcoming Deadlines</h3>
+<table>
+  {% for node in deadline_nodes %}
+  <tr>
+    <td>{{ node.deadline.date }}</td>
+    <td>{{ node.deadline.time }}</td>
+    <td>{{ node.title }}</td>
+  </tr>
+{% endfor %}
+</table>
+
+{% endblock %}

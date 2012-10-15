@@ -4,6 +4,7 @@ from django.contrib.auth.decorators import login_required
 from django.http import Http404
 from django.db.models import Q
 import re
+import datetime
 
 from GettingThingsDone.models import TodoState, Node, Context
 
@@ -78,5 +79,24 @@ def list_display(request, url_string):
 def agenda_selection(request):
     pass # Todo agenda_selection view
 
-def agenda_display(request, which_agenda):
-    pass # Todo agenda_display view
+def agenda_display(request, which_agenda=None):
+    deadline_period = 0 # In days # TODO: pull deadline period from 
+    all_nodes_qs = Node.objects.all()
+    final_Q = Q()
+    today = datetime.datetime.now()
+    # Determine query filters for "Today" section
+    date_Q = Q(scheduled__year=today.year, scheduled__month=today.month, scheduled__day=today.day)
+    repeating_Q = Q(scheduled_time_specific=False)
+    hard_Q = Q(todo_state = TodoState.objects.get(abbreviation="HARD"))
+    next_Q = Q(todo_state = TodoState.objects.get(abbreviation="NEXT"))
+    day_specific_nodes = all_nodes_qs.filter((hard_Q | next_Q), date_Q, repeating_Q)
+    repeating_Q = Q(scheduled_time_specific=True)
+    time_specific_nodes = all_nodes_qs.filter((hard_Q | next_Q), date_Q, repeating_Q)
+    time_specific_nodes = time_specific_nodes.order_by('scheduled')
+    # Determine query filters for "Upcoming Deadlines" section
+    undone_Q = Q(todo_state__done = False)
+    upcoming_deadline_Q = Q(deadline__lte = datetime.datetime.now())
+    deadline_nodes = all_nodes_qs.filter(undone_Q, upcoming_deadline_Q)
+    return render_to_response('agenda.html',
+                              locals(),
+                              RequestContext(request))
