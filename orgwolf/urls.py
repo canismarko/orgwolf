@@ -5,9 +5,9 @@ from django.contrib import admin
 admin.autodiscover()
 
 urlpatterns = patterns('',
-    # Examples:
-    # url(r'^$', 'orgwolf.views.home', name='home'),
-    # url(r'^orgwolf/', include('orgwolf.foo.urls')),
+    url(r'^$', 'orgwolf.views.home', name='home'),
+    #url(r'^orgwolf/', include('orgwolf.foo.urls')),
+    url(r'^gtd/', include('GettingThingsDone.urls')),
 
     #Uncomment the admin/doc line below to enable admin documentation:
     url(r'^admin/doc/', include('django.contrib.admindocs.urls')),

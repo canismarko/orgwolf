@@ -457,7 +457,7 @@ class OrgNode(OrgPlugin):
                 re_todos += todo_keyword
             re_todos += ")?\s*"
             r += re_todos # Todo keywords
-        r += "(\[.*\])?\s*" # Priorities
+        r += "(\[#[ABC]\])?\s*" # Priorities
         r += "(.*?(?=:\S+:)?)\s*" # Generic heading text
         r += "(:\S+:)?$" # Tags
         regexp_string = r

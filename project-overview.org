@@ -47,7 +47,6 @@ Most important concept: OrgMode web interface
   - [ ] Joe Merrell
   - [ ] Mike Grammes
   - [ ] Ryan Cousins
-
 * Development priorities
 ** High (crucial for any level of functionality)
 *** DONE Write django models
@@ -62,10 +61,16 @@ Most important concept: OrgMode web interface
       - [X] repeating
     - [X] text
     - [X] tags
-*** ACTN Get orgmode plugin to recognize changes to current database
-*** NEXT Write URL scheme for todo list and agenda
+*** DONE Write URL scheme for todo list and agenda
+    CLOSED: [2012-10-14 Sun 01:45]
+    - /gtd/ -> gettingthingsdone
 *** NEXT Write view (Basic HTML) for TODO list
+    - [X] Filter by TODO state
+    - [X] Filter by tools
+    - [ ] Filter by locations
+    - [ ] Filter by people
 *** NEXT view (Basic HTML) for daily agenda
+*** ACTN Get orgmode plugin to recognize changes to current database
 *** ACTN Modify plugin to take current user in to account
 ** Medium (Things I need for my own use)
    - IMAP/POP import plugin

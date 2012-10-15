@@ -1,5 +1,7 @@
 from django.db import models
 from django.contrib.auth.models import User
+from django.db.models import Q
+import re
 
 class TodoState(models.Model):
     abbreviation = models.CharField(max_length=10, unique=True)
@@ -14,15 +16,15 @@ class Tag(models.Model):
     tag_string = models.CharField(max_length=10)
     owner = models.ForeignKey(User, blank=True, null=True) # no owner means built-in tag
     public = models.BooleanField(default=True)
+    def __unicode__(self):
+        return self.display
 
 class Tool(Tag):
     pass
     
 class Location(Tag):
     GPS_info = False # TODO
-    tools_available = models.ManyToManyField('Tool', related_name='including_locations_set')
-    tools_unavailable = models.ManyToManyField('Tool', related_name='excluding_locations_set')
-    people_available = models.ManyToManyField('Contact', related_name='including_locations_set')
+    tools_available = models.ManyToManyField('Tool', related_name='including_locations_set', blank=True)
 
 class Contact(Tag):
     f_name = models.CharField(max_length = 50)
@@ -31,19 +33,52 @@ class Contact(Tag):
     # message_contact = models.ForeignKey('messaging.contact', blank=True, null=True) # TODO: uncomment this once messaging is implemented
 
 class Context(models.Model):
-    tools_available = models.ManyToManyField('Tool', related_name='including_contexts_set')
-    tools_unavailable = models.ManyToManyField('Tool', related_name='excluding_contexts_set')
-    locations_available = models.ManyToManyField('Location', related_name='including_contexts_set')
-    locations_unavailable = models.ManyToManyField('Location', related_name='excluding_contexts_set')
-    people_available = models.ManyToManyField('Contact', related_name='including_contexts_set')
-    people_unavailable = models.ManyToManyField('Contact', related_name='excluding_contexts_set')
-    def get_actions_list(self):
+    """A context is a [Location], with [Tool]s and/or [Contact]s available"""
+    name = models.CharField(max_length=100)
+    tools_available = models.ManyToManyField('Tool', related_name='including_contexts_set', blank=True)
+    locations_available = models.ManyToManyField('Location', related_name='including_contexts_set', blank=True)
+    people_required = models.ManyToManyField('Contact', related_name='including_contexts_set', blank=True)
+    def __unicode__(self):
+        return self.name
+    def apply(self, queryset="blank"):
         """
-        Retrieve all the actionable items given the current context. 
-        Polls all objects of the Node class and selects based on the
-        tag_string of the Node.
+        Filter a query set for this context. 
+        Gets queryset of all objects of the Node class if no queryset 
+        provided, then selects based on the tag_string of each object 
+        in the queryset. Note that this method doesn't hit the database
+        on the passed queryset, it just modifies the queryset based on 
+        Context object attributes.
         """
-        pass # TODO
+        if queryset == "blank":
+            queryset = Node.objects.all()
+        final_queryset = queryset
+        final_Q = Q()
+        # Set some lists of tags to be used later
+        excluded_tools = Tool.objects.all() # TODO: filter for current user
+        included_tools = self.tools_available.all()
+        excluded_locations = Location.objects.all() # TODO: filter for current user
+        included_locations = self.locations_available.all()
+        required_people = self.people_required.all()
+        for tool in included_tools:
+            excluded_tools = excluded_tools.exclude(id=tool.id)
+        for location in included_locations:
+            location_tools = location.tools_available.all()
+            for tool in location_tools:
+                excluded_tools = excluded_tools.exclude(id=tool.id)
+            excluded_locations = excluded_locations.exclude(id=location.id)
+        # Filter based on excluded tools and locations
+        for tool in excluded_tools:
+            tag_string = tool.tag_string
+            final_queryset = final_queryset.exclude(tag_string__icontains=tool.tag_string)
+        for location in excluded_locations:
+            final_queryset = final_queryset.exclude(tag_string__icontains=tool.tag_string)
+        # For required_people we have to construct a Q object
+        new_Q = Q()
+        for contact in required_people:
+            new_Q = new_Q | Q(tag_string__icontains=contact.tag_string)
+        final_queryset = final_queryset.filter(new_Q)
+        # Now return the resulting queryset
+        return final_queryset
 
 class Priority(models.Model):
     priority_value = models.IntegerField(default=50)
@@ -60,7 +95,7 @@ class Node(models.Model):
     syntax. It can have todo states associated with it as well as scheduling and other information. Each Node object must be associated with a project. A project is a Node with no parent (a top level Node)
     """
     owner = models.ForeignKey(User)
-    title = models.TextField()
+    title = models.TextField(blank=True)
     todo_state = models.ForeignKey('TodoState', blank=True, null=True)
     # Determine where this heading is
     parent = models.ForeignKey('self', blank=True, null=True, related_name='child_heading_set')
@@ -152,7 +187,7 @@ class Project(models.Model):
     """
     title = models.TextField()
     owner = models.ForeignKey('auth.User', related_name='owned_project_set')
-    other_users = models.ManyToManyField('auth.User', related_name='other_project_set')
+    other_users = models.ManyToManyField('auth.User', related_name='other_project_set', blank=True)
     def get_num_actions(self):
         pass
     def __unicode__(self):
