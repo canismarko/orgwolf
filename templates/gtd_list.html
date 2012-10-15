@@ -1,0 +1,17 @@
+{% extends 'base.html' %}
+{% block content %}
+<table>
+  <tr>
+    <th>State</th>
+    <th>Description</th>
+    <th>Tags</th>
+  </tr>
+  {% for node in nodes %}
+  <tr>
+    <td>{{ node.todo_state.abbreviation }}</td>
+    <td>{{ node.title }}</td>
+    <td>{{ node.tag_string }}</td>
+  </tr>
+  {% endfor %}
+</table>
+{% endblock %}
