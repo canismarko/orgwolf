@@ -39,6 +39,27 @@ def time_to_datetime(time_struct):
                             tzinfo=timezone.utc)
     return new_datetime
 
+def reset_database(confirm=False):
+    """
+    Deletes all GTD related items from the database. Should not be used
+    under normal operations.
+    """
+    if confirm == True:
+        nodes = Node.objects.all()
+        projects = Project.objects.all()
+        texts = Text.objects.all()
+        print "Deleting", nodes.count(), "nodes."
+        for node in nodes:
+            node.delete()
+        print "Deleting", projects.count(), "projects."
+        for project in projects:
+            project.delete()
+        print "Deleting", texts.count(), "text items."
+        for text in texts:
+            text.delete()
+    else:
+        print "This function deletes the database. Pass argument confirm=True to pull the trigger."
+
 def import_structure(file=None, string=None):
     """
     Parses either an org-mode file or an org-mode string and saves the

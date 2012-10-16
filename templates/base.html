@@ -16,12 +16,6 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 {% endcomment %}
-
-<html>
-  <head>
-    <title>{% block title%}TODO: implement title{% endblock %}</title>
-  </head>
-  <body>
 <!--
 Copyright 2012 Mark Wolf
 
@@ -40,11 +34,16 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 -->
+<html>
+  <head>
+    <title>{% block title%}TODO: implement title{% endblock %}</title>
+  </head>
+  <body>
     {% block nav %}
     <ul>
       <li><a href="/gtd/lists/next/">Next Actions</a></li>
       <li>Lists</li>
-      <li>Projects</li>
+      <li><a href="/projects/">Projects</a></li>
       <li>Feedback</li>
       <li><a href="/admin/">Admin</a></li>
       <li>Logout</li>
