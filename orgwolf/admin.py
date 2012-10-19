@@ -17,21 +17,23 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #######################################################################
 
-from django.conf.urls import patterns, include, url
-
-# Uncomment the next two lines to enable the admin:
 from django.contrib import admin
-admin.autodiscover()
+from django.contrib.auth.admin import UserAdmin
+from django.contrib.auth.models import User
 
-urlpatterns = patterns('',
-                       url(r'^$', 'orgwolf.views.home', name='home'),
-                       #url(r'^orgwolf/', include('orgwolf.foo.urls')),
-                       url(r'^gtd/', include('GettingThingsDone.urls')),
-                       url(r'^projects/', include('projects.urls')),
-                       
-                       #Uncomment the admin/doc line below to enable admin documentation
-                       url(r'^admin/doc/', include('django.contrib.admindocs.urls')),
+from orgwolf.models import UserProfile
 
-                       # Uncomment the next line to enable the admin
-                       url(r'^admin/', include(admin.site.urls)),
-)
+# Define an inline admin descriptor for UserProfile model
+# which acts a bit like a singleton
+class UserProfileInline(admin.StackedInline):
+    model = UserProfile
+    can_delete = False
+    verbose_name_plural = 'profile'
+
+# Define a new User admin
+class UserAdmin(UserAdmin):
+    inlines = (UserProfileInline, )
+
+# Re-register UserAdmin
+admin.site.unregister(User)
+admin.site.register(User, UserAdmin)

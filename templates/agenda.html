@@ -1,0 +1,70 @@
+{% extends 'base.html' %}
+
+{% comment %}
+Copyright 2012 Mark Wolf
+
+This file is part of OrgWolf.
+
+OrgWolf is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see <http://www.gnu.org/licenses/>.
+{% endcomment %}
+
+{% block content %}
+<h3>Today</h3>
+<h4>Day Specific</h4>
+<table>
+  {% for node in day_specific_nodes %}
+  <tr>
+    <td>&nbsp;</td>
+   <td>
+     <a href="/projects/{{node.id}}">{{ node.todo_state.abbreviation }}</a>
+   </td>
+    <td>
+      <a href="/projects/{{node.id}}">{{ node.title }}</a>
+    </td>
+  </tr>
+  {% endfor %}
+</table>
+<table>
+  {% for node in time_specific_nodes %}
+  <tr>
+    <td>&nbsp;
+      {% if node.id.scheduled.date < today.date %}
+	*
+      {% endif %}
+    </td>
+    <td>
+      <a href="/projects/{{node.id}}">{{ node.scheduled|date:"G:i" }}</a>
+    </td>
+    <td>
+      <a href="/projects/{{node.id}}">{{ node.todo_state.abbreviation }}</a>
+    </td>
+    <td>
+      <a href="/projects/{{node.id}}">{{ node.title }}</a>
+    </td>
+  </tr>
+{% endfor %}
+</table>
+<hr />
+<h3>Upcoming Deadlines</h3>
+<table>
+  {% for node in deadline_nodes %}
+  <tr>
+    <td><a href="/projects/{{node.id}}">{{ node.deadline|date:"D d M Y" }}</a></td>
+    <td>{% if node.deadline_time_specific %}<a href="/projects/{{node.id}}">{{ node.deadline.time }}</a>{% endif %}</td>
+    <td><a href="/projects/{{node.id}}">{{ node.title }}</a></td>
+  </tr>
+{% endfor %}
+</table>
+
+{% endblock %}

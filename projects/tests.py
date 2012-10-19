@@ -17,21 +17,19 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #######################################################################
 
-from django.conf.urls import patterns, include, url
+"""
+This file demonstrates writing tests using the unittest module. These will pass
+when you run "manage.py test".
 
-# Uncomment the next two lines to enable the admin:
-from django.contrib import admin
-admin.autodiscover()
+Replace this with more appropriate tests for your application.
+"""
 
-urlpatterns = patterns('',
-                       url(r'^$', 'orgwolf.views.home', name='home'),
-                       #url(r'^orgwolf/', include('orgwolf.foo.urls')),
-                       url(r'^gtd/', include('GettingThingsDone.urls')),
-                       url(r'^projects/', include('projects.urls')),
-                       
-                       #Uncomment the admin/doc line below to enable admin documentation
-                       url(r'^admin/doc/', include('django.contrib.admindocs.urls')),
+from django.test import TestCase
 
-                       # Uncomment the next line to enable the admin
-                       url(r'^admin/', include(admin.site.urls)),
-)
+
+class SimpleTest(TestCase):
+    def test_basic_addition(self):
+        """
+        Tests that 1 + 1 always equals 2.
+        """
+        self.assertEqual(1 + 1, 2)

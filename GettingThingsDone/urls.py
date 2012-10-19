@@ -23,15 +23,11 @@ from django.conf.urls import patterns, include, url
 from django.contrib import admin
 admin.autodiscover()
 
-urlpatterns = patterns('',
-                       url(r'^$', 'orgwolf.views.home', name='home'),
-                       #url(r'^orgwolf/', include('orgwolf.foo.urls')),
-                       url(r'^gtd/', include('GettingThingsDone.urls')),
-                       url(r'^projects/', include('projects.urls')),
-                       
-                       #Uncomment the admin/doc line below to enable admin documentation
-                       url(r'^admin/doc/', include('django.contrib.admindocs.urls')),
-
-                       # Uncomment the next line to enable the admin
-                       url(r'^admin/', include(admin.site.urls)),
+urlpatterns = patterns('GettingThingsDone.views',
+                       url(r'^$', 'home'),
+                       url(r'^lists/$', 'list_selection'),
+                       url(r'^lists/([\w/]+)/$', 'list_display'),
+                       url(r'^agenda/$', 'agenda_display'),
+                       url(r'^agenda/([^/]+)/$', 'agenda_display'),
+                       url(r'^toinbox/$', 'capture_to_inbox'),
 )

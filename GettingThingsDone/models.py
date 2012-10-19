@@ -1,3 +1,22 @@
+#######################################################################
+# Copyright 2012 Mark Wolf
+#
+# This file is part of OrgWolf.
+#
+# OrgWolf is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+#######################################################################
+
 from django.db import models
 from django.contrib.auth.models import User
 from django.db.models import Q
@@ -100,6 +119,7 @@ class Node(models.Model):
     # Determine where this heading is
     parent = models.ForeignKey('self', blank=True, null=True, related_name='child_heading_set')
     project = models.ManyToManyField('Project', related_name='project_heading_set') # should this be ForeignKey?
+    assigned = models.ManyToManyField('Contact', related_name='assigned_nodes')
     # Scheduling details
     scheduled = models.DateTimeField(blank=True, null=True)
     scheduled_time_specific = models.BooleanField()
@@ -145,9 +165,28 @@ class Node(models.Model):
         else:
             return False
     # Methods manipulate the context information
-    def _get_tags(self):
-        tags_list = self.tag_string.split(":")
-        return tags_list[1:len(tags_list-1)] # Get rid of the empty first and last elements
+    def get_hierarchy(self):
+        hierarchy_list = []
+        current_parent = self
+        hierarchy_list.append({'display': current_parent.title,
+                                'id': current_parent.id})
+        while(current_parent.parent != None):
+            current_parent = current_parent.parent
+            hierarchy_list.append({'display': current_parent.title,
+                                    'id': current_parent.id})
+        hierarchy_list.reverse()
+        # assert False
+        return hierarchy_list
+    def get_tags(self):
+        tag_strings = self.tag_string.split(":")
+        tag_string = tag_strings[1:len(tag_strings)-1] # Get rid of the empty first and last elements
+        tags_qs = Tag.objects.all()
+        # Build and return a Q filter
+        tag_Q = Q()
+        for tag_string in tag_strings:
+            tag_Q = tag_Q | Q(tag_string = tag_string)
+        tags_qs = tags_qs.filter(tag_Q)
+        return tags_qs
     def add_context_item(self, new_item):
         """Add a required Person, Tool or Location to this Node"""
         pass # TODO
@@ -166,9 +205,18 @@ class Node(models.Model):
         """Get any text directly associated with this node. False if none."""
         # TODO
         return False
+
+    def get_hierarchy_string(self, delimiter):
+        """
+        Get id's of all the nodes (including) this one as determined by the
+        parent relationship. This is useful for determining the URL for this
+        node.
+        """
+        pass # TODO
+
     def get_children(self):
         """Returns a list of Node objects with this Node as its parent."""
-        return []
+        return [] # TODO
     def __unicode__(self):
         try:
             todo_abbrev = self.todo_state.abbreviation

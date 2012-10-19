@@ -17,21 +17,14 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #######################################################################
 
-from django.conf.urls import patterns, include, url
-
-# Uncomment the next two lines to enable the admin:
 from django.contrib import admin
-admin.autodiscover()
+from GettingThingsDone.models import *
 
-urlpatterns = patterns('',
-                       url(r'^$', 'orgwolf.views.home', name='home'),
-                       #url(r'^orgwolf/', include('orgwolf.foo.urls')),
-                       url(r'^gtd/', include('GettingThingsDone.urls')),
-                       url(r'^projects/', include('projects.urls')),
-                       
-                       #Uncomment the admin/doc line below to enable admin documentation
-                       url(r'^admin/doc/', include('django.contrib.admindocs.urls')),
-
-                       # Uncomment the next line to enable the admin
-                       url(r'^admin/', include(admin.site.urls)),
-)
+admin.site.register(TodoState)
+admin.site.register(Node)
+admin.site.register(Project)
+admin.site.register(Text)
+admin.site.register(Context)
+admin.site.register(Tool)
+admin.site.register(Location)
+admin.site.register(Contact)

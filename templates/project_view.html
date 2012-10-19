@@ -1,0 +1,65 @@
+{% extends 'base.html' %}
+{% comment %}
+Copyright 2012 Mark Wolf
+
+This file is part of OrgWolf.
+
+OrgWolf is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see <http://www.gnu.org/licenses/>.
+{% endcomment %}
+{# Breadcrumb trail #}
+{% block content %}
+<a href="/projects/">Project List</a>
+{% for node in breadcrumb_list %}&gt;
+  <a href="/projects/{{node.id}}/">{{node.display}}</a>
+{% endfor %}
+
+<h3>{{ parent_node.title }}</h3>
+{% if node_id %}
+<a href="edit/">Edit</a>
+{% endif %}
+<p>{{ parent_node.todo_state.display_text}}</p>
+<dl>
+  {% if parent_node.scheduled %}
+  <dt>Scheduled: </dt>
+  <dd>{{ parent_node.scheduled.date }}
+    {% if parent_node.scheduled_time_specific %}
+    {{ parent_node.scheduled.time }}
+    {% endif %}</dd>
+  {% endif %}
+  {% if parent_tags %}
+  <dt>Tags: </dt>
+  {% for tag in parent_tags %}
+  <dd>{{ tag.display }}</dd>
+  {% endfor %}
+  {% endif %}
+</dl>
+{% for text in node_text_qs %}
+  {{ text.text|linebreaks }}
+{% endfor %}
+{# List of child nodes as links #}
+<table>
+  <tr>
+    <th>State</th>
+    <th>Description</th>
+    <th>Tags</th>
+  </tr>
+    {% for node in child_nodes_qs %}
+  <tr>
+    <td>{{ node.todo_state.abbreviation }}</td>
+    <td><a href="/projects/{{node.id}}/">{{ node.title }}</a></td>
+    <td>{{ node.tag_string }}</td>
+  </tr>
+  {% endfor %}
+</table>
+{% endblock %}
