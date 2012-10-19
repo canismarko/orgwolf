@@ -23,8 +23,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 {% for node in breadcrumb_list %}&gt;
   <a href="/projects/{{node.id}}/">{{node.display}}</a>
 {% endfor %}
-
 <h3>{{ node.title }}</h3>
-
-</ul>
+<form action="" method="POST">
+{% csrf_token %}
+<input type="submit" value="Save"/><a href="../">Cancel</a>
+<table>
+{{ form.as_table }}
+</table>
+</form>
 {% endblock %}

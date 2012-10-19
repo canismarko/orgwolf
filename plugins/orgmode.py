@@ -20,9 +20,8 @@
 from django.contrib.auth.models import User
 from django.core.exceptions import ValidationError
 from datetime import datetime
-import pytz # At least as a reminder to have it installed
 from django.utils import timezone
-
+import pytz # At least as a reminder to have it installed
 import re
 
 from PyOrgMode import PyOrgMode

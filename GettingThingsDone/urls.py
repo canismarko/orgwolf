@@ -29,4 +29,5 @@ urlpatterns = patterns('GettingThingsDone.views',
                        url(r'^lists/([\w/]+)/$', 'list_display'),
                        url(r'^agenda/$', 'agenda_display'),
                        url(r'^agenda/([^/]+)/$', 'agenda_display'),
+                       url(r'^toinbox/$', 'capture_to_inbox'),
 )

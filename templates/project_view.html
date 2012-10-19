@@ -25,6 +25,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 {% endfor %}
 
 <h3>{{ parent_node.title }}</h3>
+{% if node_id %}
+<a href="edit/">Edit</a>
+{% endif %}
 <p>{{ parent_node.todo_state.display_text}}</p>
 <dl>
   {% if parent_node.scheduled %}
@@ -45,9 +48,18 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
   {{ text.text|linebreaks }}
 {% endfor %}
 {# List of child nodes as links #}
-<ul>
-{% for node in child_nodes_qs %}
-<li><a href="/projects/{{node.id}}/">{% if node.todo_state.abbreviation %}{{ node.todo_state.abbreviation }} {% endif %}{{ node.title }}</a></li>
-{% endfor %}
-</ul>
+<table>
+  <tr>
+    <th>State</th>
+    <th>Description</th>
+    <th>Tags</th>
+  </tr>
+    {% for node in child_nodes_qs %}
+  <tr>
+    <td>{{ node.todo_state.abbreviation }}</td>
+    <td><a href="/projects/{{node.id}}/">{{ node.title }}</a></td>
+    <td>{{ node.tag_string }}</td>
+  </tr>
+  {% endfor %}
+</table>
 {% endblock %}

@@ -2,6 +2,7 @@
 #+EMAIL: mark.wolf.music@gmail.com
 
 Most important concept: OrgMode web interface
+Second import concept: get the hacker base (software development?)
 
 * About this file
 * Why (Purpose)
@@ -38,11 +39,12 @@ Most important concept: OrgMode web interface
   - Provide tutorials for how to maximize value
     - Not require tutorials to be useable
   - An interface with others, even if they're not using this application
-* [1/8] People to brainstorm with
+* [2/9] People to brainstorm with
   - [X] Emily Prettyman
   - [ ] Don Grantham
   - [ ] David Allen Co.
-  - [ ] r/GTD
+  - [X] r/GTD
+  - [ ] GTD forums
   - [ ] Jill McKeague
   - [ ] Joe Merrell
   - [ ] Mike Grammes
@@ -64,7 +66,8 @@ Most important concept: OrgMode web interface
 *** DONE Write URL scheme for todo list and agenda
     CLOSED: [2012-10-14 Sun 01:45]
     - /gtd/ -> gettingthingsdone
-*** NEXT Write view (Basic HTML) for TODO list
+*** DONE Write view (Basic HTML) for TODO list
+    CLOSED: [2012-10-17 Wed 15:03]
     - [X] Filter by TODO state
     - [X] Filter by tools
     - [ ] Filter by locations
@@ -72,7 +75,12 @@ Most important concept: OrgMode web interface
 *** NEXT view (Basic HTML) for daily agenda
 *** ACTN Get orgmode plugin to recognize changes to current database
 *** ACTN Modify plugin to take current user in to account
+*** NEXT Write unit tests for orgmode plugin
 ** Medium (Things I need for my own use)
+   - Week long agendas
+   - Built-in calendar
+     - Time-specific vs day-specific
+   - Penetration testing
    - IMAP/POP import plugin
    - GMail import plugin
    - Google calendar import plugin
@@ -108,11 +116,21 @@ Most important concept: OrgMode web interface
   - Sender can ask for return receipt?
     - Sender can ask to be kept informed of all decisions/changes?
   - Group messages (similar to Facebook messenger)
+  - Encryption
 * Mobile apps/Usage portals
 ** Web application (django)
+   - Update mechanism
+   - Keyboard shortcuts
+   - Setup wizard for server app
    - Quick add tasks
      - How to implement without javascript?
 ** Mobile clients
+   - Barcode scanner?
+     - I need to buy one of these [snap]
+   - What transfer protocol to use
+     - XML/JSON/etc
+     - SSH/SSL/etc
+     - Encryption
    - Sync dismissals across devices
    - Dictate to inbox or todo list
      - Try and transcribe voice dictations
@@ -141,11 +159,16 @@ Most important concept: OrgMode web interface
 *** Windows Phone
 *** Palm Pilot
 ** Desktop client
+   - One click add to shopping lists
+   - Polished installers
+     - "click and go"
    - System tray pop-up
      - NEXT list?
      - Daily agenda?
    - Data available offline
      - eg. on an airplane
+** chrome/FF/Opera extensions
+   - Pin things for later reading (similar to Pocket)
 ** Embedded clients
    - Smart notepad
    - Wall-mounted touchscreen
@@ -184,12 +207,29 @@ Most important concept: OrgMode web interface
    - Work through items on a to-do list
 ** Weekly-Review Mode
    - Tied in to weekly review workflow?
+* Security
+  - Penetration testing
+  - Encryption scheme from server to client
+  - Encryption schede for messaging protocol
+  - Look into wordpress unique keys and salts
 * Django Models
+  - Internationalization
+  - django caching
+  - Org-mode markup
+    - *bold*
+    - /italic/
+    - _underlined_
+    - =code=
+    - ~verbatim~
+    - +strikethrough+
+  - Remind about TV shows
+  - Video to watch
   - Material could be part of more than 1 project
   - Version control
   - Project categories?
     - eg. workout calendar
     - or is this just a project
+  - Attachments
 ** DONE GTD
    CLOSED: [2012-10-11 Thu 14:19]
    - how to handle errands, as tool or as location?
@@ -276,6 +316,11 @@ Most important concept: OrgMode web interface
 ** Todo lists
 ** Agenda views
 * Django Templates
+* Combined Lab projects
+  - Merge projects (and related contents)
+  - Attachments
+  - Different people can change status on same project?
+  - Multiple people assigned to a project
 * Plugins
   - OAuth
 ** Source of "in"
@@ -349,3 +394,64 @@ Most important concept: OrgMode web interface
   - How to handle specific life-span material
     - Current info folder
     - Expiration dates
+* Addition User Info (User.profile)
+  - Tutorial status
+  - done States
+  - Todo States
+  - Strict or loose GTD enforcement
+  - Track birthdays
+    - Facebook?
+    - As todo items?
+  - User's birthday
+* Domain Structure
+  - Wordpress style
+    - orgwolf.com --> Company and consulting
+    - orgwolf.net --> Actual app interface
+    - orgwolf.org --> FOSS download and bug tracking
+  - Wolfmail.net?
+  - orgmail.com?
+* Current products/competitors
+  - David Allen meta app
+  - Nozbe
+  - doit.im
+  - wunderlist
+  - fetchnotes (#todo get groceries)
+  - Trello
+  - Omnifocus
+  - workflowwy
+* GPG
+  - Allow multiple forms of key signing
+    - NFC?
+  - Messaging protocol uses the web of trust for transmission
+  - Built in web of trust
+  - Unlock private key upon login
+  - Re-lock with cookie for later use
+* Commercial integration
+  - This piece should be proprietary
+  - eg. "buy new mouse" shows sponsored links
+  - Sell users information?
+  - GTD consulting services
+  - Premium accounts
+  - Sell support
+    - Enterprise customers
+    - "We install on your hardware"
+  - sell specialized capture devices
+    - eg. electronic notepad
+* Interface
+  - Automatically play music based on what I'm doing?
+  - Minimalistic
+  - Google style
+  - Wordpress column style
+  - Bootstrap for CSS
+  - Other CSS libraries?
+  - Javascript
+    - JQuery
+  - Different modes hide unwanted areas
+  - Different modes refresh with only wanted areas
+  - 3-way twisty for project view
+    - Collapsed
+    - Show summary
+    - show details
+* Hosting partners
+* Keep track of passwords
+* Kalsec copyright/patent disclaimer

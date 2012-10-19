@@ -17,7 +17,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #######################################################################
 
-from django.shortcuts import render_to_response
+from django.shortcuts import render_to_response, redirect
 from django.template import RequestContext
 from django.contrib.auth.decorators import login_required
 from django.http import Http404
@@ -26,6 +26,7 @@ import re
 import datetime
 
 from GettingThingsDone.models import Project, Node, Text
+from projects.forms import NodeForm
 
 def display_node(request, node_id=None):
     """Displays a node as a list of links to its children.
@@ -51,7 +52,16 @@ def display_node(request, node_id=None):
 def edit_node(request, node_id):
     """Display a form to allow the user to edit a node"""
     node = Node.objects.get(id=node_id)
+    breadcrumb_list = node.get_hierarchy()
+    if request.method == "POST":
+        form = NodeForm(request.POST, instance=node)
+        if form.is_valid():
+            form.save()
+            redirect_url = "/projects/" + node_id + "/"
+            return redirect(redirect_url)
+    else:
+        form = NodeForm(instance=node)
     return render_to_response('node_edit.html',
                               locals(),
                               RequestContext(request))
-    
+
