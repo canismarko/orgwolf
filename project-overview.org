@@ -64,12 +64,14 @@ Most important concept: OrgMode web interface
 *** DONE Write URL scheme for todo list and agenda
     CLOSED: [2012-10-14 Sun 01:45]
     - /gtd/ -> gettingthingsdone
-*** NEXT Write view (Basic HTML) for TODO list
+*** DONE Write view (Basic HTML) for TODO list
+    CLOSED: [2012-10-19 Fri 10:50]
     - [X] Filter by TODO state
     - [X] Filter by tools
     - [ ] Filter by locations
     - [ ] Filter by people
-*** NEXT view (Basic HTML) for daily agenda
+*** DONE view (Basic HTML) for daily agenda
+    CLOSED: [2012-10-19 Fri 10:50]
 *** ACTN Get orgmode plugin to recognize changes to current database
 *** ACTN Modify plugin to take current user in to account
 ** Medium (Things I need for my own use)
@@ -146,6 +148,7 @@ Most important concept: OrgMode web interface
      - Daily agenda?
    - Data available offline
      - eg. on an airplane
+   - Guake style overlay dialog
 ** Embedded clients
    - Smart notepad
    - Wall-mounted touchscreen
