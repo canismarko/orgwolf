@@ -16,16 +16,21 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 {% endcomment %}
-<html>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
   <head>
     <title>{% block title%}TODO: implement title{% endblock %}</title>
+    <link rel="icon"
+	  type="image/png"
+	  href="{{ STATIC_URL }}orgwolf-icon.ico" />
   </head>
   <body>
+    <a href="/" title="Back to landing page"><img src="{{ STATIC_URL }}orgwolf-logo.jpg" alt="OrgWolf Logo" /></a>
     {% block nav %}
     <ul>
       <li><a href="/gtd/lists/next/">Next Actions</a></li>
       <li><a href="/gtd/agenda/">Today's Agenda</a></li>
-      <li>Lists</li>
+      <li><a href="/gtd/lists/">Lists</a></li>
       <li><a href="/projects/">Projects</a></li>
       <li>Feedback</li>
       <li><a href="/admin/">Admin</a></li>

@@ -41,7 +41,7 @@ def time_to_datetime(time_struct):
 def reset_database(confirm=False):
     """
     Deletes all GTD related items from the database. Should not be used
-    under normal operations.
+    under normal operations. It is intended for use in unit testing.
     """
     if confirm == True:
         nodes = Node.objects.all()
@@ -63,12 +63,13 @@ def import_structure(file=None, string=None):
     """
     Parses either an org-mode file or an org-mode string and saves the
     resulting heirerarchy to the OrgWolf models in the GettingThingsDone
-    module.
+    module. # TODO: rewrite this without PyOrgMode
     """
     start_time = datetime.now()
     print "Starting import at", start_time
     REGEX_REPEAT = "([\+\.]{1,2})(\d+)([dwmy])"
     new_structure = PyOrgMode.OrgDataStructure()
+    new_structure.plugins = [PyOrgMode.OrgNode(), PyOrgMode.OrgSchedule(), PyOrgMode.OrgClock()]
     new_structure.set_todo_states(get_todo_abbrevs())
     # validate passed parameters
     if file and string:
@@ -83,14 +84,15 @@ def import_structure(file=None, string=None):
     # Step through each item, if it's a node then step through its children
     def cycle_headings(current_orgnode, parent_node, project):
         new_text = ""
-        # print(current_orgnode)
+        order = 10
+        order_step = 10
         for child_orgnode in current_orgnode:
             try:
                 child_orgnode.TYPE
             except AttributeError:
                 # This is some text related to its parent
                 if child_orgnode.__class__ == str:
-                    new_text += child_orgnode
+                    new_text += child_orgnode + "\n"
             else:
                 # If this child is itself a parent, then process and recurse
                 if child_orgnode.TYPE == 'NODE_ELEMENT':
@@ -99,12 +101,8 @@ def import_structure(file=None, string=None):
                         project = Project()
                         project.title = child_orgnode.heading
                         project.owner_id = 1 # TODO: set to current user
-                        try:
-                            project.clean_fields()
-                        except ValidationError:
-                            raise ValidationError
-                        else:
-                            project.save()
+                        project.clean_fields()
+                        project.save()
                     new_node = Node()
                     if parent_node.__class__ == Node:
                         new_node.parent = parent_node
@@ -117,8 +115,12 @@ def import_structure(file=None, string=None):
                         todo_state = TodoState.objects.get(abbreviation=todo_string)
                         new_node.todo_state = todo_state
                     new_node.title = child_orgnode.heading
+                    new_node.priority = child_orgnode.priority
                     new_node.tag_string = child_orgnode.tags
                     new_node.owner_id = 1 # TODO: set to current user
+                    # Ordering
+                    new_node.order = order
+                    order += order_step
                     new_node.clean_fields()
                     new_node.save()
                     if not parent_node == None:
@@ -181,3 +183,102 @@ def import_structure(file=None, string=None):
     cycle_headings(new_structure.root.content, None, None)
     stop_time = datetime.now()
     print "Ending import at", stop_time, "(", stop_time-start_time, ")"
+
+def export_to_string(node=None):
+    """
+    Take the selected node and output it to as an org-mode file
+    that's a string.
+    """
+    output_string = ""
+    current_level = 1 # Tracks how many *'s are at the begging of a heading
+    if node == None:
+       root_nodes_qs = Node.objects.filter(parent=None)
+    else:
+        root_nodes_qs = Node.objects.filter(parent=node)
+    # some more sinful recursion.
+    # process each node and find and process its children recursively
+    def heading_as_string(current_node, level):
+        heading_string = "*" * level + " "
+        if hasattr(current_node.todo_state, 'abbreviation'):
+            heading_string += current_node.todo_state.abbreviation + " "
+        if current_node.priority != "":
+            heading_string += "[#" + current_node.priority + "] "
+        heading_string += current_node.title
+        if hasattr(current_node, 'tag_string'):
+            heading_string += " " + current_node.tag_string
+        heading_string += "\n"
+        # add scheduled components
+        if current_node.scheduled or current_node.deadline or current_node.closed:
+            scheduled_string = " " * (level-1) # Indent
+            if current_node.scheduled:
+                scheduled_string += current_node.scheduled.strftime("SCHEDULED: <%Y-%m-%d %a")
+                if current_node.scheduled_time_specific:
+                    scheduled_string += current_node.scheduled.strftime(" %H:%M>")
+                else:
+                    scheduled_string += ">"
+            if current_node.deadline:
+                scheduled_string += current_node.deadline.strftime("DEADLINE: <%Y-%m-%d %a")
+                if current_node.deadline_time_specific:
+                    scheduled_string += current_node.deadline.strftime(" %H:%M")
+                else:
+                    scheduled_string += ">"
+            if current_node.closed:
+                scheduled_string += current_node.closed.strftime("DEADLINE: <%Y-%m-%d %a %H:%M>")
+            heading_string += scheduled_string + "\n"
+        # Check for text associated with this heading
+        text_qs = Text.objects.filter(parent = current_node)
+        for text in text_qs:
+            heading_string += text.text
+        # Now we look for any child nodes and add their text
+        child_node_qs = Node.objects.filter(parent = current_node)
+        for child_node in child_node_qs:
+            heading_string += heading_as_string(child_node, level+1)
+        # Finally, return the compelted string
+        return heading_string
+    for root_node in root_nodes_qs:
+        output_string += heading_as_string(root_node, 1)
+    # Remove extra newline artifact
+    # output_string = output_string[0:-1]
+    return output_string
+
+def standardize_string(input_string):
+    """Apply common conventions for spacing and ordering.
+    This can be useful for unit-testing."""
+    # remove excess whitespace from headers
+    # tag_regex = re.compile(r'(\*+.*\b(?=[ \t]+:[\w:]+:\s*$))[ \t]+(:[\w:]+:)\s*$')
+    node_regex = re.compile(r"""
+        ^(\*+) # Leading stars
+        \s*(.*?(?=:\S+:)?) # The actual heading (with lookahead to avoid tags)
+        \s*(:\S+:)? # The tag string itself
+        $""", re.X)
+    # print whitespace_regex.findall(input_string)
+    # input_string = whitespace_regex.sub(r'\1 \2', input_string)
+    date_regex = re.compile(
+        r'[ \t]((?:scheduled|deadline|closed):[ \t]*<[^>]+>)',
+        re.I
+        )
+    # Put deadline, closed elements in order
+    line_list = input_string.split('\n')
+    new_string = ""
+    for line in line_list:
+        new_line = line
+        # Modify nodes
+        re_result = node_regex.findall(line)
+        if re_result:
+            new_line = ""
+            new_line += re_result[0][0]
+            if re_result[0][1]:
+                new_line += " " + re_result[0][1]
+            if re_result[0][2]:
+                new_line += " " + re_result[0][2]
+        # Rearrange and append the results of the date regex
+        re_result = sorted(date_regex.findall(line))
+        if re_result:
+            count = 0
+            new_line = ""
+            for item in re_result:
+                count += 1
+                if count == 1:
+                    new_line += item
+        new_string += new_line + "\n"
+    return unicode(new_string)

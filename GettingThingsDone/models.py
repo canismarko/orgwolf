@@ -21,6 +21,7 @@ from django.db import models
 from django.contrib.auth.models import User
 from django.db.models import Q
 import re
+from datetime import datetime
 
 class TodoState(models.Model):
     abbreviation = models.CharField(max_length=10, unique=True)
@@ -114,6 +115,7 @@ class Node(models.Model):
     syntax. It can have todo states associated with it as well as scheduling and other information. Each Node object must be associated with a project. A project is a Node with no parent (a top level Node)
     """
     owner = models.ForeignKey(User)
+    order = models.IntegerField()# TODO: autoincrement
     title = models.TextField(blank=True)
     todo_state = models.ForeignKey('TodoState', blank=True, null=True)
     # Determine where this heading is
@@ -137,7 +139,11 @@ class Node(models.Model):
     # rather than from when it was last completed.
     repeating_strict_mode = models.NullBooleanField(default=True)
     # Selection criteria
-    priority = models.ForeignKey('Priority', blank=True, null=True)
+    priority = models.CharField(max_length=1, blank=True,
+                                choices=(('A', 'A'),
+                                         ('B', 'B'),
+                                         ('C', 'C')))
+    # priority = models.ForeignKey('Priority', blank=True, null=True)
     tag_string = models.TextField(blank=True, null=True) # Org-mode style string (eg ":comp:home:RN:")
     energy = models.CharField(max_length=2, blank=True, null=True,
                               choices=(('High', 'HI'),
@@ -148,6 +154,8 @@ class Node(models.Model):
                                             ('Low', 'LO'))
                                    )
     scope = models.ManyToManyField('Scope', blank=True)
+    class Meta:
+        ordering = ['order']
     # Methods retrieve statuses of this object
     def is_todo(self):
         if self.todo_state:
@@ -164,7 +172,13 @@ class Node(models.Model):
             return todo_state.done
         else:
             return False
-    # Methods manipulate the context information
+    def overdue(self):
+        """Returns a string representing how many days ago the node was scheduled."""
+        today = datetime.now().date()
+        if self.scheduled.date() < today:
+            return today - self.scheduled.date()
+        else:
+            return u' '
     def get_hierarchy(self):
         hierarchy_list = []
         current_parent = self
@@ -187,6 +201,7 @@ class Node(models.Model):
             tag_Q = tag_Q | Q(tag_string = tag_string)
         tags_qs = tags_qs.filter(tag_Q)
         return tags_qs
+    # Methods manipulate the context information
     def add_context_item(self, new_item):
         """Add a required Person, Tool or Location to this Node"""
         pass # TODO
@@ -205,7 +220,6 @@ class Node(models.Model):
         """Get any text directly associated with this node. False if none."""
         # TODO
         return False
-
     def get_hierarchy_string(self, delimiter):
         """
         Get id's of all the nodes (including) this one as determined by the

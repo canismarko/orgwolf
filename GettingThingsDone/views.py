@@ -48,16 +48,44 @@ def home(request):
 def list_selection(request):
     pass # Todo list_selection view
 
-def list_display(request, url_string):
+def list_display(request, url_string=""):
     """Determines which list the user has requested and fetches it."""
-    # todo_states = get_todo_states()
+    all_todo_states_query = TodoState.objects.all() # TODO: switch to userprofile
+    all_contexts = Context.objects.all() # TODO: switch to userprofile
     todo_states_query = TodoState.objects.none()
     todo_abbrevs = get_todo_abbrevs(get_todo_states())
     todo_abbrevs_lc = []
+    if url_string == None:
+        url_string = ""
     for todo_abbrev in todo_abbrevs:
         todo_abbrevs_lc.append(todo_abbrev.lower())
+    # Check for changes to the TODO and context filters
+    if request.method == "POST": 
+        todo_regex = re.compile(r'todo(\d+)')
+        new_context_id = 0
+        todo_state_Q = Q()
+        empty_Q = True
+        # Check for TODO filters
+        for post_item in request.POST:
+            todo_match = todo_regex.match(post_item)
+            if todo_match:
+                todo_state_Q = todo_state_Q | Q(id=todo_match.groups()[0])
+                empty_Q = False
+            if post_item == u'context':
+                new_context_id = request.POST['context']
+        # Now build the new URL and redirect
+        new_url = u'/gtd/lists/'
+        if empty_Q:
+            matched_todo_states = TodoState.objects.none()
+        else:
+            matched_todo_states = TodoState.objects.filter(todo_state_Q)
+        for todo_state in matched_todo_states:
+            new_url += todo_state.abbreviation.lower() + u'/'
+        if int(new_context_id) > 0:
+            new_url += u'context' + new_context_id + u'/'
+        return redirect(new_url)
     nodes = Node.objects.none()
-    context = None
+    current_context = None
     # Build regular expression to decide what's a valid URL string
     seperator = ""
     regex_string = "("
@@ -71,7 +99,7 @@ def list_display(request, url_string):
     for result in regex_results:
         if result[0].lower() == "context": # URL asked for a context
             try:
-                context = Context.objects.get(id=result[1])
+                current_context = Context.objects.get(id=result[1])
             except Context.DoesNotExist:
                 pass
         elif result[0].lower() in todo_abbrevs_lc: # It's a TodoState
@@ -84,16 +112,13 @@ def list_display(request, url_string):
     nodes = Node.objects.filter(final_Q)
     # Now apply the context
     try:
-        nodes = context.apply(nodes)
+        nodes = current_context.apply(nodes)
     except AttributeError:
         pass
-    if nodes:
-        return render_to_response('gtd_list.html',
-                                  locals(),
-                                  RequestContext(request))        
-    else:
-        # The request didn't match anything so we 404
-        raise Http404("This URL did not match any conditions in GettingThingsDone.views.list_display()")
+   
+    return render_to_response('gtd_list.html',
+                              locals(),
+                              RequestContext(request))        
 
 def agenda_selection(request):
     pass # Todo agenda_selection view
@@ -120,6 +145,20 @@ def agenda_display(request, which_agenda=None):
     upcoming_deadline_Q = Q(deadline__lte = deadline) # TODO: fix this
     deadline_nodes = all_nodes_qs.filter(undone_Q, upcoming_deadline_Q)
     deadline_nodes = deadline_nodes.order_by("deadline")
+    # Force database hits and then process results into list of dictionaries
+    day_specific_nodes_qs = list(day_specific_nodes)
+    day_specific_nodes = []
+    time_specific_nodes_qs = list(time_specific_nodes)
+    time_specific_nodes = []
+    deadline_nodes_qs = list(deadline_nodes)
+    deadline_nodes = []
+    for node in day_specific_nodes_qs:
+        new_dict = {}
+        new_dict['overdue'] = node.overdue()
+        new_dict['id'] = node.id
+        new_dict['abbreviation'] = node.todo_state.abbreviation
+        new_dict['title'] = node.title
+        day_specific_nodes.append(new_dict)
     return render_to_response('agenda.html',
                               locals(),
                               RequestContext(request))

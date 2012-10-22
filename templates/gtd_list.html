@@ -17,7 +17,43 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 {% endcomment %}
+{% block title %}
+{% if current_context %}{{ current_context.name }} List | OrgWolf
+{% else %}Lists | OrgWolf
+{% endif %}
+{% endblock %}
 {% block content %}
+{# Filters #}
+<hr />
+<form action="" method="POST">
+  Context:
+  <select name="context">
+    <option value="0"
+	    {% if current_context = None %}selected="selected"{% endif %}>
+      None
+    </option>
+    {% for context in all_contexts %}
+    <option value="{{context.id}}"
+	    {% if current_context.id = context.id %} selected="selected"{% endif %}>
+      {{context.name}}
+    </option>
+    {% endfor %}
+  </select><br />
+  Todo States:<br />
+  {% for todo_state in all_todo_states_query %}
+  <input type="checkbox" 
+	 id="todo{{ todo_state.id }}" 
+	 name="todo{{ todo_state.id }}" 
+	 value="Yes" 
+	 {% if todo_state in todo_states_query %}checked="checked" {% endif %}/>
+  <label for="todo{{ todo_state.id }}">{{ todo_state.abbreviation }}</label><br />
+  {% endfor %}
+  <input type="submit" value="Filter" />
+  {% csrf_token %}
+</form>
+<hr />
+{# Display nodes (if any exist #}
+{% if nodes %}
 <table>
   <tr>
     <th>State</th>
@@ -26,10 +62,16 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
   </tr>
   {% for node in nodes %}
   <tr>
-    <td>{{ node.todo_state.abbreviation }}</td>
-    <td>{{ node.title }}</td>
-    <td>{{ node.tag_string }}</td>
+    <td>
+      <a href="/projects/{{ node.id }}/">{{ node.todo_state.abbreviation }}</a>
+    </td>
+    <td><a href="/projects/{{ node.id }}/">{{ node.title }}</a></td>
+    <td><a href="/projects/{{ node.id }}/">{{ node.tag_string }}</a></td>
   </tr>
   {% endfor %}
 </table>
+{% else %}
+{# No nodes matched so display an error message #}
+<h4>No items matched your criteria. Please change filters and resubmit.</h4>
+{% endif %}
 {% endblock %}

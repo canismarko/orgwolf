@@ -25,10 +25,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 <table>
   {% for node in day_specific_nodes %}
   <tr>
-    <td>&nbsp;</td>
-   <td>
-     <a href="/projects/{{node.id}}">{{ node.todo_state.abbreviation }}</a>
-   </td>
+    <td>{{ node.overdue }}</td>
+    <td>
+      <a href="/projects/{{node.id}}">{{ node.abbreviation }}</a>
+    </td>
     <td>
       <a href="/projects/{{node.id}}">{{ node.title }}</a>
     </td>
@@ -39,7 +39,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
   {% for node in time_specific_nodes %}
   <tr>
     <td>&nbsp;
-      {% if node.id.scheduled.date < today.date %}
+      {% if node.scheduled.date < today.date %}
 	*
       {% endif %}
     </td>

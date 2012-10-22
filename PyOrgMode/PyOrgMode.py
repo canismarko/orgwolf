@@ -445,27 +445,29 @@ class OrgNode(OrgPlugin):
         self.done_list = ['DONE']
         self.keepindent = False # If the line starts by an indent, it is not a node
     def _treat(self,current,line):
-        # Target: "^(\*+)\s*(TODO|DONE)?\s*(\[.*\])?\s*(.*?(?=:\S+:)?)\s*(:\S+:)?$"
         # Build regexp
-        r = "^(\*+)\s*"  # Opening stars
+        r = "^(\*+)\s*("  # Opening stars
         if self.todo_list:
+            re_todos = ""
             separator = ""
-            re_todos = "("
             for todo_keyword in self.todo_list + self.done_list:
                 re_todos += separator
                 separator = "|"
                 re_todos += todo_keyword
             re_todos += ")?\s*"
             r += re_todos # Todo keywords
+        else:
+            r += ")"
         r += "(\[#[ABC]\])?\s*" # Priorities
         r += "(.*?(?=:\S+:)?)\s*" # Generic heading text
         r += "(:\S+:)?$" # Tags
+
         regexp_string = r
         self.regexp = re.compile(regexp_string)
         heading = self.regexp.findall(line)
 
         if heading: # We have a heading
-            if current.parent :
+            if current.parent:
                 current.parent.append(current)
   
                   # Is that a new level ?

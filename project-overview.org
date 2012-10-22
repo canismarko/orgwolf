@@ -41,6 +41,7 @@ Second import concept: get the hacker base (software development?)
   - An interface with others, even if they're not using this application
 * [2/9] People to brainstorm with
   - [X] Emily Prettyman
+  - [ ] Sarah Labadie
   - [ ] Don Grantham
   - [ ] David Allen Co.
   - [X] r/GTD
