@@ -28,7 +28,8 @@ urlpatterns = patterns('',
                        #url(r'^orgwolf/', include('orgwolf.foo.urls')),
                        url(r'^gtd/', include('GettingThingsDone.urls')),
                        url(r'^projects/', include('projects.urls')),
-                       
+                       url(r'^messaging/', include('wolfmail.urls')),
+                       url(r'^wolfmail/', include('wolfmail.urls')),
                        #Uncomment the admin/doc line below to enable admin documentation
                        url(r'^admin/doc/', include('django.contrib.admindocs.urls')),
 

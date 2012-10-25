@@ -22,6 +22,7 @@ from django.template import RequestContext
 from django.contrib.auth.decorators import login_required
 from django.http import Http404
 from django.db.models import Q
+from django.contrib.auth.models import User
 import re
 import datetime
 
@@ -53,15 +54,36 @@ def edit_node(request, node_id):
     """Display a form to allow the user to edit a node"""
     node = Node.objects.get(id=node_id)
     breadcrumb_list = node.get_hierarchy()
-    if request.method == "POST":
+    if request.method == "POST": # Form submission
         form = NodeForm(request.POST, instance=node)
         if form.is_valid():
             form.save()
             redirect_url = "/projects/" + node_id + "/"
             return redirect(redirect_url)
-    else:
+    else: # Blank form
         form = NodeForm(instance=node)
     return render_to_response('node_edit.html',
                               locals(),
                               RequestContext(request))
 
+def new_node(request, node_id):
+    """Display a form to allow the user to edit a node"""
+    new = "Yes" # Used in template logic
+    node = Node.objects.get(id=node_id)
+    breadcrumb_list = node.get_hierarchy()
+    if request.method == "POST": # Form submission
+        last_node = Node.objects.filter(parent__id=node_id).reverse()[0]
+        form = NodeForm(request.POST)
+        form.owner = User.objects.get(id=1) # TODO: switch to user profile
+        form.order = last_node.order + last_node.ORDER_STEP
+        form.parent = Node.objects.get(id=node_id)
+        if form.is_valid():
+            form.save()
+            redirect_url = "/projects/" + form.id + "/"
+            return redirect(redirect_url)
+    else: # Blank form
+        form = NodeForm()
+        # TODO: set default projects for new nodes
+    return render_to_response('node_edit.html',
+                              locals(),
+                              RequestContext(request))

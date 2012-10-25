@@ -29,13 +29,15 @@ from GettingThingsDone.models import Node, Project, TodoState, Text
 from GettingThingsDone.views import get_todo_abbrevs
 
 def time_to_datetime(time_struct):
+    timezone.activate('America/New_York')
+    current_tz = timezone.get_current_timezone() # TODO: allow user to set timezone
     new_datetime = datetime(time_struct.tm_year, 
                             time_struct.tm_mon,
                             time_struct.tm_mday,
                             time_struct.tm_hour,
                             time_struct.tm_min,
                             time_struct.tm_sec,
-                            tzinfo=timezone.utc)
+                            tzinfo=current_tz)#timezone.get_current_timezone())
     return new_datetime
 
 def reset_database(confirm=False):
@@ -66,7 +68,7 @@ def import_structure(file=None, string=None):
     module. # TODO: rewrite this without PyOrgMode
     """
     start_time = datetime.now()
-    print "Starting import at", start_time
+    # print "Starting import at", start_time
     REGEX_REPEAT = "([\+\.]{1,2})(\d+)([dwmy])"
     new_structure = PyOrgMode.OrgDataStructure()
     new_structure.plugins = [PyOrgMode.OrgNode(), PyOrgMode.OrgSchedule(), PyOrgMode.OrgClock()]
@@ -85,7 +87,7 @@ def import_structure(file=None, string=None):
     def cycle_headings(current_orgnode, parent_node, project):
         new_text = ""
         order = 10
-        order_step = 10
+        order_step = Node.ORDER_STEP
         for child_orgnode in current_orgnode:
             try:
                 child_orgnode.TYPE
@@ -182,7 +184,7 @@ def import_structure(file=None, string=None):
     # Here we actually enter the recursion loop
     cycle_headings(new_structure.root.content, None, None)
     stop_time = datetime.now()
-    print "Ending import at", stop_time, "(", stop_time-start_time, ")"
+    # print "Ending import at", stop_time, "(", stop_time-start_time, ")"
 
 def export_to_string(node=None):
     """
@@ -209,21 +211,21 @@ def export_to_string(node=None):
         heading_string += "\n"
         # add scheduled components
         if current_node.scheduled or current_node.deadline or current_node.closed:
-            scheduled_string = " " * (level-1) # Indent
+            scheduled_string = " " * level # Indent
             if current_node.scheduled:
-                scheduled_string += current_node.scheduled.strftime("SCHEDULED: <%Y-%m-%d %a")
+                scheduled_string += current_node.scheduled.strftime(" SCHEDULED: <%Y-%m-%d %a")
                 if current_node.scheduled_time_specific:
                     scheduled_string += current_node.scheduled.strftime(" %H:%M>")
                 else:
                     scheduled_string += ">"
             if current_node.deadline:
-                scheduled_string += current_node.deadline.strftime("DEADLINE: <%Y-%m-%d %a")
+                scheduled_string += current_node.deadline.strftime(" DEADLINE: <%Y-%m-%d %a")
                 if current_node.deadline_time_specific:
                     scheduled_string += current_node.deadline.strftime(" %H:%M")
                 else:
                     scheduled_string += ">"
             if current_node.closed:
-                scheduled_string += current_node.closed.strftime("DEADLINE: <%Y-%m-%d %a %H:%M>")
+                scheduled_string += current_node.closed.strftime(" CLOSED: <%Y-%m-%d %a %H:%M>")
             heading_string += scheduled_string + "\n"
         # Check for text associated with this heading
         text_qs = Text.objects.filter(parent = current_node)
@@ -238,7 +240,7 @@ def export_to_string(node=None):
     for root_node in root_nodes_qs:
         output_string += heading_as_string(root_node, 1)
     # Remove extra newline artifact
-    # output_string = output_string[0:-1]
+    output_string = output_string[0:-1]
     return output_string
 
 def standardize_string(input_string):

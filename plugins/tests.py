@@ -89,4 +89,4 @@ Some texts for heading 0-1
         self.assertEqual(input_string, output_string)
         self.assertEqual(len(input_string), len(output_string))
         for line_index in range(0, len(input_string)):
-            sef.assertEqual(output_string[line_index], input_string[line_index])
+            self.assertEqual(output_string[line_index], input_string[line_index])

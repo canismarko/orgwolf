@@ -19,4 +19,8 @@
 
 from django.db import models
 
-# Create your models here.
+class Plugin(models.Model):
+    """
+    Holds meta-data regarding each installed plugin.
+    """
+    name = models.CharField(max_length = 200)

@@ -17,13 +17,17 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #######################################################################
 
-from django.forms import ModelForm, TextInput
-from GettingThingsDone.models import Node
+from django.conf.urls import patterns, include, url
 
-class NodeForm(ModelForm):
-    class Meta:
-        fields = ('title', 'todo_state', 'project', 'scheduled', 'scheduled_time_specific', 'deadline', 'deadline_time_specific', 'priority', 'scope')
-        model = Node
-        widgets = {
-            'title': TextInput(),
-            }
+# Uncomment the next two lines to enable the admin:
+from django.contrib import admin
+admin.autodiscover()
+
+urlpatterns = patterns('wolfmail.views',
+                       url(r'^$', 'inbox'),
+                       url(r'^label/(\w+)/$', 'filter_label'),
+                       url(r'^inbox/$', 'inbox'),
+                       # url(r'^agenda/$', 'agenda_display'),
+                       # url(r'^agenda/([^/]+)/$', 'agenda_display'),
+                       # url(r'^toinbox/$', 'capture_to_inbox'),
+)

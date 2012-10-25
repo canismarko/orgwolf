@@ -17,13 +17,23 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #######################################################################
 
-from django.forms import ModelForm, TextInput
-from GettingThingsDone.models import Node
+from django.shortcuts import render_to_response, redirect
+from django.template import RequestContext
+from django.contrib.auth.models import User
 
-class NodeForm(ModelForm):
-    class Meta:
-        fields = ('title', 'todo_state', 'project', 'scheduled', 'scheduled_time_specific', 'deadline', 'deadline_time_specific', 'priority', 'scope')
-        model = Node
-        widgets = {
-            'title': TextInput(),
-            }
+from wolfmail.models import MailItem
+
+def inbox(request):
+    """Displays the inbox of new messages"""
+    # owner_id = request.user.id
+    mail_items = MailItem.objects.filter(owner=request.user)
+    return render_to_response('display_inbox.html',
+                              locals(),
+                              RequestContext(request))
+
+def filter_label(request, label):
+    return render_to_response('display_inbox.html',
+                              locals(),
+                              RequestContext(request))
+
+    

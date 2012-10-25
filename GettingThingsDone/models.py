@@ -114,8 +114,9 @@ class Node(models.Model):
     Django model that holds some sort of divisional heading. Similar to orgmode '*** Heading'
     syntax. It can have todo states associated with it as well as scheduling and other information. Each Node object must be associated with a project. A project is a Node with no parent (a top level Node)
     """
+    ORDER_STEP = 10
     owner = models.ForeignKey(User)
-    order = models.IntegerField()# TODO: autoincrement
+    order = models.IntegerField() # TODO: autoincrement
     title = models.TextField(blank=True)
     todo_state = models.ForeignKey('TodoState', blank=True, null=True)
     # Determine where this heading is
@@ -267,3 +268,4 @@ class Text(models.Model):
     project = models.ManyToManyField('Project')
     def __unicode__(self):
         return self.text
+

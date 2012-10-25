@@ -26,6 +26,7 @@ import re
 import datetime
 
 from GettingThingsDone.models import TodoState, Node, Context
+from wolfmail.models import MailItem, Label
 
 def get_todo_states():
     """Return a list of the "in-play" Todo states."""
@@ -164,7 +165,21 @@ def agenda_display(request, which_agenda=None):
                               RequestContext(request))
 
 def capture_to_inbox(request):
+    """Processes the "capture widget" that appears on each page.
+    Basically, this view adds the item as a MailTime with the Inbox label."""
     previous_url = request.GET.get('next', '/')
+    if request.method == 'POST':
+        if request.POST['new_inbox_item'] != "":
+            new_item = MailItem()
+            new_item.sender = "Captured"
+            new_item.recipient
+            new_item.owner = request.user
+            new_item.subject = request.POST['new_inbox_item']
+            new_item.rcvd_date = datetime.datetime.now()
+            new_item.full_clean()
+            new_item.save()
+            new_item.labels.add(Label.objects.get(name="Inbox"))
+    # TODO: automatically redirect using django.messaging
     return render_to_response('capture_success.html',
                               locals(),
                               RequestContext(request))

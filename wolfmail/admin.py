@@ -17,13 +17,8 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #######################################################################
 
-from django.forms import ModelForm, TextInput
-from GettingThingsDone.models import Node
+from django.contrib import admin
+from wolfmail.models import *
 
-class NodeForm(ModelForm):
-    class Meta:
-        fields = ('title', 'todo_state', 'project', 'scheduled', 'scheduled_time_specific', 'deadline', 'deadline_time_specific', 'priority', 'scope')
-        model = Node
-        widgets = {
-            'title': TextInput(),
-            }
+admin.site.register(MailItem)
+admin.site.register(Label)

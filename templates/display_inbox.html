@@ -18,6 +18,18 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 {% endcomment %}
 {% block content %}
-Success!<br />
-<a href="{{ previous_url }}">&lt;&lt;Back</a>
+<table>
+  <tr>
+    <th>Sender</th>
+    <th>Subject</th>
+    <th>Date</th>
+  </tr>
+  {% for mail_item in mail_items %}
+  <tr>
+    <td>{{ mail_item.sender }}</td>
+    <td>{{ mail_item.subject }}</td>
+    <td>{{ mail_item.rcvd_date }}</td>
+  </tr>
+  {% endfor %}
+</table>
 {% endblock %}

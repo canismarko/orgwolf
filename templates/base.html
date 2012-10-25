@@ -28,8 +28,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
     <a href="/" title="Back to landing page"><img src="{{ STATIC_URL }}orgwolf-logo.jpg" alt="OrgWolf Logo" /></a>
     {% block nav %}
     <ul>
-      <li><a href="/gtd/lists/next/">Next Actions</a></li>
       <li><a href="/gtd/agenda/">Today's Agenda</a></li>
+      <li><a href="/gtd/lists/next/">Next Actions</a></li>
+      <li><a href="/wolfmail/inbox/">Inbox</a></li>
       <li><a href="/gtd/lists/">Lists</a></li>
       <li><a href="/projects/">Projects</a></li>
       <li>Feedback</li>
@@ -40,7 +41,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
     {% block inbox_widget %}
     {{ outcome_result }}
     <form method="POST" action="/gtd/toinbox/?next={{request.get_full_path}}">
-      <input type="text" /><input type="submit" value="To Inbox" />
+      <input type="text" name="new_inbox_item" /><input type="submit" value="To Inbox" />
       {% csrf_token %}
     </form>
     {% endblock %}

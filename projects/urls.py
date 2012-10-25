@@ -27,4 +27,5 @@ urlpatterns = patterns('projects.views',
                        url(r'^$', 'display_node'),
                        url(r'^(\d+)/$', 'display_node'),
                        url(r'^(\d+)/edit/', 'edit_node'),
+                       url(r'^(?:(\d+)/)?new/', 'new_node'),
 )
