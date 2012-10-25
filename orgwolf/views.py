@@ -22,4 +22,6 @@ from django.template import RequestContext
 from django.contrib.auth.decorators import login_required
 
 def home(request):
-    pass # Todo: orgwolf/home view
+    return render_to_response('home.html',
+                              locals(),
+                              RequestContext(request))
