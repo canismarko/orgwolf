@@ -24,10 +24,9 @@ from django.contrib import admin
 admin.autodiscover()
 
 urlpatterns = patterns('wolfmail.views',
-                       url(r'^$', 'inbox'),
-                       url(r'^label/(\w+)/$', 'filter_label'),
-                       url(r'^inbox/$', 'inbox'),
-                       # url(r'^agenda/$', 'agenda_display'),
-                       # url(r'^agenda/([^/]+)/$', 'agenda_display'),
-                       # url(r'^toinbox/$', 'capture_to_inbox'),
+                       url(r'^$', 'display_label', kwargs={'requested_label': 'inbox'}),
+                       url(r'^([^/\d][^/]*)/$', 'display_label'),
+                       url(r'^([^/\d][^/]*)/(\d+)/$', 'display_message'),
+                       url(r'^([^/\d][^/]*)/(\d+)/new_node/$', 'convert_mail_to_node'),
+                       url(r'^([^/\d][^/]*)/(\d+)/new_node/([^/\d][^/]*/)?$', 'quick_node'),
 )

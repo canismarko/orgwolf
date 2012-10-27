@@ -26,9 +26,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
   </tr>
   {% for mail_item in mail_items %}
   <tr>
-    <td>{{ mail_item.sender }}</td>
-    <td>{{ mail_item.subject }}</td>
-    <td>{{ mail_item.rcvd_date }}</td>
+    <td><a href="{{mail_item.id}}/">{{ mail_item.sender }}</a></td>
+    <td><a href="{{mail_item.id}}/">{{ mail_item.subject }}</a></td>
+    <td><a href="{{mail_item.id}}/">{{ mail_item.rcvd_date }}</a></td>
   </tr>
   {% endfor %}
 </table>

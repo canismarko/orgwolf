@@ -118,7 +118,19 @@ MIDDLEWARE_CLASSES = (
     # 'django.middleware.clickjacking.XFrameOptionsMiddleware',
 )
 
+# Additional context processors
+from django.conf.global_settings import TEMPLATE_CONTEXT_PROCESSORS
+TEMPLATE_CONTEXT_PROCESSORS += (
+    'orgwolf.context_processors.debug_variable',
+    )
+    
+
 ROOT_URLCONF = 'orgwolf.urls'
+
+# TEMPLATE_CONTEXT_PROCESSORS = (
+#     'django.core.context_processors.debug',
+#     'django.contrib.auth.context_processors.auth',
+#     )
 
 # Python dotted path to the WSGI application used by Django's runserver.
 WSGI_APPLICATION = 'orgwolf.wsgi.application'

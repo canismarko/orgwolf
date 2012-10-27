@@ -28,6 +28,8 @@ class TodoState(models.Model):
     display_text = models.CharField(max_length=30)
     actionable = models.BooleanField(default=True)
     done = models.BooleanField(default=False)
+    owner = models.ForeignKey(User)
+    system_default = models.BooleanField(default=False)
     def __unicode__(self):
         return self.abbreviation + ' - ' + self.display_text
 
@@ -268,4 +270,3 @@ class Text(models.Model):
     project = models.ManyToManyField('Project')
     def __unicode__(self):
         return self.text
-
