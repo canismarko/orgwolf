@@ -49,7 +49,7 @@ Second import concept: get the hacker base (software development?)
   - [ ] Jill McKeague
   - [ ] Joe Merrell
   - [ ] Mike Grammes
-  - [ ] Ryan Cousins
+  - [X] Ryan Cousins
 * Development priorities
 ** High (crucial for any level of functionality)
 *** DONE Write django models
