@@ -30,11 +30,13 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 	  type="image/png"
 	  href="{{ STATIC_URL }}orgwolf-icon.ico" />
     {% endif %}
+    {% if enable_css %}
     <link rel="stylesheet" type="text/css" href="{{ STATIC_URL }}bootstrap/css/bootstrap.css" />
     {% block style %}
     <style type="text/css">
     </style>
     {% endblock %}  
+    {% endif %}
   </head>
   <body>
     {% block nav %}
@@ -62,6 +64,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
     {% else %}
     <a href="/" title="Back to landing page"><img src="{{ STATIC_URL }}orgwolf-logo.jpg" alt="OrgWolf Logo" /></a>
     {% endif %}
+    <br />
     {% block content %}
     <br />This feature is not yet impletemented. Check back later.<br />
     {% endblock %}

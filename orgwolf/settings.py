@@ -20,7 +20,9 @@
 # Django settings for orgwolf project.
 
 DEBUG = True
-TEMPLATE_DEBUG = DEBUG
+TEMPLATE_DEBUG = False # DEBUG
+ENABLE_CSS = True
+ENABLE_JS = True
 
 ADMINS = (
     # ('Your Name', 'your_email@example.com'),
@@ -121,7 +123,7 @@ MIDDLEWARE_CLASSES = (
 # Additional context processors
 from django.conf.global_settings import TEMPLATE_CONTEXT_PROCESSORS
 TEMPLATE_CONTEXT_PROCESSORS += (
-    'orgwolf.context_processors.debug_variable',
+    'orgwolf.context_processors.debug_variables',
     )
     
 
@@ -187,3 +189,8 @@ LOGGING = {
         },
     }
 }
+
+try:
+    from local_settings import *
+except ImportError:
+    pass
