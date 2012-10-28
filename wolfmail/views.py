@@ -21,19 +21,40 @@ from django.shortcuts import render_to_response, redirect
 from django.template import RequestContext
 from django.contrib.auth.models import User
 
-from wolfmail.models import MailItem
+from wolfmail.models import MailItem, Label
+from projects.forms import NodeForm
 
-def inbox(request):
+def display_label(request, requested_label):
     """Displays the inbox of new messages"""
-    # owner_id = request.user.id
-    mail_items = MailItem.objects.filter(owner=request.user)
+    label = Label.objects.get(name__iexact=requested_label)
+    mail_items = label.mailitem_set.all()
+    mail_items = mail_items.filter(owner=request.user)
     return render_to_response('display_inbox.html',
                               locals(),
                               RequestContext(request))
 
-def filter_label(request, label):
-    return render_to_response('display_inbox.html',
+def display_message(request, requested_label, message_id):
+    """Show the details of a message. Handled specially for inbox."""
+    label = Label.objects.get(name__iexact=requested_label)
+    mail_item = MailItem.objects.get(id=message_id)
+    return render_to_response('display_message.html',
                               locals(),
                               RequestContext(request))
 
-    
+def convert_mail_to_node(request, url_label, message_id):
+    """Take a user's mail item and convert it into a new node.
+    This displays a more formal node addition mechanism for if
+    the quick links aren't used."""
+    message = MailItem.objects.get(id=message_id)
+    if request.method == 'POST': # Process submitted form
+        form = NodeForm(request.POST)
+    else: # Present new form
+        initial_values = {}
+        initial_values = {'title': message.subject}
+        form = NodeForm(initial=initial_values)
+    return render_to_response('new_node.html',
+                              locals(),
+                              RequestContext(request))
+
+def quick_node(request):
+    pass

@@ -16,18 +16,39 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 {% endcomment %}
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
-<html xmlns="http://www.w3.org/1999/xhtml">
+<!--DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"-->
+<!DOCTYPE html>
+<html lang="en" xmlns="http://www.w3.org/1999/xhtml">
   <head>
     <title>{% block title%}TODO: implement title{% endblock %}</title>
+    {% if debug %}
+    <link rel="icon"
+	  type="image/png"
+	  href="{{ STATIC_URL }}orgwolf-icon-debug.png" />
+    {% else %}
     <link rel="icon"
 	  type="image/png"
 	  href="{{ STATIC_URL }}orgwolf-icon.ico" />
+    {% endif %}
+    {% if enable_css %}
+    <link rel="stylesheet" type="text/css" href="{{ STATIC_URL }}bootstrap/css/bootstrap.css" />
+    {% block style %}
+    <style type="text/css">
+    </style>
+    {% endblock %}  
+    {% endif %}
   </head>
   <body>
-    <a href="/" title="Back to landing page"><img src="{{ STATIC_URL }}orgwolf-logo.jpg" alt="OrgWolf Logo" /></a>
     {% block nav %}
     <ul>
+      <li>
+	{% block inbox_widget %}
+	<form method="POST" action="/gtd/toinbox/?next={{request.get_full_path}}">
+	  <input type="text" name="new_inbox_item" /><input type="submit" value="To Inbox" />
+	  {% csrf_token %}
+	</form>
+      </li>
+    {% endblock %}
       <li><a href="/gtd/agenda/">Today's Agenda</a></li>
       <li><a href="/gtd/lists/next/">Next Actions</a></li>
       <li><a href="/wolfmail/inbox/">Inbox</a></li>
@@ -38,13 +59,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
       <li>Logout</li>
     </ul>
     {% endblock %}
-    {% block inbox_widget %}
-    {{ outcome_result }}
-    <form method="POST" action="/gtd/toinbox/?next={{request.get_full_path}}">
-      <input type="text" name="new_inbox_item" /><input type="submit" value="To Inbox" />
-      {% csrf_token %}
-    </form>
-    {% endblock %}
+    {% if debug %}
+    <a href="/" title="Back to landing page"><img src="{{ STATIC_URL }}orgwolf-logo-debug.png" alt="OrgWolf Logo" /></a>
+    {% else %}
+    <a href="/" title="Back to landing page"><img src="{{ STATIC_URL }}orgwolf-logo.jpg" alt="OrgWolf Logo" /></a>
+    {% endif %}
+    <br />
     {% block content %}
     <br />This feature is not yet impletemented. Check back later.<br />
     {% endblock %}

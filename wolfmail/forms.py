@@ -17,16 +17,5 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #######################################################################
 
-from django.conf.urls import patterns, include, url
-
-# Uncomment the next two lines to enable the admin:
-from django.contrib import admin
-admin.autodiscover()
-
-urlpatterns = patterns('wolfmail.views',
-                       url(r'^$', 'display_label', kwargs={'requested_label': 'inbox'}),
-                       url(r'^([^/\d][^/]*)/$', 'display_label'),
-                       url(r'^([^/\d][^/]*)/(\d+)/$', 'display_message'),
-                       url(r'^([^/\d][^/]*)/(\d+)/new_node/$', 'convert_mail_to_node'),
-                       url(r'^([^/\d][^/]*)/(\d+)/new_node/([^/\d][^/]*/)?$', 'quick_node'),
-)
+from django.forms import ModelForm, TextInput
+from GettingThingsDone import Node

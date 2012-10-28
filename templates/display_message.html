@@ -17,24 +17,36 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 {% endcomment %}
-{# Breadcrumb trail #}
+{% block title %}{{ mail_item.subject }}{% endblock %}
 {% block content %}
-<a href="/projects/">Project List</a>
-{% for node in breadcrumb_list %}&gt;
-  <a href="/projects/{{node.id}}/">{{node.display}}</a>
-{% endfor %}
-<h3>
-  {% if new = "Yes" %}
-  New Node
-  {% else %}
-  {{ node.title }}
+<ul>
+  <li>
+    <a href="../">
+      &lt;&lt Back to {{ label.name }}
+    </a>
+  </li>
+  <li>
+    <a href="new_node/" title="Create new node from this message">
+      New Node
+    </a>
+  </li>
+  <li>
+    <a href="new_node/next/" title="Convert into a quick next action">
+      Next Action
+    </a>
+  </li>
+<dl>
+  <dt>Sender:</dt>
+  <dd>{{ mail_item.sender}}</dd>
+  <dt>Date:</dt>
+  <dd>{{ mail_item.rcvd_date }}
+  <dt>Labels:</dt>
+  {% for label in mail_item.labels.all %}
+  <dd>{{ label.name }}</dd>
+  {% endfor %}
+  {% if mail_item.message_text != "" %}
+  <dt>Text:</dt>
+  <dd>{{ mail_item.message_text }}</dd>
   {% endif %}
-</h3>
-<form action="" method="POST">
-{% csrf_token %}
-<input type="submit" value="Save" class="btn"/><a href="../" class="btn">Cancel</a>
-<table>
-{{ form.as_table }}
-</table>
-</form>
+</dl>
 {% endblock %}
