@@ -55,3 +55,6 @@ def convert_mail_to_node(request, url_label, message_id):
     return render_to_response('new_node.html',
                               locals(),
                               RequestContext(request))
+
+def quick_node(request):
+    pass
