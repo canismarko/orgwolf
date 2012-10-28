@@ -320,6 +320,7 @@ Second import concept: get the hacker base (software development?)
 ** Agenda views
 * Django Templates
 * Combined Lab projects
+  - Markdown
   - Merge projects (and related contents)
   - Attachments
   - Different people can change status on same project?
