@@ -459,3 +459,5 @@ Second import concept: get the hacker base (software development?)
 * Hosting partners
 * Keep track of passwords
 * Kalsec copyright/patent disclaimer
+* Miscellaneous ideas
+** Use natural selection to create new regular expressions

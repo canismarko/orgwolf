@@ -20,10 +20,12 @@
 from django.shortcuts import render_to_response, redirect
 from django.template import RequestContext
 from django.contrib.auth.models import User
+from django.contrib.auth.decorators import login_required
 
 from wolfmail.models import MailItem, Label
 from projects.forms import NodeForm
 
+@login_required
 def display_label(request, requested_label):
     """Displays the inbox of new messages"""
     label = Label.objects.get(name__iexact=requested_label)
@@ -33,6 +35,7 @@ def display_label(request, requested_label):
                               locals(),
                               RequestContext(request))
 
+@login_required
 def display_message(request, requested_label, message_id):
     """Show the details of a message. Handled specially for inbox."""
     label = Label.objects.get(name__iexact=requested_label)
@@ -41,6 +44,7 @@ def display_message(request, requested_label, message_id):
                               locals(),
                               RequestContext(request))
 
+@login_required
 def convert_mail_to_node(request, url_label, message_id):
     """Take a user's mail item and convert it into a new node.
     This displays a more formal node addition mechanism for if
@@ -56,5 +60,6 @@ def convert_mail_to_node(request, url_label, message_id):
                               locals(),
                               RequestContext(request))
 
+@login_required
 def quick_node(request):
     pass
