@@ -23,12 +23,14 @@ from django.db.models import Q
 import re
 from datetime import datetime
 
+from orgwolf import settings
+
 class TodoState(models.Model):
     abbreviation = models.CharField(max_length=10, unique=True)
     display_text = models.CharField(max_length=30)
     actionable = models.BooleanField(default=True)
     done = models.BooleanField(default=False)
-    owner = models.ForeignKey(User)
+    owner = models.ForeignKey(settings.AUTH_USER_MODEL)
     system_default = models.BooleanField(default=False)
     def __unicode__(self):
         return self.abbreviation + ' - ' + self.display_text
@@ -36,7 +38,7 @@ class TodoState(models.Model):
 class Tag(models.Model):
     display = models.CharField(max_length=100)
     tag_string = models.CharField(max_length=10)
-    owner = models.ForeignKey(User, blank=True, null=True) # no owner means built-in tag
+    owner = models.ForeignKey(settings.AUTH_USER_MODEL, blank=True, null=True) # no owner means built-in tag
     public = models.BooleanField(default=True)
     def __unicode__(self):
         return self.display
@@ -51,7 +53,7 @@ class Location(Tag):
 class Contact(Tag):
     f_name = models.CharField(max_length = 50)
     l_name = models.CharField(max_length = 50)
-    user = models.ForeignKey('auth.user', blank=True, null=True)
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, blank=True, null=True)
     # message_contact = models.ForeignKey('messaging.contact', blank=True, null=True) # TODO: uncomment this once messaging is implemented
 
 class Context(models.Model):
@@ -104,10 +106,10 @@ class Context(models.Model):
 
 class Priority(models.Model):
     priority_value = models.IntegerField(default=50)
-    owner = models.ForeignKey(User)
+    owner = models.ForeignKey(settings.AUTH_USER_MODEL)
 
 class Scope(models.Model):
-    owner = models.ForeignKey(User, blank=True, null=True) # no owner means built-in tag
+    owner = models.ForeignKey(settings.AUTH_USER_MODEL, blank=True, null=True) # no owner means built-in tag
     public = models.BooleanField(default=True)
     display = models.CharField(max_length=50)
 
@@ -117,7 +119,7 @@ class Node(models.Model):
     syntax. It can have todo states associated with it as well as scheduling and other information. Each Node object must be associated with a project. A project is a Node with no parent (a top level Node)
     """
     ORDER_STEP = 10
-    owner = models.ForeignKey(User)
+    owner = models.ForeignKey(settings.AUTH_USER_MODEL)
     order = models.IntegerField() # TODO: autoincrement
     title = models.TextField(blank=True)
     todo_state = models.ForeignKey('TodoState', blank=True, null=True)
@@ -251,8 +253,8 @@ class Project(models.Model):
     with a few extra method attributes specific only to projects.
     """
     title = models.TextField()
-    owner = models.ForeignKey('auth.User', related_name='owned_project_set')
-    other_users = models.ManyToManyField('auth.User', related_name='other_project_set', blank=True)
+    owner = models.ForeignKey(settings.AUTH_USER_MODEL, related_name='owned_project_set')
+    other_users = models.ManyToManyField(settings.AUTH_USER_MODEL, related_name='other_project_set', blank=True)
     def get_num_actions(self):
         pass
     def __unicode__(self):
@@ -265,7 +267,7 @@ class Text(models.Model):
     """
     # TODO: Add support for lists, tables, etc.
     text = models.TextField()
-    owner = models.ForeignKey('auth.User')
+    owner = models.ForeignKey(settings.AUTH_USER_MODEL)
     parent = models.ForeignKey('Node', related_name='attached_text', blank=True, null=True)
     project = models.ManyToManyField('Project')
     def __unicode__(self):

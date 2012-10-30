@@ -20,6 +20,7 @@
 from django.db import models
 from django.contrib.auth.models import User
 
+from orgwolf import settings
 from orgwolf.models import Color
 from plugins.models import Plugin
 
@@ -29,7 +30,7 @@ class Label(models.Model):
     Eg. Inbox, Waiting_for
     """
     name = models.CharField(max_length=100)
-    owner = models.ForeignKey(User)
+    owner = models.ForeignKey(settings.AUTH_USER_MODEL)
     _color_rgb = models.IntegerField(default=0x000000)
     _color_alpha = models.FloatField(default=1)
     def color(self):
@@ -48,7 +49,7 @@ class MailItem(models.Model):
     """
     sender = models.TextField()
     recipient = models.TextField(blank=True)
-    owner = models.ForeignKey(User)
+    owner = models.ForeignKey(settings.AUTH_USER_MODEL)
     unread = models.BooleanField(default=True)
     plugin = models.ForeignKey(Plugin, blank=True, null=True)
     subject = models.TextField()
