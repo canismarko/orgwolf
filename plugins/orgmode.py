@@ -17,27 +17,58 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #######################################################################
 
-from django.contrib.auth.models import User
+# from django.contrib.auth.models import User # Deprecated
 from django.core.exceptions import ValidationError
+from django.utils import unittest
 from datetime import datetime
 from django.utils import timezone
 import pytz # At least as a reminder to have it installed
 import re
 
-from PyOrgMode import PyOrgMode
+from PyOrgMode import PyOrgMode # Deprecated
+from orgwolf.models import OrgWolfUser as User
+from orgwolf.stack import Stack
 from GettingThingsDone.models import Node, Project, TodoState, Text
 from GettingThingsDone.views import get_todo_abbrevs
+
+## Regular expressions used in this module for finding org-mode content
+# Find headings (eg * TODO [#A] Heading :tag:)
+r = r'^'
+r += r'(\*+)[ \t]+' # Leading stars
+r += r'((?!\[\#[A-Za-z0-9]\])[^ \t]+)?[ \t]*' # to-do state - validated in python
+r += r'(?:\[\#([A-Za-z0-9])\])?[ \t]*' # Priority tag (eg [#A])
+r += r'((?:[ \t]*?(?<=[ \t])(?!:\S+:[ \t]*$)[^ \t]+(?=(?:[ \t]|$)))+)?[ \t]*' # Remaining heading
+r += r'(:\S+:)?[ \t]*' #tag string
+r += r'$'
+HEADING_RE = re.compile(r, re.UNICODE)
+# Look for schedule of closed tags
+r =  r''
+r += r'(SCHEDULED:|DEADLINE:|CLOSED:)[ \t]*'
+r += r'(<[^>]+>' # Date(time)stamp 
+r += r'(?:--<[^>\]]+>|\])?)' # optional range
+r += r''
+TIME_SENSITIVE_RE = re.compile(r, re.UNICODE)
+# Sort the active date strings (eg <2012-10-12>)
+r =  r''
+r += r'<' # Anchor
+r += r'(\d{4})-(\d{2})-(\d{2})' # Date itself
+r += r'(?:\s+(\w{3}))?' # Day (eg Fri)
+r += r'(?:\s+(\d{1,2}:\d{2}))?' # Optional time specification
+r += r'(?:\s+([+.]\d[dwmy]))?' # Repeating modifier (eg +4d)
+r += r'>' # Closing anchor
+r += r'(?:--' + r + r')?' # Optional range
+DATE_RE = re.compile(r, re.UNICODE)
 
 def time_to_datetime(time_struct):
     timezone.activate('America/New_York')
     current_tz = timezone.get_current_timezone() # TODO: allow user to set timezone
-    new_datetime = datetime(time_struct.tm_year, 
+    new_datetime = datetime(time_struct.tm_year,
                             time_struct.tm_mon,
                             time_struct.tm_mday,
                             time_struct.tm_hour,
                             time_struct.tm_min,
                             time_struct.tm_sec,
-                            tzinfo=current_tz)#timezone.get_current_timezone())
+                            tzinfo=current_tz)
     return new_datetime
 
 def reset_database(confirm=False):
@@ -49,17 +80,17 @@ def reset_database(confirm=False):
         nodes = Node.objects.all()
         projects = Project.objects.all()
         texts = Text.objects.all()
-        print "Deleting", nodes.count(), "nodes."
+        print("Deleting", nodes.count(), "nodes.")
         for node in nodes:
             node.delete()
-        print "Deleting", projects.count(), "projects."
+        print("Deleting", projects.count(), "projects.")
         for project in projects:
             project.delete()
-        print "Deleting", texts.count(), "text items."
+        print("Deleting", texts.count(), "text items.")
         for text in texts:
             text.delete()
     else:
-        print "This function deletes the database. Pass argument confirm=True to pull the trigger."
+        print("This function deletes the database. Pass argument confirm=True to pull the trigger.")
 
 def import_structure(file=None, string=None):
     """
@@ -67,6 +98,68 @@ def import_structure(file=None, string=None):
     resulting heirerarchy to the OrgWolf models in the GettingThingsDone
     module. # TODO: rewrite this without PyOrgMode
     """
+    if file and string:
+        raise AttributeError("Please supply either a file or a string, not both.")
+    elif string:
+        source = StringIO(string)
+    elif file:
+        source = open(file, 'r', encoding='utf8')
+    else:
+        raise AttributeError("Please supply a file or a string")
+    # First, build a list of dictionaries that hold the pieces of each line.
+    data_list = []
+    for line in source:
+        data_list.append({'original': line})
+    # Now go through each line and see if it matches a regex
+    current_indent = 0 # counter
+    current_order = 0
+    parent_stack = Stack()
+    todo_state_list = TodoState.objects.all() # Todo: filter by current user
+    for line in data_list:
+        heading_match = HEADING_RE.search(line['original'])
+        if heading_match: # It's a heading
+            line_indent = len(heading_match.groups()[0])
+            line['todo'] = heading_match.groups()[1]
+            line['priority'] = heading_match.groups()[2]
+            line['heading'] = heading_match.groups()[3]
+            line['tag_string'] = heading_match.groups()[4]
+            new_node = Node()
+            print("line_indent:", line_indent, "|", "current_indent:", current_indent)
+            if line_indent > current_indent: # New child
+                # TODO: what if the user skips a level
+                current_indent = current_indent + 1
+                current_order = 0
+            elif line_indent == current_indent: # Another child
+                parent_stack.pop()
+            elif line_indent < current_indent: # Back up to parent
+                parent_stack.pop()
+                current_order = parent_stack.head.value.order
+                parent_stack.pop() # Move up the stack
+                current_indent = current_indent - 1
+            # See if the 'todo' captured by the regex matches a current TodoState,
+            #   if not then it's parts of the heading # TODO: find a way to not destroy whitespace
+            if line['todo']:
+                found = False
+                for todo_state in todo_state_list:
+                    if todo_state.abbreviation.lower() == line['todo'].lower():
+                        new_node.TodoState = todo_state
+                        found = True
+                        break
+                if found == False:
+                    line['heading'] = line['todo'] + ' ' + str(line['heading'])
+            if current_indent > 1:
+                new_node.parent = parent_stack.head.value
+            new_node.title = line['heading']
+            new_node.owner = User.objects.get(id=1) # TODO: switch to request.user in browser
+            new_node.order = current_order + 10
+            new_node.save()
+            current_order = new_node.order
+            parent_stack.push(new_node)
+
+def old_import_structure(file=None, string=None):
+    """This function imports an org-mode file or string
+    It uses PyOrgMode and has been deprecated in favor
+    of a native function."""
     start_time = datetime.now()
     # print "Starting import at", start_time
     REGEX_REPEAT = "([\+\.]{1,2})(\d+)([dwmy])"
@@ -172,7 +265,7 @@ def import_structure(file=None, string=None):
                 try:
                     new_text_object.parent = parent_node
                 except:
-                    print child_orgnode
+                    print(child_orgnode)
             # TODO: Change to current user
             current_user = User.objects.get(id=1)
             new_text_object.owner = current_user

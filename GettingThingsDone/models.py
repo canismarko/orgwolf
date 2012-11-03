@@ -115,11 +115,16 @@ class Scope(models.Model):
 
 class Node(models.Model):
     """
-    Django model that holds some sort of divisional heading. Similar to orgmode '*** Heading'
-    syntax. It can have todo states associated with it as well as scheduling and other information. Each Node object must be associated with a project. A project is a Node with no parent (a top level Node)
+    Django model that holds some sort of divisional heading. 
+    Similar to orgmode '*** Heading' syntax. 
+    It can have todo states associated with it as well as 
+    scheduling and other information. Each Node object must
+    be associated with a project. A project is a Node with 
+    no parent (a top level Node)
     """
     ORDER_STEP = 10
-    owner = models.ForeignKey(settings.AUTH_USER_MODEL)
+    owner = models.ForeignKey(settings.AUTH_USER_MODEL, related_name="owned_node_set")
+    users = models.ManyToManyField(settings.AUTH_USER_MODEL, blank=True)
     order = models.IntegerField() # TODO: autoincrement
     title = models.TextField(blank=True)
     todo_state = models.ForeignKey('TodoState', blank=True, null=True)
@@ -237,12 +242,10 @@ class Node(models.Model):
         """Returns a list of Node objects with this Node as its parent."""
         return [] # TODO
     def __unicode__(self):
-        try:
-            todo_abbrev = self.todo_state.abbreviation
-        except AttributeError:
-            return self.title
+        if hasattr(self.todo_state, "abbreviation"):
+            return "[" + self.todo_state.abbreviation + "]" + self.title
         else:
-            return "[" + todo_abbrev + "] " + self.title
+            return self.title
 
 class Project(models.Model):
     """

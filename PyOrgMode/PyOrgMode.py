@@ -715,13 +715,14 @@ class OrgDataStructure(OrgElement):
         current = self.root
         # Determine content type and put in appropriate form
         if form == "file":
-            content = open(name,'r')
+            content = open(name,'r', encoding='utf8')
         elif form == "string":
             content = name.split("\n")
         else:
             raise ValueError("Form \""+form+"\" not recognized") 
 
         for line in content:
+            print(line)
             for plugin in self.plugins:
                 current = plugin.treat(current,line)
                 if plugin.treated: # Plugin found something

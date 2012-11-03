@@ -40,6 +40,109 @@ from GettingThingsDone.models import Node, Text
 #         """
 #         self.assertEqual(1 + 1, 2)
 
+class RegexTest(TestCase):
+    def SetUp(self):
+        pass
+
+    def test_heading_regex(self):
+        """Make sure the regular expressions properly detect headings and
+        (perhaps more importantly) don't detect non-headings"""
+        # Separate text vs stars
+        self.assertEqual(orgmode.HEADING_RE.search("* Heading").groups(), 
+                    ("*", "Heading", None, None, None))
+        self.assertEqual(orgmode.HEADING_RE.search("******* Heading").groups(), 
+                    ("*******", "Heading", None, None, None))
+        self.assertEqual(orgmode.HEADING_RE.search("*Heading"), 
+                         None)   
+        self.assertEqual(orgmode.HEADING_RE.search("* * Heading").groups(), 
+                    ("*", "*", None, "Heading", None))
+        self.assertEqual(orgmode.HEADING_RE.search("* Heading").groups(), 
+                    ("*", "Heading", None, None, None))
+        self.assertEqual(orgmode.HEADING_RE.search("** State Heading").groups(), 
+                    ("**", "State", None, "Heading", None))
+        self.assertEqual(orgmode.HEADING_RE.search(" * Heading text :nottag"),
+                         None)
+        # Unicode
+        self.assertEqual(orgmode.HEADING_RE.search("* °unico✓de Heading").groups(), 
+                    ("*", "°unico✓de",None, "Heading", None))
+        # priorities
+        self.assertEqual(orgmode.HEADING_RE.search("* state [#G] Heading").groups(), 
+                    ("*", "state", "G", "Heading", None))
+        self.assertEqual(orgmode.HEADING_RE.search("* [C] Heading").groups(), 
+                    ("*", "[C]", None, "Heading", None))
+        self.assertEqual(orgmode.HEADING_RE.search("* [#&] Heading").groups(), 
+                    ("*", "[#&]", None, "Heading", None))
+        self.assertEqual(orgmode.HEADING_RE.search("* [#] Heading").groups(), 
+                    ("*", "[#]", None, "Heading", None))
+        # Tag string
+        self.assertEqual(orgmode.HEADING_RE.search("* Heading :tag1:").groups(), 
+                    ("*", "Heading", None, None, ":tag1:"))
+        self.assertEqual(orgmode.HEADING_RE.search("* Heading :tag1:tag2:").groups(), 
+                    ("*", "Heading", None, None, ":tag1:tag2:"))
+        self.assertEqual(orgmode.HEADING_RE.search("* Heading text :nottag").groups(), 
+                    ("*", "Heading", None, "text :nottag", None))
+        self.assertEqual(orgmode.HEADING_RE.search("* Heading text nottag:").groups(), 
+                    ("*", "Heading", None, "text nottag:", None))
+        self.assertEqual(
+            orgmode.HEADING_RE.search("* Heading text :nottag: moretext").groups(), 
+            ("*", "Heading", None, "text :nottag: moretext", None)
+            )
+    def test_time_senseitive_regex(self):
+        # Simple scheduled/deadline/closed dates
+        self.assertEqual(
+            orgmode.TIME_SENSITIVE_RE.findall("  SCHEDULED:   <2012-05-10 Thu>"),
+            [("SCHEDULED:", "<2012-05-10 Thu>")]
+            )
+        self.assertEqual(
+            orgmode.TIME_SENSITIVE_RE.findall("DEADLINE: <2012-05-10 Thu>"),
+            [("DEADLINE:", "<2012-05-10 Thu>")]
+            )
+        self.assertEqual(
+            orgmode.TIME_SENSITIVE_RE.findall(" othertext  CLOSED: <2012-05-10 Thu>"),
+            [("CLOSED:", "<2012-05-10 Thu>")]
+            )
+        self.assertEqual(
+            orgmode.TIME_SENSITIVE_RE.findall("  DEADLINE: <2012-05-10 Thu> CLOSED: <2012-11-02 Fri>"),
+            [("DEADLINE:", "<2012-05-10 Thu>"), ("CLOSED:", "<2012-11-02 Fri>")]
+            )
+        # Ranged date
+        self.assertEqual(
+            orgmode.TIME_SENSITIVE_RE.findall("  DEADLINE: <2012-05-10 Thu>--<2012-11-02 Fri>"),
+            [("DEADLINE:", "<2012-05-10 Thu>--<2012-11-02 Fri>")]
+            )
+        # Inactive date - ignore these
+        self.assertEqual(
+            orgmode.TIME_SENSITIVE_RE.findall("  SCHEDULED:   [2012-05-10 Thu]"),
+            []
+            )
+    def test_date_regex(self):
+        # Make sure the regex recognizes all the pieces
+        self.assertEqual(
+            orgmode.DATE_RE.search("<2012-11-02>").groups(),
+            ("2012", "11", "02", None, None, None, 
+             None, None, None, None, None, None))
+        self.assertEqual(
+            orgmode.DATE_RE.search("<2012-11-02 4:19>").groups(),
+            ("2012", "11", "02", None, "4:19", None, 
+             None, None, None, None, None, None))
+        self.assertEqual(
+            orgmode.DATE_RE.search("<2012-11-02 Thu>").groups(),
+            ("2012", "11", "02", "Thu", None, None, 
+             None, None, None, None, None, None))
+        self.assertEqual(
+            orgmode.DATE_RE.search("<2012-11-02 Fri 14:19>").groups(),
+            ("2012", "11", "02", "Fri", "14:19", None, 
+             None, None, None, None, None, None))
+        self.assertEqual(
+            orgmode.DATE_RE.search("<2012-11-02 4:19 +3d>").groups(),
+            ("2012", "11", "02", None, "4:19", "+3d",
+             None, None, None, None, None, None))
+        self.assertEqual(
+            orgmode.DATE_RE.search("<2012-11-02 4:19>--<2011-07-13 Sat 15:17 .3y>").groups(),
+            ("2012", "11", "02", None, "4:19", None, 
+             "2011", "07", "13", "Sat", "15:17", ".3y"))
+        # TODO: write unittests for valid dates (eg day between 1 and 31)
+
 class TestOrgModePlugin(TestCase):
     def setUp(self):
         new_user = User()
