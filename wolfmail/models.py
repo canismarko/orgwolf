@@ -19,11 +19,13 @@
 
 from django.db import models
 from django.contrib.auth.models import User
+from django.utils.encoding import python_2_unicode_compatible
 
 from orgwolf import settings
 from orgwolf.models import Color
 from plugins.models import Plugin
 
+@python_2_unicode_compatible
 class Label(models.Model):
     """
     A label for grouping mail items.
@@ -40,9 +42,10 @@ class Label(models.Model):
         blue = (self._color_rgb & Color.BLUE_MASK) >> Color.BLUE_OFFSET
         new_color = Color(red, green, blue, self._color_alpha)
         return new_color
-    def __unicode__(self):
+    def __str__(self):
         return self.name
 
+@python_2_unicode_compatible
 class MailItem(models.Model):
     """
     Incoming item that hasn't been processed yet.
@@ -56,7 +59,7 @@ class MailItem(models.Model):
     rcvd_date = models.DateTimeField()
     message_text = models.TextField(blank=True)
     labels = models.ManyToManyField(Label, blank=True)
-    def __unicode__(self):
+    def __str__(self):
         return self.subject
     def spawn_node(self):
         """Create a new GTD node based on this mail item.

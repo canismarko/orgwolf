@@ -18,13 +18,15 @@
 #######################################################################
 
 from django.db import models
-from django.contrib.auth.models import User
 from django.db.models import Q
-import re
+from django.contrib.auth.models import User
+from django.utils.encoding import python_2_unicode_compatible
 from datetime import datetime
+import re
 
 from orgwolf import settings
 
+@python_2_unicode_compatible
 class TodoState(models.Model):
     abbreviation = models.CharField(max_length=10, unique=True)
     display_text = models.CharField(max_length=30)
@@ -32,15 +34,16 @@ class TodoState(models.Model):
     done = models.BooleanField(default=False)
     owner = models.ForeignKey(settings.AUTH_USER_MODEL)
     system_default = models.BooleanField(default=False)
-    def __unicode__(self):
+    def __str__(self):
         return self.abbreviation + ' - ' + self.display_text
 
+@python_2_unicode_compatible
 class Tag(models.Model):
     display = models.CharField(max_length=100)
     tag_string = models.CharField(max_length=10)
     owner = models.ForeignKey(settings.AUTH_USER_MODEL, blank=True, null=True) # no owner means built-in tag
     public = models.BooleanField(default=True)
-    def __unicode__(self):
+    def __str__(self):
         return self.display
 
 class Tool(Tag):
@@ -56,13 +59,14 @@ class Contact(Tag):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, blank=True, null=True)
     # message_contact = models.ForeignKey('messaging.contact', blank=True, null=True) # TODO: uncomment this once messaging is implemented
 
+@python_2_unicode_compatible
 class Context(models.Model):
     """A context is a [Location], with [Tool]s and/or [Contact]s available"""
     name = models.CharField(max_length=100)
     tools_available = models.ManyToManyField('Tool', related_name='including_contexts_set', blank=True)
     locations_available = models.ManyToManyField('Location', related_name='including_contexts_set', blank=True)
     people_required = models.ManyToManyField('Contact', related_name='including_contexts_set', blank=True)
-    def __unicode__(self):
+    def __str__(self):
         return self.name
     def apply(self, queryset="blank"):
         """
@@ -113,6 +117,7 @@ class Scope(models.Model):
     public = models.BooleanField(default=True)
     display = models.CharField(max_length=50)
 
+@python_2_unicode_compatible
 class Node(models.Model):
     """
     Django model that holds some sort of divisional heading. 
@@ -241,12 +246,13 @@ class Node(models.Model):
     def get_children(self):
         """Returns a list of Node objects with this Node as its parent."""
         return [] # TODO
-    def __unicode__(self):
+    def __str__(self):
         if hasattr(self.todo_state, "abbreviation"):
             return "[" + self.todo_state.abbreviation + "]" + self.title
         else:
             return self.title
 
+@python_2_unicode_compatible
 class Project(models.Model):
     """
     A project is defined as a Node that has no parent. An isolated TODO
@@ -260,10 +266,11 @@ class Project(models.Model):
     other_users = models.ManyToManyField(settings.AUTH_USER_MODEL, related_name='other_project_set', blank=True)
     def get_num_actions(self):
         pass
-    def __unicode__(self):
+    def __str__(self):
         return self.title
     # TODO: brainstorm more methods
 
+@python_2_unicode_compatible
 class Text(models.Model):
     """
     Holds the text component associated with a Node object.
@@ -273,5 +280,5 @@ class Text(models.Model):
     owner = models.ForeignKey(settings.AUTH_USER_MODEL)
     parent = models.ForeignKey('Node', related_name='attached_text', blank=True, null=True)
     project = models.ManyToManyField('Project')
-    def __unicode__(self):
+    def __str__(self):
         return self.text

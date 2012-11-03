@@ -59,6 +59,7 @@ r += r'>' # Closing anchor
 r += r'(?:--' + r + r')?' # Optional range
 DATE_RE = re.compile(r, re.UNICODE)
 
+# Deprecated - this method was used in the old import_to_structure method
 def time_to_datetime(time_struct):
     timezone.activate('America/New_York')
     current_tz = timezone.get_current_timezone() # TODO: allow user to set timezone
