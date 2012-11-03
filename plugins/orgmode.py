@@ -53,7 +53,7 @@ r =  r''
 r += r'<' # Anchor
 r += r'(\d{4})-(\d{2})-(\d{2})' # Date itself
 r += r'(?:\s+(\w{3}))?' # Day (eg Fri)
-r += r'(?:\s+(\d{1,2}:\d{2}))?' # Optional time specification
+r += r'(?:\s+(\d{1,2}):(\d{2}))?' # Optional time specification
 r += r'(?:\s+([+.]\d[dwmy]))?' # Repeating modifier (eg +4d)
 r += r'>' # Closing anchor
 r += r'(?:--' + r + r')?' # Optional range
@@ -155,6 +155,61 @@ def import_structure(file=None, string=None):
             new_node.save()
             current_order = new_node.order
             parent_stack.push(new_node)
+        else: # Some sort of text item
+            # Test to see if it's a scheduled, deadline or closed modifier
+            time_sensitive_match = TIME_SENSITIVE_RE.findall(line['original'])
+            if time_sensitive_match:
+                parent = parent_stack.head.value
+                for match in time_sensitive_match:
+                    date_match = DATE_RE.search(match[1]).groups()
+                    if date_match:
+                        # Set some variables to make things easier to read
+                        year = int(date_match[0])
+                        month = int(date_match[1])
+                        day = int(date_match[2])
+                        if date_match[4]:
+                            hour = int(date_match[4])
+                        else:
+                            hour = 0
+                        if date_match[5]:
+                            minute = int(date_match[5])
+                        else:
+                            minute = 0
+                        new_datetime = datetime(year,
+                                                month,
+                                                day,
+                                                hour,
+                                                minute,
+                                                tzinfo = timezone.get_current_timezone())
+                        if date_match[4] and date_match[5]:
+                            time_specific = True
+                        else:
+                            time_specific = False
+                        if date_match[5]: # repeating
+                            parent.repeating_number = date_match[5][1]
+                            parent.repeating_unit = date_match[5][2]
+                            if date_match[5][0] == "+":
+                                parent.repeating_strict_mode = True
+                            elif date_match[5][0] == ".":
+                                parent.repeating_strict_mode = False
+                        # Set the appropriate fields
+                        if match[0] == "SCHEDULED:":
+                            parent.scheduled = new_datetime
+                            parent.scheduled_time_specific = time_specific
+                        elif match[0] == "DEADLINE:":
+                            parent.deadline = new_datetime
+                            parent.deadline_time_specific = time_specific
+                        elif match[0] == "CLOSED:":
+                            parent.closed = new_datetime
+                        parent.save()
+            else: # It's just a regular text item
+                new_text = Text()
+                new_text.text = line['original']
+                new_text.owner = User.objects.get(id=1) # TODO: switch to request.user
+                # new_text.project = Project.objects.get(id=1)
+                if current_indent > 0:
+                    new_text.parent = parent_stack.head.value
+                new_text.save()
 
 def old_import_structure(file=None, string=None):
     """This function imports an org-mode file or string
