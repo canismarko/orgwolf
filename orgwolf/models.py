@@ -22,21 +22,6 @@ from django.contrib.auth.models import User, AbstractUser
 from django.db.models.signals import post_save
 from GettingThingsDone.models import TodoState, Location, Contact, Tool, Priority
 
-# # Dropped in favor new 1.5 approach
-# class UserProfile(models.Model):
-#     # TODO: This will be deprecated in Django1.5. Translate code.
-#     user = models.OneToOneField(User)
-#     # Customized user profile fields
-#     todo_state = models.ManyToManyField(TodoState, blank=True)
-#     location = models.ManyToManyField(Location, blank=True)
-#     contact = models.ManyToManyField(Contact, blank=True)
-#     tool = models.ManyToManyField(Tool, blank=True)
-#     priority = models.ManyToManyField(Priority, blank=True)
-# def create_user_profile(sender, instance, created, **kwargs):
-#     if created:
-#         UserProfile.objects.create(user=instance)
-# post_save.connect(create_user_profile, sender=User)
-
 class OrgWolfUser(AbstractUser):
     """Holds profile information for users."""
     preferred_timezone = models.CharField(max_length=25, blank=True)

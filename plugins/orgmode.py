@@ -17,7 +17,6 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #######################################################################
 
-# from django.contrib.auth.models import User # Deprecated
 from django.core.exceptions import ValidationError
 from django.utils import unittest
 from datetime import datetime
@@ -26,7 +25,6 @@ from io import StringIO
 import pytz # At least as a reminder to have it installed
 import re
 
-from PyOrgMode import PyOrgMode # Deprecated
 from orgwolf.models import OrgWolfUser as User
 from orgwolf.stack import Stack
 from GettingThingsDone.models import Node, Project, TodoState, Text
@@ -63,19 +61,6 @@ r += r'(?:\s+([+.]\d+[dwmy]))?' # Repeating modifier (eg +4d)
 r += r'[>\]]' # Closing anchor
 r += r'(?:--' + r + r')?' # Optional range
 DATE_RE = re.compile(r, re.UNICODE)
-
-# Deprecated - this method was used in the old import_to_structure method
-def time_to_datetime(time_struct):
-    timezone.activate('America/New_York')
-    current_tz = timezone.get_current_timezone() # TODO: allow user to set timezone
-    new_datetime = datetime(time_struct.tm_year,
-                            time_struct.tm_mon,
-                            time_struct.tm_mday,
-                            time_struct.tm_hour,
-                            time_struct.tm_min,
-                            time_struct.tm_sec,
-                            tzinfo=current_tz)
-    return new_datetime
 
 def reset_database(confirm=False):
     """
@@ -251,129 +236,6 @@ def import_structure(file=None, string=None, request=None):
                 new_text.save()
                 if current_project:
                     new_text.project.add(current_project)
-
-def old_import_structure(file=None, string=None):
-    """This function imports an org-mode file or string
-    It uses PyOrgMode and has been deprecated in favor
-    of a native function."""
-    start_time = datetime.now()
-    # print "Starting import at", start_time
-    REGEX_REPEAT = "([\+\.]{1,2})(\d+)([dwmy])"
-    new_structure = PyOrgMode.OrgDataStructure()
-    new_structure.plugins = [PyOrgMode.OrgNode(), PyOrgMode.OrgSchedule(), PyOrgMode.OrgClock()]
-    new_structure.set_todo_states(get_todo_abbrevs())
-    # validate passed parameters
-    if file and string:
-        raise AttributeError("Please supply either a file or a string, not both.")
-    if file:
-        new_structure.load_from_file(file)
-    elif string:
-        new_structure.load_from_string(string)
-    else:
-        raise AttributeError("Please supply at least a file or a string")
-    # Now for some wonderfully sinful recursion
-    # Step through each item, if it's a node then step through its children
-    def cycle_headings(current_orgnode, parent_node, project):
-        new_text = ""
-        order = 10
-        order_step = Node.ORDER_STEP
-        for child_orgnode in current_orgnode:
-            try:
-                child_orgnode.TYPE
-            except AttributeError:
-                # This is some text related to its parent
-                if child_orgnode.__class__ == str:
-                    new_text += child_orgnode + "\n"
-            else:
-                # If this child is itself a parent, then process and recurse
-                if child_orgnode.TYPE == 'NODE_ELEMENT':
-                    # If a top level node then it's also a project
-                    if parent_node == None and child_orgnode.heading != '':
-                        project = Project()
-                        project.title = child_orgnode.heading
-                        project.owner_id = 1 # TODO: set to current user
-                        project.clean_fields()
-                        project.save()
-                    new_node = Node()
-                    if parent_node.__class__ == Node:
-                        new_node.parent = parent_node
-                    # Parse Todo state
-                    try:
-                        todo_string = child_orgnode.todo
-                    except AttributeError:
-                        pass
-                    else:
-                        todo_state = TodoState.objects.get(abbreviation=todo_string)
-                        new_node.todo_state = todo_state
-                    new_node.title = child_orgnode.heading
-                    new_node.priority = child_orgnode.priority
-                    new_node.tag_string = child_orgnode.tags
-                    new_node.owner_id = 1 # TODO: set to current user
-                    # Ordering
-                    new_node.order = order
-                    order += order_step
-                    new_node.clean_fields()
-                    new_node.save()
-                    if not parent_node == None:
-                        new_node.project.add(project)
-                        new_node.save()
-                    # Recurse
-                    cycle_headings(child_orgnode.content, new_node, project)
-                if child_orgnode.TYPE == 'SCHEDULE_ELEMENT':
-                    # If this child is a schedule then add this information to its parent
-                    # Check for scheduled...
-                    try:
-                        scheduled = child_orgnode.scheduled
-                    except AttributeError:
-                        pass
-                    else:
-                        new_datetime = time_to_datetime(scheduled.value)
-                        parent_node.scheduled = new_datetime
-                        if scheduled.format & scheduled.TIMED:
-                            parent_node.scheduled_time_specific = True
-                        if scheduled.format & scheduled.REPEAT:
-                            repeat_info = re.findall(REGEX_REPEAT, scheduled.repeat)
-                            if repeat_info[0][0].find('.'):
-                                parent_node.repeating_strict_mode = False
-                    # ...deadline...
-                    try:
-                        deadline = child_orgnode.deadline
-                    except AttributeError:
-                        pass
-                    else:
-                        new_datetime = time_to_datetime(deadline.value)
-                        parent_node.deadline = new_datetime
-                        if deadline.format & deadline.TIMED:
-                            parent_node.deadline_time_specific = True
-                    # ...or closed...
-                    try:
-                        closed = child_orgnode.closed
-                    except AttributeError:
-                        pass
-                    else:
-                        new_datetime = time_to_datetime(closed.value)
-                        parent_node.closed = new_datetime
-                    # ...then save
-                    parent_node.save()
-        if new_text:
-            new_text_object = Text()
-            if parent_node != None:
-                try:
-                    new_text_object.parent = parent_node
-                except:
-                    print(child_orgnode)
-            # TODO: Change to current user
-            current_user = User.objects.get(id=1)
-            new_text_object.owner = current_user
-            new_text_object.text = new_text
-            # TODO: Add code to interpret new org-mode text
-            new_text_object.clean_fields()
-            new_text_object.save()
-            new_text = ""
-    # Here we actually enter the recursion loop
-    cycle_headings(new_structure.root.content, None, None)
-    stop_time = datetime.now()
-    # print "Ending import at", stop_time, "(", stop_time-start_time, ")"
 
 def export_to_string(node=None):
     """
