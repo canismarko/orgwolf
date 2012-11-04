@@ -17,18 +17,10 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #######################################################################
 
-"""
-This file demonstrates writing tests using the unittest module. These will pass
-when you run "manage.py test".
-
-Replace this with more appropriate tests for your application.
-"""
-
 from django.test import TestCase
-from django.contrib.auth.models import User
 import re
-# from IOString import IOString
 
+from orgwolf.models import OrgWolfUser as User
 from PyOrgMode import PyOrgMode
 from plugins import orgmode
 from GettingThingsDone.models import Node, Text
@@ -87,28 +79,29 @@ class RegexTest(TestCase):
             orgmode.HEADING_RE.search("* Heading text :nottag: moretext").groups(), 
             ("*", "Heading", None, "text :nottag: moretext", None)
             )
-    def test_time_senseitive_regex(self):
+    def test_time_sensitive_regex(self):
         # Simple scheduled/deadline/closed dates
         self.assertEqual(
             orgmode.TIME_SENSITIVE_RE.findall("  SCHEDULED:   <2012-05-10 Thu>"),
-            [("SCHEDULED:", "<2012-05-10 Thu>")]
+            [("SCHEDULED:", "<2012-05-10 Thu>", "", "")]
             )
         self.assertEqual(
             orgmode.TIME_SENSITIVE_RE.findall("DEADLINE: <2012-05-10 Thu>"),
-            [("DEADLINE:", "<2012-05-10 Thu>")]
+            [("DEADLINE:", "<2012-05-10 Thu>", "", "")]
             )
         self.assertEqual(
-            orgmode.TIME_SENSITIVE_RE.findall(" othertext  CLOSED: <2012-05-10 Thu>"),
-            [("CLOSED:", "<2012-05-10 Thu>")]
+            orgmode.TIME_SENSITIVE_RE.findall(" othertext  CLOSED: [2012-05-10 Thu]"),
+            [("", "", "CLOSED:", "[2012-05-10 Thu]")]
             )
         self.assertEqual(
-            orgmode.TIME_SENSITIVE_RE.findall("  DEADLINE: <2012-05-10 Thu> CLOSED: <2012-11-02 Fri>"),
-            [("DEADLINE:", "<2012-05-10 Thu>"), ("CLOSED:", "<2012-11-02 Fri>")]
+            orgmode.TIME_SENSITIVE_RE.findall("  DEADLINE: <2012-05-10 Thu> CLOSED: [2012-11-02 Fri]"),
+            [("DEADLINE:", "<2012-05-10 Thu>", "", ""),
+             ("", "", "CLOSED:", "[2012-11-02 Fri]")]
             )
         # Ranged date
         self.assertEqual(
             orgmode.TIME_SENSITIVE_RE.findall("  DEADLINE: <2012-05-10 Thu>--<2012-11-02 Fri>"),
-            [("DEADLINE:", "<2012-05-10 Thu>--<2012-11-02 Fri>")]
+            [("DEADLINE:", "<2012-05-10 Thu>--<2012-11-02 Fri>", "", "")]
             )
         # Inactive date - ignore these
         self.assertEqual(
@@ -119,28 +112,28 @@ class RegexTest(TestCase):
         # Make sure the regex recognizes all the pieces
         self.assertEqual(
             orgmode.DATE_RE.search("<2012-11-02>").groups(),
-            ("2012", "11", "02", None, None, None, 
-             None, None, None, None, None, None))
+            ("2012", "11", "02", None, None, None, None,
+             None, None, None, None, None, None, None))
         self.assertEqual(
             orgmode.DATE_RE.search("<2012-11-02 4:19>").groups(),
-            ("2012", "11", "02", None, "4:19", None, 
-             None, None, None, None, None, None))
+            ("2012", "11", "02", None, "4", "19", None, 
+             None, None, None, None, None, None, None))
         self.assertEqual(
             orgmode.DATE_RE.search("<2012-11-02 Thu>").groups(),
-            ("2012", "11", "02", "Thu", None, None, 
-             None, None, None, None, None, None))
+            ("2012", "11", "02", "Thu", None, None, None,
+             None, None, None, None, None, None, None))
         self.assertEqual(
-            orgmode.DATE_RE.search("<2012-11-02 Fri 14:19>").groups(),
-            ("2012", "11", "02", "Fri", "14:19", None, 
-             None, None, None, None, None, None))
+            orgmode.DATE_RE.search("[2012-11-02 Fri 14:19]").groups(),
+            ("2012", "11", "02", "Fri", "14", "19", None, 
+             None, None, None, None, None, None, None))
         self.assertEqual(
             orgmode.DATE_RE.search("<2012-11-02 4:19 +3d>").groups(),
-            ("2012", "11", "02", None, "4:19", "+3d",
-             None, None, None, None, None, None))
+            ("2012", "11", "02", None, "4", "19", "+3d",
+             None, None, None, None, None, None, None))
         self.assertEqual(
             orgmode.DATE_RE.search("<2012-11-02 4:19>--<2011-07-13 Sat 15:17 .3y>").groups(),
-            ("2012", "11", "02", None, "4:19", None, 
-             "2011", "07", "13", "Sat", "15:17", ".3y"))
+            ("2012", "11", "02", None, "4", "19", None, 
+             "2011", "07", "13", "Sat", "15", "17", ".3y"))
         # TODO: write unittests for valid dates (eg day between 1 and 31)
 
 class TestOrgModePlugin(TestCase):
@@ -158,6 +151,7 @@ Some texts for heading 0-1
 | and | a  | table   |
 | row | io | smidgin | 
 *** Heading 0-1-0  
+** 
 * [#A] [#B] Heading 1
   SCHEDULED: <2012-10-21 Sun>
 ** NEXT Heading 1-0

@@ -22,6 +22,7 @@ from django.core.exceptions import ValidationError
 from django.utils import unittest
 from datetime import datetime
 from django.utils import timezone
+from io import StringIO
 import pytz # At least as a reminder to have it installed
 import re
 
@@ -41,21 +42,25 @@ r += r'((?:[ \t]*?(?<=[ \t])(?!:\S+:[ \t]*$)[^ \t]+(?=(?:[ \t]|$)))+)?[ \t]*' # 
 r += r'(:\S+:)?[ \t]*' #tag string
 r += r'$'
 HEADING_RE = re.compile(r, re.UNICODE)
-# Look for schedule of closed tags
+# Look for schedule, deadline or closed tags
 r =  r''
-r += r'(SCHEDULED:|DEADLINE:|CLOSED:)[ \t]*'
+r += r'(?:'
+r += r'(SCHEDULED:|DEADLINE:)[ \t]*'
 r += r'(<[^>]+>' # Date(time)stamp 
-r += r'(?:--<[^>\]]+>|\])?)' # optional range
-r += r''
+r += r'(?:--<[^>\]]+>)?)' # optional range
+r += r'|'
+r += r'(CLOSED:)[ \t]*'
+r += r'(\[[^\]]+\])' # closed datetime stamp
+r += r')'
 TIME_SENSITIVE_RE = re.compile(r, re.UNICODE)
 # Sort the active date strings (eg <2012-10-12>)
 r =  r''
-r += r'<' # Anchor
+r += r'[<\[]' # Anchor
 r += r'(\d{4})-(\d{2})-(\d{2})' # Date itself
 r += r'(?:\s+(\w{3}))?' # Day (eg Fri)
 r += r'(?:\s+(\d{1,2}):(\d{2}))?' # Optional time specification
 r += r'(?:\s+([+.]\d[dwmy]))?' # Repeating modifier (eg +4d)
-r += r'>' # Closing anchor
+r += r'[>\]]' # Closing anchor
 r += r'(?:--' + r + r')?' # Optional range
 DATE_RE = re.compile(r, re.UNICODE)
 
@@ -93,7 +98,7 @@ def reset_database(confirm=False):
     else:
         print("This function deletes the database. Pass argument confirm=True to pull the trigger.")
 
-def import_structure(file=None, string=None):
+def import_structure(file=None, string=None, request=None):
     """
     Parses either an org-mode file or an org-mode string and saves the
     resulting heirerarchy to the OrgWolf models in the GettingThingsDone
@@ -109,6 +114,11 @@ def import_structure(file=None, string=None):
         raise AttributeError("Please supply a file or a string")
     # First, build a list of dictionaries that hold the pieces of each line.
     data_list = []
+    current_project = None
+    if request:
+        current_user = request.user
+    else:
+        current_user = User.objects.get(id=1)
     for line in source:
         data_list.append({'original': line})
     # Now go through each line and see if it matches a regex
@@ -117,7 +127,7 @@ def import_structure(file=None, string=None):
     parent_stack = Stack()
     todo_state_list = TodoState.objects.all() # Todo: filter by current user
     for line in data_list:
-        heading_match = HEADING_RE.search(line['original'])
+        heading_match = HEADING_RE.search(line['original'].strip("\n"))
         if heading_match: # It's a heading
             line_indent = len(heading_match.groups()[0])
             line['todo'] = heading_match.groups()[1]
@@ -125,7 +135,6 @@ def import_structure(file=None, string=None):
             line['heading'] = heading_match.groups()[3]
             line['tag_string'] = heading_match.groups()[4]
             new_node = Node()
-            print("line_indent:", line_indent, "|", "current_indent:", current_indent)
             if line_indent > current_indent: # New child
                 # TODO: what if the user skips a level
                 current_indent = current_indent + 1
@@ -134,26 +143,51 @@ def import_structure(file=None, string=None):
                 parent_stack.pop()
             elif line_indent < current_indent: # Back up to parent
                 parent_stack.pop()
-                current_order = parent_stack.head.value.order
-                parent_stack.pop() # Move up the stack
-                current_indent = current_indent - 1
+                for x in range(current_indent - line_indent):
+                    # Move up the stack
+                    current_order = parent_stack.head.value.order
+                    parent_stack.pop()
+                    current_indent = current_indent - 1
             # See if the 'todo' captured by the regex matches a current TodoState,
             #   if not then it's parts of the heading # TODO: find a way to not destroy whitespace
             if line['todo']:
                 found = False
                 for todo_state in todo_state_list:
                     if todo_state.abbreviation.lower() == line['todo'].lower():
-                        new_node.TodoState = todo_state
+                        new_node.todo_state = todo_state
                         found = True
                         break
                 if found == False:
                     line['heading'] = line['todo'] + ' ' + str(line['heading'])
             if current_indent > 1:
                 new_node.parent = parent_stack.head.value
-            new_node.title = line['heading']
-            new_node.owner = User.objects.get(id=1) # TODO: switch to request.user in browser
+            if current_indent == 1:
+                # New project for first level heading
+                new_project = Project()
+                if line['heading']:
+                    new_project.title = line['heading']
+                else:
+                    new_project.title = ''
+                new_project.owner = current_user
+                new_project.save()
+                current_project = new_project
+            if line['heading']:
+                new_node.title = line['heading']
+            else:
+                new_node.title = ''
+            new_node.owner = current_user
             new_node.order = current_order + 10
+            if line['priority']:
+                new_node.priority = line['priority']
+            else:
+                new_node.priority = ''
+            if line['tag_string']:
+                new_node.tag_string = line['tag_string']
+            else:
+                new_node.tag_string = ''
             new_node.save()
+            new_node.project.add(current_project)
+            # Update current state variables
             current_order = new_node.order
             parent_stack.push(new_node)
         else: # Some sort of text item
@@ -162,6 +196,9 @@ def import_structure(file=None, string=None):
             if time_sensitive_match:
                 parent = parent_stack.head.value
                 for match in time_sensitive_match:
+                    # Bump a match for "CLOSED:" up to the 0 and 1 position
+                    if match[2] and match[3]:
+                        match = (match[2], match[3], "", "")
                     date_match = DATE_RE.search(match[1]).groups()
                     if date_match:
                         # Set some variables to make things easier to read
@@ -176,22 +213,24 @@ def import_structure(file=None, string=None):
                             minute = int(date_match[5])
                         else:
                             minute = 0
-                        new_datetime = datetime(year,
+                        naive_datetime = datetime(year,
                                                 month,
                                                 day,
                                                 hour,
-                                                minute,
-                                                tzinfo = timezone.get_current_timezone())
+                                                minute)
+                        new_datetime = timezone.get_current_timezone().localize(naive_datetime) # TODO: set to user's preferred timezone
+                        # Fix for DST
+                        # new_datetime = current_tz.normalize(new_datetime)
                         if date_match[4] and date_match[5]:
                             time_specific = True
                         else:
                             time_specific = False
-                        if date_match[5]: # repeating
-                            parent.repeating_number = date_match[5][1]
-                            parent.repeating_unit = date_match[5][2]
-                            if date_match[5][0] == "+":
+                        if date_match[6]: # repeating
+                            parent.repeating_number = date_match[6][1]
+                            parent.repeating_unit = date_match[6][2]
+                            if date_match[6][0] == "+":
                                 parent.repeating_strict_mode = True
-                            elif date_match[5][0] == ".":
+                            elif date_match[6][0] == ".":
                                 parent.repeating_strict_mode = False
                         # Set the appropriate fields
                         if match[0] == "SCHEDULED:":
@@ -201,16 +240,18 @@ def import_structure(file=None, string=None):
                             parent.deadline = new_datetime
                             parent.deadline_time_specific = time_specific
                         elif match[0] == "CLOSED:":
-                            parent.closed = new_datetime
+                            print(new_datetime)
+                            parent.closed = new_datetime               
                         parent.save()
             else: # It's just a regular text item
                 new_text = Text()
                 new_text.text = line['original']
                 new_text.owner = User.objects.get(id=1) # TODO: switch to request.user
-                # new_text.project = Project.objects.get(id=1)
                 if current_indent > 0:
                     new_text.parent = parent_stack.head.value
                 new_text.save()
+                if current_project:
+                    new_text.project.add(current_project)
 
 def old_import_structure(file=None, string=None):
     """This function imports an org-mode file or string
@@ -354,9 +395,10 @@ def export_to_string(node=None):
             heading_string += current_node.todo_state.abbreviation + " "
         if current_node.priority != "":
             heading_string += "[#" + current_node.priority + "] "
-        heading_string += current_node.title
+        if current_node.title:
+            heading_string += current_node.title
         if hasattr(current_node, 'tag_string'):
-            heading_string += " " + current_node.tag_string
+            heading_string += " " + str(current_node.tag_string)
         heading_string += "\n"
         # add scheduled components
         if current_node.scheduled or current_node.deadline or current_node.closed:
@@ -432,4 +474,4 @@ def standardize_string(input_string):
                 if count == 1:
                     new_line += item
         new_string += new_line + "\n"
-    return unicode(new_string)
+    return new_string

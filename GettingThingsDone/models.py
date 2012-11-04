@@ -159,7 +159,7 @@ class Node(models.Model):
                                          ('B', 'B'),
                                          ('C', 'C')))
     # priority = models.ForeignKey('Priority', blank=True, null=True)
-    tag_string = models.TextField(blank=True, null=True) # Org-mode style string (eg ":comp:home:RN:")
+    tag_string = models.TextField(blank=True) # Org-mode style string (eg ":comp:home:RN:")
     energy = models.CharField(max_length=2, blank=True, null=True,
                               choices=(('High', 'HI'),
                                        ('Low', 'LO'))
@@ -248,7 +248,7 @@ class Node(models.Model):
         return [] # TODO
     def __str__(self):
         if hasattr(self.todo_state, "abbreviation"):
-            return "[" + self.todo_state.abbreviation + "]" + self.title
+            return "[" + self.todo_state.abbreviation + "] " + self.title
         else:
             return self.title
 
@@ -257,9 +257,7 @@ class Project(models.Model):
     """
     A project is defined as a Node that has no parent. An isolated TODO
     item is de-facto classified as a project. This may seem confusing but
-    practically it does not pose any problems. This is a sub-classed version
-    of the Node without the requirement that it have a parent and
-    with a few extra method attributes specific only to projects.
+    practically it does not pose any problems.
     """
     title = models.TextField()
     owner = models.ForeignKey(settings.AUTH_USER_MODEL, related_name='owned_project_set')
