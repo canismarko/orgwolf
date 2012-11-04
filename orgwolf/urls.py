@@ -25,7 +25,7 @@ admin.autodiscover()
 
 urlpatterns = patterns('',
                        url(r'^$', 'orgwolf.views.home', name='home'),
-                       #url(r'^orgwolf/', include('orgwolf.foo.urls')),
+                       url(r'^feedback/$', 'orgwolf.views.feedback'),
                        url(r'^gtd/', include('GettingThingsDone.urls')),
                        url(r'^projects/', include('projects.urls')),
                        url(r'^messaging/', include('wolfmail.urls')),

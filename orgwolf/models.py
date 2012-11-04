@@ -83,4 +83,4 @@ class Color:
     def set_alpha(self, new_alpha):
         """Sets the alpha value (between 0 and 1)."""
         self._alpha = int(new_alpha * 100)
-    
+
