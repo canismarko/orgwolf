@@ -133,9 +133,11 @@ def agenda_display(request, which_agenda=None):
     # Determine query filters for "Today" section
     date_Q = Q(scheduled__lte=today)
     time_specific_Q = Q(scheduled_time_specific=False)
+    # TODO: allow user to set todo states
     hard_Q = Q(todo_state = TodoState.objects.get(abbreviation="HARD"))
     next_Q = Q(todo_state = TodoState.objects.get(abbreviation="NEXT"))
-    day_specific_nodes = all_nodes_qs.filter((hard_Q | next_Q), date_Q, time_specific_Q)
+    dfrd_Q = Q(todo_state = TodoState.objects.get(abbreviation="DFRD"))
+    day_specific_nodes = all_nodes_qs.filter((hard_Q | next_Q | dfrd_Q), date_Q, time_specific_Q)
     day_specific_nodes = day_specific_nodes.order_by('scheduled')
     time_specific_Q = Q(scheduled_time_specific=True)
     time_specific_nodes = all_nodes_qs.filter((hard_Q | next_Q), date_Q, time_specific_Q)
@@ -155,11 +157,27 @@ def agenda_display(request, which_agenda=None):
     deadline_nodes = []
     for node in day_specific_nodes_qs:
         new_dict = {}
-        new_dict['overdue'] = node.overdue()
+        new_dict['overdue'] = node.overdue(node.scheduled)
         new_dict['id'] = node.id
         new_dict['abbreviation'] = node.todo_state.abbreviation
         new_dict['title'] = node.title
         day_specific_nodes.append(new_dict)
+    for node in time_specific_nodes_qs:
+        new_dict = {}
+        new_dict['overdue'] = node.overdue(node.scheduled)
+        new_dict['id'] = node.id
+        new_dict['scheduled'] = node.scheduled
+        new_dict['abbreviation'] = node.todo_state.abbreviation
+        new_dict['title'] = node.title
+        time_specific_nodes.append(new_dict)
+    for node in deadline_nodes_qs:
+        new_dict = {}
+        new_dict['overdue'] = node.overdue(node.deadline, future=True)
+        new_dict['id'] = node.id
+        new_dict['deadline'] = node.deadline
+        new_dict['deadline_time_specific'] = node.deadline_time_specific
+        new_dict['title'] = node.title
+        deadline_nodes.append(new_dict)
     return render_to_response('agenda.html',
                               locals(),
                               RequestContext(request))

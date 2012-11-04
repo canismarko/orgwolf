@@ -59,7 +59,7 @@ r += r'[<\[]' # Anchor
 r += r'(\d{4})-(\d{2})-(\d{2})' # Date itself
 r += r'(?:\s+(\w{3}))?' # Day (eg Fri)
 r += r'(?:\s+(\d{1,2}):(\d{2}))?' # Optional time specification
-r += r'(?:\s+([+.]\d[dwmy]))?' # Repeating modifier (eg +4d)
+r += r'(?:\s+([+.]\d+[dwmy]))?' # Repeating modifier (eg +4d)
 r += r'[>\]]' # Closing anchor
 r += r'(?:--' + r + r')?' # Optional range
 DATE_RE = re.compile(r, re.UNICODE)
@@ -240,7 +240,6 @@ def import_structure(file=None, string=None, request=None):
                             parent.deadline = new_datetime
                             parent.deadline_time_specific = time_specific
                         elif match[0] == "CLOSED:":
-                            print(new_datetime)
                             parent.closed = new_datetime               
                         parent.save()
             else: # It's just a regular text item

@@ -127,8 +127,8 @@ class RegexTest(TestCase):
             ("2012", "11", "02", "Fri", "14", "19", None, 
              None, None, None, None, None, None, None))
         self.assertEqual(
-            orgmode.DATE_RE.search("<2012-11-02 4:19 +3d>").groups(),
-            ("2012", "11", "02", None, "4", "19", "+3d",
+            orgmode.DATE_RE.search("<2012-11-02 4:19 +379d>").groups(),
+            ("2012", "11", "02", None, "4", "19", "+379d",
              None, None, None, None, None, None, None))
         self.assertEqual(
             orgmode.DATE_RE.search("<2012-11-02 4:19>--<2011-07-13 Sat 15:17 .3y>").groups(),

@@ -25,7 +25,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 <table>
   {% for node in day_specific_nodes %}
   <tr>
-    <td>{{ node.overdue }}</td>
+    <td>
+      <a href="/projects/{{node.id}}">{{ node.overdue }}</a>
+    </td>
     <td>
       <a href="/projects/{{node.id}}">{{ node.abbreviation }}</a>
     </td>
@@ -35,13 +37,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
   </tr>
   {% endfor %}
 </table>
+<h4>Time Specific</h4>
 <table>
   {% for node in time_specific_nodes %}
   <tr>
-    <td>&nbsp;
-      {% if node.scheduled.date < today.date %}
-	*
-      {% endif %}
+    <td>
+      <a href="/projects/{{node.id}}">{{ node.overdue }}</a>
     </td>
     <td>
       <a href="/projects/{{node.id}}">{{ node.scheduled|date:"G:i" }}</a>
@@ -60,8 +61,15 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 <table>
   {% for node in deadline_nodes %}
   <tr>
-    <td><a href="/projects/{{node.id}}">{{ node.deadline|date:"D d M Y" }}</a></td>
-    <td>{% if node.deadline_time_specific %}<a href="/projects/{{node.id}}">{{ node.deadline.time }}</a>{% endif %}</td>
+    <td>
+      <a href="/projects/{{node.id}}">{{ node.overdue }}</a>
+    </td>
+    <td>
+      <a href="/projects/{{node.id}}">{{ node.deadline|date:"D d M Y" }}</a>
+    </td>
+    <td>
+      {% if node.deadline_time_specific %}<a href="/projects/{{node.id}}">{{ node.deadline|date:"G:i" }}</a>{% else %}&nbsp;{% endif %}
+    </td>
     <td><a href="/projects/{{node.id}}">{{ node.title }}</a></td>
   </tr>
 {% endfor %}

@@ -187,13 +187,13 @@ class Node(models.Model):
             return todo_state.done
         else:
             return False
-    def overdue(self):
-        """Returns a string representing how many days ago the node was scheduled."""
+    def overdue(self, target_date, future=False):
+        """Returns a string representing how many days ago the target_date was scheduled. Method will ignore future dates unless the future parameter is True."""
         today = datetime.now().date()
-        if self.scheduled.date() < today:
-            return today - self.scheduled.date()
+        if (target_date.date() < today) or future:
+            return str((target_date.date() - today).days) + " days"
         else:
-            return u' '
+            return " "
     def get_hierarchy(self):
         hierarchy_list = []
         current_parent = self
