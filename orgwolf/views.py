@@ -31,6 +31,7 @@ def home(request):
                               locals(),
                               RequestContext(request))
 
+@login_required
 def feedback(request):
     """Allows the user to quickly provide feedback about 
     the operation of the site."""

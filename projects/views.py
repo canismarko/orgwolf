@@ -29,6 +29,7 @@ import datetime
 from GettingThingsDone.models import Project, Node, Text
 from projects.forms import NodeForm
 
+@login_required
 def display_node(request, node_id=None):
     """Displays a node as a list of links to its children.
     If no node_id is specified, shows the projects list."""
@@ -50,6 +51,7 @@ def display_node(request, node_id=None):
                               locals(),
                               RequestContext(request))
 
+@login_required
 def edit_node(request, node_id):
     """Display a form to allow the user to edit a node"""
     node = Node.objects.get(id=node_id)
@@ -66,6 +68,7 @@ def edit_node(request, node_id):
                               locals(),
                               RequestContext(request))
 
+@login_required
 def new_node(request, node_id):
     """Display a form to allow the user to edit a node"""
     new = "Yes" # Used in template logic

@@ -49,6 +49,7 @@ def home(request):
 def list_selection(request):
     pass # Todo list_selection view
 
+@login_required
 def list_display(request, url_string=""):
     """Determines which list the user has requested and fetches it."""
     all_todo_states_query = TodoState.objects.all() # TODO: switch to userprofile
@@ -124,6 +125,7 @@ def list_display(request, url_string=""):
 def agenda_selection(request):
     pass # Todo agenda_selection view
 
+@login_required
 def agenda_display(request, which_agenda=None):
     deadline_period = 7 # In days # TODO: pull deadline period from user
     all_nodes_qs = Node.objects.all()
@@ -182,6 +184,7 @@ def agenda_display(request, which_agenda=None):
                               locals(),
                               RequestContext(request))
 
+@login_required
 def capture_to_inbox(request):
     """Processes the "capture widget" that appears on each page.
     Basically, this view adds the item as a MailTime with the Inbox label."""
