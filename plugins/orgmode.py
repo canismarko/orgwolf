@@ -17,6 +17,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #######################################################################
 
+from __future__ import unicode_literals
 from django.core.exceptions import ValidationError
 from django.utils import unittest
 from datetime import datetime
@@ -94,7 +95,7 @@ def import_structure(file=None, string=None, request=None):
     elif string:
         source = StringIO(string)
     elif file:
-        source = open(file, 'r', encoding='utf8')
+        source = open(file, 'r')
     else:
         raise AttributeError("Please supply a file or a string")
     # First, build a list of dictionaries that hold the pieces of each line.

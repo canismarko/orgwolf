@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 #######################################################################
 # Copyright 2012 Mark Wolf
 #
@@ -17,11 +18,11 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #######################################################################
 
+from __future__ import unicode_literals
 from django.test import TestCase
 import re
 
 from orgwolf.models import OrgWolfUser as User
-from PyOrgMode import PyOrgMode
 from plugins import orgmode
 from GettingThingsDone.models import Node, Text
 
