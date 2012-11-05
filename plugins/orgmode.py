@@ -17,6 +17,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #######################################################################
 
+from __future__ import unicode_literals
 from django.core.exceptions import ValidationError
 from django.utils import unittest
 from datetime import datetime
@@ -24,6 +25,7 @@ from django.utils import timezone
 from io import StringIO
 import pytz # At least as a reminder to have it installed
 import re
+import io
 
 from orgwolf.models import OrgWolfUser as User
 from orgwolf.stack import Stack
@@ -94,7 +96,7 @@ def import_structure(file=None, string=None, request=None):
     elif string:
         source = StringIO(string)
     elif file:
-        source = open(file, 'r', encoding='utf8')
+        source = io.open(file, 'r', encoding='utf8')
     else:
         raise AttributeError("Please supply a file or a string")
     # First, build a list of dictionaries that hold the pieces of each line.
