@@ -137,12 +137,12 @@ def agenda_display(request, which_agenda=None):
     time_specific_Q = Q(scheduled_time_specific=False)
     # TODO: allow user to set todo states
     hard_Q = Q(todo_state = TodoState.objects.get(abbreviation="HARD"))
-    next_Q = Q(todo_state = TodoState.objects.get(abbreviation="NEXT"))
+    next_Q = Q(todo_state = TodoState.objects.get(abbreviation="NEXT")) # Deprecated: not used anymore
     dfrd_Q = Q(todo_state = TodoState.objects.get(abbreviation="DFRD"))
-    day_specific_nodes = all_nodes_qs.filter((hard_Q | next_Q | dfrd_Q), date_Q, time_specific_Q)
+    day_specific_nodes = all_nodes_qs.filter((hard_Q | dfrd_Q), date_Q, time_specific_Q)
     day_specific_nodes = day_specific_nodes.order_by('scheduled')
     time_specific_Q = Q(scheduled_time_specific=True)
-    time_specific_nodes = all_nodes_qs.filter((hard_Q | next_Q), date_Q, time_specific_Q)
+    time_specific_nodes = all_nodes_qs.filter((hard_Q | dfrd_Q), date_Q, time_specific_Q)
     time_specific_nodes = time_specific_nodes.order_by('scheduled')
     # Determine query filters for "Upcoming Deadlines" section
     undone_Q = Q(todo_state__closed = False)
