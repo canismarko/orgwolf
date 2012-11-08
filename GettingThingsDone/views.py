@@ -145,7 +145,7 @@ def agenda_display(request, which_agenda=None):
     time_specific_nodes = all_nodes_qs.filter((hard_Q | next_Q), date_Q, time_specific_Q)
     time_specific_nodes = time_specific_nodes.order_by('scheduled')
     # Determine query filters for "Upcoming Deadlines" section
-    undone_Q = Q(todo_state__done = False)
+    undone_Q = Q(todo_state__closed = False)
     deadline = today + datetime.timedelta(days=deadline_period)
     upcoming_deadline_Q = Q(deadline__lte = deadline) # TODO: fix this
     deadline_nodes = all_nodes_qs.filter(undone_Q, upcoming_deadline_Q)

@@ -20,14 +20,16 @@
 from django.shortcuts import render_to_response, redirect
 from django.template import RequestContext
 from django.contrib.auth.decorators import login_required
+from django.utils.timezone import get_current_timezone
 from django.http import Http404
 from django.db.models import Q
 from django.contrib.auth.models import User
 import re
 import datetime
 
-from GettingThingsDone.models import Project, Node, Text
+from GettingThingsDone.models import Project, Node, Text, TodoState
 from projects.forms import NodeForm
+from orgwolf.models import OrgWolfUser as User
 
 @login_required
 def display_node(request, node_id=None):
@@ -57,9 +59,18 @@ def edit_node(request, node_id):
     node = Node.objects.get(id=node_id)
     breadcrumb_list = node.get_hierarchy()
     if request.method == "POST": # Form submission
+        if hasattr(node.todo_state, 'closed'):
+            node_closed = node.todo_state.closed
+        else: # No todo state so set to false
+            node_closed = False
         form = NodeForm(request.POST, instance=node)
         if form.is_valid():
-            form.save()
+            new_todo_state = TodoState.objects.get(id=request.POST['todo_state'])
+            updated_node = form.save(commit=False)
+            if (new_todo_state.closed == True) and (node_closed == False):
+                # Timestamp for when the user closed this item
+                updated_node.closed = datetime.datetime.now(get_current_timezone())
+            updated_node.save()
             redirect_url = "/projects/" + node_id + "/"
             return redirect(redirect_url)
     else: # Blank form
@@ -75,14 +86,20 @@ def new_node(request, node_id):
     node = Node.objects.get(id=node_id)
     breadcrumb_list = node.get_hierarchy()
     if request.method == "POST": # Form submission
-        last_node = Node.objects.filter(parent__id=node_id).reverse()[0]
         form = NodeForm(request.POST)
-        form.owner = User.objects.get(id=1) # TODO: switch to user profile
-        form.order = last_node.order + last_node.ORDER_STEP
-        form.parent = Node.objects.get(id=node_id)
         if form.is_valid():
+            form = form.save(commit=False)
+            form.owner = request.user
+            siblings = Node.objects.filter(parent__id=node_id)
+            if len(siblings) > 0:
+                form.order = siblings.reverse()[0] + Node.ORDER_STEP
+            else:
+                form.order = 0
+            form.parent = Node.objects.get(id=node_id)
+            if form.todo_state.closed:
+                form.closed = datetime.datetime.now(get_current_timezone())
             form.save()
-            redirect_url = "/projects/" + form.id + "/"
+            redirect_url = "/projects/" + str(form.id) + "/"
             return redirect(redirect_url)
     else: # Blank form
         form = NodeForm()

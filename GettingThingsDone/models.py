@@ -19,7 +19,6 @@
 
 from django.db import models
 from django.db.models import Q
-from django.contrib.auth.models import User
 from django.utils.encoding import python_2_unicode_compatible
 from datetime import datetime
 import re
@@ -31,8 +30,8 @@ class TodoState(models.Model):
     abbreviation = models.CharField(max_length=10, unique=True)
     display_text = models.CharField(max_length=30)
     actionable = models.BooleanField(default=True)
-    done = models.BooleanField(default=False)
-    owner = models.ForeignKey(settings.AUTH_USER_MODEL)
+    closed = models.BooleanField(default=False)
+    owner= models.ForeignKey(settings.AUTH_USER_MODEL)
     system_default = models.BooleanField(default=False)
     def __str__(self):
         return self.abbreviation + ' - ' + self.display_text
@@ -136,7 +135,7 @@ class Node(models.Model):
     # Determine where this heading is
     parent = models.ForeignKey('self', blank=True, null=True, related_name='child_heading_set')
     project = models.ManyToManyField('Project', related_name='project_heading_set') # should this be ForeignKey?
-    assigned = models.ManyToManyField('Contact', related_name='assigned_nodes')
+    assigned = models.ManyToManyField('Contact', related_name='assigned_nodes', blank=True)
     # Scheduling details
     scheduled = models.DateTimeField(blank=True, null=True)
     scheduled_time_specific = models.BooleanField()
