@@ -17,8 +17,13 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 {% endcomment %}
-{# Breadcrumb trail #}
+{% block title %}
+{% if parent_node.title %}{{ parent_node.title }}
+{% else %}Projects
+{% endif %}
+{% endblock %}
 {% block content %}
+{# Breadcrumb trail #}
 <a href="/projects/">Project List</a>
 {% for node in breadcrumb_list %}&gt;
   <a href="/projects/{{node.id}}/">{{node.display}}</a>
@@ -26,10 +31,13 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 <h3>{{ parent_node.title }}</h3>
 {% if node_id %}
-<a href="edit/">Edit</a>
+<a href="edit/" class="btn">Edit</a>
 {% endif %}
-<p>{{ parent_node.todo_state.display_text}}</p>
 <dl>
+  {% if parent_node.todo_state %}
+  <dt>Status:</dt>
+  <dd>{{ parent_node.todo_state.display_text}}</dd>
+  {% endif %}
   {% if parent_node.scheduled %}
   <dt>Scheduled: </dt>
   <dd>{{ parent_node.scheduled.date }}
@@ -47,9 +55,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 {% for text in node_text_qs %}
   {{ text.text|linebreaks }}
 {% endfor %}
-<a href="new/">New</a>
+<a href="new/" class="btn">New</a>
 {# List of child nodes as links #}
-<table>
+<table class="table">
   <tr>
     <th>State</th>
     <th>Description</th>

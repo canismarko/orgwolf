@@ -32,28 +32,39 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
     {% endif %}
     {% if enable_css %}
     <link rel="stylesheet" type="text/css" href="{{ STATIC_URL }}bootstrap/css/bootstrap.css" />
-    {% block style %}
     <style type="text/css">
-    </style>
+    {% block style %}
+    #new_inbox_item {
+	margin-bottom: 0px;
+    }
+    #new_inbox_form {
+	margin-bottom: 0px;
+    }
     {% endblock %}  
+    </style>
     {% endif %}
   </head>
   <body>
+    {% if debug %}
+    <a href="/" title="Back to landing page"><img src="{{ STATIC_URL }}orgwolf-logo-debug.png" alt="OrgWolf Logo" /></a>
+    {% else %}
+    <a href="/" title="Back to landing page"><img src="{{ STATIC_URL }}orgwolf-logo.jpg" alt="OrgWolf Logo" /></a>
+    {% endif %}
     {% block nav %}
     <ul>
-      <li>
-	{% block inbox_widget %}
-	<form method="POST" action="/gtd/toinbox/?next={{request.get_full_path}}">
-	  <input type="text" name="new_inbox_item" /><input type="submit" value="To Inbox" />
-	  {% csrf_token %}
-	</form>
-      </li>
-    {% endblock %}
       <li><a href="/gtd/agenda/">Today's Agenda</a></li>
       <li><a href="/gtd/lists/next/">Next Actions</a></li>
       <li><a href="/wolfmail/inbox/">Inbox</a></li>
       <li><a href="/gtd/lists/">Lists</a></li>
       <li><a href="/projects/">Projects</a></li>
+      {% block inbox_widget %}
+      <li>
+	<form method="POST" action="/gtd/toinbox/?next={{request.get_full_path}}" id="new_inbox_form">
+	  <input type="text" name="new_inbox_item" id="new_inbox_item"/><input type="submit" value="To Inbox" />
+	  {% csrf_token %}
+	</form>
+      </li>
+      {% endblock %}
       <li><a href="/feedback/?next={{request.get_full_path}}">Feedback</a></li>
       <li><a href="/admin/">Admin</a></li>
       <li>
@@ -62,11 +73,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 	    {% endif %}</a></li>
     </ul>
     {% endblock %}
-    {% if debug %}
-    <a href="/" title="Back to landing page"><img src="{{ STATIC_URL }}orgwolf-logo-debug.png" alt="OrgWolf Logo" /></a>
-    {% else %}
-    <a href="/" title="Back to landing page"><img src="{{ STATIC_URL }}orgwolf-logo.jpg" alt="OrgWolf Logo" /></a>
-    {% endif %}
     <br />
     {% block content %}
     <br />This feature is not yet impletemented. Check back later.<br />

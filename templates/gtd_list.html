@@ -18,8 +18,8 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 {% endcomment %}
 {% block title %}
-{% if current_context %}{{ current_context.name }} List | OrgWolf
-{% else %}Lists | OrgWolf
+{% if current_context %}{{ current_context.name }} List
+{% else %}ToDo Lists
 {% endif %}
 {% endblock %}
 {% block content %}
@@ -41,12 +41,13 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
   </select><br />
   Todo States:<br />
   {% for todo_state in all_todo_states_query %}
+  <label for="todo{{ todo_state.id }}" class="checkbox inline">
   <input type="checkbox" 
 	 id="todo{{ todo_state.id }}" 
 	 name="todo{{ todo_state.id }}" 
-	 value="Yes" 
+	 value="Yes"  
 	 {% if todo_state in todo_states_query %}checked="checked" {% endif %}/>
-  <label for="todo{{ todo_state.id }}">{{ todo_state.abbreviation }}</label><br />
+{{ todo_state.abbreviation }}</label>
   {% endfor %}
   <input type="submit" value="Filter" />
   {% csrf_token %}
@@ -54,7 +55,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 <hr />
 {# Display nodes (if any exist #}
 {% if nodes %}
-<table class="table">
+<table class="table table-condensed">
   <tr>
     <th>State</th>
     <th>Description</th>
