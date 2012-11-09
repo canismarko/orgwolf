@@ -94,7 +94,7 @@ class EditNode(TestCase):
         self.assertTrue(redirect.group()) # Did the redirect match
         self.assertEqual(302, response.redirect_chain[0][1])
         return redirect.groups()[0]
-                  
+
     def test_close_timestamp(self):
         """
         Test that the "closed" timestamp is set automatically."
@@ -137,3 +137,10 @@ class EditNode(TestCase):
         # Make sure the node is closed
         self.assertTrue(new_node.todo_state.closed)
         self.assertEqual(now.date(), new_node.closed.date())
+
+    def test_set_todo_state(self):
+        node = Node.objects.get(title='Buy cat food')
+        todo_state = TodoState.objects.get(id=2)
+        node.todo_state = todo_state
+        node.save()
+        self.assertEqual(todo_state, node.todo_state)

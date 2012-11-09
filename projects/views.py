@@ -65,12 +65,7 @@ def edit_node(request, node_id):
             node_closed = False
         form = NodeForm(request.POST, instance=node)
         if form.is_valid():
-            new_todo_state = TodoState.objects.get(id=request.POST['todo_state'])
-            updated_node = form.save(commit=False)
-            if (new_todo_state.closed == True) and (node_closed == False):
-                # Timestamp for when the user closed this item
-                updated_node.closed = datetime.datetime.now(get_current_timezone())
-            updated_node.save()
+            form.save()
             redirect_url = "/projects/" + node_id + "/"
             return redirect(redirect_url)
     else: # Blank form
@@ -96,8 +91,6 @@ def new_node(request, node_id):
             else:
                 form.order = 0
             form.parent = Node.objects.get(id=node_id)
-            if form.todo_state.closed:
-                form.closed = datetime.datetime.now(get_current_timezone())
             form.save()
             redirect_url = "/projects/" + str(form.id) + "/"
             return redirect(redirect_url)

@@ -18,8 +18,10 @@
 #######################################################################
 
 from django.db import models
-from django.db.models import Q
+from django.db.models import Q, signals
+from django.dispatch import receiver
 from django.utils.encoding import python_2_unicode_compatible
+from django.utils.timezone import get_current_timezone
 from datetime import datetime
 import re
 
@@ -250,6 +252,17 @@ class Node(models.Model):
             return "[" + self.todo_state.abbreviation + "] " + self.title
         else:
             return self.title
+
+@receiver(signals.pre_save, sender=Node)
+def node_timestamp(sender, **kwargs):
+    """Check if a node is being changed to a closed todo_state.
+    If so, set the closed timestamp to now."""
+    instance = kwargs['instance']
+    if getattr(instance.todo_state, 'closed', False):
+        if instance.id:
+            old_node = Node.objects.get(id=instance.id)
+            if not getattr(old_node.todo_state, 'closed', False):
+                instance.closed = datetime.now(get_current_timezone())
 
 @python_2_unicode_compatible
 class Project(models.Model):
