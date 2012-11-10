@@ -183,11 +183,8 @@ class Node(models.Model):
             return todo_state.actionable
         else:
             return False
-    def is_done(self):
-        if self.todo_state:
-            return todo_state.done
-        else:
-            return False
+    def is_closed(self):
+        return getattr(self.todo_state, 'closed', False)
     def overdue(self, target_date, future=False):
         """Returns a string representing how many days ago the target_date was scheduled. Method will ignore future dates unless the future parameter is True."""
         today = datetime.now().date()
@@ -253,16 +250,21 @@ class Node(models.Model):
         else:
             return self.title
 
+# Signal handlers for the Node class
 @receiver(signals.pre_save, sender=Node)
 def node_timestamp(sender, **kwargs):
     """Check if a node is being changed to a closed todo_state.
     If so, set the closed timestamp to now."""
+    # This function check the passed instance node against
+    # the version currently in the database.
     instance = kwargs['instance']
-    if getattr(instance.todo_state, 'closed', False):
-        if instance.id:
+    if instance.is_closed():
+        if instance.id: # Existing node
             old_node = Node.objects.get(id=instance.id)
-            if not getattr(old_node.todo_state, 'closed', False):
+            if not old_node.is_closed():
                 instance.closed = datetime.now(get_current_timezone())
+        else: # New node
+            instance.closed = datetime.now(get_current_timezone())
 
 @python_2_unicode_compatible
 class Project(models.Model):

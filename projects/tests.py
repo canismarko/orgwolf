@@ -106,16 +106,15 @@ class EditNode(TestCase):
             client.login(username='test', password='secret')
             )
         node = Node.objects.get(title='Buy cat food')
-        # print node.todo_state.closed
         project = Project.objects.get(title='Errands')
         # Make sure it's not closed first
-        self.assertFalse(node.todo_state.closed)
+        self.assertFalse(node.is_closed())
         # Edit the node through the client
         self.close_node_through_client(client, project, node)
         # Refresh the node
         new_node = Node.objects.get(title='Buy cat food')
         # Make sure the node is closed
-        self.assertTrue(new_node.todo_state.closed)
+        self.assertTrue(new_node.is_closed())
         self.assertEqual(now.date(), new_node.closed.date())
 
         # Same thing if it has no initial todostate
@@ -128,14 +127,14 @@ class EditNode(TestCase):
         # Refresh the node
         new_node = Node.objects.get(title='Buy cat food')
         # Make sure the node is closed
-        self.assertTrue(new_node.todo_state.closed)
+        self.assertTrue(new_node.is_closed())
         self.assertEqual(now.date(), new_node.closed.date())
 
         # Test that closed is set for new nodes
         new_node_id = self.close_node_through_client(client, project)
         new_node = Node.objects.get(id=new_node_id)
         # Make sure the node is closed
-        self.assertTrue(new_node.todo_state.closed)
+        self.assertTrue(new_node.is_closed())
         self.assertEqual(now.date(), new_node.closed.date())
 
     def test_set_todo_state(self):

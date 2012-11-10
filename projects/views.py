@@ -59,10 +59,6 @@ def edit_node(request, node_id):
     node = Node.objects.get(id=node_id)
     breadcrumb_list = node.get_hierarchy()
     if request.method == "POST": # Form submission
-        if hasattr(node.todo_state, 'closed'):
-            node_closed = node.todo_state.closed
-        else: # No todo state so set to false
-            node_closed = False
         form = NodeForm(request.POST, instance=node)
         if form.is_valid():
             form.save()
