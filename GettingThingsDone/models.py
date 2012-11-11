@@ -198,17 +198,22 @@ class Node(models.Model):
             return str((target_date.date() - today).days) + " days"
         else:
             return " "
+    def get_title(self):
+        if self.title.strip(' ').strip('\t'):
+            title = self.title
+        else: # Nothing but whitespace
+            title = "[Blank]"
+        return title
     def get_hierarchy(self):
         hierarchy_list = []
         current_parent = self
-        hierarchy_list.append({'display': current_parent.title,
+        hierarchy_list.append({'display': current_parent.get_title(),
                                 'id': current_parent.id})
         while(current_parent.parent != None):
             current_parent = current_parent.parent
-            hierarchy_list.append({'display': current_parent.title,
+            hierarchy_list.append({'display': current_parent.get_title(),
                                     'id': current_parent.id})
         hierarchy_list.reverse()
-        # assert False
         return hierarchy_list
     def get_tags(self):
         tag_strings = self.tag_string.split(":")
@@ -252,9 +257,9 @@ class Node(models.Model):
         return [] # TODO
     def __str__(self):
         if hasattr(self.todo_state, "abbreviation"):
-            return "[" + self.todo_state.abbreviation + "] " + self.title
+            return "[" + self.todo_state.abbreviation + "] " + self.get_title()
         else:
-            return self.title
+            return self.get_title()
 
 # Signal handlers for the Node class
 @receiver(signals.pre_save, sender=Node)
