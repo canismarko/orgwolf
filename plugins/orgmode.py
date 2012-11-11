@@ -155,7 +155,10 @@ def import_structure(file=None, string=None, request=None, scope=None):
                         found = True
                         break
                 if found == False:
-                    line['heading'] = line['todo'] + ' ' + str(line['heading'])
+                    if line['heading']:
+                        line['heading'] = line['todo'] + ' ' + str(line['heading'])
+                    else:
+                        line['heading'] = line['todo']
             if current_indent > 1:
                 new_node.parent = parent_stack.head.value
             if current_indent == 1:
