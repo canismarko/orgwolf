@@ -216,9 +216,9 @@ def import_structure(file=None, string=None, request=None):
                             parent.repeating_number = date_match[6][1]
                             parent.repeating_unit = date_match[6][2]
                             if date_match[6][0] == "+":
-                                parent.repeating_strict_mode = True
+                                parent.repeats_from_completion = False
                             elif date_match[6][0] == ".":
-                                parent.repeating_strict_mode = False
+                                parent.repeats_from_completion = True
                         # Set the appropriate fields
                         if match[0] == "SCHEDULED:":
                             parent.scheduled = new_datetime

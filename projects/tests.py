@@ -31,6 +31,7 @@ from django.utils.timezone import get_current_timezone
 from GettingThingsDone.models import Node, TodoState, Project
 from projects.forms import NodeForm
 from orgwolf.models import OrgWolfUser as User
+from orgwolf.tests import prepare_database
 import datetime
 import re
 
@@ -39,31 +40,16 @@ class EditNode(TestCase):
         """
         Creates a node in order to test editing functions
         """
-        dummy_user = User(username='test')
-        dummy_user.set_password('secret')
-        dummy_user.save()
-        actionable = TodoState(abbreviation='ACTN',
-                               display_text='Action',
-                               actionable=True,
-                               closed=False,
-                               owner=dummy_user,
-                               system_default=True)
-        actionable.save()
-        closed = TodoState(abbreviation='DONE',
-                           display_text='Completed',
-                           actionable=False,
-                           closed=True,
-                           owner=dummy_user,
-                           system_default=True)
-        closed.save()
+        prepare_database()
+        dummy_user = User.objects.get(pk=1)
+        actionable = TodoState.objects.get(abbreviation='ACTN')
+        closed = TodoState.objects.get(abbreviation='DONE')
+        project = Project.objects.get(pk=1)
         node = Node(owner=dummy_user,
                     order=10,
                     title='Buy cat food',
                     todo_state=actionable)
         node.save()
-        project = Project(title='Errands',
-                          owner=dummy_user)
-        project.save()    
              
     def close_node_through_client(self, client, project, node=None):
         """

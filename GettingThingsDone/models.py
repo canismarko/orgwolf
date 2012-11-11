@@ -22,8 +22,9 @@ from django.db.models import Q, signals
 from django.dispatch import receiver
 from django.utils.encoding import python_2_unicode_compatible
 from django.utils.timezone import get_current_timezone
-from datetime import datetime
+from datetime import datetime, timedelta
 import re
+import math
 
 from orgwolf import settings
 
@@ -71,7 +72,7 @@ class Context(models.Model):
         return self.name
     def apply(self, queryset="blank"):
         """
-        Filter a query set for this context. 
+        Filter a query set for this context.
         Gets queryset of all objects of the Node class if no queryset 
         provided, then selects based on the tag_string of each object 
         in the queryset. Note that this method doesn't hit the database
@@ -145,15 +146,16 @@ class Node(models.Model):
     deadline_time_specific = models.BooleanField()
     opened = models.DateTimeField(auto_now_add=True, blank=True, null=True)
     closed = models.DateTimeField(blank=True, null=True)
+    repeats = models.BooleanField(default=False)
     repeating_number = models.IntegerField(blank=True, null=True)
     repeating_unit = models.CharField(max_length=1, blank=True, null=True,
                                       choices=(('d', 'Day'),
                                                ('w', 'Week'),
                                                ('m', 'Month'),
                                                ('y', 'Year')))
-    # Strict mode has the repeat happen from when the original event was scheduled
-    # rather than from when it was last completed.
-    repeating_strict_mode = models.NullBooleanField(default=True)
+    # If repeats_from_completions is True, then when the system repeats this node,
+    # it will schedule it from the current time rather than the original scheduled time.
+    repeats_from_completion = models.NullBooleanField(default=False)
     # Selection criteria
     priority = models.CharField(max_length=1, blank=True,
                                 choices=(('A', 'A'),
@@ -265,6 +267,87 @@ def node_timestamp(sender, **kwargs):
                 instance.closed = datetime.now(get_current_timezone())
         else: # New node
             instance.closed = datetime.now(get_current_timezone())
+@receiver(signals.pre_save, sender=Node)
+def node_repeat(sender, **kwargs):
+    """Handle repeating information if the Node has the Node.repeats
+    flag set."""
+    def _get_new_time(original, number, unit):
+        """Helper function to determine new repeated timestamp"""
+        if unit == 'd': # Days
+            new = original + timedelta(days=number)
+        elif unit == 'w': # Weeks
+            new = original + timedelta(days=(number*7))
+            print original
+        elif unit == 'm': # Months
+            month = (original.month + number) % 12
+            # Make sure we're not setting Sep 31st of other non-dates
+            if month in (4, 6, 9, 11) and original.day == 31:
+                day = 30
+            elif month == 2 and original.day > 28:
+                day = 28
+            else:
+                day = original.day
+            year = int(
+                math.floor(
+                    original.year + ((original.month + number) / 12)
+                    )
+                )
+            new = datetime(year=year,
+                           month=month,
+                           day=day,
+                           tzinfo=get_current_timezone())
+        elif unit == 'y': # Years
+            new = datetime(year=original.year+number,
+                           month=original.month,
+                           day=original.day,
+                           tzinfo=get_current_timezone())
+        else: # None of the above
+            raise ValueError
+        return new
+    # Code execution starts here
+    instance = kwargs['instance']
+    if instance.repeats:
+        if instance.id: # if existing node
+            old_node = Node.objects.get(pk=instance.pk)
+            if not (old_node.todo_state == instance.todo_state):
+                # Only if something has changed
+                if instance.scheduled: # Adjust Node.scheduled
+                    if instance.repeats_from_completion:
+                        original = datetime.now()
+                    else:
+                        original = instance.scheduled
+                    instance.scheduled = _get_new_time(original,
+                                                       instance.repeating_number,
+                                                       instance.repeating_unit)
+                if instance.deadline: # Adjust Node.deadline
+                    if instance.repeats_from_completion:
+                        original = datetime.now()
+                    else:
+                        original = instance.deadline
+                    instance.deadline = _get_new_time(original,
+                                                      instance.repeating_number,
+                                                      instance.repeating_unit)
+                # Make a record of what we just did
+                new_repetition = NodeRepetition()
+                new_repetition.node=instance
+                new_repetition.original_todo_state = old_node.todo_state
+                new_repetition.new_todo_state = instance.todo_state
+                new_repetition.timestamp = datetime.now(get_current_timezone())
+                new_repetition.save()
+                # Set the actual todo_state back to its original value
+                instance.todo_state = old_node.todo_state
+
+@python_2_unicode_compatible
+class NodeRepetition(models.Model):
+    """
+    Describes an occurance of a repeating Node being toggled. 
+    The handlers for the Node class will create instances of 
+    this class when their state is changed.
+    """
+    node = models.ForeignKey('Node')
+    original_todo_state = models.ForeignKey('TodoState', related_name='repetitions_original_set', blank=True)
+    new_todo_state = models.ForeignKey('TodoState', related_name='repetitions_new_set', blank=True)
+    timestamp = models.DateTimeField()
 
 @python_2_unicode_compatible
 class Project(models.Model):

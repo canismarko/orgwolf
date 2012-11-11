@@ -23,12 +23,108 @@ when you run "manage.py test".
 Replace this with more appropriate tests for your application.
 """
 
+from datetime import datetime, timedelta
 from django.test import TestCase
+from django.utils.timezone import get_current_timezone
 
-class SimpleTest(TestCase):
-    def test_basic_addition(self):
-        """
-        Tests that 1 + 1 always equals 2.
-        """
-        self.assertEqual(1 + 1, 2)
-       
+from orgwolf.tests import prepare_database
+from orgwolf.models import OrgWolfUser as User
+from GettingThingsDone.models import Node, TodoState, Project, node_repeat
+
+class RepeatingNodeTest(TestCase):
+    def setUp(self):
+        prepare_database()
+        dummy_user = User(pk=1)
+        actionable = TodoState.objects.get(abbreviation='ACTN')
+        # closed = TodoState.objects.get(abbreviation='DONE')
+        node = Node(owner=dummy_user,
+                    order=10,
+                    title='Buy cat food',
+                    scheduled=datetime(2012, 12, 31, tzinfo=get_current_timezone()),
+                    repeats=True,
+                    repeating_number=3,
+                    repeating_unit='d',
+                    todo_state=actionable
+                    )
+        node.save()
+        
+    def test_scheduled_repetition(self):
+        """Make sure the item is rescheduled properly."""
+        node = Node.objects.get(title='Buy cat food')
+        closed = TodoState.objects.get(abbreviation='DONE')
+        actionable = TodoState.objects.get(abbreviation='ACTN')
+        self.assertTrue(node.repeats)
+        # Close the node
+        node.todo_state = closed
+        node.save()
+        node = Node.objects.get(title='Buy cat food')
+        # The state shouldn't actually change since it's repeating
+        self.assertEqual(actionable, node.todo_state)
+        new_date = datetime(2013, 1, 3, tzinfo=get_current_timezone())
+        self.assertEqual(new_date.date(), node.scheduled.date())
+    def test_all_repeat_units(self):
+        """Make sure day, week, month and year repeating units work"""
+        node = Node.objects.get(title='Buy cat food')
+        closed = TodoState.objects.get(abbreviation='DONE')
+        old_date = datetime(2012, 12, 31, tzinfo=get_current_timezone())
+        # Test 'd' for day
+        node.repeating_unit='d'
+        node.scheduled = old_date
+        node.save()
+        node.todo_state=closed
+        node.save()
+        self.assertFalse(node.is_closed())
+        new_date = datetime(2013, 1, 3, tzinfo=get_current_timezone())
+        self.assertEqual(new_date.date(), node.scheduled.date())
+        # Test 'w' for week
+        node.repeating_unit='w'
+        node.scheduled = old_date
+        node.save()
+        node.todo_state=closed
+        node.save()
+        self.assertFalse(node.is_closed())
+        new_date = datetime(2013, 1, 21, tzinfo=get_current_timezone())
+        self.assertEqual(new_date.date(), node.scheduled.date())
+        # Test 'm' for month
+        node.repeating_unit='m'
+        node.scheduled = old_date
+        node.save()
+        node.todo_state=closed
+        node.save()
+        self.assertFalse(node.is_closed())
+        new_date = datetime(2013, 3, 31, tzinfo=get_current_timezone())
+        self.assertEqual(new_date.date(), node.scheduled.date())
+        # Test 'y' for year
+        node.repeating_unit='y'
+        node.scheduled = old_date
+        node.save()
+        node.todo_state=closed
+        node.save()
+        self.assertFalse(node.is_closed())
+        new_date = datetime(2015, 12, 31, tzinfo=get_current_timezone())
+        self.assertEqual(new_date.date(), node.scheduled.date())
+    def test_31st_bug(self):
+        """Test for proper behavior if trying to set a month that
+        doesn't have a 31st day."""
+        node = Node.objects.get(title='Buy cat food')
+        closed = TodoState.objects.get(abbreviation='DONE')
+        node.repeating_unit = 'm'
+        node.repeating_number = 1
+        old_date = datetime(2013, 8, 31, tzinfo=get_current_timezone())
+        node.scheduled = old_date
+        node.save()
+        node.todo_state=closed
+        node.save()
+        self.assertFalse(node.is_closed())
+        new_date = datetime(2013, 9, 30, tzinfo=get_current_timezone())
+        self.assertEqual(new_date.date(), node.scheduled.date())
+        # Now try for February type bugs
+        old_date = datetime(2013, 1, 28, tzinfo=get_current_timezone())
+        node.scheduled = old_date
+        node.repeating_number = 2
+        node.save()
+        node.todo_state = closed
+        node.save()
+        self.assertFalse(node.is_closed())
+        new_date = datetime(2013, 3, 28, tzinfo=get_current_timezone())
+        self.assertEqual(new_date.date(), node.scheduled.date())

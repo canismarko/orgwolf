@@ -22,7 +22,7 @@ from GettingThingsDone.models import Node
 
 class NodeForm(ModelForm):
     class Meta:
-        fields = ('title', 'todo_state', 'project', 'scheduled', 'scheduled_time_specific', 'deadline', 'deadline_time_specific', 'priority', 'scope')
+        fields = ('title', 'todo_state', 'project', 'scheduled', 'scheduled_time_specific', 'deadline', 'deadline_time_specific', 'priority', 'scope', 'repeats', 'repeating_number', 'repeating_unit', 'repeats_from_completion')
         model = Node
         widgets = {
             'title': TextInput(),
