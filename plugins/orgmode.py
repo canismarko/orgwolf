@@ -29,7 +29,7 @@ import io
 
 from orgwolf.models import OrgWolfUser as User
 from orgwolf.stack import Stack
-from GettingThingsDone.models import Node, Project, TodoState, Text
+from GettingThingsDone.models import Node, Project, TodoState, Text, Scope
 from GettingThingsDone.views import get_todo_abbrevs
 
 ## Regular expressions used in this module for finding org-mode content
@@ -85,7 +85,7 @@ def reset_database(confirm=False):
     else:
         print("This function deletes the database. Pass argument confirm=True to pull the trigger.")
 
-def import_structure(file=None, string=None, request=None):
+def import_structure(file=None, string=None, request=None, scope=None):
     """
     Parses either an org-mode file or an org-mode string and saves the
     resulting heirerarchy to the OrgWolf models in the GettingThingsDone
@@ -97,6 +97,16 @@ def import_structure(file=None, string=None, request=None):
         source = StringIO(string)
     elif file:
         source = io.open(file, 'r', encoding='utf8')
+        if not scope: # Automatic scope detection
+            scope_match = re.search(r'([^/]+)\.org', file)
+            if scope_match:
+                scope_string = scope_match.groups()[0]
+                scope = Scope.objects.filter(name__iexact=scope_string)
+                if scope.exists():
+                    scope = scope[0]
+                else:
+                    scope = Scope(name=scope_string, display=scope_string)
+                    scope.save()                  
     else:
         raise AttributeError("Please supply a file or a string")
     # First, build a list of dictionaries that hold the pieces of each line.
@@ -173,6 +183,9 @@ def import_structure(file=None, string=None, request=None):
             else:
                 new_node.tag_string = ''
             new_node.save()
+            # Add scope (passed as argument or auto-detected)
+            if scope:
+                new_node.scope.add(scope)
             new_node.project.add(current_project)
             # Update current state variables
             current_order = new_node.order

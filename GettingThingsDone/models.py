@@ -114,10 +114,14 @@ class Priority(models.Model):
     priority_value = models.IntegerField(default=50)
     owner = models.ForeignKey(settings.AUTH_USER_MODEL)
 
+@python_2_unicode_compatible
 class Scope(models.Model):
     owner = models.ForeignKey(settings.AUTH_USER_MODEL, blank=True, null=True) # no owner means built-in tag
-    public = models.BooleanField(default=True)
+    public = models.BooleanField(default=False)
     display = models.CharField(max_length=50)
+    name = models.CharField(max_length=50)
+    def __str__(self):
+        return self.display
 
 @python_2_unicode_compatible
 class Node(models.Model):
