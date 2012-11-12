@@ -65,7 +65,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 	</form>
       </li>
       {% endblock %}
-      <li><a href="/feedback/?next={{request.get_full_path}}">Feedback</a></li>
+      <li><a href="https://github.com/m3wolf/OrgWolf/issues/new">Feedback</a></li>
+      {#<li><a href="/feedback/?next={{request.get_full_path}}">Feedback</a></li>#}
       <li><a href="/admin/">Admin</a></li>
       <li>
 	{% if user.is_authenticated %}<a href="/accounts/logout/?next=/">Logout
