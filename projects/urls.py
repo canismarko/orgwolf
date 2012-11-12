@@ -24,8 +24,8 @@ from django.contrib import admin
 admin.autodiscover()
 
 urlpatterns = patterns('projects.views',
-                       url(r'^$', 'display_node'),
-                       url(r'^(\d+)/$', 'display_node'),
-                       url(r'^(\d+)/edit/', 'edit_node'),
-                       url(r'^(?:(\d+)/)?new/', 'new_node'),
+                       url(r'^(?:scope(?P<scope_id>\d+)/)?$', 'display_node'),
+                       url(r'^(?:scope(?P<scope_id>\d+)/)?(?P<node_id>\d+)/$', 'display_node'),
+                       url(r'^(?:scope\d+/)?(\d+)/edit/', 'edit_node'),
+                       url(r'^(?:scope\d+/)?(?:(\d+)/)?new/', 'new_node'),
 )

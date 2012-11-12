@@ -17,7 +17,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #######################################################################
 
-from django.shortcuts import render_to_response, redirect
+from django.shortcuts import render_to_response, redirect, get_object_or_404
 from django.template import RequestContext
 from django.contrib.auth.decorators import login_required
 from django.utils.timezone import get_current_timezone
@@ -27,18 +27,26 @@ from django.contrib.auth.models import User
 import re
 import datetime
 
-from GettingThingsDone.models import Project, Node, Text, TodoState
+from GettingThingsDone.models import Project, Node, Text, TodoState, Scope
 from projects.forms import NodeForm
 from orgwolf.models import OrgWolfUser as User
 
 @login_required
-def display_node(request, node_id=None):
+def display_node(request, node_id=None, scope_id=None):
     """Displays a node as a list of links to its children.
     If no node_id is specified, shows the projects list."""
+    if request.method == "POST":
+        redirect_string = "/projects/"
+        if int(request.POST['scope']) > 0:
+            redirect_string += "scope" + request.POST['scope'] + "/"
+        if request.POST['node_id']:
+            redirect_string += request.POST['node_id'] + "/"
+        return redirect(redirect_string)
     all_projects_qs = Project.objects.all()
     all_nodes_qs = Node.objects.all()
     child_nodes_qs = all_nodes_qs
     all_text_qs = Text.objects.all()
+    all_scope_qs = Scope.objects.all()
     # If the user asked for a specific node
     if node_id:
         node_text_qs = all_text_qs.filter(parent__id=node_id)
@@ -49,6 +57,12 @@ def display_node(request, node_id=None):
     else: # Otherwise display root level nodes (Projects)
         child_nodes_qs = child_nodes_qs.filter(parent=None)
         node_text_qs = all_text_qs.filter(parent=None)
+    base_url = '/projects/'
+    # Filter by scope
+    if scope_id:
+        scope = get_object_or_404(Scope, pk=scope_id)
+        child_nodes_qs = child_nodes_qs.filter(scope=scope)
+        base_url += 'scope' + str(scope.id) + '/'
     return render_to_response('project_view.html',
                               locals(),
                               RequestContext(request))

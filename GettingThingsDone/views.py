@@ -17,6 +17,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #######################################################################
 
+from __future__ import unicode_literals
 from django.shortcuts import render_to_response, redirect
 from django.template import RequestContext
 from django.contrib.auth.decorators import login_required
@@ -25,7 +26,7 @@ from django.db.models import Q
 import re
 import datetime
 
-from GettingThingsDone.models import TodoState, Node, Context
+from GettingThingsDone.models import TodoState, Node, Context, Scope
 from wolfmail.models import MailItem, Label
 
 def get_todo_states():
@@ -54,6 +55,8 @@ def list_display(request, url_string=""):
     """Determines which list the user has requested and fetches it."""
     all_todo_states_query = TodoState.objects.all() # TODO: switch to userprofile
     all_contexts = Context.objects.all() # TODO: switch to userprofile
+    all_scope_qs = Scope.objects.all()
+    scope = None
     todo_states_query = TodoState.objects.none()
     todo_abbrevs = get_todo_abbrevs(get_todo_states())
     todo_abbrevs_lc = []
@@ -73,8 +76,10 @@ def list_display(request, url_string=""):
             if todo_match:
                 todo_state_Q = todo_state_Q | Q(id=todo_match.groups()[0])
                 empty_Q = False
-            if post_item == u'context':
-                new_context_id = request.POST['context']
+            if post_item == 'context':
+                new_context_id = int(request.POST['context'])
+            elif post_item == 'scope':
+                new_scope_id = int(request.POST['scope'])
         # Now build the new URL and redirect
         new_url = u'/gtd/lists/'
         if empty_Q:
@@ -82,9 +87,11 @@ def list_display(request, url_string=""):
         else:
             matched_todo_states = TodoState.objects.filter(todo_state_Q)
         for todo_state in matched_todo_states:
-            new_url += todo_state.abbreviation.lower() + u'/'
-        if int(new_context_id) > 0:
-            new_url += u'context' + new_context_id + u'/'
+            new_url += todo_state.abbreviation.lower() + '/'
+        if new_scope_id > 0:
+            new_url += 'scope' + str(new_scope_id) + '/'
+        if new_context_id > 0:
+            new_url += 'context' + str(new_context_id) + '/'
         return redirect(new_url)
     nodes = Node.objects.none()
     current_context = None
@@ -95,13 +102,19 @@ def list_display(request, url_string=""):
         regex_string += seperator + abbrev
         seperator = "|"
     # (Add more URL regex pieces here)
-    regex_string += seperator + "context)(\d*)"
+    regex_string += seperator + "context"
+    regex_string += seperator + "scope)(\d*)"
     regex = re.compile(regex_string, re.IGNORECASE)
     regex_results = regex.findall(url_string)
     for result in regex_results:
         if result[0].lower() == "context": # URL asked for a context
             try:
                 current_context = Context.objects.get(id=result[1])
+            except Context.DoesNotExist:
+                pass
+        if result[0].lower() == "scope": # URL asked for a context
+            try:
+                scope = Scope.objects.get(id=result[1])
             except Context.DoesNotExist:
                 pass
         elif result[0].lower() in todo_abbrevs_lc: # It's a TodoState
@@ -117,7 +130,12 @@ def list_display(request, url_string=""):
         nodes = current_context.apply(nodes)
     except AttributeError:
         pass
-   
+    # And filter by scope
+    if scope:
+        try:
+            nodes = nodes.filter(scope=scope)
+        except Node.ObjectDoesNotExist:
+            pass
     return render_to_response('gtd_list.html',
                               locals(),
                               RequestContext(request))        
