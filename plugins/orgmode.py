@@ -229,6 +229,7 @@ def import_structure(file=None, string=None, request=None, scope=None):
                         else:
                             time_specific = False
                         if date_match[6]: # repeating
+                            parent.repeats = True
                             parent.repeating_number = date_match[6][1]
                             parent.repeating_unit = date_match[6][2]
                             if date_match[6][0] == "+":

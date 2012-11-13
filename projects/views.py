@@ -36,14 +36,22 @@ def display_node(request, node_id=None, scope_id=None):
     """Displays a node as a list of links to its children.
     If no node_id is specified, shows the projects list."""
     if request.method == "POST":
-        redirect_string = "/projects/"
-        if int(request.POST['scope']) > 0:
-            redirect_string += "scope" + request.POST['scope'] + "/"
-        if request.POST['node_id']:
-            redirect_string += request.POST['node_id'] + "/"
-        return redirect(redirect_string)
+        if request.POST['function'] == 'filter':
+            # User has asked to filter
+            redirect_string = "/projects/"
+            if int(request.POST['scope']) > 0:
+                redirect_string += "scope" + request.POST['scope'] + "/"
+            if request.POST['node_id']:
+                redirect_string += request.POST['node_id'] + "/"
+            return redirect(redirect_string)
+        if request.POST['function'] == 'change_todo_state':
+            # User has asked to change TodoState
+            node = Node.objects.get(pk=node_id)
+            node.todo_state = TodoState.objects.get(pk=request.POST['new_todo'])
+            node.save()
     all_projects_qs = Project.objects.all()
     all_nodes_qs = Node.objects.all()
+    all_todo_states_qs = TodoState.get_active()
     child_nodes_qs = all_nodes_qs
     all_text_qs = Text.objects.all()
     all_scope_qs = Scope.objects.all()

@@ -27,6 +27,7 @@ import re
 import math
 
 from orgwolf import settings
+#from orgwolf.models import Color
 
 @python_2_unicode_compatible
 class TodoState(models.Model):
@@ -34,10 +35,24 @@ class TodoState(models.Model):
     display_text = models.CharField(max_length=30)
     actionable = models.BooleanField(default=True)
     closed = models.BooleanField(default=False)
-    owner= models.ForeignKey(settings.AUTH_USER_MODEL)
-    system_default = models.BooleanField(default=False)
+    # No owner means system default
+    owner= models.ForeignKey(settings.AUTH_USER_MODEL, blank=True, null=True)
+    _color_rgb = models.IntegerField(default=0x000000)
+    _color_alpha = models.FloatField(default=0)
+    def color(self):
+        """Returns a Color object built from _color_rgba field."""
+        red = (self._color_rgb & Color.RED_MASK) >> Color.RED_OFFSET
+        green = (self._color_rgb & Color.GREEN_MASK) >> Color.GREEN_OFFSET
+        blue = (self._color_rgb & Color.BLUE_MASK) >> Color.BLUE_OFFSET
+        new_color = Color(red, green, blue, self._color_alpha)
+        return new_color 
     def __str__(self):
         return self.abbreviation + ' - ' + self.display_text
+    @staticmethod
+    def get_active():
+        """Returns a queryset containing all the TodoState objects
+        that are currently in play."""
+        return TodoState.objects.all()
 
 @python_2_unicode_compatible
 class Tag(models.Model):
@@ -289,7 +304,6 @@ def node_repeat(sender, **kwargs):
             new = original + timedelta(days=number)
         elif unit == 'w': # Weeks
             new = original + timedelta(days=(number*7))
-            print original
         elif unit == 'm': # Months
             month = (original.month + number) % 12
             # Make sure we're not setting Sep 31st of other non-dates

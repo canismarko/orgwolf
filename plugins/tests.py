@@ -20,11 +20,13 @@
 
 from __future__ import unicode_literals
 from django.test import TestCase
+from django.utils.timezone import get_current_timezone
 import re
+import datetime as dt
 
 from orgwolf.models import OrgWolfUser as User
 from plugins import orgmode
-from GettingThingsDone.models import Node, Text
+from GettingThingsDone.models import Node, Text, TodoState
 
 # class SimpleTest(TestCase):
 #     def test_basic_addition(self):
@@ -141,12 +143,20 @@ class TestOrgModePlugin(TestCase):
     def setUp(self):
         new_user = User()
         new_user.save()
+        # Make the relevant nodes
+        new_state = TodoState(abbreviation='DONE',
+                              display_text='Done',
+                              owner=new_user)
+        new_state.save()
+        new_state = TodoState(abbreviation='NEXT',
+                              display_text='Next Action',
+                              owner=new_user)
+        new_state.save()
         # This is the test string
         self.org_file = """* Heading 0
 Some heading 1 text (no indent)
   Some heading 1 text (indent)
 ** Heading 0-0						     :home:work:comp:
-
 ** Heading 0-1							       :jaz3z:
 Some texts for heading 0-1
 | and | a  | table   |
@@ -166,6 +176,15 @@ Some texts for heading 0-1
 
 * Back to python"""
         orgmode.import_structure(string=self.org_file)
+
+    def test_scheduling_repeats(self):
+        node = Node.objects.get(title="Heading 1-1")
+        target_date = dt.date(2012, 10, 19)
+        self.assertEqual(target_date, node.scheduled.date())
+        self.assertTrue(node.repeats)
+        self.assertFalse(node.repeats_from_completion)
+        self.assertEqual(2, node.repeating_number)
+        self.assertEqual('d', node.repeating_unit)
 
     def test_heading_parameters(self):
         root_nodes = Node.objects.filter(parent=None)

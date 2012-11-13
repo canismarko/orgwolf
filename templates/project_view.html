@@ -33,11 +33,20 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 <form action="" method="POST">
 {% include "scope_filter.html" %}
   <input type="hidden" name="node_id" value="{{ parent_node.id }}" />
-  <input type="submit" value="Filter" />
+  <button type="submit" name="function" value="filter" class="btn" />Filter</button>
   {% csrf_token %}
 </form>
 {% if node_id %}
-<a href="edit/" class="btn">Edit</a>
+<form action="" method="POST">
+  <a href="edit/" class="btn">Edit</a>
+  {% for todo_state in all_todo_states_qs %}
+  <button type="submit" name="new_todo" value="{{ todo_state.id }}" class="btn{% if todo_state = parent_node.todo_state %} active{% endif %}">
+    {{ todo_state.abbreviation }}
+  </button>
+  {% endfor %}
+  <input type="hidden" name="function" value="change_todo_state" />
+  {% csrf_token %}
+</form>
 {% endif %}
 <dl>
   {% if parent_node.todo_state %}
@@ -61,7 +70,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 {% for text in node_text_qs %}
   {{ text.text|linebreaks }}
 {% endfor %}
-<a href="new/" class="btn">New</a>
+<a href="new/" class="btn">Add</a>
 {# List of child nodes as links #}
 <table class="table">
   <tr>
