@@ -191,9 +191,12 @@ class Node(models.Model):
             return False
     def is_closed(self):
         return getattr(self.todo_state, 'closed', False)
-    def overdue(self, target_date, future=False):
+    def overdue(self, target_date, agenda_dt=None, future=False):
         """Returns a string representing how many days ago the target_date was scheduled. Method will ignore future dates unless the future parameter is True."""
-        today = datetime.now().date()
+        if agenda_dt:
+            today = agenda_dt.date()
+        else:
+            today = datetime.now().date()
         if (target_date.date() < today) or future:
             return str((target_date.date() - today).days) + " days"
         else:

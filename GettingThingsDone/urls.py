@@ -27,7 +27,7 @@ urlpatterns = patterns('GettingThingsDone.views',
                        url(r'^$', 'home'),
                        # url(r'^lists/$', 'list_selection'),
                        url(r'^lists(/[\w/]+)?/$', 'list_display'),
-                       url(r'^agenda/$', 'agenda_display'),
+                       url(r'^agenda(?:/(?P<date>\d{4}-\d{1,2}-\d{1,2}))?/$', 'agenda_display'),
                        url(r'^agenda/([^/]+)/$', 'agenda_display'),
                        url(r'^toinbox/$', 'capture_to_inbox'),
 )

@@ -144,14 +144,30 @@ def agenda_selection(request):
     pass # Todo agenda_selection view
 
 @login_required
-def agenda_display(request, which_agenda=None):
+def agenda_display(request, date=None):
+    format_string = "%Y-%m-%d"
+    if request.method == "POST":
+        # Check and process the new date
+        try:
+            datetime.datetime.strptime(request.POST['date'], format_string)
+        except ValueError:
+            pass
+        else:
+            new_url = "/gtd/agenda/" + request.POST['date']
+            return redirect(new_url)
     deadline_period = 7 # In days # TODO: pull deadline period from user
     all_nodes_qs = Node.objects.all()
     final_Q = Q()
-    now = datetime.datetime.now()
-    today = datetime.datetime(year=now.year, month=now.month, day=now.day, hour=23, minute=59, second=59)
+    if date:
+        try:
+            agenda_date = datetime.datetime.strptime(date, format_string).date()
+        except ValueError:
+            raise Http404
+    else:
+        agenda_date = datetime.date.today()
+    agenda_dt = datetime.datetime(year=agenda_date.year, month=agenda_date.month, day=agenda_date.day, hour=23, minute=59, second=59)
     # Determine query filters for "Today" section
-    date_Q = Q(scheduled__lte=today)
+    date_Q = Q(scheduled__lte=agenda_dt)
     time_specific_Q = Q(scheduled_time_specific=False)
     # TODO: allow user to set todo states
     hard_Q = Q(todo_state = TodoState.objects.get(abbreviation="HARD"))
@@ -164,7 +180,7 @@ def agenda_display(request, which_agenda=None):
     time_specific_nodes = time_specific_nodes.order_by('scheduled')
     # Determine query filters for "Upcoming Deadlines" section
     undone_Q = Q(todo_state__closed = False)
-    deadline = today + datetime.timedelta(days=deadline_period)
+    deadline = agenda_dt + datetime.timedelta(days=deadline_period)
     upcoming_deadline_Q = Q(deadline__lte = deadline) # TODO: fix this
     deadline_nodes = all_nodes_qs.filter(undone_Q, upcoming_deadline_Q)
     deadline_nodes = deadline_nodes.order_by("deadline")
@@ -177,14 +193,14 @@ def agenda_display(request, which_agenda=None):
     deadline_nodes = []
     for node in day_specific_nodes_qs:
         new_dict = {}
-        new_dict['overdue'] = node.overdue(node.scheduled)
+        new_dict['overdue'] = node.overdue(node.scheduled, agenda_dt)
         new_dict['id'] = node.id
         new_dict['abbreviation'] = node.todo_state.abbreviation
         new_dict['title'] = node.title
         day_specific_nodes.append(new_dict)
     for node in time_specific_nodes_qs:
         new_dict = {}
-        new_dict['overdue'] = node.overdue(node.scheduled)
+        new_dict['overdue'] = node.overdue(node.scheduled, agenda_dt)
         new_dict['id'] = node.id
         new_dict['scheduled'] = node.scheduled
         new_dict['abbreviation'] = node.todo_state.abbreviation
@@ -192,7 +208,7 @@ def agenda_display(request, which_agenda=None):
         time_specific_nodes.append(new_dict)
     for node in deadline_nodes_qs:
         new_dict = {}
-        new_dict['overdue'] = node.overdue(node.deadline, future=True)
+        new_dict['overdue'] = node.overdue(node.deadline, agenda_dt, future=True)
         new_dict['id'] = node.id
         new_dict['deadline'] = node.deadline
         new_dict['deadline_time_specific'] = node.deadline_time_specific
