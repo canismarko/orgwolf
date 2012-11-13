@@ -113,8 +113,14 @@ def new_node(request, node_id):
             redirect_url = "/projects/" + str(form.id) + "/"
             return redirect(redirect_url)
     else: # Blank form
-        form = NodeForm()
-        # TODO: set default projects for new nodes
+        initial_dict = {}
+        projects = getattr(node, 'project', None)
+        # Set default projects for new nodes (taken from parent)
+        if projects:
+            initial_dict['project'] = [] # initialize empty set
+            for project in projects.all():
+                initial_dict['project'].append(project.pk)
+        form = NodeForm(initial=initial_dict)
     return render_to_response('node_edit.html',
                               locals(),
                               RequestContext(request))

@@ -156,7 +156,7 @@ class Node(models.Model):
     todo_state = models.ForeignKey('TodoState', blank=True, null=True)
     # Determine where this heading is
     parent = models.ForeignKey('self', blank=True, null=True, related_name='child_heading_set')
-    project = models.ManyToManyField('Project', related_name='project_heading_set') # should this be ForeignKey?
+    project = models.ManyToManyField('Project', related_name='project_heading_set')
     assigned = models.ManyToManyField('Contact', related_name='assigned_nodes', blank=True)
     # Scheduling details
     scheduled = models.DateTimeField(blank=True, null=True)
