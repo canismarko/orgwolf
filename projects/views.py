@@ -105,7 +105,7 @@ def new_node(request, node_id):
             form.owner = request.user
             siblings = Node.objects.filter(parent__id=node_id)
             if len(siblings) > 0:
-                form.order = siblings.reverse()[0] + Node.ORDER_STEP
+                form.order = siblings.reverse()[0].order + Node.ORDER_STEP
             else:
                 form.order = 0
             form.parent = Node.objects.get(id=node_id)
