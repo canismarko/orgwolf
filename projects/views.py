@@ -27,7 +27,7 @@ from django.contrib.auth.models import User
 import re
 import datetime
 
-from GettingThingsDone.models import Project, Node, Text, TodoState, Scope
+from GettingThingsDone.models import Node, Text, TodoState, Scope
 from projects.forms import NodeForm
 from orgwolf.models import OrgWolfUser as User
 
@@ -49,7 +49,6 @@ def display_node(request, node_id=None, scope_id=None):
             node = Node.objects.get(pk=node_id)
             node.todo_state = TodoState.objects.get(pk=request.POST['new_todo'])
             node.save()
-    all_projects_qs = Project.objects.all()
     all_nodes_qs = Node.objects.all()
     all_todo_states_qs = TodoState.get_active()
     child_nodes_qs = all_nodes_qs
@@ -62,7 +61,7 @@ def display_node(request, node_id=None, scope_id=None):
         parent_node = all_nodes_qs.get(id=node_id)
         parent_tags = parent_node.get_tags()
         breadcrumb_list = parent_node.get_hierarchy()
-    else: # Otherwise display root level nodes (Projects)
+    else:
         child_nodes_qs = child_nodes_qs.filter(parent=None)
         node_text_qs = all_text_qs.filter(parent=None)
     base_url = '/projects/'
@@ -84,7 +83,7 @@ def edit_node(request, node_id):
         form = NodeForm(request.POST, instance=node)
         if form.is_valid():
             form.save()
-            redirect_url = "/projects/" + node_id + "/"
+            redirect_url= '/projects/' + node_id + '/'
             return redirect(redirect_url)
     else: # Blank form
         form = NodeForm(instance=node)
@@ -96,10 +95,12 @@ def edit_node(request, node_id):
 def new_node(request, node_id):
     """Display a form to allow the user to edit a node"""
     new = "Yes" # Used in template logic
-    node = Node.objects.get(id=node_id)
-    breadcrumb_list = node.get_hierarchy()
+    node = None
+    if node_id:
+        node = Node.objects.get(id=node_id)
+        breadcrumb_list = node.get_hierarchy()
     if request.method == "POST": # Form submission
-        form = NodeForm(request.POST)
+        form = NodeForm(request.POST, parent=node)
         if form.is_valid():
             form = form.save(commit=False)
             form.owner = request.user
@@ -108,19 +109,15 @@ def new_node(request, node_id):
                 form.order = siblings.reverse()[0].order + Node.ORDER_STEP
             else:
                 form.order = 0
-            form.parent = Node.objects.get(id=node_id)
+            if node:
+                form.parent = Node.objects.get(id=node.id)
             form.save()
             redirect_url = "/projects/" + str(form.id) + "/"
             return redirect(redirect_url)
     else: # Blank form
         initial_dict = {}
-        projects = getattr(node, 'project', None)
-        # Set default projects for new nodes (taken from parent)
-        if projects:
-            initial_dict['project'] = [] # initialize empty set
-            for project in projects.all():
-                initial_dict['project'].append(project.pk)
-        form = NodeForm(initial=initial_dict)
+        projects = getattr(node, 'related_projects', None)
+        form = NodeForm(parent=node)
     return render_to_response('node_edit.html',
                               locals(),
                               RequestContext(request))

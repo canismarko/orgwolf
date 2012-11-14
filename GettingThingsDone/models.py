@@ -19,6 +19,7 @@
 
 from django.db import models
 from django.db.models import Q, signals
+from django.core.exceptions import ValidationError
 from django.dispatch import receiver
 from django.utils.encoding import python_2_unicode_compatible
 from django.utils.timezone import get_current_timezone
@@ -156,7 +157,7 @@ class Node(models.Model):
     todo_state = models.ForeignKey('TodoState', blank=True, null=True)
     # Determine where this heading is
     parent = models.ForeignKey('self', blank=True, null=True, related_name='child_heading_set')
-    project = models.ManyToManyField('Project', related_name='project_heading_set')
+    related_projects = models.ManyToManyField('Node', related_name='project_set', blank=True)
     assigned = models.ManyToManyField('Contact', related_name='assigned_nodes', blank=True)
     # Scheduling details
     scheduled = models.DateTimeField(blank=True, null=True)
@@ -222,6 +223,19 @@ class Node(models.Model):
         else: # Nothing but whitespace
             title = "[Blank]"
         return title
+    @staticmethod
+    def get_all_projects():
+        return Node.objects.filter(parent=None)
+    def get_primary_parent(self):
+        """Return the root-level node corresponding to this node."""
+        # Recursively step up through the parents
+        def find_immediate_parent(child):
+            if getattr(child.parent, 'pk', False):
+                parent = Node.objects.get(pk=child.parent.pk)
+                return find_immediate_parent(parent)
+            else:
+                return child
+        return find_immediate_parent(self)
     def get_hierarchy(self):
         hierarchy_list = []
         current_parent = self
@@ -262,14 +276,6 @@ class Node(models.Model):
         """Get any text directly associated with this node. False if none."""
         # TODO
         return False
-    def get_hierarchy_string(self, delimiter):
-        """
-        Get id's of all the nodes (including) this one as determined by the
-        parent relationship. This is useful for determining the URL for this
-        node.
-        """
-        pass # TODO
-
     def get_children(self):
         """Returns a list of Node objects with this Node as its parent."""
         return [] # TODO
@@ -376,22 +382,6 @@ class NodeRepetition(models.Model):
     timestamp = models.DateTimeField()
 
 @python_2_unicode_compatible
-class Project(models.Model):
-    """
-    A project is defined as a Node that has no parent. An isolated TODO
-    item is de-facto classified as a project. This may seem confusing but
-    practically it does not pose any problems.
-    """
-    title = models.TextField()
-    owner = models.ForeignKey(settings.AUTH_USER_MODEL, related_name='owned_project_set')
-    other_users = models.ManyToManyField(settings.AUTH_USER_MODEL, related_name='other_project_set', blank=True)
-    def get_num_actions(self):
-        pass
-    def __str__(self):
-        return self.title
-    # TODO: brainstorm more methods
-
-@python_2_unicode_compatible
 class Text(models.Model):
     """
     Holds the text component associated with a Node object.
@@ -400,6 +390,5 @@ class Text(models.Model):
     text = models.TextField()
     owner = models.ForeignKey(settings.AUTH_USER_MODEL)
     parent = models.ForeignKey('Node', related_name='attached_text', blank=True, null=True)
-    project = models.ManyToManyField('Project')
     def __str__(self):
         return self.text

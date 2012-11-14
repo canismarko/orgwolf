@@ -28,7 +28,7 @@ from __future__ import unicode_literals
 from django.test import TestCase
 from django.test.client import Client
 from django.utils.timezone import get_current_timezone
-from GettingThingsDone.models import Node, TodoState, Project
+from GettingThingsDone.models import Node, TodoState
 from projects.forms import NodeForm
 from orgwolf.models import OrgWolfUser as User
 from orgwolf.tests import prepare_database
@@ -44,14 +44,13 @@ class EditNode(TestCase):
         dummy_user = User.objects.get(pk=1)
         actionable = TodoState.objects.get(abbreviation='ACTN')
         closed = TodoState.objects.get(abbreviation='DONE')
-        project = Project.objects.get(pk=1)
         node = Node(owner=dummy_user,
                     order=10,
                     title='Buy cat food',
                     todo_state=actionable)
         node.save()
              
-    def close_node_through_client(self, client, project, node=None):
+    def close_node_through_client(self, client, node=None):
         """
         Helper function that uses the client to edit a node
         and set it to a closed state. If the optional /node/
@@ -62,7 +61,6 @@ class EditNode(TestCase):
         self.assertTrue(closed_todo.closed)
         post_data = {'scheduled': '',
                      'priority': '',
-                     'project': project.id,
                      'deadline': '',
                      'todo_state': closed_todo.id}
         if node: # existing node
@@ -75,7 +73,7 @@ class EditNode(TestCase):
             post_data['title'] = 'new node 1'
         response = client.post(url, post_data, follow=True)
         self.assertEqual(200, response.status_code)
-        redirect = re.match("http://testserver/projects/(\d+)/",
+        redirect = re.match('http://testserver/projects/(\d+)/',
                             response.redirect_chain[0][0])
         self.assertTrue(redirect.group()) # Did the redirect match
         self.assertEqual(302, response.redirect_chain[0][1])
@@ -92,11 +90,10 @@ class EditNode(TestCase):
             client.login(username='test', password='secret')
             )
         node = Node.objects.get(title='Buy cat food')
-        project = Project.objects.get(title='Errands')
         # Make sure it's not closed first
         self.assertFalse(node.is_closed())
         # Edit the node through the client
-        self.close_node_through_client(client, project, node)
+        self.close_node_through_client(client, node)
         # Refresh the node
         new_node = Node.objects.get(title='Buy cat food')
         # Make sure the node is closed
@@ -109,7 +106,7 @@ class EditNode(TestCase):
         node.save()
         self.assertEqual(None, node.todo_state)
         # Now run the request
-        self.close_node_through_client(client, project, node)
+        self.close_node_through_client(client, node)
         # Refresh the node
         new_node = Node.objects.get(title='Buy cat food')
         # Make sure the node is closed
@@ -117,7 +114,7 @@ class EditNode(TestCase):
         self.assertEqual(now.date(), new_node.closed.date())
 
         # Test that closed is set for new nodes
-        new_node_id = self.close_node_through_client(client, project)
+        new_node_id = self.close_node_through_client(client)
         new_node = Node.objects.get(id=new_node_id)
         # Make sure the node is closed
         self.assertTrue(new_node.is_closed())

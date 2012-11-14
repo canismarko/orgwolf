@@ -319,6 +319,7 @@ Second import concept: get the hacker base (software development?)
 ** Todo lists
 ** Agenda views
 * Django Templates
+** Gate One SSH in browser?
 * Combined Lab projects
   - Markdown
   - Merge projects (and related contents)

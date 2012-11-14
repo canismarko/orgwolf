@@ -29,7 +29,7 @@ import io
 
 from orgwolf.models import OrgWolfUser as User
 from orgwolf.stack import Stack
-from GettingThingsDone.models import Node, Project, TodoState, Text, Scope
+from GettingThingsDone.models import Node, TodoState, Text, Scope
 from GettingThingsDone.views import get_todo_abbrevs
 
 ## Regular expressions used in this module for finding org-mode content
@@ -71,14 +71,10 @@ def reset_database(confirm=False):
     """
     if confirm == True:
         nodes = Node.objects.all()
-        projects = Project.objects.all()
         texts = Text.objects.all()
         print("Deleting", nodes.count(), "nodes.")
         for node in nodes:
             node.delete()
-        print("Deleting", projects.count(), "projects.")
-        for project in projects:
-            project.delete()
         print("Deleting", texts.count(), "text items.")
         for text in texts:
             text.delete()
@@ -111,7 +107,6 @@ def import_structure(file=None, string=None, request=None, scope=None):
         raise AttributeError("Please supply a file or a string")
     # First, build a list of dictionaries that hold the pieces of each line.
     data_list = []
-    current_project = None
     if request:
         current_user = request.user
     else:
@@ -161,16 +156,6 @@ def import_structure(file=None, string=None, request=None, scope=None):
                         line['heading'] = line['todo']
             if current_indent > 1:
                 new_node.parent = parent_stack.head.value
-            if current_indent == 1:
-                # New project for first level heading
-                new_project = Project()
-                if line['heading']:
-                    new_project.title = line['heading']
-                else:
-                    new_project.title = ''
-                new_project.owner = current_user
-                new_project.save()
-                current_project = new_project
             if line['heading']:
                 new_node.title = line['heading']
             else:
@@ -189,7 +174,6 @@ def import_structure(file=None, string=None, request=None, scope=None):
             # Add scope (passed as argument or auto-detected)
             if scope:
                 new_node.scope.add(scope)
-            new_node.project.add(current_project)
             # Update current state variables
             current_order = new_node.order
             parent_stack.push(new_node)
@@ -253,8 +237,6 @@ def import_structure(file=None, string=None, request=None, scope=None):
                 if current_indent > 0:
                     new_text.parent = parent_stack.head.value
                 new_text.save()
-                if current_project:
-                    new_text.project.add(current_project)
 
 def export_to_string(node=None):
     """

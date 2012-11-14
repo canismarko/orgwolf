@@ -29,7 +29,7 @@ from django.utils.timezone import get_current_timezone
 
 from orgwolf.tests import prepare_database
 from orgwolf.models import OrgWolfUser as User
-from GettingThingsDone.models import Node, TodoState, Project, node_repeat
+from GettingThingsDone.models import Node, TodoState, node_repeat
 
 class RepeatingNodeTest(TestCase):
     def setUp(self):
@@ -128,3 +128,35 @@ class RepeatingNodeTest(TestCase):
         self.assertFalse(node.is_closed())
         new_date = datetime(2013, 3, 28, tzinfo=get_current_timezone())
         self.assertEqual(new_date.date(), node.scheduled.date())
+
+class ParentStructure(TestCase):
+    def setUp(self):
+        prepare_database()
+        dummy_user = User.objects.get(pk=1)
+        root_node = Node(owner=dummy_user,
+                         order=10,
+                         title='Errands')
+        root_node.save()
+        child_node1 = Node(owner=dummy_user,
+                          order=10,
+                          title='Meijer',
+                          parent=root_node)
+        child_node1.save()
+        child_node2 = Node(owner=dummy_user,
+                          order=20,
+                          title='PetSmart',
+                          parent=root_node)
+        child_node2.save()
+        grandchild_node1 = Node(owner=dummy_user,
+                          order=10,
+                          title='Buy beer',
+                          parent=child_node1)                         
+        grandchild_node1.save()
+    def test_primary_parent(self):
+        target_parent = Node.objects.get(title='Errands')
+        child = Node.objects.get(title='Meijer')
+        parent = child.get_primary_parent()
+        self.assertEqual(target_parent, parent)
+        child = Node.objects.get(title='Meijer')
+        parent = child.get_primary_parent()
+        self.assertEqual(target_parent, parent)
