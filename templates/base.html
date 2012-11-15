@@ -45,13 +45,18 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
     {% endif %}
   </head>
   <body>
-    {% if debug %}
-    <a href="/" title="Back to landing page"><img src="{{ STATIC_URL }}orgwolf-logo-debug.png" alt="OrgWolf Logo" /></a>
-    {% else %}
-    <a href="/" title="Back to landing page"><img src="{{ STATIC_URL }}orgwolf-logo.jpg" alt="OrgWolf Logo" /></a>
-    {% endif %}
+
     {% block nav %}
-    <ul>
+    <div class="navbar">
+      <div class="navbar-inner">
+      <ul class="nav">
+	<li>
+	  {% if debug %}
+	  <a href="/" title="Back to landing page"><img src="{{ STATIC_URL }}orgwolf-logo-debug.png" alt="OrgWolf Logo" /></a>
+	  {% else %}
+	  <a href="/" title="Back to landing page"><img src="{{ STATIC_URL }}orgwolf-logo.jpg" alt="OrgWolf Logo" /></a>
+	  {% endif %}
+	</li>
       <li><a href="/gtd/agenda/">Today's Agenda</a></li>
       <li><a href="/gtd/lists/next/">Next Actions</a></li>
       <li><a href="/wolfmail/inbox/">Inbox</a></li>
@@ -59,20 +64,22 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
       <li><a href="/projects/">Projects</a></li>
       {% block inbox_widget %}
       <li>
-	<form method="POST" action="/gtd/toinbox/?next={{request.get_full_path}}" id="new_inbox_form">
+	<form class="navbar-form" method="POST" action="/gtd/toinbox/?next={{request.get_full_path}}" id="new_inbox_form">
 	  <input type="text" name="new_inbox_item" id="new_inbox_item"/><input type="submit" value="To Inbox" />
 	  {% csrf_token %}
 	</form>
       </li>
       {% endblock %}
-      <li><a href="https://github.com/m3wolf/OrgWolf/issues/new">Feedback</a></li>
+      <li class="pull-right"><a href="https://github.com/m3wolf/OrgWolf/issues/new">Feedback</a></li>
       {#<li><a href="/feedback/?next={{request.get_full_path}}">Feedback</a></li>#}
       <li><a href="/admin/">Admin</a></li>
       <li>
-	{% if user.is_authenticated %}<a href="/accounts/logout/?next=/">Logout
+	{% if user.is_authenticated %}<a class="pull-right" href="/accounts/logout/?next=/">Logout
 	  {% else %}<a href="/accounts/login/?next={{request.get_full_path}}">Login
 	    {% endif %}</a></li>
-    </ul>
+      </ul>
+      </div>
+    </div>
     {% endblock %}
     <br />
     {% block content %}
