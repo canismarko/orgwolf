@@ -24,7 +24,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 {% endblock %}
 {% block content %}
 {# Breadcrumb trail #}
-<a href="{{ base_url }}"{# Todo: automagically detect this #}>Project List</a>
+<a href="{{ base_url }}">Project List</a>
 {% for node in breadcrumb_list %}&gt;
   <a href="{{ base_url }}{{node.id}}/">{{node.display}}</a>
 {% endfor %}
@@ -81,7 +81,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
     {% for node in child_nodes_qs %}
   <tr>
     <td>{{ node.todo_state.abbreviation }}</td>
-    <td><a href="{{base_url}}{{node.id}}/">{{ node.get_title }}</a></td>
+    <td><a href="{{ base_url }}{{ node.id }}">{{ node.get_title }}</a></td>
     <td>{{ node.tag_string }}</td>
   </tr>
   {% endfor %}

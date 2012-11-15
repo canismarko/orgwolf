@@ -18,6 +18,7 @@
 #######################################################################
 
 from __future__ import unicode_literals
+from django.core.urlresolvers import reverse
 from django.shortcuts import render_to_response, redirect, get_object_or_404
 from django.template import RequestContext
 from django.contrib.auth.decorators import login_required
@@ -194,6 +195,8 @@ def agenda_display(request, date=None):
         new_dict['id'] = node.id
         new_dict['abbreviation'] = node.todo_state.abbreviation
         new_dict['title'] = node.title
+        new_dict['repeats'] = node.repeats
+        new_dict['hierarchy'] = node.get_hierarchy_as_string()
         day_specific_nodes.append(new_dict)
     for node in time_specific_nodes_qs:
         new_dict = {}
@@ -202,6 +205,8 @@ def agenda_display(request, date=None):
         new_dict['scheduled'] = node.scheduled
         new_dict['abbreviation'] = node.todo_state.abbreviation
         new_dict['title'] = node.title
+        new_dict['repeats'] = node.repeats
+        new_dict['hierarchy'] = node.get_hierarchy_as_string()
         time_specific_nodes.append(new_dict)
     for node in deadline_nodes_qs:
         new_dict = {}
@@ -210,9 +215,9 @@ def agenda_display(request, date=None):
         new_dict['deadline'] = node.deadline
         new_dict['deadline_time_specific'] = node.deadline_time_specific
         new_dict['title'] = node.title
+        new_dict['repeats'] = node.repeats
+        new_dict['hierarchy'] = node.get_hierarchy_as_string()
         deadline_nodes.append(new_dict)
-    # Todo: automagically detect base_url
-    base_url = '/gtd/nodes/'
     return render_to_response('agenda.html',
                               locals(),
                               RequestContext(request))
@@ -242,16 +247,15 @@ def capture_to_inbox(request):
 def display_node(request, node_id=None, scope_id=None):
     """Displays a node as a list of links to its children.
     If no node_id is specified, shows the projects list."""
-    base_url = '/gtd/nodes/' # Todo: automagically detect this
     if request.method == "POST":
         if request.POST['function'] == 'filter':
             # User has asked to filter
-            redirect_string = base_url
+            url_kwargs = {}
             if int(request.POST['scope']) > 0:
-                redirect_string += "scope" + request.POST['scope'] + "/"
+                url_kwargs['scope_id'] = request.POST['scope']
             if request.POST['node_id']:
-                redirect_string += request.POST['node_id'] + "/"
-            return redirect(redirect_string)
+                url_kwargs['node_id'] = request.POST['node_id']
+            return redirect(reverse('gtd.views.display_node', kwargs=url_kwargs))
         if request.POST['function'] == 'change_todo_state':
             # User has asked to change TodoState
             node = Node.objects.get(pk=node_id)
@@ -272,27 +276,32 @@ def display_node(request, node_id=None, scope_id=None):
     else:
         child_nodes_qs = child_nodes_qs.filter(parent=None)
         node_text_qs = all_text_qs.filter(parent=None)
-    base_url = '/gtd/nodes/' # Todo: automagically detect this
+    url_kwargs = {}
     # Filter by scope
     if scope_id:
         scope = get_object_or_404(Scope, pk=scope_id)
         child_nodes_qs = child_nodes_qs.filter(scope=scope)
-        base_url += 'scope' + str(scope.id) + '/'
-    return render_to_response('project_view.html',
+        url_kwargs['scope_id'] = scope_id
+    base_url = reverse('gtd.views.display_node', kwargs=url_kwargs)
+    return render_to_response('node_view.html',
                               locals(),
                               RequestContext(request))
 
 @login_required
-def edit_node(request, node_id):
+def edit_node(request, node_id, scope_id):
     """Display a form to allow the user to edit a node"""
-    base_url = '/gtd/nodes/' # Todo: automagically detect this
+    url_kwargs = {}
+    if scope_id:
+        url_kwargs['scope_id'] = scope_id
+    base_url = reverse('gtd.views.display_node', kwargs=url_kwargs)
     node = Node.objects.get(id=node_id)
     breadcrumb_list = node.get_hierarchy()
     if request.method == "POST": # Form submission
         form = NodeForm(request.POST, instance=node)
         if form.is_valid():
             form.save()
-            redirect_url= base_url + node_id + '/'
+            url_kwargs['node_id'] = node_id
+            redirect_url = reverse('gtd.views.display_node', kwargs=url_kwargs)
             return redirect(redirect_url)
     else: # Blank form
         form = NodeForm(instance=node)
@@ -301,9 +310,12 @@ def edit_node(request, node_id):
                               RequestContext(request))
 
 @login_required
-def new_node(request, node_id):
+def new_node(request, node_id, scope_id):
     """Display a form to allow the user to edit a node"""
-    base_url = '/gtd/nodes/' # Todo: automagically detect this
+    url_kwargs = {}
+    if scope_id:
+        url_kwargs['scope_id'] = scope_id
+    base_url = reverse('gtd.views.display_node', kwargs=url_kwargs)
     new = "Yes" # Used in template logic
     node = None
     if node_id:
@@ -322,7 +334,8 @@ def new_node(request, node_id):
             if node:
                 form.parent = Node.objects.get(id=node.id)
             form.save()
-            redirect_url = base_url + str(form.id) + "/"
+            url_kwargs['node_id'] = form.id
+            redirect_url = reverse('gtd.views.display_node', kwargs=url_kwargs)
             return redirect(redirect_url)
     else: # Blank form
         initial_dict = {}

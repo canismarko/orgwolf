@@ -62,10 +62,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
   {% for node in nodes %}
   <tr>
     <td>
-      <a href="/gtd/nodes/{{ node.id }}/"{# Todo: automagically detect this url #}>{{ node.todo_state.abbreviation }}</a>
+      <a href="{% url 'gtd.views.display_node' node_id=node.id %}" title="{{ node.get_hierarchy_as_string }}">{{ node.todo_state.abbreviation }}</a>
     </td>
-    <td><a href="/gtd/nodes/{{ node.id }}/">{{ node.title }}</a></td>
-    <td><a href="/gtd/nodes/{{ node.id }}/">{{ node.tag_string }}</a></td>
+    <td><a href="{% url 'gtd.views.display_node' node_id=node.id %}" title="{{ node.get_hierarchy_as_string }}">{{ node.title }}</a></td>
+    <td><a href="{% url 'gtd.views.display_node' node_id=node.id %}" title="{{ node.get_hierarchy_as_string }}">{{ node.tag_string }}</a></td>
   </tr>
   {% endfor %}
 </table>

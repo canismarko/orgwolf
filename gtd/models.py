@@ -247,6 +247,13 @@ class Node(models.Model):
                                     'id': current_parent.id})
         hierarchy_list.reverse()
         return hierarchy_list
+    def get_hierarchy_as_string(self):
+        delimiter = ' > '
+        node_list = self.get_hierarchy()
+        string = ''
+        for node in node_list:
+            string += delimiter + node['display']
+        return string
     def get_tags(self):
         tag_strings = self.tag_string.split(":")
         tag_string = tag_strings[1:len(tag_strings)-1] # Get rid of the empty first and last elements
