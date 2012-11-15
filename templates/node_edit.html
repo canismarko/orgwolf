@@ -19,9 +19,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 {% endcomment %}
 {# Breadcrumb trail #}
 {% block content %}
-<a href="/gtd/projects/"{# Todo: automagically detect this url #}>Project List</a>
+<a href="/gtd/nodes/"{# Todo: automagically detect this url #}>Project List</a>
 {% for node in breadcrumb_list %}&gt;
-  <a href="/gtd/projects/{{node.id}}/">{{node.display}}</a>
+  <a href="/gtd/nodes/{{node.id}}/">{{node.display}}</a>
 {% endfor %}
 <h3>
   {% if new = "Yes" %}

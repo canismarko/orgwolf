@@ -212,7 +212,7 @@ def agenda_display(request, date=None):
         new_dict['title'] = node.title
         deadline_nodes.append(new_dict)
     # Todo: automagically detect base_url
-    base_url = '/gtd/projects'
+    base_url = '/gtd/nodes/'
     return render_to_response('agenda.html',
                               locals(),
                               RequestContext(request))
@@ -242,10 +242,11 @@ def capture_to_inbox(request):
 def display_node(request, node_id=None, scope_id=None):
     """Displays a node as a list of links to its children.
     If no node_id is specified, shows the projects list."""
+    base_url = '/gtd/nodes/' # Todo: automagically detect this
     if request.method == "POST":
         if request.POST['function'] == 'filter':
             # User has asked to filter
-            redirect_string = "/gtd/projects/"
+            redirect_string = base_url
             if int(request.POST['scope']) > 0:
                 redirect_string += "scope" + request.POST['scope'] + "/"
             if request.POST['node_id']:
@@ -271,7 +272,7 @@ def display_node(request, node_id=None, scope_id=None):
     else:
         child_nodes_qs = child_nodes_qs.filter(parent=None)
         node_text_qs = all_text_qs.filter(parent=None)
-    base_url = '/gtd/projects/'
+    base_url = '/gtd/nodes/' # Todo: automagically detect this
     # Filter by scope
     if scope_id:
         scope = get_object_or_404(Scope, pk=scope_id)
@@ -284,13 +285,14 @@ def display_node(request, node_id=None, scope_id=None):
 @login_required
 def edit_node(request, node_id):
     """Display a form to allow the user to edit a node"""
+    base_url = '/gtd/nodes/' # Todo: automagically detect this
     node = Node.objects.get(id=node_id)
     breadcrumb_list = node.get_hierarchy()
     if request.method == "POST": # Form submission
         form = NodeForm(request.POST, instance=node)
         if form.is_valid():
             form.save()
-            redirect_url= '/gtd/projects/' + node_id + '/'
+            redirect_url= base_url + node_id + '/'
             return redirect(redirect_url)
     else: # Blank form
         form = NodeForm(instance=node)
@@ -301,6 +303,7 @@ def edit_node(request, node_id):
 @login_required
 def new_node(request, node_id):
     """Display a form to allow the user to edit a node"""
+    base_url = '/gtd/nodes/' # Todo: automagically detect this
     new = "Yes" # Used in template logic
     node = None
     if node_id:
@@ -319,7 +322,7 @@ def new_node(request, node_id):
             if node:
                 form.parent = Node.objects.get(id=node.id)
             form.save()
-            redirect_url = "/gtd/projects/" + str(form.id) + "/"
+            redirect_url = base_url + str(form.id) + "/"
             return redirect(redirect_url)
     else: # Blank form
         initial_dict = {}
