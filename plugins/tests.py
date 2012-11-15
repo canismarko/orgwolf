@@ -26,14 +26,7 @@ import datetime as dt
 
 from orgwolf.models import OrgWolfUser as User
 from plugins import orgmode
-from GettingThingsDone.models import Node, Text, TodoState
-
-# class SimpleTest(TestCase):
-#     def test_basic_addition(self):
-#         """
-#         Tests that 1 + 1 always equals 2.
-#         """
-#         self.assertEqual(1 + 1, 2)
+from gtd.models import Node, Text, TodoState
 
 class RegexTest(TestCase):
     def SetUp(self):

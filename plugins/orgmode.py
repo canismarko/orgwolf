@@ -29,8 +29,8 @@ import io
 
 from orgwolf.models import OrgWolfUser as User
 from orgwolf.stack import Stack
-from GettingThingsDone.models import Node, TodoState, Text, Scope
-from GettingThingsDone.views import get_todo_abbrevs
+from gtd.models import Node, TodoState, Text, Scope
+from gtd.views import get_todo_abbrevs
 
 ## Regular expressions used in this module for finding org-mode content
 # Find headings (eg * TODO [#A] Heading :tag:)
@@ -84,8 +84,8 @@ def reset_database(confirm=False):
 def import_structure(file=None, string=None, request=None, scope=None):
     """
     Parses either an org-mode file or an org-mode string and saves the
-    resulting heirerarchy to the OrgWolf models in the GettingThingsDone
-    module. # TODO: rewrite this without PyOrgMode
+    resulting heirerarchy to the OrgWolf models in the gtd module. 
+    # TODO: rewrite this without PyOrgMode
     """
     if file and string:
         raise AttributeError("Please supply either a file or a string, not both.")

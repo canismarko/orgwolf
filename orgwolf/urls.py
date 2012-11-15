@@ -27,16 +27,15 @@ admin.autodiscover()
 urlpatterns = patterns('',
                        url(r'^$', 'orgwolf.views.home', name='home'),
                        url(r'^feedback/$', 'orgwolf.views.feedback'),
-                       url(r'^gtd/', include('GettingThingsDone.urls')),
-                       url(r'^projects/', include('projects.urls')),
+                       url(r'^gtd/', include('gtd.urls')),
                        url(r'^messaging/', include('wolfmail.urls')),
                        url(r'^wolfmail/', include('wolfmail.urls')),
                        # Login stuff
                        url(r'^accounts/login/', login),
                        url(r'^accounts/logout/', logout),
+
                        #Uncomment the admin/doc line below to enable admin documentation
                        url(r'^admin/doc/', include('django.contrib.admindocs.urls')),
-
                        # Uncomment the next line to enable the admin
                        url(r'^admin/', include(admin.site.urls)),
 )

@@ -19,7 +19,7 @@
 
 from django.core.exceptions import ValidationError
 from django import forms
-from GettingThingsDone.models import Node
+from gtd.models import Node
 
 class NodeForm(forms.ModelForm):
     related_projects = forms.ModelMultipleChoiceField(

@@ -153,8 +153,7 @@ INSTALLED_APPS = (
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'orgwolf',
-    'GettingThingsDone',
-    'projects',
+    'gtd',
     'plugins',
     'wolfmail',
     # Uncomment the next line to enable the admin:

@@ -17,3 +17,24 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #######################################################################
 
+from django import forms
+from django.contrib import admin
+
+import gtd.models as gtd
+from gtd.forms import NodeForm
+
+class NodeAdminForm(NodeForm):
+    class Meta:
+        model = gtd.Node
+
+class NodeAdmin(admin.ModelAdmin):
+    form = NodeAdminForm
+
+admin.site.register(gtd.TodoState)
+admin.site.register(gtd.Node, NodeAdmin)
+admin.site.register(gtd.Text)
+admin.site.register(gtd.Context)
+admin.site.register(gtd.Tool)
+admin.site.register(gtd.Location)
+admin.site.register(gtd.Contact)
+admin.site.register(gtd.Scope)

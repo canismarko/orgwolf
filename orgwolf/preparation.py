@@ -16,9 +16,10 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #######################################################################
+
 """Holds functions and classes related to first-time setup wizard."""
 
-from GettingThingsDone.models import TodoState
+from gtd.models import TodoState
 
 def populate_todo_states(reset=False):
     """
@@ -92,5 +93,3 @@ def populate_todo_states(reset=False):
                                _color_rgb = state['_color_rgb'],
                                _color_alpha = state['_color_alpha'])
         todo_state.save()
-
-    

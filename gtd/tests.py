@@ -23,13 +23,109 @@ when you run "manage.py test".
 Replace this with more appropriate tests for your application.
 """
 
-from datetime import datetime, timedelta
+from __future__ import unicode_literals
+import datetime as dt
 from django.test import TestCase
+from django.test.client import Client
 from django.utils.timezone import get_current_timezone
+import re
 
 from orgwolf.tests import prepare_database
 from orgwolf.models import OrgWolfUser as User
-from GettingThingsDone.models import Node, TodoState, node_repeat
+from gtd.forms import NodeForm
+from gtd.models import Node, TodoState, node_repeat
+
+class EditNode(TestCase):
+    def setUp(self):
+        """
+        Creates a node in order to test editing functions
+        """
+        prepare_database()
+        dummy_user = User.objects.get(pk=1)
+        actionable = TodoState.objects.get(abbreviation='ACTN')
+        closed = TodoState.objects.get(abbreviation='DONE')
+        node = Node(owner=dummy_user,
+                    order=10,
+                    title='Buy cat food',
+                    todo_state=actionable)
+        node.save()
+             
+    def close_node_through_client(self, client, node=None):
+        """
+        Helper function that uses the client to edit a node
+        and set it to a closed state. If the optional /node/
+        argument is passed then that node is edited, otherwise
+        a new node is created.
+        """
+        closed_todo = TodoState.objects.get(abbreviation='DONE')
+        self.assertTrue(closed_todo.closed)
+        post_data = {'scheduled': '',
+                     'priority': '',
+                     'deadline': '',
+                     'todo_state': closed_todo.id}
+        if node: # existing node
+            url = '/gtd/projects/' + str(node.id) + '/edit/'
+            regex = re.compile('http://testserver/gtd/projects/' + str(node.id))
+            post_data['title'] = node.title
+        else: # new node
+            url = '/gtd/projects/1/new/'
+            regex = re.compile('http://testserver/gtd/projects/1/')
+            post_data['title'] = 'new node 1'
+        response = client.post(url, post_data, follow=True)
+        self.assertEqual(200, response.status_code)
+        redirect = re.match('http://testserver/gtd/projects/(\d+)/',
+                            response.redirect_chain[0][0])
+        self.assertTrue(redirect.group()) # Did the redirect match
+        self.assertEqual(302, response.redirect_chain[0][1])
+        return redirect.groups()[0]
+
+    def test_close_timestamp(self):
+        """
+        Test that the "closed" timestamp is set automatically."
+        """
+        now = dt.datetime.utcnow()
+        client = Client()
+        # Login
+        self.assertTrue(
+            client.login(username='test', password='secret')
+            )
+        node = Node.objects.get(title='Buy cat food')
+        # Make sure it's not closed first
+        self.assertFalse(node.is_closed())
+        # Edit the node through the client
+        self.close_node_through_client(client, node)
+        # Refresh the node
+        new_node = Node.objects.get(title='Buy cat food')
+        # Make sure the node is closed
+        self.assertTrue(new_node.is_closed())
+        self.assertEqual(now.date(), new_node.closed.date())
+
+        # Same thing if it has no initial todostate
+        node = Node.objects.get(title='Buy cat food')
+        node.todo_state = None
+        node.save()
+        self.assertEqual(None, node.todo_state)
+        # Now run the request
+        self.close_node_through_client(client, node)
+        # Refresh the node
+        new_node = Node.objects.get(title='Buy cat food')
+        # Make sure the node is closed
+        self.assertTrue(new_node.is_closed())
+        self.assertEqual(now.date(), new_node.closed.date())
+
+        # Test that closed is set for new nodes
+        new_node_id = self.close_node_through_client(client)
+        new_node = Node.objects.get(id=new_node_id)
+        # Make sure the node is closed
+        self.assertTrue(new_node.is_closed())
+        self.assertEqual(now.date(), new_node.closed.date())
+
+    def test_set_todo_state(self):
+        node = Node.objects.get(title='Buy cat food')
+        todo_state = TodoState.objects.get(id=2)
+        node.todo_state = todo_state
+        node.save()
+        self.assertEqual(todo_state, node.todo_state)
 
 class RepeatingNodeTest(TestCase):
     def setUp(self):
@@ -40,7 +136,7 @@ class RepeatingNodeTest(TestCase):
         node = Node(owner=dummy_user,
                     order=10,
                     title='Buy cat food',
-                    scheduled=datetime(2012, 12, 31, tzinfo=get_current_timezone()),
+                    scheduled=dt.datetime(2012, 12, 31, tzinfo=get_current_timezone()),
                     repeats=True,
                     repeating_number=3,
                     repeating_unit='d',
@@ -60,13 +156,13 @@ class RepeatingNodeTest(TestCase):
         node = Node.objects.get(title='Buy cat food')
         # The state shouldn't actually change since it's repeating
         self.assertEqual(actionable, node.todo_state)
-        new_date = datetime(2013, 1, 3, tzinfo=get_current_timezone())
+        new_date = dt.datetime(2013, 1, 3, tzinfo=get_current_timezone())
         self.assertEqual(new_date.date(), node.scheduled.date())
     def test_all_repeat_units(self):
         """Make sure day, week, month and year repeating units work"""
         node = Node.objects.get(title='Buy cat food')
         closed = TodoState.objects.get(abbreviation='DONE')
-        old_date = datetime(2012, 12, 31, tzinfo=get_current_timezone())
+        old_date = dt.datetime(2012, 12, 31, tzinfo=get_current_timezone())
         # Test 'd' for day
         node.repeating_unit='d'
         node.scheduled = old_date
@@ -74,7 +170,7 @@ class RepeatingNodeTest(TestCase):
         node.todo_state=closed
         node.save()
         self.assertFalse(node.is_closed())
-        new_date = datetime(2013, 1, 3, tzinfo=get_current_timezone())
+        new_date = dt.datetime(2013, 1, 3, tzinfo=get_current_timezone())
         self.assertEqual(new_date.date(), node.scheduled.date())
         # Test 'w' for week
         node.repeating_unit='w'
@@ -83,7 +179,7 @@ class RepeatingNodeTest(TestCase):
         node.todo_state=closed
         node.save()
         self.assertFalse(node.is_closed())
-        new_date = datetime(2013, 1, 21, tzinfo=get_current_timezone())
+        new_date = dt.datetime(2013, 1, 21, tzinfo=get_current_timezone())
         self.assertEqual(new_date.date(), node.scheduled.date())
         # Test 'm' for month
         node.repeating_unit='m'
@@ -92,7 +188,7 @@ class RepeatingNodeTest(TestCase):
         node.todo_state=closed
         node.save()
         self.assertFalse(node.is_closed())
-        new_date = datetime(2013, 3, 31, tzinfo=get_current_timezone())
+        new_date = dt.datetime(2013, 3, 31, tzinfo=get_current_timezone())
         self.assertEqual(new_date.date(), node.scheduled.date())
         # Test 'y' for year
         node.repeating_unit='y'
@@ -101,7 +197,7 @@ class RepeatingNodeTest(TestCase):
         node.todo_state=closed
         node.save()
         self.assertFalse(node.is_closed())
-        new_date = datetime(2015, 12, 31, tzinfo=get_current_timezone())
+        new_date = dt.datetime(2015, 12, 31, tzinfo=get_current_timezone())
         self.assertEqual(new_date.date(), node.scheduled.date())
     def test_31st_bug(self):
         """Test for proper behavior if trying to set a month that
@@ -110,23 +206,23 @@ class RepeatingNodeTest(TestCase):
         closed = TodoState.objects.get(abbreviation='DONE')
         node.repeating_unit = 'm'
         node.repeating_number = 1
-        old_date = datetime(2013, 8, 31, tzinfo=get_current_timezone())
+        old_date = dt.datetime(2013, 8, 31, tzinfo=get_current_timezone())
         node.scheduled = old_date
         node.save()
         node.todo_state=closed
         node.save()
         self.assertFalse(node.is_closed())
-        new_date = datetime(2013, 9, 30, tzinfo=get_current_timezone())
+        new_date = dt.datetime(2013, 9, 30, tzinfo=get_current_timezone())
         self.assertEqual(new_date.date(), node.scheduled.date())
         # Now try for February type bugs
-        old_date = datetime(2013, 1, 28, tzinfo=get_current_timezone())
+        old_date = dt.datetime(2013, 1, 28, tzinfo=get_current_timezone())
         node.scheduled = old_date
         node.repeating_number = 2
         node.save()
         node.todo_state = closed
         node.save()
         self.assertFalse(node.is_closed())
-        new_date = datetime(2013, 3, 28, tzinfo=get_current_timezone())
+        new_date = dt.datetime(2013, 3, 28, tzinfo=get_current_timezone())
         self.assertEqual(new_date.date(), node.scheduled.date())
 
 class ParentStructure(TestCase):

@@ -24,7 +24,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 {% endblock %}
 {% block content %}
 {# Filters #}
-<hr />
 <form action="" method="POST">
   {% include 'scope_filter.html' %}<br />
   Context:
@@ -65,10 +64,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
   {% for node in nodes %}
   <tr>
     <td>
-      <a href="/projects/{{ node.id }}/">{{ node.todo_state.abbreviation }}</a>
+      <a href="/gtd/projects/{{ node.id }}/"{# Todo: automagically detect this url #}>{{ node.todo_state.abbreviation }}</a>
     </td>
-    <td><a href="/projects/{{ node.id }}/">{{ node.title }}</a></td>
-    <td><a href="/projects/{{ node.id }}/">{{ node.tag_string }}</a></td>
+    <td><a href="/gtd/projects/{{ node.id }}/">{{ node.title }}</a></td>
+    <td><a href="/gtd/projects/{{ node.id }}/">{{ node.tag_string }}</a></td>
   </tr>
   {% endfor %}
 </table>

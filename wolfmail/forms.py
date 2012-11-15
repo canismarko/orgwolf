@@ -18,4 +18,4 @@
 #######################################################################
 
 from django.forms import ModelForm, TextInput
-from GettingThingsDone import Node
+from gtd.models import Node

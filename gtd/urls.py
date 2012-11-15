@@ -23,11 +23,20 @@ from django.conf.urls import patterns, include, url
 from django.contrib import admin
 admin.autodiscover()
 
-urlpatterns = patterns('GettingThingsDone.views',
+urlpatterns = patterns('gtd.views',
                        url(r'^$', 'home'),
+
                        # url(r'^lists/$', 'list_selection'),
                        url(r'^lists(/[\w/]+)?/$', 'list_display'),
+
                        url(r'^agenda(?:/(?P<date>\d{4}-\d{1,2}-\d{1,2}))?/$', 'agenda_display'),
                        url(r'^agenda/([^/]+)/$', 'agenda_display'),
+
                        url(r'^toinbox/$', 'capture_to_inbox'),
+
+                       url(r'^nodes/(?:scope(?P<scope_id>\d+)/)?$', 'display_node'),
+                       url(r'^nodes/(?:scope(?P<scope_id>\d+)/)?(?P<node_id>\d+)/$', 'display_node'),
+                       url(r'^nodes/(?:scope\d+/)?(\d+)/edit/', 'edit_node'),
+                       url(r'^nodes/(?:scope\d+/)?(?:(\d+)/)?new/', 'new_node'),
 )
+

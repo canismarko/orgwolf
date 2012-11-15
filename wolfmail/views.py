@@ -23,7 +23,7 @@ from django.contrib.auth.models import User
 from django.contrib.auth.decorators import login_required
 
 from wolfmail.models import MailItem, Label
-from projects.forms import NodeForm
+from gtd.forms import NodeForm
 
 @login_required
 def display_label(request, requested_label):

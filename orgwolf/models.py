@@ -20,7 +20,7 @@
 from django.db import models
 from django.contrib.auth.models import User, AbstractUser
 from django.db.models.signals import post_save
-from GettingThingsDone.models import TodoState, Location, Contact, Tool, Priority
+from gtd.models import TodoState, Location, Contact, Tool, Priority
 
 class OrgWolfUser(AbstractUser):
     """Holds profile information for users."""

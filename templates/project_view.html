@@ -24,9 +24,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 {% endblock %}
 {% block content %}
 {# Breadcrumb trail #}
-<a href="/projects/">Project List</a>
+<a href="/gtd/projects/"{# Todo: automagically detect this #}>Project List</a>
 {% for node in breadcrumb_list %}&gt;
-  <a href="/projects/{{node.id}}/">{{node.display}}</a>
+  <a href="/gtd/projects/{{node.id}}/">{{node.display}}</a>
 {% endfor %}
 
 <h3>{{ parent_node.get_title }}</h3>
