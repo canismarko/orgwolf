@@ -54,11 +54,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 	  <a href="/" title="Back to landing page"><img src="{{ STATIC_URL }}orgwolf-logo.jpg" alt="OrgWolf Logo" /></a>
 	  {% endif %}
 	</li>
-	<li><a href="/gtd/agenda/">Today's Agenda</a></li>
-	<li><a href="/gtd/lists/next/">Next Actions</a></li>
-	<li><a href="/wolfmail/inbox/">Inbox</a></li>
-	<li><a href="/gtd/lists/">Lists</a></li>
-	<li><a href="/gtd/nodes/">Projects</a></li>
+	<li><a href="{% url 'gtd.views.agenda_display' %}">Today's Agenda</a></li>
+	<li><a href="{% url 'gtd.views.list_display' '/next' %}">Next Actions</a></li>
+	<li><a href="{% url 'wolfmail.views.display_label' %}">Inbox</a></li>
+	<li><a href="{% url 'gtd.views.list_display' %}">Lists</a></li>
+	<li><a href="{% url 'gtd.views.display_node' %}">Projects</a></li>
 
 	{% block inbox_widget %}
 	<li>
@@ -68,7 +68,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 	  </form>
 	</li>
 	{% endblock %}
-
 	<li class="pull-right"><a href="https://github.com/m3wolf/OrgWolf/issues/new">Feedback</a></li>
       {#<li><a href="/feedback/?next={{request.get_full_path}}">Feedback</a></li>#}
 	<li><a href="/admin/">Admin</a></li>

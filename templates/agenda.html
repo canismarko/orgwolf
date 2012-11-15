@@ -1,5 +1,5 @@
 {% extends 'base.html' %}
-
+{% load gtd_extras %}
 {% comment %}
 Copyright 2012 Mark Wolf
 
@@ -31,13 +31,16 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
   {% for node in day_specific_nodes %}
   <tr>
     <td>
-      <a href="{{ base_url }}/{{node.id}}">{{ node.overdue }}</a>
+      <a href="{% url 'gtd.views.display_node' node_id=node.id %}" title="{{ node.hierarchy }}">{{ node.overdue }}</a>
     </td>
     <td>
-      <a href="{{ base_url }}/{{node.id}}">{{ node.abbreviation }}</a>
+      {{ node.repeats|repeat_icon|safe }}
     </td>
     <td>
-      <a href="{{ base_url }}/{{node.id}}">{{ node.title }}</a>
+      <a href="{% url 'gtd.views.display_node' node_id=node.id %}" title="{{ node.hierarchy }}">{{ node.abbreviation }}</a>
+    </td>
+    <td>
+      <a href="{% url 'gtd.views.display_node' node_id=node.id %}" title="{{ node.hierarchy }}">{{ node.title }}</a>
     </td>
   </tr>
   {% endfor %}
@@ -47,16 +50,16 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
   {% for node in time_specific_nodes %}
   <tr>
     <td>
-      <a href="{{ base_url }}/{{node.id}}">{{ node.overdue }}</a>
+      <a href="{% url 'gtd.views.display_node' node_id=node.id %}" title="{{ node.hierarchy }}">{{ node.overdue }}</a>
     </td>
     <td>
-      <a href="{{ base_url }}/{{node.id}}">{{ node.scheduled|date:"G:i" }}</a>
+      <a href="{% url 'gtd.views.display_node' node_id=node.id %}" title="{{ node.hierarchy }}">{{ node.scheduled|date:"G:i" }}</a>
     </td>
     <td>
-      <a href="{{ base_url }}/{{node.id}}">{{ node.todo_state.abbreviation }}</a>
+      <a href="{% url 'gtd.views.display_node' node_id=node.id %}" title="{{ node.hierarchy }}">{{ node.todo_state.abbreviation }}</a>
     </td>
     <td>
-      <a href="{{ base_url }}/{{node.id}}">{{ node.title }}</a>
+      <a href="{% url 'gtd.views.display_node' node_id=node.id %}" title="{{ node.hierarchy }}">{{ node.title }}</a>
     </td>
   </tr>
 {% endfor %}
@@ -67,15 +70,15 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
   {% for node in deadline_nodes %}
   <tr>
     <td>
-      <a href="{{ base_url }}/{{node.id}}">{{ node.overdue }}</a>
+      <a href="{% url 'gtd.views.display_node' node_id=node.id %}" title="{{ node.hierarchy }}">{{ node.overdue }}</a>
     </td>
     <td>
-      <a href="{{ base_url }}/{{node.id}}">{{ node.deadline|date:"D d M Y" }}</a>
+      <a href="{% url 'gtd.views.display_node' node_id=node.id %}" title="{{ node.hierarchy }}">{{ node.deadline|date:"D d M Y" }}</a>
     </td>
     <td>
-      {% if node.deadline_time_specific %}<a href="{{ base_url }}/{{node.id}}">{{ node.deadline|date:"G:i" }}</a>{% else %}&nbsp;{% endif %}
+      {% if node.deadline_time_specific %}<a href="{% url 'gtd.views.display_node' node_id=node.id %}" title="{{ node.hierarchy }}">{{ node.deadline|date:"G:i" }}</a>{% else %}&nbsp;{% endif %}
     </td>
-    <td><a href="{{ base_url }}/{{node.id}}">{{ node.title }}</a></td>
+    <td><a href="{% url 'gtd.views.display_node' node_id=node.id %}" title="{{ node.hierarchy }}">{{ node.title }}</a></td>
   </tr>
 {% endfor %}
 </table>
