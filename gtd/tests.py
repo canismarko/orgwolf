@@ -64,16 +64,16 @@ class EditNode(TestCase):
                      'deadline': '',
                      'todo_state': closed_todo.id}
         if node: # existing node
-            url = '/gtd/projects/' + str(node.id) + '/edit/'
-            regex = re.compile('http://testserver/gtd/projects/' + str(node.id))
+            url = '/gtd/nodes/' + str(node.id) + '/edit/'
+            regex = re.compile('http://testserver/gtd/nodes/' + str(node.id))
             post_data['title'] = node.title
         else: # new node
-            url = '/gtd/projects/1/new/'
-            regex = re.compile('http://testserver/gtd/projects/1/')
+            url = '/gtd/nodes/1/new/'
+            regex = re.compile('http://testserver/gtd/nodes/1/')
             post_data['title'] = 'new node 1'
         response = client.post(url, post_data, follow=True)
         self.assertEqual(200, response.status_code)
-        redirect = re.match('http://testserver/gtd/projects/(\d+)/',
+        redirect = re.match('http://testserver/gtd/nodes/(\d+)/',
                             response.redirect_chain[0][0])
         self.assertTrue(redirect.group()) # Did the redirect match
         self.assertEqual(302, response.redirect_chain[0][1])

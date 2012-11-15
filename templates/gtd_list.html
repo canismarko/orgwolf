@@ -25,7 +25,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 {% block content %}
 {# Filters #}
 <form action="" method="POST">
-  {% include 'scope_filter.html' %}<br />
+  {% include 'scope_filter.html' %}
   Context:
   <select name="context">
     <option value="0"
@@ -39,7 +39,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
     </option>
     {% endfor %}
   </select><br />
-  Todo States:<br />
   {% for todo_state in all_todo_states_query %}
   <label for="todo{{ todo_state.id }}" class="checkbox inline">
   <input type="checkbox" 
@@ -52,7 +51,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
   <input type="submit" value="Filter" />
   {% csrf_token %}
 </form>
-<hr />
 {# Display nodes (if any exist #}
 {% if nodes %}
 <table class="table table-condensed">
@@ -64,10 +62,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
   {% for node in nodes %}
   <tr>
     <td>
-      <a href="/gtd/projects/{{ node.id }}/"{# Todo: automagically detect this url #}>{{ node.todo_state.abbreviation }}</a>
+      <a href="/gtd/nodes/{{ node.id }}/"{# Todo: automagically detect this url #}>{{ node.todo_state.abbreviation }}</a>
     </td>
-    <td><a href="/gtd/projects/{{ node.id }}/">{{ node.title }}</a></td>
-    <td><a href="/gtd/projects/{{ node.id }}/">{{ node.tag_string }}</a></td>
+    <td><a href="/gtd/nodes/{{ node.id }}/">{{ node.title }}</a></td>
+    <td><a href="/gtd/nodes/{{ node.id }}/">{{ node.tag_string }}</a></td>
   </tr>
   {% endfor %}
 </table>
