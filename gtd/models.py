@@ -17,15 +17,16 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #######################################################################
 
+from django.core.exceptions import ValidationError
 from django.db import models
 from django.db.models import Q, signals
-from django.core.exceptions import ValidationError
 from django.dispatch import receiver
 from django.utils.encoding import python_2_unicode_compatible
 from django.utils.timezone import get_current_timezone
 from datetime import datetime, timedelta
 import re
 import math
+import operator
 
 from orgwolf import settings
 #from orgwolf.models import Color
@@ -150,6 +151,7 @@ class Node(models.Model):
     no parent (a top level Node)
     """
     ORDER_STEP = 10
+    SEARCH_FIELDS = ['title']
     owner = models.ForeignKey(settings.AUTH_USER_MODEL, related_name="owned_node_set")
     users = models.ManyToManyField(settings.AUTH_USER_MODEL, blank=True)
     order = models.IntegerField() # TODO: autoincrement
@@ -286,6 +288,32 @@ class Node(models.Model):
     def get_children(self):
         """Returns a list of Node objects with this Node as its parent."""
         return [] # TODO
+
+    @staticmethod
+    def search(query):
+        """Look in columns specified by self.SEARCH_FIELDS for the given query.
+        Return a queryset with the results."""
+        qs = Node.objects.all()
+        # Apply keyword searches.
+        def construct_search(field_name):
+            if field_name.startswith('^'):
+                return "%s__istartswith" % field_name[1:]
+            elif field_name.startswith('='):
+                return "%s__iexact" % field_name[1:]
+            elif field_name.startswith('@'):
+                return "%s__search" % field_name[1:]
+            else:
+                return "%s__icontains" % field_name
+        if Node.SEARCH_FIELDS and query:
+            for bit in query.split():
+                or_queries = [models.Q(**{construct_search(str(field_name)): bit}) for field_name in Node.SEARCH_FIELDS]
+                qs = qs.filter(reduce(operator.or_, or_queries))
+            for field_name in Node.SEARCH_FIELDS:
+                if '__' in field_name:
+                    qs = qs.distinct()
+                    break
+        return qs
+
     def __str__(self):
         if hasattr(self.todo_state, "abbreviation"):
             return "[" + self.todo_state.abbreviation + "] " + self.get_title()

@@ -1,3 +1,4 @@
+{% load gtd_extras %}
 {% comment %}
 Copyright 2012 Mark Wolf
 
@@ -49,9 +50,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
       <ul class="nav">
 	<li>
 	  {% if debug %}
-	  <a href="/" title="Back to landing page"><img src="{{ STATIC_URL }}orgwolf-logo-debug.png" alt="OrgWolf Logo" /></a>
+	  <a href="/" title="Back to landing page" class="brand"><img src="{{ STATIC_URL }}orgwolf-logo-debug.png" alt="OrgWolf Logo" /></a>
 	  {% else %}
-	  <a href="/" title="Back to landing page"><img src="{{ STATIC_URL }}orgwolf-logo.jpg" alt="OrgWolf Logo" /></a>
+	  <a href="/" title="Back to landing page" class="brand"><img src="{{ STATIC_URL }}orgwolf-logo.jpg" alt="OrgWolf Logo" /></a>
 	  {% endif %}
 	</li>
 	<li><a href="{% url 'gtd.views.agenda_display' %}">Today's Agenda</a></li>
@@ -63,7 +64,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 	{% block inbox_widget %}
 	<li>
 	  <form class="navbar-form" method="POST" action="/gtd/toinbox/?next={{request.get_full_path}}" id="new_inbox_form">
-	    <input type="text" name="new_inbox_item" id="new_inbox_item"/><input type="submit" value="To Inbox" />
+	    <input type="text" name="new_inbox_item" id="new_inbox_item"/><input type="submit" value="To Inbox" class="btn" />
 	    {% csrf_token %}
 	  </form>
 	</li>
@@ -79,7 +80,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
       </div>
     </div>
     {% endblock %}
-    <br />
+
     {% block content %}
     <br />This feature is not yet impletemented. Check back later.<br />
     {% endblock %}

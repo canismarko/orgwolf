@@ -24,7 +24,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 {% endblock %}
 {% block content %}
 {# Filters #}
-<form action="" method="POST">
+<form action="" method="POST" class="form-inline">
   {% include 'scope_filter.html' %}
   Context:
   <select name="context">
@@ -48,7 +48,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 	 {% if todo_state in todo_states_query %}checked="checked" {% endif %}/>
 {{ todo_state.abbreviation }}</label>
   {% endfor %}
-  <input type="submit" value="Filter" />
+  <input type="submit" value="Filter" class="btn" />
   {% csrf_token %}
 </form>
 {# Display nodes (if any exist #}
