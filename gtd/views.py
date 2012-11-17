@@ -311,7 +311,7 @@ def edit_node(request, node_id, scope_id):
 
 @login_required
 def new_node(request, node_id, scope_id):
-    """Display a form to allow the user to edit a node"""
+    """Display a form to allow the user to create a new node"""
     url_kwargs = {}
     if scope_id:
         url_kwargs['scope_id'] = scope_id
@@ -334,7 +334,10 @@ def new_node(request, node_id, scope_id):
             if node:
                 form.parent = Node.objects.get(id=node.id)
             form.save()
-            url_kwargs['node_id'] = form.id
+            for new_scope_id in request.POST['scope']:
+                form.scope.add(Scope.objects.get(pk=new_scope_id))
+            form.save()
+            url_kwargs['node_id'] = form.parent.pk
             redirect_url = reverse('gtd.views.display_node', kwargs=url_kwargs)
             return redirect(redirect_url)
     else: # Blank form
@@ -342,5 +345,18 @@ def new_node(request, node_id, scope_id):
         projects = getattr(node, 'related_projects', None)
         form = NodeForm(parent=node)
     return render_to_response('node_edit.html',
+                              locals(),
+                              RequestContext(request))
+
+@login_required
+def node_search(request):
+    """Simple search module."""
+    if request.GET.has_key('q'):
+        query = request.GET['q']
+        nodes_found = Node.search(query)
+    else:
+        query = ''
+    base_url = reverse('gtd.views.node_search')
+    return render_to_response('node_search.html',
                               locals(),
                               RequestContext(request))

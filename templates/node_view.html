@@ -23,6 +23,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 {% endif %}
 {% endblock %}
 {% block content %}
+
+{# Search box #}
+{% include 'search_box.html' %}
+
 {# Breadcrumb trail #}
 <a href="{{ base_url }}">Project List</a>
 {% for node in breadcrumb_list %}&gt;
@@ -30,7 +34,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 {% endfor %}
 
 <h3>{{ parent_node.get_title }}</h3>
-<form action="" method="POST">
+<form action="" method="POST" class="form-inline">
 {% include "scope_filter.html" %}
   <input type="hidden" name="node_id" value="{{ parent_node.id }}" />
   <button type="submit" name="function" value="filter" class="btn" />Filter</button>
