@@ -334,8 +334,9 @@ def new_node(request, node_id, scope_id):
             if node:
                 form.parent = Node.objects.get(id=node.id)
             form.save()
-            for new_scope_id in request.POST['scope']:
-                form.scope.add(Scope.objects.get(pk=new_scope_id))
+            if request.POST.has_key('scope'):
+                for new_scope_id in request.POST['scope']:
+                    form.scope.add(Scope.objects.get(pk=new_scope_id))
             form.save()
             url_kwargs['node_id'] = form.parent.pk
             redirect_url = reverse('gtd.views.display_node', kwargs=url_kwargs)

@@ -31,9 +31,10 @@ from django.utils.timezone import get_current_timezone
 import re
 
 from orgwolf.tests import prepare_database
+from orgwolf.preparation import translate_old_text
 from orgwolf.models import OrgWolfUser as User
 from gtd.forms import NodeForm
-from gtd.models import Node, TodoState, node_repeat
+from gtd.models import Node, TodoState, node_repeat, Text
 
 class EditNode(TestCase):
     def setUp(self):
@@ -63,6 +64,7 @@ class EditNode(TestCase):
                      'priority': '',
                      'deadline': '',
                      'todo_state': closed_todo.id}
+
         if node: # existing node
             url = '/gtd/nodes/' + str(node.id) + '/edit/'
             regex = re.compile('http://testserver/gtd/nodes/' + str(node.id))
@@ -256,3 +258,40 @@ class ParentStructure(TestCase):
         child = Node.objects.get(title='Meijer')
         parent = child.get_primary_parent()
         self.assertEqual(target_parent, parent)
+
+class TextHandling(TestCase):
+    def setUp(self):
+        prepare_database()
+        dummy_user = User.objects.get(pk=1)
+        root_node = Node(owner=dummy_user,
+                         order=10,
+                         title='Errands')
+        root_node.save()
+        child_node1 = Node(owner=dummy_user,
+                          order=10,
+                          title='Meijer',
+                          parent=root_node)
+        child_node1.save()
+        child_node2 = Node(owner=dummy_user,
+                          order=20,
+                          title='PetSmart',
+                          parent=root_node)
+        child_node2.save()
+        text1 = Text(owner=dummy_user,
+                     parent=root_node,
+                     text='When will I have time\n')
+        text1.save()
+        text2 = Text(owner=dummy_user,
+                     parent=child_node1,
+                     text='- Toilet paper\n')
+        text2.save()
+        text3 = Text(owner=dummy_user,
+                     parent=child_node1,
+                     text='- Milk\n')
+        text3.save()
+    def test_text_translate(self):
+        translate_old_text()
+        root_node = Node.objects.get(title='Errands')
+        self.assertEqual('When will I have time\n', root_node.text)
+        child_node1 = Node.objects.get(title='Meijer')
+        self.assertEqual('- Toilet paper\n- Milk\n', child_node1.text)

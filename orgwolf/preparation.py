@@ -17,9 +17,10 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #######################################################################
 
-"""Holds functions and classes related to first-time setup wizard."""
+"""Holds functions and classes related to first-time setup wizard
+as well as a few additional helper functions."""
 
-from gtd.models import TodoState
+from gtd.models import TodoState, Node
 
 def populate_todo_states(reset=False):
     """
@@ -93,3 +94,15 @@ def populate_todo_states(reset=False):
                                _color_rgb = state['_color_rgb'],
                                _color_alpha = state['_color_alpha'])
         todo_state.save()
+
+def translate_old_text():
+    """Look through the database and find any instances of the old Text objects
+    and translate them to Node.text items. This function will not remove the
+    Text objects, however."""
+    nodes = Node.objects.all()
+    for node in nodes:
+        current_text = ''
+        for old_text in node.attached_text.all():
+            current_text += old_text.text
+        node.text = current_text
+        node.save()

@@ -157,6 +157,7 @@ class Node(models.Model):
     order = models.IntegerField() # TODO: autoincrement
     title = models.TextField(blank=True)
     todo_state = models.ForeignKey('TodoState', blank=True, null=True)
+    text = models.TextField(blank=True)
     # Determine where this heading is
     parent = models.ForeignKey('self', blank=True, null=True, related_name='child_heading_set')
     related_projects = models.ManyToManyField('Node', related_name='project_set', blank=True)

@@ -134,6 +134,7 @@ class RegexTest(TestCase):
 
 class TestOrgModePlugin(TestCase):
     def setUp(self):
+        # Todo: switch to prepare database
         new_user = User()
         new_user.save()
         # Make the relevant nodes
@@ -181,13 +182,17 @@ Some texts for heading 0-1
 
     def test_heading_parameters(self):
         root_nodes = Node.objects.filter(parent=None)
-        texts = Text.objects.all()
         self.assertEqual(root_nodes[0].title, "Heading 0")
         child_nodes = Node.objects.filter(parent=root_nodes[0])
         self.assertEqual(child_nodes[0].tag_string, ":home:work:comp:")
         self.assertEqual(child_nodes[1].tag_string, ":jaz3z:")
         child_nodes = Node.objects.filter(parent=child_nodes[1])
         # TODO: Finish unittesting of orgmode plugin
+
+    def test_text_identification(self):
+        test_node = Node.objects.get(title='Heading 0-1')
+        self.assertEqual('Some texts for heading 0-1\n| and | a  | table   |\n| row | io | smidgin | \n',
+                    test_node.text)
 
     def test_output(self):
         """Check that the org-mode input and output are similar."""

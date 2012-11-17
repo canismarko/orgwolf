@@ -35,9 +35,13 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
     <link rel="stylesheet" type="text/css" href="{{ STATIC_URL }}bootstrap/css/bootstrap.css" />
     <style type="text/css">
     {% block style %}
-
-    /* Add internal style here */
-
+    #logo
+    {
+	margin-left: auto;
+	margin-right: auto;
+	width: auto;
+	padding-left: 0px;
+    }
     {% endblock %}  
     </style>
     {% endif %}
@@ -48,7 +52,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
     <div class="navbar">
       <div class="navbar-inner">
       <ul class="nav">
-	<li>
+      <li>
 	  {% if debug %}
 	  <a href="/" title="Back to landing page" class="brand"><img src="{{ STATIC_URL }}orgwolf-logo-debug.png" alt="OrgWolf Logo" /></a>
 	  {% else %}
