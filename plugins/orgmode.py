@@ -113,11 +113,22 @@ def import_structure(file=None, string=None, request=None, scope=None):
         current_user = User.objects.get(id=1)
     for line in source:
         data_list.append({'original': line})
+    def save_text(parent, text):
+        # A helper function the tries to save some new text
+        if parent:
+            parent.text = current_text
+            parent.save()
+        elif current_text: # Warn the user about some dropped text
+            print("---")
+            print("Warning, dropping text (no parent node)")
+            print("Text: %s", current_text)
+            print("---")
     # Now go through each line and see if it matches a regex
     current_indent = 0 # counter
     current_order = 0
     parent_stack = Stack()
     todo_state_list = TodoState.objects.all() # Todo: filter by current user
+    current_text = ''
     for line in data_list:
         heading_match = HEADING_RE.search(line['original'].strip("\n"))
         if heading_match: # It's a heading
@@ -131,9 +142,22 @@ def import_structure(file=None, string=None, request=None, scope=None):
                 # TODO: what if the user skips a level
                 current_indent = current_indent + 1
                 current_order = 0
+                # Save any text associated with the parent
+                parent = getattr(parent_stack.head, 'value', None)
+                save_text(parent, current_text)
+                current_text = ''
             elif line_indent == current_indent: # Another child
+                # Save any text associated with the parent
+                parent = getattr(parent_stack.head, 'value', None)
+                save_text(parent, current_text)
+                current_text = ''
+                # Adjust the parent
                 parent_stack.pop()
             elif line_indent < current_indent: # Back up to parent
+                # Save any text associated with the parent
+                parent = getattr(parent_stack.head, 'value', None)
+                save_text(parent, current_text)
+                current_text = ''
                 parent_stack.pop()
                 for x in range(current_indent - line_indent):
                     # Move up the stack
@@ -206,8 +230,6 @@ def import_structure(file=None, string=None, request=None, scope=None):
                                                 hour,
                                                 minute)
                         new_datetime = timezone.get_current_timezone().localize(naive_datetime) # TODO: set to user's preferred timezone
-                        # Fix for DST
-                        # new_datetime = current_tz.normalize(new_datetime)
                         if date_match[4] and date_match[5]:
                             time_specific = True
                         else:
@@ -231,12 +253,7 @@ def import_structure(file=None, string=None, request=None, scope=None):
                             parent.closed = new_datetime               
                         parent.save()
             else: # It's just a regular text item
-                new_text = Text()
-                new_text.text = line['original']
-                new_text.owner = User.objects.get(id=1) # TODO: switch to request.user
-                if current_indent > 0:
-                    new_text.parent = parent_stack.head.value
-                new_text.save()
+                current_text += line['original']
 
 def export_to_string(node=None):
     """
@@ -281,14 +298,13 @@ def export_to_string(node=None):
                 scheduled_string += current_node.closed.strftime(" CLOSED: <%Y-%m-%d %a %H:%M>")
             heading_string += scheduled_string + "\n"
         # Check for text associated with this heading
-        text_qs = Text.objects.filter(parent = current_node)
-        for text in text_qs:
-            heading_string += text.text
+        if current_node.text:
+            heading_string += current_node.text
         # Now we look for any child nodes and add their text
         child_node_qs = Node.objects.filter(parent = current_node)
         for child_node in child_node_qs:
             heading_string += heading_as_string(child_node, level+1)
-        # Finally, return the compelted string
+        # Finally, return the completed string
         return heading_string
     for root_node in root_nodes_qs:
         output_string += heading_as_string(root_node, 1)
@@ -300,14 +316,11 @@ def standardize_string(input_string):
     """Apply common conventions for spacing and ordering.
     This can be useful for unit-testing."""
     # remove excess whitespace from headers
-    # tag_regex = re.compile(r'(\*+.*\b(?=[ \t]+:[\w:]+:\s*$))[ \t]+(:[\w:]+:)\s*$')
     node_regex = re.compile(r"""
         ^(\*+) # Leading stars
         \s*(.*?(?=:\S+:)?) # The actual heading (with lookahead to avoid tags)
         \s*(:\S+:)? # The tag string itself
         $""", re.X)
-    # print whitespace_regex.findall(input_string)
-    # input_string = whitespace_regex.sub(r'\1 \2', input_string)
     date_regex = re.compile(
         r'[ \t]((?:scheduled|deadline|closed):[ \t]*<[^>]+>)',
         re.I

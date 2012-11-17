@@ -10,8 +10,8 @@
    xmlns:xlink="http://www.w3.org/1999/xlink"
    xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
    xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
-   width="816.97235"
-   height="359.1673"
+   width="61"
+   height="24"
    id="svg2"
    version="1.1"
    inkscape:version="0.48.3.1 r9886"
@@ -448,15 +448,15 @@
      borderopacity="1.0"
      inkscape:pageopacity="0.0"
      inkscape:pageshadow="2"
-     inkscape:zoom="0.97400214"
-     inkscape:cx="422.04741"
-     inkscape:cy="145.9021"
+     inkscape:zoom="12.687023"
+     inkscape:cx="31.5"
+     inkscape:cy="11.125"
      inkscape:document-units="px"
-     inkscape:current-layer="layer8"
+     inkscape:current-layer="layer1"
      showgrid="false"
      inkscape:snap-nodes="false"
      inkscape:window-width="1366"
-     inkscape:window-height="715"
+     inkscape:window-height="718"
      inkscape:window-x="0"
      inkscape:window-y="25"
      inkscape:window-maximized="1"
@@ -473,7 +473,7 @@
         <dc:format>image/svg+xml</dc:format>
         <dc:type
            rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
-        <dc:title></dc:title>
+        <dc:title />
       </cc:Work>
     </rdf:RDF>
   </metadata>
@@ -482,7 +482,7 @@
      id="layer2"
      inkscape:label="Background"
      style="display:none"
-     transform="translate(36.664778,36.357049)">
+     transform="translate(36.664778,-298.81025)">
     <image
        y="-0.2222463"
        x="1.639245"
@@ -496,7 +496,7 @@
      id="layer3"
      inkscape:label="Background2"
      style="display:none"
-     transform="translate(36.664778,36.357049)">
+     transform="translate(36.664778,-298.81025)">
     <image
        y="118.93631"
        x="-473.77936"
@@ -511,7 +511,7 @@
      id="layer6"
      inkscape:label="Backdrop"
      style="display:none"
-     transform="translate(36.664778,36.357049)">
+     transform="translate(36.664778,-298.81025)">
     <rect
        style="fill:#980101;fill-opacity:1"
        id="rect5768"
@@ -526,9 +526,10 @@
      inkscape:groupmode="layer"
      id="layer1"
      style="display:inline"
-     transform="translate(36.664778,36.357049)">
+     transform="translate(36.664778,-298.81025)">
     <g
-       id="g3046">
+       id="g3046"
+       transform="matrix(0.083,0,0,0.083,-37.287867,298.3891)">
       <path
          id="path3950-8"
          d="m 142.91887,11.86017 c -72.957896,0 -132.104416,59.14652 -132.104416,132.10443 0,72.95791 59.14652,132.10443 132.104416,132.10443 72.95791,0 132.10443,-59.14652 132.10443,-132.10443 0,-72.95791 -59.14652,-132.10443 -132.10443,-132.10443 z M 142.537,31.04351 c 28.94689,0 67.95448,49.19379 67.52354,108.8553 -0.42954,59.46553 -40.05265,116.24561 -67.52354,116.24561 -62.156866,0 -112.539216,-50.40482 -112.539216,-112.56169 0,-62.15687 50.38235,-112.53922 112.539216,-112.53922 z"
@@ -552,7 +553,7 @@
      id="layer7"
      inkscape:label="Sky"
      style="display:none"
-     transform="translate(36.664778,36.357049)">
+     transform="translate(36.664778,-298.81025)">
     <path
        sodipodi:type="arc"
        style="fill:#74009c;fill-opacity:1"
@@ -572,17 +573,17 @@
      id="layer4"
      inkscape:label="Moon"
      style="display:inline"
-     transform="translate(36.664778,36.357049)" />
+     transform="translate(36.664778,-298.81025)" />
   <g
      inkscape:groupmode="layer"
      id="layer8"
      inkscape:label="Text"
-     transform="translate(36.664778,36.357049)">
+     transform="translate(36.664778,-298.81025)">
     <flowRoot
        xml:space="preserve"
        id="flowRoot6038"
        style="font-size:144px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#6600cc;fill-opacity:1;stroke:none;filter:url(#filter6618);font-family:Sans;-inkscape-font-specification:'decsess.pcf'"
-       transform="translate(-375.04714,-174.53761)"
+       transform="matrix(0.083,0,0,0.083,-68.416777,283.90248)"
        inkscape:export-xdpi="90"
        inkscape:export-ydpi="90"><flowRegion
          id="flowRegion6040"><rect
@@ -598,24 +599,25 @@
      inkscape:groupmode="layer"
      id="layer5"
      inkscape:label="Debug"
-     style="display:inline">
+     style="display:inline"
+     transform="translate(0,-335.1673)">
     <text
        xml:space="preserve"
-       style="font-size:18px;font-style:normal;font-weight:normal;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;font-family:Sans"
-       x="415.81018"
-       y="131.24171"
+       style="font-size:1.49399996px;font-style:normal;font-weight:normal;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;font-family:Sans"
+       x="30.845978"
+       y="342.62158"
        id="text3302"
        sodipodi:linespacing="125%"><tspan
          sodipodi:role="line"
          id="tspan3304"
-         x="415.81018"
-         y="131.24171"
-         style="font-size:72px;font-weight:bold;fill:#650101;fill-opacity:1;-inkscape-font-specification:Sans Bold">DEBUG</tspan></text>
+         x="30.845978"
+         y="342.62158"
+         style="font-size:5.97599983px;font-weight:bold;fill:#650101;fill-opacity:1;-inkscape-font-specification:Sans Bold">DEBUG</tspan></text>
     <flowRoot
        xml:space="preserve"
        id="flowRoot6038-0"
        style="font-size:144px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#015a01;fill-opacity:1;stroke:none;filter:url(#filter6618-5);font-family:Sans;-inkscape-font-specification:'decsess.pcf'"
-       transform="translate(-338.90152,-137.87294)"
+       transform="matrix(0.083,0,0,0.083,-31.795097,320.28506)"
        inkscape:export-xdpi="90"
        inkscape:export-ydpi="90"><flowRegion
          id="flowRegion6040-9"><rect
@@ -628,7 +630,7 @@
          id="flowPara6044-3"
          style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;fill:#015a01;font-family:Sans;-inkscape-font-specification:Terminal">rgWolf</flowPara></flowRoot>    <g
        id="g4210"
-       transform="translate(1.0266918,2.0533836)">
+       transform="matrix(0.083,0,0,0.083,-3.5810466,331.89895)">
       <g
          transform="translate(2.0533836,-1.0266918)"
          id="g4206">

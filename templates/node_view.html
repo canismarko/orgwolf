@@ -71,8 +71,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
   {% endfor %}
   {% endif %}
 </dl>
+<p>{{ parent_node.text|linebreaks }}</p>
 {% for text in node_text_qs %}
-  {{ text.text|linebreaks }}
+  <div style="color:red">{{ text.text|linebreaks }}</div>
 {% endfor %}
 <a href="new/" class="btn">Add</a>
 {# List of child nodes as links #}
