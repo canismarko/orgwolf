@@ -20,7 +20,6 @@
 from django.db import models
 from django.contrib.auth.models import User, AbstractUser
 from django.db.models.signals import post_save
-from gtd.models import TodoState, Location, Contact, Tool, Priority
 
 class OrgWolfUser(AbstractUser):
     """Holds profile information for users."""
@@ -45,7 +44,8 @@ class Color:
     def html_string(self):
         """Return a hex string suitable for use in html documents"""
         def _format_hex_digits(number):
-            return str(hex(number))[2:4].upper()
+            return "%.02X" % number
+            # return str(hex(number))[2:4].upper()
         string = "#"
         string += _format_hex_digits(self.red)
         string += _format_hex_digits(self.green)
@@ -59,9 +59,9 @@ class Color:
         string = "rgb("
         string += _format_int_digits(self.red)
         string += ", "
-        string += _format_int_digits(self.blue)
-        string += ", "
         string += _format_int_digits(self.green)
+        string += ", "
+        string += _format_int_digits(self.blue)
         string += ")"
         return string
     def rgba_string(self):

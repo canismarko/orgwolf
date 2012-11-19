@@ -23,13 +23,15 @@ from django.db.models import Q, signals
 from django.dispatch import receiver
 from django.utils.encoding import python_2_unicode_compatible
 from django.utils.timezone import get_current_timezone
+from django.utils.html import conditional_escape
+from django.utils.safestring import mark_safe
 from datetime import datetime, timedelta
 import re
 import math
 import operator
 
 from orgwolf import settings
-#from orgwolf.models import Color
+from orgwolf.models import Color
 
 @python_2_unicode_compatible
 class TodoState(models.Model):
@@ -38,7 +40,8 @@ class TodoState(models.Model):
     actionable = models.BooleanField(default=True)
     closed = models.BooleanField(default=False)
     # No owner means system default
-    owner= models.ForeignKey(settings.AUTH_USER_MODEL, blank=True, null=True)
+    owner = models.ForeignKey(settings.AUTH_USER_MODEL, blank=True, null=True)
+    order = models.IntegerField(default=50)
     _color_rgb = models.IntegerField(default=0x000000)
     _color_alpha = models.FloatField(default=0)
     def color(self):
@@ -49,12 +52,26 @@ class TodoState(models.Model):
         new_color = Color(red, green, blue, self._color_alpha)
         return new_color 
     def __str__(self):
-        return self.abbreviation + ' - ' + self.display_text
+        return mark_safe(
+            conditional_escape(self.as_html()) + 
+            ' - ' + 
+            conditional_escape(self.display_text)
+            )
+    class Meta():
+        ordering = ['order']
     @staticmethod
     def get_active():
         """Returns a queryset containing all the TodoState objects
         that are currently in play."""
         return TodoState.objects.all()
+    def as_html(self):
+        """Converts this todostate to an HTML string that be put into tempaltes"""
+        html = conditional_escape(self.abbreviation)
+        if not self.closed: # Bold if not a closed TodoState
+            html = '<strong>' + html + '</strong>'
+        if self.color().get_alpha() > 0:
+            html = '<span style="color: ' + self.color().rgba_string() + '">' + html + '</span>'
+        return mark_safe(html)
 
 @python_2_unicode_compatible
 class Tag(models.Model):
@@ -268,29 +285,7 @@ class Node(models.Model):
             tag_Q = tag_Q | Q(tag_string = tag_string)
         tags_qs = tags_qs.filter(tag_Q)
         return tags_qs
-    # Methods manipulate the context information
-    def add_context_item(self, new_item):
-        """Add a required Person, Tool or Location to this Node"""
-        pass # TODO
-    def rm_context_item(self, item_to_remove):
-        """Remove a required Person, Tool or Location from this Node"""
-        pass # TODO
-    def get_context_items(self):
-        """
-        Return a list of Person, Tool and/or Location objects required
-        for this Node. Usually associated with a TODO item. Empty list
-        if none.
-        """
-        return []
     # Methods return miscellaneous information
-    def get_text(self):
-        """Get any text directly associated with this node. False if none."""
-        # TODO
-        return False
-    def get_children(self):
-        """Returns a list of Node objects with this Node as its parent."""
-        return [] # TODO
-
     @staticmethod
     def search(query):
         """Look in columns specified by self.SEARCH_FIELDS for the given query.
@@ -315,10 +310,9 @@ class Node(models.Model):
                     qs = qs.distinct()
                     break
         return qs
-
     def __str__(self):
         if hasattr(self.todo_state, "abbreviation"):
-            return "[" + self.todo_state.abbreviation + "] " + self.get_title()
+            return mark_safe("[" + self.todo_state.as_html() + "] " + conditional_escape(self.get_title()))
         else:
             return self.get_title()
 

@@ -34,7 +34,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
       <a href="{% url 'gtd.views.display_node' node_id=node.id %}" title="{{ node.hierarchy }}">{{ node.overdue }}</a>
     </td>
     <td>
-      {{ node.repeats|repeat_icon|safe }}
+      {{ node.repeats|repeat_icon }}
     </td>
     <td>
       <a href="{% url 'gtd.views.display_node' node_id=node.id %}" title="{{ node.hierarchy }}">{{ node.abbreviation }}</a>

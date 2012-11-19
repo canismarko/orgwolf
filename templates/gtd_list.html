@@ -46,7 +46,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 	 name="todo{{ todo_state.id }}" 
 	 value="Yes"  
 	 {% if todo_state in todo_states_query %}checked="checked" {% endif %}/>
-{{ todo_state.abbreviation }}</label>
+{{ todo_state.as_html }}</label>
   {% endfor %}
   <input type="submit" value="Filter" class="btn" />
   {% csrf_token %}
@@ -62,7 +62,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
   {% for node in nodes %}
   <tr>
     <td>
-      <a href="{% url 'gtd.views.display_node' node_id=node.id %}" title="{{ node.get_hierarchy_as_string }}">{{ node.todo_state.abbreviation }}</a>
+      <a href="{% url 'gtd.views.display_node' node_id=node.id %}" title="{{ node.get_hierarchy_as_string }}">{{ node.todo_state.as_html }}</a>
     </td>
     <td><a href="{% url 'gtd.views.display_node' node_id=node.id %}" title="{{ node.get_hierarchy_as_string }}">{{ node.title }}</a></td>
     <td><a href="{% url 'gtd.views.display_node' node_id=node.id %}" title="{{ node.get_hierarchy_as_string }}">{{ node.tag_string }}</a></td>

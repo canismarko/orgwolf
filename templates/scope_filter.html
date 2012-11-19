@@ -18,7 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 {% endcomment %}
 Scope:
 <select name="scope">
-  <option value="0">None</option>
+  <option value="0">Select scope...</option>
   {% for all_scope in all_scope_qs %}
   <option value="{{ all_scope.id }}"{% if all_scope.id = scope.id %} selected="selected"{% endif %}>
     {{ all_scope.display }}
