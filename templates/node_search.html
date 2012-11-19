@@ -28,7 +28,7 @@ Search{% if query %} results for {{ query }}{% endif %}
 
 {% if query %}
 {% if nodes_found.count > 0 %}
-{{ nodes_found|nodes_as_hierarchy_table:base_url|safe }}
+{{ nodes_found|nodes_as_hierarchy_table:base_url }}
 {% else %}
 Sorry, your search did not match any results.
 {% endif %}
