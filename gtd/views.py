@@ -260,6 +260,7 @@ def display_node(request, node_id=None, scope_id=None):
             # User has asked to change TodoState
             node = Node.objects.get(pk=node_id)
             node.todo_state = TodoState.objects.get(pk=request.POST['new_todo'])
+            node.auto_repeat = True
             node.save()
     all_nodes_qs = Node.objects.all()
     all_todo_states_qs = TodoState.get_active()
@@ -338,7 +339,8 @@ def new_node(request, node_id, scope_id):
                 for new_scope_id in request.POST['scope']:
                     form.scope.add(Scope.objects.get(pk=new_scope_id))
             form.save()
-            url_kwargs['node_id'] = form.parent.pk
+            if hasattr(form.parent, 'pk'):
+                url_kwargs['node_id'] = form.parent.pk
             redirect_url = reverse('gtd.views.display_node', kwargs=url_kwargs)
             return redirect(redirect_url)
     else: # Blank form
@@ -357,7 +359,7 @@ def node_search(request):
         nodes_found = Node.search(query)
     else:
         query = ''
-    base_url = reverse('gtd.views.node_search')
+    base_url = reverse('gtd.views.display_node')
     return render_to_response('node_search.html',
                               locals(),
                               RequestContext(request))
