@@ -37,6 +37,15 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
     <link rel="stylesheet" type="text/css" href="{{ STATIC_URL }}timepicker/timepicker.css" />
     <style type="text/css">
     {% block style %}
+    .required label
+    {
+	font-weight: bold;
+    }
+    form table input[type="checkbox"],label
+    {
+	margin-top: 2px;
+	margin-bottom: 2px;
+    }
     #logo
     {
 	margin-left: auto;
@@ -114,7 +123,23 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 				showMeridian: false});
 	  $('#id_deadline_time').timepicker( {defaultTime: 'value',
 				showMeridian: false});
-	  }); // End of onReady
+	  // Disable inputs for repeating information if checkbox is blank
+	  function repeating_toggle(selector) {
+	      if ($(selector).attr('checked') == 'checked') {
+		  $('#id_repeating_number').removeAttr('disabled');
+		  $('#id_repeating_unit').removeAttr('disabled');
+		  $('#id_repeats_from_completion').removeAttr('disabled');
+	      } else {
+		  $('#id_repeating_number').attr('disabled', 'disabled');
+		  $('#id_repeating_unit').attr('disabled', 'disabled');
+		  $('#id_repeats_from_completion').attr('disabled', 'disabled');
+	      }
+	  }
+	  $('#id_repeats').click(function() {
+	      repeating_toggle('#id_repeats');
+	  });
+	  repeating_toggle('#id_repeats');
+      }); // End of onReady
     </script>
     {% endblock %}  
     </style>

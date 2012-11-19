@@ -152,6 +152,7 @@ class Node(models.Model):
     """
     ORDER_STEP = 10
     SEARCH_FIELDS = ['title']
+    auto_repeat = False
     owner = models.ForeignKey(settings.AUTH_USER_MODEL, related_name="owned_node_set")
     users = models.ManyToManyField(settings.AUTH_USER_MODEL, blank=True)
     order = models.IntegerField() # TODO: autoincrement
@@ -374,7 +375,7 @@ def node_repeat(sender, **kwargs):
         return new
     # Code execution starts here
     instance = kwargs['instance']
-    if instance.repeats:
+    if instance.repeats and instance.auto_repeat:
         if instance.id: # if existing node
             old_node = Node.objects.get(pk=instance.pk)
             if not (old_node.todo_state == instance.todo_state):

@@ -25,6 +25,7 @@ from gtd.models import Node
 import datetime as dt
 
 class NodeForm(forms.ModelForm):
+    required_css_class = 'required'
     title = forms.CharField(
         widget=widgets.TextInput(attrs={'autofocus': 'autofocus'}),
         )
@@ -138,7 +139,7 @@ class NodeForm(forms.ModelForm):
         local_tz = timezone.get_current_timezone()
         cleaned_data = super(NodeForm, self).clean()
         def get_new_datetime(new_date, new_time):
-            # Helper function to determine what to put in the new field
+            # Helper function to determine what to put in the new date or time field
             if new_date:
                 if new_time:
                     naive_dt = dt.datetime(new_date.year,
@@ -164,4 +165,12 @@ class NodeForm(forms.ModelForm):
         cleaned_data['deadline'] = get_new_datetime(
             cleaned_data['deadline_date'],
             cleaned_data['deadline_time'])
+        # Make sure that if this Node repeats then the repeating
+        #   information is included.
+        if cleaned_data['repeats']:
+            if not (cleaned_data['repeating_number'] and
+                    cleaned_data['repeating_unit']):
+                raise forms.ValidationError(
+                    "This Node repeats but the repeating value and unit have not been set properly."
+                    )
         return cleaned_data

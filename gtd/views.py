@@ -260,6 +260,7 @@ def display_node(request, node_id=None, scope_id=None):
             # User has asked to change TodoState
             node = Node.objects.get(pk=node_id)
             node.todo_state = TodoState.objects.get(pk=request.POST['new_todo'])
+            node.auto_repeat = True
             node.save()
     all_nodes_qs = Node.objects.all()
     all_todo_states_qs = TodoState.get_active()
