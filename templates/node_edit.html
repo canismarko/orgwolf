@@ -30,7 +30,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
   {{ node.title }}
   {% endif %}
 </h3>
-<form action="" method="POST">
+<form action="" method="POST" class="form-horizontal">
 {% csrf_token %}
 <input type="submit" value="Save" class="btn"/><a href="../" class="btn">Cancel</a>
 <table>

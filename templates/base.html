@@ -33,6 +33,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
     {% endif %}
     {% if enable_css %}
     <link rel="stylesheet" type="text/css" href="{{ STATIC_URL }}bootstrap/css/bootstrap.css" />
+    <link rel="stylesheet" type="text/css" href="{{ STATIC_URL }}datepicker/datepicker.css" />
+    <link rel="stylesheet" type="text/css" href="{{ STATIC_URL }}timepicker/timepicker.css" />
     <style type="text/css">
     {% block style %}
     #logo
@@ -42,6 +44,78 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 	width: auto;
 	padding-left: 0px;
     }
+    .datepicker
+    {
+	padding: 0px;
+    }
+    span.add-on.disabled
+    {
+	pointer-events: none;
+    }
+    {% endblock %}  
+    </style>
+    {% endif %}
+    {% if enable_js %}
+    <script src="{{ STATIC_URL }}jquery-1.8.3.min.js"></script>
+    <script src="{{ STATIC_URL }}datepicker/bootstrap-datepicker.js"></script>
+    <script src="{{ STATIC_URL }}timepicker/bootstrap-timepicker.js"></script>
+    {% block script %}
+    <script type="text/javascript">
+      // enable or disable the timepicker objects
+      function timepicker_toggle(id_attr) 
+	{
+	    var checkbox = '#' + id_attr;
+	    var input = '#id_' + $("#" + id_attr).attr('toggles');
+	    var button = input + ' ~ span.add-on'
+	    if ($(checkbox).attr('checked') == 'checked')
+	    {
+		$(input).removeAttr('disabled');
+		$(button).removeClass('disabled');
+	    }
+	    else
+	    {
+		$(input).attr('disabled', 'disabled');
+		$(button).addClass('disabled');
+	    }
+	}
+      $(document).ready(function(){
+	  $("input.datepicker").each(function(ct) {
+	      // Prepare a date field for the date picker widget
+	      $(this).wrap('<div class="date datepicker input-append" data-date></div>');
+	      $(this).after('<span class="add-on">\n<i class="icon-calendar"></i>\n</span>');
+	      var btn_width = $(this).next('span.add-on').outerWidth();
+	      var mod_width = $(this).width() - btn_width
+	      // Shrink the field by the size of the button
+	      $(this).width(mod_width);
+	      // The parent <div> has the datepicker class now
+	      $(this).removeClass('datepicker');
+	      });
+	  // Now apply the actual datepicker functionality
+	  $('.datepicker').datepicker( {format: 'yyyy-mm-dd'})
+	      .on('changeDate', function() {
+		  $(this).datepicker('hide')});
+	  $("input.timepicker").each(function(ct) {
+	      // Prepare a time field for the time picker widget
+	      $(this).wrap('<div class="bootstrap-timepicker-component input-append" data-date></div>');
+	      $(this).after('<span class="add-on">\n<i class="icon-time"></i>\n</span>');
+	      // Shrink the field by the size of the button
+	      var btn_width = $(this).next('span.add-on').outerWidth();
+	      var mod_width = $(this).width() - btn_width
+	      $(this).width(mod_width);
+	      });
+	  // Disable scheduled/deadline time input if checkbox is blank
+	  $('#id_scheduled_time_specific').click(function() {
+	      timepicker_toggle($(this).attr('id'))});
+	  $('#id_deadline_time_specific').click(function() {
+	      timepicker_toggle($(this).attr('id'))});
+	  timepicker_toggle('id_scheduled_time_specific');
+	  timepicker_toggle('id_deadline_time_specific');
+	  $('#id_scheduled_time').timepicker( {defaultTime: 'value',
+				showMeridian: false});
+	  $('#id_deadline_time').timepicker( {defaultTime: 'value',
+				showMeridian: false});
+	  }); // End of onReady
+    </script>
     {% endblock %}  
     </style>
     {% endif %}
@@ -68,7 +142,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 	{% block inbox_widget %}
 	<li>
 	  <form class="navbar-form" method="POST" action="/gtd/toinbox/?next={{request.get_full_path}}" id="new_inbox_form">
-	    <input type="text" name="new_inbox_item" id="new_inbox_item"/><input type="submit" value="To Inbox" class="btn" />
+	    <div class="input-append">
+	    <input type="text" name="new_inbox_item" id="new_inbox_item" class="input-small" placeholder="To inbox..." /><input type="submit" value="Save" class="btn"></span>
+	    </div>
 	    {% csrf_token %}
 	  </form>
 	</li>

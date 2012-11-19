@@ -21,10 +21,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 {% block title %}Daily Agenda{% endblock %}
 {% block content %}
 <h3>{{ agenda_dt.date }}</h3>
-<form action="" method="post">
-  <input type="text" name="date" value="{{ agenda_dt|date:"Y-m-d" }}"/>
-  {% csrf_token %}
-  <input type="submit" value="Update" />
+<form action="" method="post" class="form-horizontal">
+    <input type="text" name="date" value="{{ agenda_dt|date:"Y-m-d" }}" class="input-medium datepicker" placeholder="Change date..."></input>
+    {% csrf_token %}
+  <input type="submit" value="Update" class="btn" />
 </form>
 <h4>Day Specific</h4>
 <table>

@@ -1,4 +1,6 @@
 <form action="{% url 'gtd.views.node_search' %}" method="get" class="form-search">
-  <input name='q' type='text'{% if query %} value="{{ query }}" {% endif %} class="search-query" placeholder="Enter search query..."/>
-  <input type='submit' value='Search' class="btn"/>
+  <div class="input-append"> 
+     <input name='q' type='text'{% if query %} value="{{ query }}" {% endif %} class="search-query input-medium" placeholder="Enter search query..."/>
+     <input type='submit' value='Search' class="btn"/>
+  </div>
 </form>
