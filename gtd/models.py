@@ -135,7 +135,7 @@ class Context(models.Model):
             tag_string = tool.tag_string
             final_queryset = final_queryset.exclude(tag_string__icontains=tool.tag_string)
         for location in excluded_locations:
-            final_queryset = final_queryset.exclude(tag_string__icontains=tool.tag_string)
+            final_queryset = final_queryset.exclude(tag_string__icontains=location.tag_string)
         # For required_people we have to construct a Q object
         new_Q = Q()
         for contact in required_people:

@@ -34,7 +34,7 @@ from orgwolf.tests import prepare_database
 from orgwolf.preparation import translate_old_text
 from orgwolf.models import OrgWolfUser as User
 from gtd.forms import NodeForm
-from gtd.models import Node, TodoState, node_repeat, Text
+from gtd.models import Node, TodoState, node_repeat, Text, Location, Tool, Context
 
 class EditNode(TestCase):
     def setUp(self):
@@ -154,6 +154,7 @@ class RepeatingNodeTest(TestCase):
         self.assertTrue(node.repeats)
         # Close the node
         node.todo_state = closed
+        node.auto_repeat = True
         node.save()
         node = Node.objects.get(title='Buy cat food')
         # The state shouldn't actually change since it's repeating
@@ -170,6 +171,7 @@ class RepeatingNodeTest(TestCase):
         node.scheduled = old_date
         node.save()
         node.todo_state=closed
+        node.auto_repeat = True
         node.save()
         self.assertFalse(node.is_closed())
         new_date = dt.datetime(2013, 1, 3, tzinfo=get_current_timezone())
@@ -212,6 +214,7 @@ class RepeatingNodeTest(TestCase):
         node.scheduled = old_date
         node.save()
         node.todo_state=closed
+        node.auto_repeat = True
         node.save()
         self.assertFalse(node.is_closed())
         new_date = dt.datetime(2013, 9, 30, tzinfo=get_current_timezone())
@@ -295,3 +298,78 @@ class TextHandling(TestCase):
         self.assertEqual('When will I have time\n', root_node.text)
         child_node1 = Node.objects.get(title='Meijer')
         self.assertEqual('- Toilet paper\n- Milk\n', child_node1.text)
+
+class ContextFiltering(TestCase):
+    def setUp(self):
+        prepare_database()
+        dummy_user = User.objects.get(pk=1)
+        next_state = TodoState.objects.get(abbreviation='NEXT')
+        # Create some locations
+        kalsec = Location(
+            display='Kalsec',
+            tag_string='work',
+            owner=dummy_user,
+            )
+        kalsec.save()
+        sheldon = Location(
+            display='Sheldon',
+            tag_string='home',
+            owner=dummy_user,
+            )
+        sheldon.save()
+        # Create some tools
+        computer = Tool(
+            display='Computer',
+            tag_string='comp',
+            owner=dummy_user,
+            )
+        computer.save()
+        phone = Tool(
+            display='Phone',
+            tag_string='phone',
+            owner=dummy_user,
+            )
+        phone.save()
+        # Create some contexts
+        work = Context(
+            name = 'Work',
+            )
+        work.save()
+        work.tools_available.add(computer)
+        work.tools_available.add(phone)
+        work.locations_available.add(kalsec)
+        home = Context(
+            name = 'Home',
+            )
+        home.save()
+        home.tools_available.add(computer)
+        home.tools_available.add(phone)
+        home.locations_available.add(sheldon)
+        # Create some nodes to play with
+        Node(
+            owner=dummy_user,
+            order=10,
+            title='Home Node',
+            todo_state=next_state,
+            tag_string=':home:',
+            ).save()
+        Node(
+            owner=dummy_user,
+            order=10,
+            title='Work Node',
+            todo_state=next_state,
+            tag_string=':work:',
+            ).save()
+    def test_home_tag(self):
+        all_nodes_qs = Node.objects.all()
+        work = Context.objects.get(name='Work')
+        home = Context.objects.get(name='Home')
+        self.assertEqual(
+            list(Node.objects.filter(title='Work Node')),
+            list(work.apply(all_nodes_qs))
+            )
+        self.assertEqual(
+            list(Node.objects.filter(title='Home Node')),
+            list(home.apply(all_nodes_qs))
+            )
+        
