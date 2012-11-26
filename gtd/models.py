@@ -17,6 +17,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #######################################################################
 
+from __future__ import unicode_literals
 from django.core.exceptions import ValidationError
 from django.db import models
 from django.db.models import Q, signals
@@ -342,7 +343,7 @@ def node_repeat(sender, **kwargs):
         elif unit == 'w': # Weeks
             new = original + timedelta(days=(number*7))
         elif unit == 'm': # Months
-            month = (original.month + number) % 12
+            month = ((original.month + number -1 ) % 12) + 1
             # Make sure we're not setting Sep 31st of other non-dates
             if month in (4, 6, 9, 11) and original.day == 31:
                 day = 30
@@ -352,7 +353,7 @@ def node_repeat(sender, **kwargs):
                 day = original.day
             year = int(
                 math.floor(
-                    original.year + ((original.month + number) / 12)
+                    original.year + ((original.month + number - 1) / 12)
                     )
                 )
             new = datetime(year=year,
