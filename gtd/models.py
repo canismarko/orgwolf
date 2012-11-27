@@ -17,6 +17,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #######################################################################
 
+from __future__ import unicode_literals
 from django.core.exceptions import ValidationError
 from django.db import models
 from django.db.models import Q, signals
