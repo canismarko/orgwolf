@@ -134,7 +134,6 @@ class RepeatingNodeTest(TestCase):
         prepare_database()
         dummy_user = User(pk=1)
         actionable = TodoState.objects.get(abbreviation='ACTN')
-        # closed = TodoState.objects.get(abbreviation='DONE')
         node = Node(owner=dummy_user,
                     order=10,
                     title='Buy cat food',
@@ -229,6 +228,21 @@ class RepeatingNodeTest(TestCase):
         self.assertFalse(node.is_closed())
         new_date = dt.datetime(2013, 3, 28, tzinfo=get_current_timezone())
         self.assertEqual(new_date.date(), node.scheduled.date())
+    def test_month_bug(self):
+        """Test for a bug that imporperly increments months and years if original_month + repeating_unit equals 12 and if repeating_unit = month"""
+        node = Node.objects.get(title='Buy cat food')
+        closed = TodoState.objects.get(abbreviation='DONE')
+        node.scheduled = dt.datetime(2012, 11, 25, 0, 0, tzinfo=get_current_timezone())
+        node.repeating_unit = 'm'
+        node.repeating_number = 1
+        node.repeats_from_completion = False
+        node.save()
+        self.assertTrue(node.todo_state.actionable)
+        node.todo_state = closed
+        node.auto_repeat = True
+        node.save()
+        self.assertEqual(dt.datetime(2012, 12, 25, 0, 0, tzinfo=get_current_timezone()),
+                         node.scheduled)
 
 class ParentStructure(TestCase):
     def setUp(self):

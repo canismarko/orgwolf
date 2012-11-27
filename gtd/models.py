@@ -343,7 +343,7 @@ def node_repeat(sender, **kwargs):
         elif unit == 'w': # Weeks
             new = original + timedelta(days=(number*7))
         elif unit == 'm': # Months
-            month = (original.month + number) % 12
+            month = ((original.month + number -1 ) % 12) + 1
             # Make sure we're not setting Sep 31st of other non-dates
             if month in (4, 6, 9, 11) and original.day == 31:
                 day = 30
@@ -353,7 +353,7 @@ def node_repeat(sender, **kwargs):
                 day = original.day
             year = int(
                 math.floor(
-                    original.year + ((original.month + number) / 12)
+                    original.year + ((original.month + number - 1) / 12)
                     )
                 )
             new = datetime(year=year,
@@ -412,6 +412,12 @@ class NodeRepetition(models.Model):
     original_todo_state = models.ForeignKey('TodoState', related_name='repetitions_original_set', blank=True)
     new_todo_state = models.ForeignKey('TodoState', related_name='repetitions_new_set', blank=True)
     timestamp = models.DateTimeField()
+    def __str__(self):
+        string = ''
+        string += self.node.title + ': '
+        string += self.original_todo_state.abbreviation
+        string += ' --> ' + self.new_todo_state.abbreviation
+        return string
 
 @python_2_unicode_compatible
 class Text(models.Model):
