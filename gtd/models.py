@@ -412,6 +412,12 @@ class NodeRepetition(models.Model):
     original_todo_state = models.ForeignKey('TodoState', related_name='repetitions_original_set', blank=True)
     new_todo_state = models.ForeignKey('TodoState', related_name='repetitions_new_set', blank=True)
     timestamp = models.DateTimeField()
+    def __str__(self):
+        string = ''
+        string += self.node.title + ': '
+        string += self.original_todo_state.abbreviation
+        string += ' --> ' + self.new_todo_state.abbreviation
+        return string
 
 @python_2_unicode_compatible
 class Text(models.Model):
