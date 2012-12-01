@@ -1,0 +1,23 @@
+{% extends 'base.html' %}
+{% block title %}QUnit Test Runner{% endblock %}
+
+{% block all_style %}
+<link rel="stylesheet" href="http://code.jquery.com/qunit/qunit-1.10.0.css"></link>
+{% endblock %}
+{% block nav %}
+{% endblock %}
+{% block all_script %}
+<script src="{{ STATIC_URL }}jquery-1.8.3.min.js"></script>
+<script src="{{ STATIC_URL }}node_view.js"></script>
+{% endblock %}
+
+
+{% block content %}
+<div id="qunit"></div>
+<div id="qunit-fixture"></div>
+<div id="heading0" node_id="0" level="-1" ></div>
+<script src="http://code.jquery.com/qunit/qunit-1.10.0.js"></script>
+<!-- Add QUnit imports here -->
+<script src="{{ STATIC_URL }}node_view-test.js"></script>
+<!-- End QUnit tests -->
+{% endblock %}

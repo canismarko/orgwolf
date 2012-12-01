@@ -66,7 +66,7 @@ class TodoState(models.Model):
         that are currently in play."""
         return TodoState.objects.all()
     def as_html(self):
-        """Converts this todostate to an HTML string that be put into tempaltes"""
+        """Converts this todostate to an HTML string that can be put into tempaltes"""
         html = conditional_escape(self.abbreviation)
         if not self.closed: # Bold if not a closed TodoState
             html = '<strong>' + html + '</strong>'
@@ -235,10 +235,17 @@ class Node(models.Model):
             today = agenda_dt.date()
         else:
             today = datetime.now().date()
-        if (target_date.date() < today) or future:
-            return str((target_date.date() - today).days) + " days"
+        difference = (target_date.date() - today).days
+        if abs(difference) == 1:
+            pluralized = ''
         else:
-            return " "
+            pluralized = 's'
+        if difference < 0:
+            return '%d day%s ago' % (abs(difference), pluralized)
+        elif difference > 0 and future:
+            return 'in %d day%s' % (abs(difference), pluralized)
+        else:
+            return '' 
     def get_title(self):
         if self.title.strip(' ').strip('\t'):
             title = self.title
@@ -275,6 +282,12 @@ class Node(models.Model):
         string = ''
         for node in node_list:
             string += delimiter + node['display']
+        return string
+    def as_html(self):
+        string = ''
+        if self.todo_state:
+            string += self.todo_state.as_html() + ' '
+        string += self.title
         return string
     def get_tags(self):
         tag_strings = self.tag_string.split(":")

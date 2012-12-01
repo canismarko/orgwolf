@@ -17,6 +17,12 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 {% endcomment %}
+
+{% block script %}
+<script src="{{ STATIC_URL }}node_form.js"></script>
+{{ block.super }}
+{% endblock %}
+
 {# Breadcrumb trail #}
 {% block content %}
 <a href="{{ base_url }}">Project List</a>

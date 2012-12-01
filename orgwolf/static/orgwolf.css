@@ -1,0 +1,49 @@
+.required label:before
+{
+    content: "*"
+}
+.required label
+{
+    font-weight: bold;
+}
+form table input[type="checkbox"],label
+{
+    margin-top: 2px;
+    margin-bottom: 2px;
+}
+#logo
+{
+    margin-left: auto;
+    margin-right: auto;
+    width: auto;
+    padding-left: 0px;
+}
+.datepicker
+{
+    padding: 0px;
+}
+span.add-on.disabled
+{
+    pointer-events: none;
+}
+span.alt
+{
+    display: none;
+}
+.spacer
+{
+    visibility: hidden;
+}
+.children
+{
+    display: none;
+}
+.odd-heading
+{
+    background-color: #B6D6DB;
+}
+.even-heading
+{
+    background-color: white; 
+   /* Todo: figure out how to do this using background: transparent */
+}

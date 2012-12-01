@@ -53,3 +53,10 @@ def feedback(request):
     return render_to_response('feedback.html',
                               locals(),
                               RequestContext(request))
+
+def jstest(request):
+    """Executes the javascript test runner (QUnit).
+    Unit tests are stored in `appname/static/`."""
+    return render_to_response('qunit.html',
+                              locals(),
+                              RequestContext(request))

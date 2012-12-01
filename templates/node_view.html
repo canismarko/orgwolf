@@ -22,6 +22,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 {% else %}Projects
 {% endif %}
 {% endblock %}
+
+{% block script %}
+{{ block.super }}
+<script src="{{ STATIC_URL }}node_view.js"></script>
+{% endblock %}
+
 {% block content %}
 
 {# Search box #}
@@ -36,12 +42,18 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 <h3>{{ parent_node.get_title }}</h3>
 {% if node_id %}
 <form action="" method="POST">
-  <a href="edit/" class="btn">Edit</a>
-  {% for todo_state in all_todo_states_qs %}
-  <button type="submit" name="new_todo" value="{{ todo_state.id }}" class="btn{% if todo_state = parent_node.todo_state %} active{% endif %}">
-    {{ todo_state.as_html }}
-  </button>
-  {% endfor %}
+  <div class="btn-toolbar">
+    <div class="btn-group">
+      <a href="edit/" class="btn">Edit</a><span class="alt"> |</span>
+    </div>
+    <div class="btn-group">
+      {% for todo_state in all_todo_states_qs %}
+      <button type="submit" name="new_todo" value="{{ todo_state.id }}" class="btn{% if todo_state = parent_node.todo_state %} active{% endif %}">
+	{{ todo_state.as_html }}
+      </button>
+      {% endfor %}
+  </div>
+  </div>
   <input type="hidden" name="function" value="change_todo_state" />
   {% csrf_token %}
 </form>
@@ -57,6 +69,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
     {% if parent_node.scheduled_time_specific %}
     {{ parent_node.scheduled.time }}
     {% endif %}</dd>
+  {% endif %}
+  {% if parent_node.repeats %}
+  <dt><i class="icon-repeat"></i>Repeats:</dt>
+  <dd>Every {{ parent_node.repeating_number}}{{ parent_node.repeating_unit }}</dd>
   {% endif %}
   {% if parent_tags %}
   <dt>Tags: </dt>
@@ -79,17 +95,29 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
   {% csrf_token %}
 </form>
 {# List of child nodes as links #}
-<table class="table">
+<div id="node-workspace">
+  {# Used as a place to put twisty drop dows of all Nodes #}
+</div>
+<table class="table" id="non-js-table">
   <tr>
     <th>State</th>
     <th>Description</th>
     <th>Tags</th>
+    <th>Actions</th>
   </tr>
     {% for node in child_nodes_qs %}
-  <tr>
-    <td>{{ node.todo_state.as_html }}</td>
-    <td><a href="{{ base_url }}{{ node.id }}">{{ node.get_title }}</a></td>
-    <td>{{ node.tag_string }}</td>
+  <tr class="child_row" node_id="{{ node.id }}">
+    <td id="todo{{ node.id }}">{{ node.todo_state.as_html }}</td>
+    <td id="title{{ node.id }}">
+      <a href="{{ base_url }}{{ node.id }}">{{ node.get_title }}</a>
+    </td>
+    <td id="tags{{ node.id }}">{{ node.tag_string }}</td>
+    <td>
+      <div class="btn-group">
+	<button class="btn"><i class="icon-arrow-up"></i><span class="alt">Up</span></button>
+	<button class="btn"><i class="icon-arrow-down"></i><span class="alt">Down</span></button>
+      </div>
+    </td>
   </tr>
   {% endfor %}
 </table>
