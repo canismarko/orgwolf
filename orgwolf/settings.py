@@ -125,6 +125,7 @@ MIDDLEWARE_CLASSES = (
 from django.conf.global_settings import TEMPLATE_CONTEXT_PROCESSORS
 TEMPLATE_CONTEXT_PROCESSORS += (
     'orgwolf.context_processors.debug_variables',
+    'orgwolf.context_processors.scope_context',
     'django.core.context_processors.request',
     )
     

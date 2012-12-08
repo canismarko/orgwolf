@@ -1,0 +1,10 @@
+<ul class="nav nav-tabs">
+  <li>
+    <a>All</a>
+  </li>
+  {% for scope in scopes %}
+  <li>
+    <a>{{ scope.display }}</a>
+  </li>
+  {% endfor %}
+</ul>

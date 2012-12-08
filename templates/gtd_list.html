@@ -23,6 +23,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 {% endif %}
 {% endblock %}
 {% block content %}
+
+{# Scope tabs #}
+{% include 'scope_tabs.html' %}
+
 {# Filters #}
 <form action="" method="POST" class="form-inline">
   {% include 'scope_filter.html' %}
