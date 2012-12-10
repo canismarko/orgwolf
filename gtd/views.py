@@ -118,7 +118,7 @@ def list_display(request, url_string=""):
         seperator = "|"
     # (Add more URL regex pieces here)
     regex_string += seperator + "context"
-    regex_string += seperator + "scope)([1-9][0-9]*)"
+    regex_string += seperator + "scope)(\d*)"
     regex = re.compile(regex_string, re.IGNORECASE)
     regex_results = regex.findall(url_string)
     for result in regex_results:
