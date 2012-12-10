@@ -96,9 +96,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 </form>
 {# List of child nodes as links #}
 <div id="node-workspace">
-  {# Used as a place to put twisty drop dows of all Nodes #}
+  {% comment %}
+  Used as a place to put twisty drop downs of all Nodes. 
+  Populated with javascript
+  {% endcomment %}
 </div>
-<table class="table" id="non-js-table">
+<table class="table" id="non-js-table" node_id="{{ parent_node.id }}">
   <tr>
     <th>State</th>
     <th>Description</th>
