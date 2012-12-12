@@ -424,3 +424,22 @@ class UrlParse(TestCase):
         self.assertEqual(parse_url.__class__.__name__, 'function')
         return_value = parse_url({})
         self.assertEqual(return_value.__class__.__name__, 'dict')
+
+from gtd.templatetags.gtd_extras import overdue, upcoming
+
+class OverdueFilter(TestCase):
+    """Tests the `overdue` template filter that makes deadlines into
+    prettier "in 1 day" strings, etc."""
+    def test_filter_exists(self):
+        self.assertEqual(overdue.__class__.__name__, 'function')
+        self.assertEqual(overdue(dt.datetime.now()).__class__.__name__, 'SafeBytes')
+    def test_simple_dt(self):
+        yesterday = dt.datetime.now() + dt.timedelta(-1)
+        self.assertEqual(overdue(yesterday, future=True), '1 day ago')
+        yesterday = yesterday + dt.timedelta(-1)
+        self.assertEqual(overdue(yesterday, future=True), '2 days ago')
+    def test_future_dt(self):
+        tomorrow = dt.datetime.now() + dt.timedelta(1)
+        self.assertEqual(overdue(tomorrow, future=True), 'in 1 day') 
+        tomorrow = tomorrow + dt.timedelta(1)
+        self.assertEqual(overdue(tomorrow, future=True), 'in 2 days')
