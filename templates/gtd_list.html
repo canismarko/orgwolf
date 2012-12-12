@@ -1,4 +1,5 @@
 {% extends 'base.html' %}
+{% load gtd_extras %}
 {% comment %}
 Copyright 2012 Mark Wolf
 
@@ -64,7 +65,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
     <td>
       <a href="{% url 'gtd.views.display_node' node_id=node.id %}" title="{{ node.get_hierarchy_as_string }}">{{ node.todo_state.as_html }}</a>
     </td>
-    <td><a href="{% url 'gtd.views.display_node' node_id=node.id %}" title="{{ node.get_hierarchy_as_string }}">{{ node.title }}</a></td>
+    <td><a href="{% url 'gtd.views.display_node' node_id=node.id %}" title="{{ node.get_hierarchy_as_string }}">{{ node.title }}</a>{% if node.deadline %} Due {{ node.deadline|upcoming }}{% endif %}</td>
     <td><a href="{% url 'gtd.views.display_node' node_id=node.id %}" title="{{ node.get_hierarchy_as_string }}">{{ node.tag_string }}</a></td>
   </tr>
   {% endfor %}

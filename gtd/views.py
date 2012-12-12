@@ -27,6 +27,7 @@ from django.db.models import Q
 from django.utils.timezone import get_current_timezone
 import re
 import datetime
+from itertools import chain
 
 from gtd.models import TodoState, Node, Context, Scope, Text
 from wolfmail.models import MailItem, Label
@@ -156,6 +157,13 @@ def list_display(request, url_string=""):
             nodes = nodes.filter(scope=scope)
         except Node.ObjectDoesNotExist:
             pass
+    # Put nodes with deadlines first
+    deadline_nodes = nodes.exclude(deadline=None)
+    other_nodes = nodes.filter(deadline=None)
+    nodes = chain(
+        deadline_nodes.order_by('deadline'),
+        other_nodes
+        )
     return render_to_response('gtd_list.html',
                               locals(),
                               RequestContext(request))        
