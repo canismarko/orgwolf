@@ -22,11 +22,12 @@ from django.core.urlresolvers import reverse
 from django.shortcuts import render_to_response, redirect, get_object_or_404
 from django.template import RequestContext
 from django.contrib.auth.decorators import login_required
-from django.http import Http404, HttpResponseRedirect
+from django.http import HttpResponse, Http404, HttpResponseRedirect
 from django.db.models import Q
 from django.utils.timezone import get_current_timezone
 import re
 import datetime
+import json
 
 from gtd.models import TodoState, Node, Context, Scope, Text
 from wolfmail.models import MailItem, Label
@@ -350,6 +351,29 @@ def new_node(request, node_id, scope_id):
     return render_to_response('node_edit.html',
                               locals(),
                               RequestContext(request))
+
+@login_required
+def get_children(request, parent_id):
+    parent = get_object_or_404(Node, pk=parent_id)
+    children_qs = Node.objects.filter(parent=parent)
+    children = []
+    for child in children_qs:
+        new_dict = {
+            'node_id': child.pk,
+            'title': child.title,
+            'tags': child.tag_string,
+            'text': child.text,
+             }
+        if hasattr(child.todo_state, 'pk'):
+            new_dict['todo_id'] = child.todo_state.pk
+            new_dict['todo'] = child.todo_state.as_html()
+        children.append(new_dict)
+    data = {
+        'status': 'success',
+        'parent_id': parent_id,
+        'children': children,
+        }
+    return HttpResponse(json.dumps(data))
 
 @login_required
 def node_search(request):

@@ -25,7 +25,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 {% block script %}
 {{ block.super }}
-<script src="{{ STATIC_URL }}node_view.js"></script>
+<script>
+$('document').ready(function() {
+    var outline = new project_outline($('#outline-workspace'));
+    outline.init();
+});
+</script>
 {% endblock %}
 
 {% block content %}
@@ -101,6 +106,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
   Populated with javascript
   {% endcomment %}
 </div>
+<div id="outline-workspace">
 <table class="table" id="non-js-table" node_id="{{ parent_node.id }}">
   <tr>
     <th>State</th>
@@ -109,12 +115,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
     <th>Actions</th>
   </tr>
     {% for node in child_nodes_qs %}
-  <tr class="child_row" node_id="{{ node.id }}">
-    <td id="todo{{ node.id }}">{{ node.todo_state.as_html }}</td>
-    <td id="title{{ node.id }}">
+  <tr class="ow-heading" node_id="{{ node.id }}">
+    <td class="ow-todo">{{ node.todo_state.as_html }}</td>
+    <td class="ow-title">
       <a href="{{ base_url }}{{ node.id }}">{{ node.get_title }}</a>
     </td>
-    <td id="tags{{ node.id }}">{{ node.tag_string }}</td>
+    <td class="ow-tags">{{ node.tag_string }}</td>
     <td>
       <div class="btn-group">
 	<button class="btn"><i class="icon-arrow-up"></i><span class="alt">Up</span></button>
@@ -124,4 +130,5 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
   </tr>
   {% endfor %}
 </table>
+</div>
 {% endblock %}

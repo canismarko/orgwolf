@@ -34,10 +34,6 @@ span.alt
 {
     visibility: hidden;
 }
-.children
-{
-    display: none;
-}
 .odd-heading
 {
     background-color: #B6D6DB;
@@ -46,4 +42,8 @@ span.alt
 {
     background-color: white; 
    /* Todo: figure out how to do this using background: transparent */
+}
+.clickable, .add-heading
+{
+    cursor: pointer;
 }
