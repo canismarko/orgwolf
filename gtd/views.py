@@ -28,11 +28,20 @@ from django.utils.timezone import get_current_timezone
 import re
 import datetime
 import json
+from itertools import chain
 
 from gtd.models import TodoState, Node, Context, Scope, Text
 from wolfmail.models import MailItem, Label
 from gtd.forms import NodeForm
 from orgwolf.models import OrgWolfUser as User
+
+def parse_url(raw_url):
+    """Detects context and scope information from the url that was requested.
+    Returns the results as a dictionary.
+    Note: this function will throw a 404 exception if any unprocessable bits are
+    passed so it's important for the calling view to strip any parts that
+    are specific to itself."""
+    pass
 
 def get_todo_states():
     """Return a list of the "in-play" Todo states."""
@@ -80,6 +89,9 @@ def list_display(request, url_string=""):
                 empty_Q = False
             if post_item == 'context':
                 new_context_id = int(request.POST['context'])
+                # Update session variable if user is clearning the context
+                if new_context_id == 0:
+                    request.session['context'] = None
             elif post_item == 'scope':
                 new_scope_id = int(request.POST['scope'])
         # Now build the new URL and redirect
@@ -96,7 +108,10 @@ def list_display(request, url_string=""):
             new_url += 'context' + str(new_context_id) + '/'
         return redirect(new_url)
     nodes = Node.objects.none()
-    current_context = None
+    # Get stored context value (or set if first visit)
+    if 'context' not in request.session: 
+        request.session['context'] = None
+    current_context = request.session['context']
     # Build regular expression to decide what's a valid URL string
     seperator = ""
     regex_string = "("
@@ -111,10 +126,15 @@ def list_display(request, url_string=""):
     for result in regex_results:
         if result[0].lower() == "context": # URL asked for a context
             try:
-                current_context = Context.objects.get(id=result[1])
+                requested_context = Context.objects.get(id=result[1])
             except Context.DoesNotExist:
                 pass
-        if result[0].lower() == "scope": # URL asked for a context
+            else:
+                if requested_context != current_context:
+                    # User is changing the context
+                    request.session['context'] = requested_context
+                    current_context = requested_context
+        if result[0].lower() == "scope": # URL asked for a scope
             try:
                 scope = Scope.objects.get(id=result[1])
             except Context.DoesNotExist:
@@ -138,6 +158,13 @@ def list_display(request, url_string=""):
             nodes = nodes.filter(scope=scope)
         except Node.ObjectDoesNotExist:
             pass
+    # Put nodes with deadlines first
+    deadline_nodes = nodes.exclude(deadline=None)
+    other_nodes = nodes.filter(deadline=None)
+    nodes = chain(
+        deadline_nodes.order_by('deadline'),
+        other_nodes
+        )
     return render_to_response('gtd_list.html',
                               locals(),
                               RequestContext(request))        

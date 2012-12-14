@@ -35,6 +35,7 @@ from orgwolf.preparation import translate_old_text
 from orgwolf.models import OrgWolfUser as User
 from gtd.forms import NodeForm
 from gtd.models import Node, TodoState, node_repeat, Text, Location, Tool, Context
+from gtd.views import parse_url
 
 class EditNode(TestCase):
     def setUp(self):
@@ -374,6 +375,14 @@ class ContextFiltering(TestCase):
             todo_state=next_state,
             tag_string=':work:',
             ).save()
+        # Login
+        self.assertTrue(
+            self.client.login(username='test', password='secret')
+            )
+    def test_context0(self):
+        """Confirm that trying to set context0 returns a 404"""
+        response = self.client.get('/gtd/lists/context0/')
+        self.assertEqual(response.status_code, 404)
     def test_home_tag(self):
         all_nodes_qs = Node.objects.all()
         work = Context.objects.get(name='Work')
@@ -386,4 +395,51 @@ class ContextFiltering(TestCase):
             list(Node.objects.filter(title='Home Node')),
             list(home.apply(all_nodes_qs))
             )
-        
+    def test_context_session_variables(self):
+        """Test if the active GTD context is saved and stored properly in session variables"""
+        response = self.client.get('/gtd/lists/');
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(
+            self.client.session['context'],
+            None)
+        response = self.client.get('/gtd/lists/context1/');
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(
+            self.client.session['context'],
+            Context.objects.get(name = 'Work')
+            )
+        # Test clearing the context by using the POST filter
+        response = self.client.post('/gtd/lists/context1/', {'context': '0',
+                                                             'scope': '0',
+                                                             })
+        self.assertRedirects(response, '/gtd/lists/')
+        self.assertEqual(
+            self.client.session['context'],
+            None)
+
+class UrlParse(TestCase):
+    """Tests for the gtd url_parser that extracts context and scope information
+    from the URL string and returns it as a useful dictionary."""
+    def test_function_exists(self):
+        self.assertEqual(parse_url.__class__.__name__, 'function')
+        return_value = parse_url({})
+        self.assertEqual(return_value.__class__.__name__, 'dict')
+
+from gtd.templatetags.gtd_extras import overdue, upcoming
+
+class OverdueFilter(TestCase):
+    """Tests the `overdue` template filter that makes deadlines into
+    prettier "in 1 day" strings, etc."""
+    def test_filter_exists(self):
+        self.assertEqual(overdue.__class__.__name__, 'function')
+        self.assertEqual(overdue(dt.datetime.now()).__class__.__name__, 'SafeBytes')
+    def test_simple_dt(self):
+        yesterday = dt.datetime.now() + dt.timedelta(-1)
+        self.assertEqual(overdue(yesterday, future=True), '1 day ago')
+        yesterday = yesterday + dt.timedelta(-1)
+        self.assertEqual(overdue(yesterday, future=True), '2 days ago')
+    def test_future_dt(self):
+        tomorrow = dt.datetime.now() + dt.timedelta(1)
+        self.assertEqual(overdue(tomorrow, future=True), 'in 1 day') 
+        tomorrow = tomorrow + dt.timedelta(1)
+        self.assertEqual(overdue(tomorrow, future=True), 'in 2 days')
