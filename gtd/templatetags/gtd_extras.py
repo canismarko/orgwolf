@@ -58,7 +58,8 @@ def nodes_as_hierarchy_table(qs, base_url, autoescape=None):
     for obj in qs:
         html += '<tr>\n<td>'
         html += '<a href="' + base_url + str(obj.id) + '">'
-        html += esc(getattr(obj.todo_state, 'abbreviation', ' '))
+        if hasattr(obj.todo_state, 'pk'):
+            html += esc(obj.todo_state.as_html())
         html += '</a>'
         html += '</td>\n<td>'
         html += '<a href="' + base_url + str(obj.id) + '">'

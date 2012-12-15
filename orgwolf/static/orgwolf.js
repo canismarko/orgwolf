@@ -100,7 +100,6 @@ var outline_heading = function(args) {
 	this.$text.css('display', 'none');
 	this.set_indent(this.$children, 1);
 	this.set_indent(this.$text, 1);
-	console.log(this.$text.text());
 	this.$element.data('object', this);
 	var $clickable = this.$element.children('.clickable');
 	$clickable.data('$parent', this.$element);
