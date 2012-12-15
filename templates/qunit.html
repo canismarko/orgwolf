@@ -16,40 +16,42 @@
 {% block content %}
 <div id="qunit"></div>
 <div id="qunit-fixture"></div>
-<table class="table ow-outline" id="test_workspace" node_id="3">
-  <tr>
-    <th>State</th>
-    <th>Description</th>
-    <th>Tags</th>
-    <th>Actions</th>
-  </tr>
-  <tr class="ow-heading" node_id="1">
-    <td class="ow-todo" todo_id="1">DONE</td>
-    <td class="ow-title">
-      <a href="/gtd/nodes/1">Tasks</a>
-    </td>
-    <td class="ow-tags"></td>
-    <td>
-      <div class="btn-group">
-	<button class="btn"><i class="icon-arrow-up"></i><span class="alt">Up</span></button>
-	<button class="btn"><i class="icon-arrow-down"></i><span class="alt">Down</span></button>
-      </div>
-    </td>
-  </tr>
-  <tr class="ow-heading" node_id="2">
-    <td class="ow-todo"></td>
-    <td class="ow-title">
-      <a href="/gtd/nodes/2">Expense reports</a>
-    </td>
-    <td class="ow-tags">:comp:</td>
-    <td>
-      <div class="btn-group">
-	<button class="btn"><i class="icon-arrow-up"></i><span class="alt">Up</span></button>
-	<button class="btn"><i class="icon-arrow-down"></i><span class="alt">Down</span></button>
-      </div>
-    </td>
-  </tr>
-</table>
+<div class="ow-outline" id="test_workspace" node_id="0">
+</div>
+<!-- <table class="table ow-outline" id="test_workspace" node_id="0"> -->
+<!--   <tr> -->
+<!--     <th>State</th> -->
+<!--     <th>Description</th> -->
+<!--     <th>Tags</th> -->
+<!--     <th>Actions</th> -->
+<!--   </tr> -->
+<!--   <tr class="ow-heading" node_id="1"> -->
+<!--     <td class="ow-todo" todo_id="1">DONE</td> -->
+<!--     <td class="ow-title"> -->
+<!--       <a href="/gtd/nodes/1">Tasks</a> -->
+<!--     </td> -->
+<!--     <td class="ow-tags"></td> -->
+<!--     <td> -->
+<!--       <div class="btn-group"> -->
+<!-- 	<button class="btn"><i class="icon-arrow-up"></i><span class="alt">Up</span></button> -->
+<!-- 	<button class="btn"><i class="icon-arrow-down"></i><span class="alt">Down</span></button> -->
+<!--       </div> -->
+<!--     </td> -->
+<!--   </tr> -->
+<!--   <tr class="ow-heading" node_id="2"> -->
+<!--     <td class="ow-todo"></td> -->
+<!--     <td class="ow-title"> -->
+<!--       <a href="/gtd/nodes/2">Expense reports</a> -->
+<!--     </td> -->
+<!--     <td class="ow-tags">:comp:</td> -->
+<!--     <td> -->
+<!--       <div class="btn-group"> -->
+<!-- 	<button class="btn"><i class="icon-arrow-up"></i><span class="alt">Up</span></button> -->
+<!-- 	<button class="btn"><i class="icon-arrow-down"></i><span class="alt">Down</span></button> -->
+<!--       </div> -->
+<!--     </td> -->
+<!--   </tr> -->
+<!-- </table> -->
 <script src="{{ STATIC_URL }}qunit-1.10.0.js"></script>
 <!-- Add QUnit imports here -->
 <script src="{{ STATIC_URL }}project_outline-test.js"></script>

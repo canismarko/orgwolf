@@ -312,6 +312,8 @@ def display_node(request, node_id=None, scope_id=None):
         child_nodes_qs = child_nodes_qs.filter(scope=scope)
         url_kwargs['scope_id'] = scope_id
     base_url = reverse('gtd.views.display_node', kwargs=url_kwargs)
+    if node_id == None:
+        node_id = 0
     return render_to_response('node_view.html',
                               locals(),
                               RequestContext(request))
@@ -381,7 +383,10 @@ def new_node(request, node_id, scope_id):
 
 @login_required
 def get_children(request, parent_id):
-    parent = get_object_or_404(Node, pk=parent_id)
+    if int(parent_id) > 0:
+        parent = get_object_or_404(Node, pk=parent_id)
+    elif int(parent_id) == 0:
+        parent = None
     children_qs = Node.objects.filter(parent=parent)
     children = []
     for child in children_qs:

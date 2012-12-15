@@ -12,6 +12,7 @@ var sparse_dict = {
 };
 var full_dict = {
     title: 'test_title',
+    text: 'here\' some text that goes with it',
     node_id: '1',
     todo_id: '1',
     todo: 'DONE',
@@ -22,9 +23,34 @@ var second_dict = {
     node_id: '5',
     todo_id: '2',
     todo: 'NEXT',
-}
-var ajax_timer = 20; // how long fake ajax request takes (in milliseconds)
+};
+var ajax_timer = 30; // how long fake ajax request takes (in milliseconds)
 // Setup fake AJAX responses
+$.mockjax({
+    url: '/gtd/nodes/0/children/',
+    responseTime: ajax_timer,
+    responseText: {
+	status: 'success',
+	parent_id: 0,
+	children: [
+	    {
+		node_id: 1,
+		title: 'Tasks',
+		todo_id: 1,
+		todo: 'DONE',
+		tags: '',
+		text: 'Mostly when I can...',
+	    },
+	    {
+		node_id: 2,
+		title: 'Expense reports',
+		todo: 'NEXT',
+		tags: ':comp:',
+		text: 'From Korea-Japan',
+	    }
+	]
+    }
+});
 $.mockjax({
     url: '/gtd/nodes/1/children/',
     responseTime: ajax_timer,
@@ -103,6 +129,7 @@ test('create new heading object from full data', function() {
     var test_heading = new outline_heading(full_dict);
     equal(test_heading.title, 'test_title', 'Title is set');
     strictEqual(test_heading.todo_id, 1, 'Todo ID is set');
+    equal(test_heading.text, 'here\' some text that goes with it', 'Text set');
     equal(test_heading.todo, 'DONE', 'Todo state is set');
     equal(test_heading.tags, ':comp:', 'Tag string is set');
 });
@@ -126,7 +153,7 @@ test('create new heading object from sparse data', function() {
 });
 test('heading as_html method', function() {
     var test_heading = new outline_heading(sparse_dict);
-    var expected_html = '<div class="heading" node_id="1">\n<div class="clickable">\n<i class="icon-chevron-right"></i>\n test_title\n</div>\n<div class="children">\n<div class="loading">\n<em>Loading...</em>\n</div>\n</div>\n</div>\n';
+    var expected_html = '<div class="heading" node_id="1">\n<div class="clickable">\n<i class="icon-chevron-right"></i>\n test_title\n</div>\n<div class=\"ow-text\"></div>\n<div class="children">\n<div class="loading">\n<em>Loading...</em>\n</div>\n</div>\n</div>\n';
     equal(test_heading.as_html(), expected_html, 'outline_heading.as_html() output');
 });
 
@@ -140,6 +167,16 @@ test('heading create_div method', function() {
     equal($heading.length, 1, '1 heading created');
     equal(test_heading.$element.attr('node_id'), '1', 'node_id set');
     equal(test_heading.$element.data('title'), 'test_title', 'title data attribute set');
+    equal(
+	test_heading.$element.data('text'), 
+	'here\' some text that goes with it',
+	'text data attribute set'
+    );
+    equal(
+	test_heading.$element.children('.ow-text').text(),
+	'here\' some text that goes with it',
+	'text element created'
+    );	
     equal(test_heading.$element.data('node_id'), 1, 'node_id data attribute set');
     equal(test_heading.$element.data('todo_id'), 1, 'todo_id data attribute set');
     equal(test_heading.$element.data('todo'), 'DONE', 'todo data attribute set');
@@ -201,7 +238,7 @@ asyncTest('populate children', function() {
 	);
 	strictEqual(first.$element.data('populated'), true);
 	start();
-    }, (ajax_timer * 1.1));
+    }, (ajax_timer * 1.1 + 5));
 });
 
 test('Heading toggle() method', function() {
@@ -259,7 +296,7 @@ asyncTest('Toggle clickable region on heading', function() {
 		// This should actually pass but is being run too early I think
 	});
 	start();
-    }, (ajax_timer * 1.1));
+    }, (ajax_timer * 1.1 + 5));
 });
 
 
@@ -294,33 +331,36 @@ test('outline regular expressions', function() {
     equal(r.exec('\n\t')[1], '', 'Only whitespace');
 });
 
-test('converts initial workspace', function() {
+asyncTest('converts initial workspace', function() {
     // See if the function finds the existing workspace and sets the right number of children with the right attributes and data
     expect(10);
     var $workspace = $('#test_workspace');
     setup();
     var test_outline = new project_outline($workspace);
     test_outline.init();
-    equal($('#test_workspace > div.heading').length, 2, 'correct number of .heading divs');
-    equal(
-	test_outline.$workspace.data('node_id'),
-	3,
-	'Set workspace node_id data attribute'
-    );
-    $('#test_workspace > div.heading').each(function() {
-	if( $(this).attr('node_id') == '1' ) {
-	    equal($(this).data('todo_id'), 1, 'Node 1 TodoState id correct');
-	    equal($(this).data('todo'), 'DONE', 'Node 1 TodoState correct');
-	    equal($(this).data('title'), 'Tasks', 'Node 1 title correct');
-	    equal($(this).data('tags'), '', 'Node 1 tags correct'); 
+    setTimeout(function() {
+	equal($('#test_workspace > div.heading').length, 2, 'correct number of .heading divs');
+	equal(
+	    test_outline.$workspace.data('node_id'),
+	    0,
+	    'Set workspace node_id data attribute'
+	);
+	$('#test_workspace > div.heading').each(function() {
+	    if( $(this).attr('node_id') == '1' ) {
+		equal($(this).data('todo_id'), 1, 'Node 1 TodoState id correct');
+		equal($(this).data('todo'), 'DONE', 'Node 1 TodoState correct');
+		equal($(this).data('title'), 'Tasks', 'Node 1 title correct');
+		equal($(this).data('tags'), '', 'Node 1 tags correct'); 
 	    }
-	if( $(this).attr('node_id') == '2' ) {
-	    equal($(this).data('todo_id'), null, 'Node 2 TodoState id correct');
-	    equal($(this).data('todo'), '', 'Node 2 TodoState correct');
-	    equal($(this).data('title'), 'Expense reports', 'Node 2 title correct');
-	    equal($(this).data('tags'), ':comp:', 'Node 2 tags correct'); 
+	    if( $(this).attr('node_id') == '2' ) {
+		equal($(this).data('todo_id'), null, 'Node 2 TodoState id correct');
+		equal($(this).data('todo'), '', 'Node 2 TodoState correct');
+		equal($(this).data('title'), 'Expense reports', 'Node 2 title correct');
+		equal($(this).data('tags'), ':comp:', 'Node 2 tags correct'); 
 	    }
-    });
+	});
+	start();
+    }, (ajax_timer * 1.1 + 5));
 });
 
 asyncTest('Populates children on outline init', function() {
@@ -341,6 +381,6 @@ asyncTest('Populates children on outline init', function() {
 	    'Adds an \'add heading\' div'
 	);
 	start()
-    }, (ajax_timer * 1.1));
+    }, (ajax_timer * 3.3 + 5));
 });
 

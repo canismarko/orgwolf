@@ -32,6 +32,10 @@ $(document).ready(function(){
 var outline_heading = function(args) {
     this.ICON = 'icon-chevron-right';
     this.title = args['title'];
+    if (typeof args['text'] == 'undefined') {
+	args['text'] = '';
+    }
+    this.text = args['text'];
     if( typeof args['todo_id'] != 'undefined' ) {
 	this.todo_id = Number(args['todo_id']);
 	this.todo = args['todo'];
@@ -67,6 +71,9 @@ var outline_heading = function(args) {
 	new_string += '<i class="' + this.ICON + '"></i>\n';
 	new_string += this.todo + ' ' + this.title + '\n';
 	new_string += '</div>\n';
+	new_string += '<div class="ow-text">';
+	new_string += this.text;
+	new_string += '</div>\n';
 	new_string += '<div class="children">\n';
 	new_string += '<div class="loading">\n<em>Loading...</em>\n</div>\n';
 	new_string += '</div>\n</div>\n';
@@ -80,15 +87,20 @@ var outline_heading = function(args) {
 	var $element = $(new_selector);
 	this.$element = $element;
 	this.$element.data('title', this.title);
+	this.$element.data('text', this.text);
 	this.$element.data('node_id', this.node_id);
 	this.$element.data('todo_id', this.todo_id);
 	this.$element.data('todo', this.todo);
 	this.$element.data('tags', this.tags);
 	this.$element.data('level', this.level);
 	this.$element.data('populated', false);
-	this.$children = this.$element.children('.children')
+	this.$children = this.$element.children('.children');
+	this.$text = this.$element.children('.ow-text');
 	this.$children.css('display', 'none');
+	this.$text.css('display', 'none');
 	this.set_indent(this.$children, 1);
+	this.set_indent(this.$text, 1);
+	console.log(this.$text.text());
 	this.$element.data('object', this);
 	var $clickable = this.$element.children('.clickable');
 	$clickable.data('$parent', this.$element);
@@ -117,20 +129,24 @@ var outline_heading = function(args) {
 	html += 'Error! Please refresh your browser\n';
 	$container.html(html);
     };
-    this.populate_children = function() {
+    this.populate_children = function(extra_callback) {
 	// Gets children via AJAX request and creates their div elements
 	var url = '/gtd/nodes/' + this.node_id + '/children/';
 	var $children = this.$children;
-	var parent = this
+	var parent = this;
 	$.getJSON(url, function(response) {
 	    var children = response['children'];
-		for (var i = 0; i < children.length; i++) {
-		    var child = new outline_heading(children[i]);
-		    child.create_div(parent.$children);
-		}
-		parent.$children.children('.loading').remove()
-		parent.create_add_button();
+	    for (var i = 0; i < children.length; i++) {
+		var child = new outline_heading(children[i]);
+		child.create_div(parent.$children);
+	    }
+	    parent.$children.children('.loading').remove()
+	    parent.create_add_button();
 	    parent.$element.data('populated', true);
+	    populated = true;
+	    if (typeof extra_callback == 'function') {
+		extra_callback();
+	    }
 	});
     };
     this.toggle = function() {
@@ -143,6 +159,7 @@ var outline_heading = function(args) {
 	    var new_icon_class = 'icon-chevron-right';
 	}
 	$icon.attr('class', new_icon_class);
+	this.$text.slideToggle();
 	this.$children.slideToggle();
 	this.$children.children('.heading').each(function() {
 	    // Populate the next level of children 
@@ -161,48 +178,25 @@ var project_outline = function($workspace) {
     // Matches everything but leading and trailing whitespace
     this.WS_RE = '^[ \n\t]*((?:.|\n)*?)[ \n\t]*$';
     this.init = function () {
+	// Initialize the workspace with data from AJAX request
 	var new_headings = [];
 	var this_a_re = this.A_RE;
 	var this_ws_re = this.WS_RE;
-	var parent_id = this.$workspace.attr('node_id');
-	this.$workspace.find('.ow-heading').each( function() {
-	    // Get initial attributes from current DOM
-	    var $todo = $(this).children('.ow-todo');
-	    var $tags = $(this).children('.ow-tags');
-	    var $title = $(this).children('.ow-title');
-	    var anchor_re = new RegExp(this_a_re, 'gi');
-	    var new_node_id = $(this).attr('node_id');
-	    var new_title = $title.html().replace(anchor_re, ''); // Remove <a>
-	    var re = new RegExp(this_ws_re, 'g');
-	    new_title = re.exec(new_title)[1];
-	    var new_todo_id = $todo.attr('todo_id');
-	    var new_todo = $todo.html();
-	    var new_tags = $tags.html();
-	    var new_heading = new outline_heading(
-		{
-		    node_id: new_node_id,
-		    title: new_title,
-		    todo_id: new_todo_id,
-		    todo: new_todo,
-		    tags: new_tags,
-		});
-	    new_headings.push(new_heading);
-	});
+	var parent_id = Number(this.$workspace.attr('node_id'));
 	$workspace.html(''); // Clear old content
-	for (var i=0; i<new_headings.length; i++) {
-	    new_headings[i].create_div($workspace);
-	}
-	for (var i=0; i<new_headings.length; i++) {
-	    new_headings[i].populate_children();
-	}
 	$workspace.data('node_id', parent_id);
 	var workspace = new outline_heading({
 	    node_id: parent_id,
-	    title: 'Outline Workspace',   
+	    title: 'Outline Workspace',
 	});
 	workspace.$children = $workspace;
-	workspace.node_id = parent_id;
-	workspace.create_add_button();
+	workspace.$element = $workspace;
+	workspace.populate_children(function() {
+	    workspace.$element.children('.heading').each(function() {
+		subheading = $(this).data('object');
+		subheading.populate_children();
+	    });
+	});
     };
 };
 
