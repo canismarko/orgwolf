@@ -384,3 +384,32 @@ asyncTest('Populates children on outline init', function() {
     }, (ajax_timer * 3.3 + 5));
 });
 
+asyncTest('Alternate colors', function() {
+    var $workspace = $('#test_workspace');
+    setup();
+    var outline = new project_outline($workspace);
+    var expected_colors = ['blue', 'brown', 'purple', 'red', 'green', 'teal', 'slateblue', 'darkred'];
+    outline.init();
+    deepEqual(
+	outline.COLORS,
+	expected_colors,
+	'project_outline object has colors set'
+    );
+    setTimeout(function() {
+	$workspace.children('.heading').each(function() {
+	    deepEqual(
+		$(this).data('object').COLORS, 
+		expected_colors, 
+		'outline_heading object has COLORS set'
+	    );
+	    equal($(this).data('level'), 1, 'Level has been set' + $(this).data('title'));
+	    equal($(this).children('.clickable').css('color'), 'rgb(0, 0, 255)', 'Level 1 heading is blue');
+	});
+	equal(
+	    $workspace.children('.add-heading').css('color'),
+	    'rgb(0, 0, 255)',
+	    'Level 1 add-heading is blue');
+	start();
+    }, (ajax_timer * 1.1 + 5));
+});
+

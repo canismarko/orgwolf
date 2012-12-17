@@ -1,5 +1,5 @@
-// Set up timepicker functionality
 $(document).ready(function(){
+    // Set up timepicker functionality
     $("input.datepicker").each(function(ct) {
 	// Prepare a date field for the date picker widget
 	$(this).wrap('<div class="date datepicker input-append" data-date></div>');
@@ -51,11 +51,19 @@ var outline_heading = function(args) {
     if (typeof args['parent_id'] == 'undefined' ) {
 	// Root level heading
 	this.level = 1;
+	this.COLORS = ['black'];
     }
-    else { // Find the parent a get its info
+    else { // Find the parent and get its info
 	this.parent_id = Number(args['parent_id']);
 	var s = '.heading[node_id="' + this.parent_id + '"]';
 	this.$parent = $(s);
+	var parent = this.$parent.data('object');
+	if (typeof parent == 'undefined') {
+	    this.COLORS = ['black']; // Default if no colors set
+	}
+	else {
+	    this.COLORS = this.$parent.data('object').COLORS;
+	}
 	this.level = (this.$parent.data('level') + 1);
     }
     // Determine the width of icon that is being used
@@ -65,6 +73,7 @@ var outline_heading = function(args) {
     $('#7783452').remove();
     // Methods...
     this.as_html = function() {
+	// Render to html
 	var new_string = '';
 	new_string += '<div class="heading" node_id="' + this.node_id + '">\n';
 	new_string += '<div class="clickable">\n';
@@ -94,6 +103,10 @@ var outline_heading = function(args) {
 	this.$element.data('tags', this.tags);
 	this.$element.data('level', this.level);
 	this.$element.data('populated', false);
+	// Set color
+	var color_i = this.level % this.COLORS.length;
+	this.color = this.COLORS[color_i-1];
+	this.$element.children('.clickable').css('color', this.color);
 	this.$children = this.$element.children('.children');
 	this.$text = this.$element.children('.ow-text');
 	this.$children.css('display', 'none');
@@ -121,6 +134,7 @@ var outline_heading = function(args) {
 	this.$children.append(html);
 	var $add = this.$children.children('.add-heading');
 	$add.data('parent_id', this.node_id);
+	$add.css('color', this.COLORS[this.level]);
     };
     this.show_error = function($container) {
 	var html = '';
@@ -134,15 +148,18 @@ var outline_heading = function(args) {
 	var $children = this.$children;
 	var parent = this;
 	$.getJSON(url, function(response) {
+	    // (callback) Process AJAX to get an array of children objects
 	    var children = response['children'];
 	    for (var i = 0; i < children.length; i++) {
+		children[i].parent_id = response['parent_id'];
 		var child = new outline_heading(children[i]);
 		child.create_div(parent.$children);
 	    }
+	    // Create the DOM elements
 	    parent.$children.children('.loading').remove()
 	    parent.create_add_button();
 	    parent.$element.data('populated', true);
-	    populated = true;
+	    var populated = true;
 	    if (typeof extra_callback == 'function') {
 		extra_callback();
 	    }
@@ -171,11 +188,13 @@ var outline_heading = function(args) {
 };
 
 var project_outline = function($workspace) {
-    this.$workspace = $workspace;
     // Matches anchor tags for removal
     this.A_RE = '\</?a[^>]*\>';
     // Matches everything but leading and trailing whitespace
     this.WS_RE = '^[ \n\t]*((?:.|\n)*?)[ \n\t]*$';
+    // Array of browser recognized colors for each level of nodes
+    this.COLORS = ['blue', 'brown', 'purple', 'red', 'green', 'teal', 'slateblue', 'darkred'];
+    this.$workspace = $workspace;
     this.init = function () {
 	// Initialize the workspace with data from AJAX request
 	var new_headings = [];
@@ -188,11 +207,18 @@ var project_outline = function($workspace) {
 	    node_id: parent_id,
 	    title: 'Outline Workspace',
 	});
+	workspace.COLORS = this.COLORS;
+	workspace.color = this.COLORS[0];
 	workspace.$children = $workspace;
 	workspace.$element = $workspace;
+	workspace.$element.addClass('heading');
+	workspace.$element.data('object', this);
+	workspace.$element.data('level', 0);
+	workspace.level = 0;
+	// Create all the first two levels of nodes
 	workspace.populate_children(function() {
 	    workspace.$element.children('.heading').each(function() {
-		subheading = $(this).data('object');
+		var subheading = $(this).data('object');
 		subheading.populate_children();
 	    });
 	});
