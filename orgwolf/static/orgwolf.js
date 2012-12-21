@@ -76,9 +76,15 @@ var outline_heading = function(args) {
 	// Render to html
 	var new_string = '';
 	new_string += '<div class="heading" node_id="' + this.node_id + '">\n';
+	new_string += '<div class="ow-hoverable">\n';
 	new_string += '<div class="clickable">\n';
 	new_string += '<i class="' + this.ICON + '"></i>\n';
 	new_string += this.todo + ' ' + this.title + '\n';
+	new_string += '</div>\n';
+	new_string += '<div class="ow-buttons">\n';
+	new_string += '<i class="icon-plus"></i>\n';
+	new_string += '<i class="icon-ok"></i>\n';
+	new_string += '</div>\n';
 	new_string += '</div>\n';
 	new_string += '<div class="ow-text">';
 	new_string += this.text;
@@ -95,6 +101,10 @@ var outline_heading = function(args) {
 	new_selector += '[node_id="' + this.node_id + '"]';
 	var $element = $(new_selector);
 	this.$element = $element;
+	this.$hoverable = this.$element.children('.ow-hoverable');
+	this.$clickable = this.$hoverable.children('.clickable');
+	var $buttons = this.$hoverable.children('.ow-buttons');
+	this.$buttons =	$buttons;
 	this.$element.data('title', this.title);
 	this.$element.data('text', this.text);
 	this.$element.data('node_id', this.node_id);
@@ -103,22 +113,30 @@ var outline_heading = function(args) {
 	this.$element.data('tags', this.tags);
 	this.$element.data('level', this.level);
 	this.$element.data('populated', false);
+	this.$element.data('object', this);
+	this.$clickable.data('$parent', this.$element);
 	// Set color
 	var color_i = this.level % this.COLORS.length;
 	this.color = this.COLORS[color_i-1];
-	this.$element.children('.clickable').css('color', this.color);
 	this.$children = this.$element.children('.children');
 	this.$text = this.$element.children('.ow-text');
+	// Set initial CSS
+	this.$clickable.css('color', this.color);
 	this.$children.css('display', 'none');
+	this.$buttons.css('visibility', 'hidden');
 	this.$text.css('display', 'none');
 	this.set_indent(this.$children, 1);
 	this.set_indent(this.$text, 1);
-	this.$element.data('object', this);
-	var $clickable = this.$element.children('.clickable');
-	$clickable.data('$parent', this.$element);
-	this.$element.children('.clickable').click(function() {
+	// Attach event handlers
+	this.$clickable.click(function() {
 	    var saved_heading = $(this).data('$parent').data('object');
 	    saved_heading.toggle();
+	});
+	this.$hoverable.mouseenter(function() {
+	    $buttons.css('visibility', 'visible');
+	});
+	this.$hoverable.mouseleave(function() {
+	    $buttons.css('visibility', 'hidden');
 	});
     };
     this.set_indent = function($target, offset) {
@@ -167,7 +185,7 @@ var outline_heading = function(args) {
     };
     this.toggle = function() {
 	// Show or hide the children div based on present state
-	var $icon = this.$element.children('.clickable').children('i')
+	var $icon = this.$element.children('.ow-hoverable').children('.clickable').children('i')
 	if ($icon.attr('class') == 'icon-chevron-right') {
 	    var new_icon_class = 'icon-chevron-down';
 	}

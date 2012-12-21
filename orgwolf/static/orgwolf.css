@@ -47,3 +47,7 @@ span.alt
 {
     cursor: pointer;
 }
+div.ow-hoverable, div.clickable, div.ow-buttons
+{
+    display: inline-block;
+}

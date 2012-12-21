@@ -153,7 +153,7 @@ test('create new heading object from sparse data', function() {
 });
 test('heading as_html method', function() {
     var test_heading = new outline_heading(sparse_dict);
-    var expected_html = '<div class="heading" node_id="1">\n<div class="clickable">\n<i class="icon-chevron-right"></i>\n test_title\n</div>\n<div class=\"ow-text\"></div>\n<div class="children">\n<div class="loading">\n<em>Loading...</em>\n</div>\n</div>\n</div>\n';
+    var expected_html = '<div class="heading" node_id="1">\n<div class="ow-hoverable">\n<div class="clickable">\n<i class="icon-chevron-right"></i>\n test_title\n</div>\n<div class="ow-buttons">\n<i class="icon-plus"></i>\n<i class="icon-ok"></i>\n</div>\n</div>\n<div class=\"ow-text\"></div>\n<div class="children">\n<div class="loading">\n<em>Loading...</em>\n</div>\n</div>\n</div>\n';
     equal(test_heading.as_html(), expected_html, 'outline_heading.as_html() output');
 });
 
@@ -203,7 +203,8 @@ test('outline indentations', function() {
     equal($second.data('level'), 2, 'Set child data("level") attribute');
 });
 
-test('add heading button', function() {
+test('add function buttons', function() {
+    setup();
     var $workspace = $('#test_workspace');
     var heading = new outline_heading(full_dict);
     heading.create_div($workspace);
@@ -213,6 +214,30 @@ test('add heading button', function() {
 	1,
 	'Set add heading button\'s parent_id data attribute'
     );
+    equal(
+	heading.$buttons.length,
+	1,
+	'Creates a buttons div'
+    );
+    equal(
+	heading.$buttons.css('visibility'),
+	'hidden',
+	'Function buttons start off hidden'
+    );
+    heading.$buttons.mouseenter(),
+    equal(
+	heading.$buttons.css('visibility'),
+	'visible',
+	'MouseEnter makes the buttons visible'
+    );
+    heading.$buttons.mouseleave(),
+    equal(
+	heading.$buttons.css('visibility'),
+	'hidden',
+	'MouseLeave makes the buttons hidden again'
+    );
+    var $buttons = heading.$element.children('div.ow-buttons').children('i');
+    //okay($buttons[0].hasClass('
 });
 
 asyncTest('populate children', function() {
@@ -250,7 +275,7 @@ test('Heading toggle() method', function() {
 	'none',
 	'.children starts off hidden'
     );
-    var $icon = heading.$element.children('.clickable').children('i')
+    var $icon = heading.$element.children('.ow-hoverable').children('.clickable').children('i');
     equal(
 	$icon.attr('class'),
 	'icon-chevron-right',
@@ -287,7 +312,7 @@ asyncTest('Toggle clickable region on heading', function() {
 	    });
 	});
 	$workspace.find('.heading').each(function() {
-	    $(this).children('.clickable').click();
+	    $(this).children('.ow-hoverable').children('.clickable').click();
 	    equal(
 		$(this).children('.children').css('display'),
 		'block',
@@ -371,9 +396,11 @@ asyncTest('Populates children on outline init', function() {
     outline.init();
     setTimeout(function() {
 	$workspace.children('.heading').each(function() {
-	    equal($(this).data('populated'), true,
-		  'Heading ' + $(this).data('node_id') + 'populated'
-		 );
+	    equal(
+		$(this).data('populated'), 
+		true,
+		'Heading ' + $(this).data('node_id') + 'populated'
+	    );
 	});
 	equal(
 	    $workspace.children('div.add-heading').length,
@@ -402,8 +429,16 @@ asyncTest('Alternate colors', function() {
 		expected_colors, 
 		'outline_heading object has COLORS set'
 	    );
-	    equal($(this).data('level'), 1, 'Level has been set' + $(this).data('title'));
-	    equal($(this).children('.clickable').css('color'), 'rgb(0, 0, 255)', 'Level 1 heading is blue');
+	    equal(
+		$(this).data('level'),
+		1, 
+		'Level has been set' + $(this).data('title')
+	    );
+	    equal(
+		$(this).children('.ow-hoverable').children('.clickable').css('color'), 
+		'rgb(0, 0, 255)', 
+		'Level 1 heading is blue'
+	    );
 	});
 	equal(
 	    $workspace.children('.add-heading').css('color'),
