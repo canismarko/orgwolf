@@ -63,6 +63,7 @@ var outline_heading = function(args) {
 	}
 	else {
 	    this.COLORS = this.$parent.data('object').COLORS;
+	    this.todo_states = parent.todo_states;
 	}
 	this.level = (this.$parent.data('level') + 1);
     }
@@ -77,9 +78,17 @@ var outline_heading = function(args) {
 	var new_string = '';
 	new_string += '<div class="heading" node_id="' + this.node_id + '">\n';
 	new_string += '<div class="ow-hoverable">\n';
+	new_string += '<i class="clickable ' + this.ICON + '"></i>\n';
+	    new_string += '<span class="todo_state">';
+	if (this.todo) {
+	    new_string += this.todo;
+	}
+	else {
+	    new_string += '[]';
+	}
+	new_string += '</span>\n';
 	new_string += '<div class="clickable">\n';
-	new_string += '<i class="' + this.ICON + '"></i>\n';
-	new_string += this.todo + ' ' + this.title + '\n';
+	new_string += this.title + '\n';
 	new_string += '</div>\n';
 	new_string += '<div class="ow-buttons">\n';
 	new_string += '<i class="icon-plus"></i>\n';
@@ -103,6 +112,7 @@ var outline_heading = function(args) {
 	this.$element = $element;
 	this.$hoverable = this.$element.children('.ow-hoverable');
 	this.$clickable = this.$hoverable.children('.clickable');
+	var $todo_state = this.$hoverable.children('.todo_state');
 	var $buttons = this.$hoverable.children('.ow-buttons');
 	this.$buttons =	$buttons;
 	this.$element.data('title', this.title);
@@ -114,6 +124,9 @@ var outline_heading = function(args) {
 	this.$element.data('level', this.level);
 	this.$element.data('populated', false);
 	this.$element.data('object', this);
+	if (typeof this.$parent != 'undefined') {
+	    this.$element.data('$workspace', this.$parent.data('$workspace'));
+	}
 	this.$clickable.data('$parent', this.$element);
 	// Set color
 	var color_i = this.level % this.COLORS.length;
@@ -127,6 +140,9 @@ var outline_heading = function(args) {
 	this.$text.css('display', 'none');
 	this.set_indent(this.$children, 1);
 	this.set_indent(this.$text, 1);
+	if (!this.todo) {
+	    $todo_state.css('display', 'none');
+	}
 	// Attach event handlers
 	this.$clickable.click(function() {
 	    var saved_heading = $(this).data('$parent').data('object');
@@ -134,9 +150,34 @@ var outline_heading = function(args) {
 	});
 	this.$hoverable.mouseenter(function() {
 	    $buttons.css('visibility', 'visible');
+	    $todo_state.css('display', 'inline');
 	});
 	this.$hoverable.mouseleave(function() {
 	    $buttons.css('visibility', 'hidden');
+	    if (!$(this).parent().data('object').todo){
+		$todo_state.css('display', 'none');
+	    }
+
+	});
+	var todo_states = this.todo_states;
+	this.$hoverable.children('.todo_state').click(function() {
+	    // Switch out for a select box when the user click a TodoState
+	    var $select_box = $(this).children('select');
+	    if ($select_box.length == 0) {
+		// Only modify if a select box doesn't exist
+		var new_html = '';
+		new_html += '<select>\n';
+		for(var i=0; i<todo_states.length; i++) {
+		    new_html += '<option value="' + todo_states[i].todo_id + '">\n';
+		    new_html += todo_states[i].todo + '\n';
+		    new_html += '</option>\n';
+		}
+		new_html += '</select>\n';
+		$(this).html(new_html);
+		$(this).children('select').change(function() {
+		    console.log('clicked');
+		});
+	    }
 	});
     };
     this.set_indent = function($target, offset) {
@@ -175,7 +216,7 @@ var outline_heading = function(args) {
 	    }
 	    // Create the DOM elements
 	    parent.$children.children('.loading').remove()
-	    parent.create_add_button();
+	    //parent.create_add_button();
 	    parent.$element.data('populated', true);
 	    var populated = true;
 	    if (typeof extra_callback == 'function') {
@@ -185,14 +226,16 @@ var outline_heading = function(args) {
     };
     this.toggle = function() {
 	// Show or hide the children div based on present state
-	var $icon = this.$element.children('.ow-hoverable').children('.clickable').children('i')
-	if ($icon.attr('class') == 'icon-chevron-right') {
+	var $icon = this.$element.children('.ow-hoverable').children('i.clickable');
+	if ($icon.hasClass('icon-chevron-right')) {
 	    var new_icon_class = 'icon-chevron-down';
+	    $icon.removeClass('icon-chevron-right');
 	}
 	else {
 	    var new_icon_class = 'icon-chevron-right';
+	    $icon.removeClass('icon-chevron-down');
 	}
-	$icon.attr('class', new_icon_class);
+	$icon.addClass(new_icon_class);
 	this.$text.slideToggle();
 	this.$children.slideToggle();
 	this.$children.children('.heading').each(function() {
@@ -205,30 +248,32 @@ var outline_heading = function(args) {
     };
 };
 
-var project_outline = function($workspace) {
+var project_outline = function(args) {
     // Matches anchor tags for removal
     this.A_RE = '\</?a[^>]*\>';
     // Matches everything but leading and trailing whitespace
     this.WS_RE = '^[ \n\t]*((?:.|\n)*?)[ \n\t]*$';
     // Array of browser recognized colors for each level of nodes
     this.COLORS = ['blue', 'brown', 'purple', 'red', 'green', 'teal', 'slateblue', 'darkred'];
-    this.$workspace = $workspace;
+    this.$workspace = args['$workspace'];
+    this.$workspace.data('$workspace', this.$workspace);
+    this.todo_states = args['todo_states'];
     this.init = function () {
 	// Initialize the workspace with data from AJAX request
 	var new_headings = [];
 	var this_a_re = this.A_RE;
 	var this_ws_re = this.WS_RE;
 	var parent_id = Number(this.$workspace.attr('node_id'));
-	$workspace.html(''); // Clear old content
-	$workspace.data('node_id', parent_id);
+	this.$workspace.html(''); // Clear old content
+	this.$workspace.data('node_id', parent_id);
 	var workspace = new outline_heading({
 	    node_id: parent_id,
 	    title: 'Outline Workspace',
 	});
 	workspace.COLORS = this.COLORS;
 	workspace.color = this.COLORS[0];
-	workspace.$children = $workspace;
-	workspace.$element = $workspace;
+	workspace.$children = this.$workspace;
+	workspace.$element = this.$workspace;
 	workspace.$element.addClass('heading');
 	workspace.$element.data('object', this);
 	workspace.$element.data('level', 0);

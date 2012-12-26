@@ -51,3 +51,7 @@ div.ow-hoverable, div.clickable, div.ow-buttons
 {
     display: inline-block;
 }
+.todo_state > select 
+{
+    /* height: 20px; */
+}

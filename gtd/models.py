@@ -68,10 +68,12 @@ class TodoState(models.Model):
     def as_html(self):
         """Converts this todostate to an HTML string that can be put into tempaltes"""
         html = conditional_escape(self.abbreviation)
-        if not self.closed: # Bold if not a closed TodoState
-            html = '<strong>' + html + '</strong>'
+        # html = '<span class="todostate">' + html
         if self.color().get_alpha() > 0:
             html = '<span style="color: ' + self.color().rgba_string() + '">' + html + '</span>'
+        if not self.closed: # Bold if not a closed TodoState
+            html = '<strong>' + html + '</strong>'
+        # html = '<span class="todo_state">' + html + '</span>'
         return mark_safe(html)
 
 @python_2_unicode_compatible

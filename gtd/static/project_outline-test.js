@@ -153,7 +153,7 @@ test('create new heading object from sparse data', function() {
 });
 test('heading as_html method', function() {
     var test_heading = new outline_heading(sparse_dict);
-    var expected_html = '<div class="heading" node_id="1">\n<div class="ow-hoverable">\n<div class="clickable">\n<i class="icon-chevron-right"></i>\n test_title\n</div>\n<div class="ow-buttons">\n<i class="icon-plus"></i>\n<i class="icon-ok"></i>\n</div>\n</div>\n<div class=\"ow-text\"></div>\n<div class="children">\n<div class="loading">\n<em>Loading...</em>\n</div>\n</div>\n</div>\n';
+    var expected_html = '<div class="heading" node_id="1">\n<div class="ow-hoverable">\n<i class="clickable icon-chevron-right"></i>\n<span class="todo_state">[]</span>\n<div class="clickable">\ntest_title\n</div>\n<div class="ow-buttons">\n<i class="icon-plus"></i>\n<i class="icon-ok"></i>\n</div>\n</div>\n<div class=\"ow-text\"></div>\n<div class="children">\n<div class="loading">\n<em>Loading...</em>\n</div>\n</div>\n</div>\n';
     equal(test_heading.as_html(), expected_html, 'outline_heading.as_html() output');
 });
 
@@ -256,11 +256,6 @@ asyncTest('populate children', function() {
 	    true,
 	    'Parent \'populated\' data attribute set'
 	);
-	equal(
-	    first.$children.children('.add-heading').data('parent_id'),
-	    1,
-	    'Added add-heading button during create_div method'
-	);
 	strictEqual(first.$element.data('populated'), true);
 	start();
     }, (ajax_timer * 1.1 + 5));
@@ -275,29 +270,21 @@ test('Heading toggle() method', function() {
 	'none',
 	'.children starts off hidden'
     );
-    var $icon = heading.$element.children('.ow-hoverable').children('.clickable').children('i');
-    equal(
-	$icon.attr('class'),
-	'icon-chevron-right',
-	'Icon starts off closed'
-    );
+    var $icon = heading.$element.children('.ow-hoverable').children('i.clickable');
+    ok($icon.hasClass('icon-chevron-right', 'Icon ends up closed'));
     heading.toggle();
     equal(
 	heading.$children.css('display'),
 	'block',
 	'.children gets un-hidden on toggle'
     );
-    equal(
-	$icon.attr('class'),
-	'icon-chevron-down',
-	'Icon ends up open'
-    );
+    ok($icon.hasClass('icon-chevron-down', 'Icon ends up open'));
 });
 
 asyncTest('Toggle clickable region on heading', function() {
     var $workspace = $('#test_workspace');
     setup();
-    var outline = new project_outline($workspace);
+    var outline = new project_outline({$workspace: $workspace});
     outline.init();
     setTimeout(function() {
 	$workspace.find('.heading').each(function() {
@@ -324,6 +311,106 @@ asyncTest('Toggle clickable region on heading', function() {
     }, (ajax_timer * 1.1 + 5));
 });
 
+test('Clickable TodoState elements', function() {
+    // When '.todostate' spans are clicked, they become a combo select box.
+    var $workspace = $('#test_workspace');
+    var heading = new outline_heading(second_dict);
+    heading.todo_states = [
+	{todo_id: 1,
+	 todo: 'NEXT'},
+	{todo_id: 2,
+	 todo: 'DONE'},
+    ]
+    heading.create_div($workspace);
+    equal(
+	heading.$element.find('.todo_state').length,
+	1,
+	'One .todo_state element found'
+    );
+    equal(
+	1,
+	2,
+	'Start work here'
+    );
+});
+
+test('Hovering actions', function() {
+    // When an .ow-hoverable action is hovered over, the relevant buttons show
+    setup();
+    var $workspace = $('#test_workspace');
+    var heading = new outline_heading(sparse_dict);
+    heading.todo_states = [
+	{todo_id: 1,
+	 todo: 'NEXT'},
+	{todo_id: 2,
+	 todo: 'DONE'},
+    ]
+    heading.create_div($workspace);
+    var $hoverable = heading.$element.children('.ow-hoverable')
+    var heading2 = new outline_heading(second_dict);
+    heading2.todo_states = heading.todo_states;
+    heading2.create_div($workspace);
+    var $hoverable2 = heading2.$element.children('.ow-hoverable');
+    // Tests before hover over
+    equal(
+	$hoverable.children('.ow-buttons').length,
+	1,
+	'Buttons div exists'
+    );
+    equal(
+	$hoverable.children('.ow-buttons').css('visibility'),
+	'hidden',
+	'Buttons div starts out hidden'
+    );
+    equal(
+	$hoverable.children('.todo_state').length,
+	1,
+	'Todo state div exists'
+    );
+    equal(
+	$hoverable.children('.todo_state').text(),
+	'[]',
+	'Todo state div has \'[]\' as text'
+    );
+    equal(
+	$hoverable.children('.todo_state').css('display'),
+	'none',
+	'Todo state is not displayed before mouse over'
+    );
+    // Tests after hover over
+    $hoverable.mouseenter();
+    equal(
+	$hoverable.children('.ow-buttons').css('visibility'),
+	'visible',
+	'Buttons div is visible after mouse enter'
+    );
+    equal(
+	$hoverable.children('.todo_state').css('display'),
+	'inline',
+	'Empty Todo state div is display after mouse enter'
+    );
+    // Tests after hover out
+    $hoverable.mouseleave();
+    equal(
+	$hoverable.children('.ow-buttons').css('visibility'),
+	'hidden',
+	'Buttons div is visible after mouse enter'
+    );
+    equal(
+	$hoverable.children('.todo_state').css('display'),
+	'none',
+	'Empty Todo state is hidden after mouse leave'
+    );
+    $hoverable2.mouseleave();
+    equal(
+	$hoverable2.children('.todo_state').css('display'),
+	'inline',
+	'Real todo state is still visible after mouse leave'
+    );
+});
+
+
+
 
 module(module_name + 'Outline setup');
 
@@ -331,7 +418,7 @@ test('outline regular expressions', function() {
     // See that the regular expressions for cleaning up content are correct
 
     // removing anchors...
-    var outline = new project_outline();
+    var outline = new project_outline({$workspace: $('#test_workspace')});
     equal(typeof outline.A_RE, 'string', 'Anchors regular expression exists');
     var r = new RegExp(outline.A_RE, 'g');
     equal(r.exec('<a>'), '<a>', 'Matches simple opening anchor');
@@ -361,7 +448,7 @@ asyncTest('converts initial workspace', function() {
     expect(10);
     var $workspace = $('#test_workspace');
     setup();
-    var test_outline = new project_outline($workspace);
+    var test_outline = new project_outline({$workspace: $workspace});
     test_outline.init();
     setTimeout(function() {
 	equal($('#test_workspace > div.heading').length, 2, 'correct number of .heading divs');
@@ -389,24 +476,26 @@ asyncTest('converts initial workspace', function() {
 });
 
 asyncTest('Populates children on outline init', function() {
-    expect(3);
+    // See if the appliance properly converts the non-javascript
+    // table to the outline workspace.
+    expect(4);
     var $workspace = $('#test_workspace');
     setup();
-    var outline = new project_outline($workspace);
+    var outline = new project_outline({$workspace: $workspace});
     outline.init();
     setTimeout(function() {
 	$workspace.children('.heading').each(function() {
 	    equal(
 		$(this).data('populated'), 
 		true,
-		'Heading ' + $(this).data('node_id') + 'populated'
+		'Heading ' + $(this).data('node_id') + ' populated'
+	    );
+	    equal(
+		$(this).data('$workspace').attr('id'),
+		'test_workspace',
+		'Each heading has a $workspace data attribute'
 	    );
 	});
-	equal(
-	    $workspace.children('div.add-heading').length,
-	    1,
-	    'Adds an \'add heading\' div'
-	);
 	start()
     }, (ajax_timer * 3.3 + 5));
 });
@@ -414,7 +503,7 @@ asyncTest('Populates children on outline init', function() {
 asyncTest('Alternate colors', function() {
     var $workspace = $('#test_workspace');
     setup();
-    var outline = new project_outline($workspace);
+    var outline = new project_outline({$workspace: $workspace});
     var expected_colors = ['blue', 'brown', 'purple', 'red', 'green', 'teal', 'slateblue', 'darkred'];
     outline.init();
     deepEqual(
@@ -440,11 +529,42 @@ asyncTest('Alternate colors', function() {
 		'Level 1 heading is blue'
 	    );
 	});
-	equal(
-	    $workspace.children('.add-heading').css('color'),
-	    'rgb(0, 0, 255)',
-	    'Level 1 add-heading is blue');
 	start();
     }, (ajax_timer * 1.1 + 5));
 });
 
+asyncTest('Set todo states', function() {
+    expect(7);
+    var $workspace = $('#test_workspace');
+    setup();
+    var outline = new project_outline({
+	$workspace: $workspace,
+	todo_states: [
+	    {todo_id: 1,
+	     todo: 'NEXT'},
+	    {todo_id: 2,
+	     todo: 'DONE'},
+	]
+    });
+    outline.init();
+    equal(outline.todo_states[0].todo, 'NEXT', 'NEXT todo state set');
+    equal(outline.todo_states[1].todo, 'DONE', 'DONE todo state set');
+    setTimeout(function() {
+	start();	    
+	$workspace.children('.heading').each(function() {
+	    equal(
+		$(this).data('$workspace').attr('id'),
+		'test_workspace',
+		'Child ' + $(this).data('node_id') + ' has data(\'$workspace\')'
+	    );
+	    equal(
+		$(this).data('object').todo_states[0].todo,
+		'NEXT',
+		'NEXT state accessible through heading object'
+	    );
+	});
+	var $todo = $workspace.children('.heading').children('.ow-hoverable').children('.todo_state');
+	equal($todo.html(), 'DONE', 'Todo state element selected');
+	$todo.click();
+    }, (ajax_timer*1.1+5));
+});
