@@ -153,7 +153,7 @@ test('create new heading object from sparse data', function() {
 });
 test('heading as_html method', function() {
     var test_heading = new outline_heading(sparse_dict);
-    var expected_html = '<div class="heading" node_id="1">\n<div class="ow-hoverable">\n<i class="clickable icon-chevron-right"></i>\n<span class="todo_state">[]</span>\n<div class="clickable">\ntest_title\n</div>\n<div class="ow-buttons">\n<i class="icon-plus"></i>\n<i class="icon-ok"></i>\n</div>\n</div>\n<div class=\"ow-text\"></div>\n<div class="children">\n<div class="loading">\n<em>Loading...</em>\n</div>\n</div>\n</div>\n';
+    var expected_html = '<div class="heading" node_id="1">\n  <div class="ow-hoverable">\n    <i class="clickable icon-chevron-right"></i>\n    <span class="todo-state">[]</span>\n    <div class="popover right">\n      <div class="arrow"></div>\n      <div class="popover-title">Todo State</div>\n      <div class="popover-inner">\n      </div>\n    </div>\n    <div class="clickable">\n      test_title\n    </div>\n    <div class="ow-buttons">\n      <i class="icon-plus"></i>\n      <i class="icon-ok"></i>\n    </div>\n  </div>\n  <div class=\"ow-text\"></div>\n  <div class="children">\n    <div class="loading">\n      <em>Loading...</em>\n    </div>\n  </div>\n</div>\n';
     equal(test_heading.as_html(), expected_html, 'outline_heading.as_html() output');
 });
 
@@ -311,29 +311,6 @@ asyncTest('Toggle clickable region on heading', function() {
     }, (ajax_timer * 1.1 + 5));
 });
 
-test('Clickable TodoState elements', function() {
-    // When '.todostate' spans are clicked, they become a combo select box.
-    var $workspace = $('#test_workspace');
-    var heading = new outline_heading(second_dict);
-    heading.todo_states = [
-	{todo_id: 1,
-	 todo: 'NEXT'},
-	{todo_id: 2,
-	 todo: 'DONE'},
-    ]
-    heading.create_div($workspace);
-    equal(
-	heading.$element.find('.todo_state').length,
-	1,
-	'One .todo_state element found'
-    );
-    equal(
-	1,
-	2,
-	'Start work here'
-    );
-});
-
 test('Hovering actions', function() {
     // When an .ow-hoverable action is hovered over, the relevant buttons show
     setup();
@@ -363,17 +340,17 @@ test('Hovering actions', function() {
 	'Buttons div starts out hidden'
     );
     equal(
-	$hoverable.children('.todo_state').length,
+	$hoverable.children('.todo-state').length,
 	1,
 	'Todo state div exists'
     );
     equal(
-	$hoverable.children('.todo_state').text(),
+	$hoverable.children('.todo-state').text(),
 	'[]',
 	'Todo state div has \'[]\' as text'
     );
     equal(
-	$hoverable.children('.todo_state').css('display'),
+	$hoverable.children('.todo-state').css('display'),
 	'none',
 	'Todo state is not displayed before mouse over'
     );
@@ -385,7 +362,7 @@ test('Hovering actions', function() {
 	'Buttons div is visible after mouse enter'
     );
     equal(
-	$hoverable.children('.todo_state').css('display'),
+	$hoverable.children('.todo-state').css('display'),
 	'inline',
 	'Empty Todo state div is display after mouse enter'
     );
@@ -397,16 +374,144 @@ test('Hovering actions', function() {
 	'Buttons div is visible after mouse enter'
     );
     equal(
-	$hoverable.children('.todo_state').css('display'),
+	$hoverable.children('.todo-state').css('display'),
 	'none',
 	'Empty Todo state is hidden after mouse leave'
     );
     $hoverable2.mouseleave();
     equal(
-	$hoverable2.children('.todo_state').css('display'),
+	$hoverable2.children('.todo-state').css('display'),
 	'inline',
 	'Real todo state is still visible after mouse leave'
     );
+});
+
+test('Clickable TodoState elements', function() {
+    setup();
+    // When '.todostate' spans are clicked, they become a combo select box.
+    var $workspace = $('#test_workspace');
+    var heading = new outline_heading(second_dict);
+    heading.todo_states = [
+	{todo_id: 1,
+	 todo: 'NEXT'},
+	{todo_id: 2,
+	 todo: 'DONE'},
+    ]
+    heading.create_div($workspace);
+    var $todo = heading.$element.find('.todo-state');
+    var $popover = heading.$element.find('.popover');
+    equal(
+	$popover.css('position'), 
+	'absolute', 
+	'Todo state element uses absolute positioning'
+    );
+    equal(
+	heading.$element.find('.todo-state').length,
+	1,
+	'One .todo-state element found'
+    );
+    equal(
+	$popover.length,
+	1,
+	'Popover div exists'
+    );
+    equal(
+	$popover.css('display'),
+	'none',
+	'Popover starts off hidden'
+    );
+    equal(
+	$popover.find('.todo-option').length,
+	2,
+	'Two todo state options in popover'
+    );
+    // Now click the todo state and check properties
+    $todo.click();
+    equal(
+	$popover.css('display'),
+	'block',
+	'Popover is displayed on todo state click'
+    );
+    equal(
+	$popover.position().left,
+	$todo.position().left + $todo.width(),
+	'Todo popover is positioned right of todo state'
+    );
+    // Make sure it goes away when mouse leave
+    heading.$element.children('.ow-hoverable').mouseleave();
+    equal(
+	$popover.css('display'),
+	'none',
+	'Heading disappers when mouse leaves \'.ow-hoverable\''
+    );
+});
+
+test('Todo state popover', function() {
+    setup();
+    // When '.todostate' spans are clicked, they become a combo select box.
+    var $workspace = $('#test_workspace');
+    var heading = new outline_heading(second_dict);
+    heading.todo_states = [
+	{todo_id: 1,
+	 todo: 'TODO'},
+	{todo_id: 2,
+	 todo: 'NEXT'},
+    ]
+    heading.create_div($workspace);
+    var $todo = heading.$element.find('.todo-state');
+    var $popover = heading.$element.find('.popover');
+    equal(
+	$popover.find('.todo-option').length,
+	2,
+	'Created correct number of todo options'
+    );
+    equal(
+	$popover.find('.todo-option').attr('todo_id'),
+	'1',
+	'todo_id attribute set'
+    );
+    equal(
+	$popover.find('.todo-option[todo_id="2"]').html(),
+	'NEXT*',
+	'Current todo state has an asterisk'
+    );
+    equal(
+	$popover.find('.todo-option[todo_id="1"]').html(),
+	'TODO',
+	'Other todo state has a white background'
+    );
+    // Hover-over
+    var $option1 = $popover.find('.todo-option[todo_id="1"]')
+    $option1.mouseenter();
+    equal(
+	$option1.css('background-color'),
+	'rgb(223, 240, 216)',
+	'Hovered element has background set'
+    );
+    $option1.mouseleave();
+    equal(
+	$option1.css('background-color'),
+	'rgba(0, 0, 0, 0)',
+	'Hovered element has background set'
+    );
+    
+});
+
+asyncTest('Todo state changing functionality', function() {
+    var $workspace = $('#test_workspace');
+    setup();
+    var test_outline = new project_outline({$workspace: $workspace});
+    test_outline.todo_states = [
+	{todo_id: 1,
+	 todo: 'DONE'},
+	{todo_id: 2,
+	 todo: 'NEXT'},
+    ]
+    test_outline.init();
+    setTimeout(function() {
+	start();
+	console.log($workspace.html());
+    }, (ajax_timer * 1.1 + 5));
 });
 
 
@@ -563,7 +668,7 @@ asyncTest('Set todo states', function() {
 		'NEXT state accessible through heading object'
 	    );
 	});
-	var $todo = $workspace.children('.heading').children('.ow-hoverable').children('.todo_state');
+	var $todo = $workspace.children('.heading').children('.ow-hoverable').children('.todo-state');
 	equal($todo.html(), 'DONE', 'Todo state element selected');
 	$todo.click();
     }, (ajax_timer*1.1+5));

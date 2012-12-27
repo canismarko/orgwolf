@@ -43,7 +43,7 @@ span.alt
     background-color: white; 
    /* Todo: figure out how to do this using background: transparent */
 }
-.clickable, .add-heading
+.clickable, .add-heading, .todo-state
 {
     cursor: pointer;
 }
@@ -51,7 +51,16 @@ div.ow-hoverable, div.clickable, div.ow-buttons
 {
     display: inline-block;
 }
-.todo_state > select 
+.popover
 {
-    /* height: 20px; */
+    width: auto;
+}
+.todo-option
+{
+    margin: 3px;
+    cursor: default;
+}
+.ow-hover
+{
+    background-color: #DFF0D8;
 }
