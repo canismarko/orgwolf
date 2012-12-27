@@ -29,6 +29,7 @@ from django.test import TestCase
 from django.test.client import Client
 from django.utils.timezone import get_current_timezone
 import re
+import json
 
 from orgwolf.tests import prepare_database
 from orgwolf.preparation import translate_old_text
@@ -129,6 +130,73 @@ class EditNode(TestCase):
         node.todo_state = todo_state
         node.save()
         self.assertEqual(todo_state, node.todo_state)
+    
+    def test_edit_by_json(self):
+        # Login
+        self.assertTrue(
+            self.client.login(username='test', password='secret')
+            )
+        node = Node.objects.get(title='Buy cat food')
+        actionable = TodoState.objects.get(abbreviation='ACTN')
+        closed = TodoState.objects.get(abbreviation='DONE')
+        self.assertEqual(
+            actionable,
+            node.todo_state,
+            'Node does not start out actionable'
+            )
+        url = '/gtd/nodes/' + str(node.pk) + '/edit/'
+        data = {
+            'format': 'json',
+            'todo_id': closed.pk,
+            }
+        response = self.client.get(url, data)
+        self.assertEqual(
+            200,
+            response.status_code,
+            'getJSON call did not return HTTP 200'
+            )
+        jresponse = json.loads(response.content)
+        # Check response object
+        self.assertEqual(
+            1,
+            jresponse['node_id'],
+            'JSON edit does not return correct node_id'
+            )
+        self.assertEqual(
+            'success',
+            jresponse['status'],
+            'JSON edit does not return success status: ' + jresponse['status']
+            )
+        self.assertEqual(
+            closed.pk,
+            jresponse['todo_id'],
+            'JSON edit does not return new todo_state.pk: ' + str(closed.pk) + '/' + str(jresponse['todo_id'])
+            )
+        # Make sure the node has been updated
+        node = Node.objects.get(title='Buy cat food')
+        self.assertEqual(
+            closed,
+            node.todo_state,
+            'node.todo_state not set properly'
+            )
+        # Check about setting to no node
+        data = {
+            'format': 'json',
+            'todo_id': 0,
+            }
+        response = self.client.get(url, data)
+        self.assertEqual(
+            200,
+            response.status_code,
+            'getJSON call did not return HTTP 200: ' + str(response.status_code)
+            )
+        # jresponse = json.loads(response.content)
+        node = Node.objects.get(title='Buy cat food')        
+        self.assertEqual(
+            None,
+            node.todo_state,
+            'node.todo_state not unset when todo_id: 0 passed to edit node'
+            )
 
 class RepeatingNodeTest(TestCase):
     def setUp(self):

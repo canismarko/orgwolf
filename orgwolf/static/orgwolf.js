@@ -41,7 +41,8 @@ var outline_heading = function(args) {
 	this.todo = args['todo'];
     }
     else {
-	this.todo = '';
+	this.todo_id = 0
+	this.todo = '[None]';
     }
     if( typeof args['node_id'] != 'undefined' ) {
 	this.node_id = Number(args['node_id']);
@@ -75,45 +76,22 @@ var outline_heading = function(args) {
     // Methods...
     this.as_html = function() {
 	// Render to html
+	// This is just the skeleton of the html
+	// Actual values are added later using update_dom()
 	var new_string = '';
 	new_string += '<div class="heading" node_id="' + this.node_id + '">\n';
 	new_string += '  <div class="ow-hoverable">\n';
 	new_string += '    <i class="clickable ' + this.ICON + '"></i>\n';
 	// Todo state
-	new_string += '    <span class="todo-state">';
-	if (this.todo) {
-	    new_string += this.todo;
-	}
-	else {
-	    new_string += '[]';
-	}
-	new_string += '</span>\n';
+	new_string += '    <span class="todo-state"></span>\n';
 	// Todo selection popover
 	new_string += '    <div class="popover right">\n';
 	new_string += '      <div class="arrow"></div>\n';
 	new_string += '      <div class="popover-title">Todo State</div>\n';
 	new_string += '      <div class="popover-inner">\n';
-	if (typeof this.todo_states == 'undefined') {
-	    var num_todo_states = 0;
-	}
-	else {
-	    var num_todo_states = this.todo_states.length;
-	}
-	for (var i=0; i<num_todo_states; i++) {
-	    new_string += '        <div todo_id="' + this.todo_states[i].todo_id + '"';
-	    new_string += ' class="todo-option';
-	    new_string += '">';
-	    new_string += this.todo_states[i].todo;
-	    if (this.todo_id == this.todo_states[i].todo_id) {
-		new_string += '*';
-	    }
-	    new_string += '</div>\n';
-	}
 	new_string += '      </div>\n    </div>\n';
 	// title
-	new_string += '    <div class="clickable">\n';
-	new_string += '      ' + this.title + '\n';
-	new_string += '    </div>\n';
+	new_string += '    <div class="clickable ow-title"></div>\n';
 	// Quick-action buttons
 	new_string += '    <div class="ow-buttons">\n';
 	new_string += '      <i class="icon-plus"></i>\n';
@@ -121,9 +99,7 @@ var outline_heading = function(args) {
 	new_string += '    </div>\n';
 	new_string += '  </div>\n';
 	// Child containers
-	new_string += '  <div class="ow-text">';
-	new_string += this.text;
-	new_string += '</div>\n';
+	new_string += '  <div class="ow-text"></div>\n';
 	new_string += '  <div class="children">\n';
 	new_string += '    <div class="loading">\n';
 	new_string += '      <em>Loading...</em>\n';
@@ -143,12 +119,18 @@ var outline_heading = function(args) {
 	var $todo_state = $hoverable.children('.todo-state');
 	var $buttons = $hoverable.children('.ow-buttons');
 	var $popover = $hoverable.children('.popover');
+	var $text = $element.children('.ow-text');
+	var $title = $hoverable.children('.ow-title');
 	this.$element = $element;
 	this.$hoverable = $hoverable;
 	this.$clickable = $clickable;
 	this.$todo_state = $todo_state;
 	this.$buttons =	$buttons;
 	this.$popover = $popover;
+	this.$text = $text;
+	this.$title = $title;
+	// Set initial dom data
+	this.update_dom();
 	// Set jquery data
 	this.$element.data('title', this.title);
 	this.$element.data('text', this.text);
@@ -163,6 +145,8 @@ var outline_heading = function(args) {
 	    this.$element.data('$workspace', this.$parent.data('$workspace'));
 	}
 	this.$clickable.data('$parent', this.$element);
+	// Populate popover children
+	this.populate_todo_states($popover.children('.popover-inner'));
 	// Set color based on indentation level
 	var color_i = this.level % this.COLORS.length;
 	this.color = this.COLORS[color_i-1];
@@ -176,7 +160,7 @@ var outline_heading = function(args) {
 	this.$text.css('display', 'none');
 	this.set_indent(this.$children, 1);
 	this.set_indent(this.$text, 1);
-	if (!this.todo) {
+	if (this.todo_id == 0) {
 	    $todo_state.css('display', 'none');
 	}
 	$popover.css('display', 'none');
@@ -191,7 +175,7 @@ var outline_heading = function(args) {
 	});
 	this.$hoverable.mouseleave(function() {
 	    $buttons.css('visibility', 'hidden');
-	    if (!$(this).parent().data('object').todo){
+	    if (!$(this).parent().data('object').todo_id){
 		$todo_state.css('display', 'none');
 	    }
 	    $popover.css('display', 'none');
@@ -209,15 +193,49 @@ var outline_heading = function(args) {
 	    $popover.css('top', new_top + 'px');
 	    // Then make it visible
 	    $popover.css('display', 'block');
-	});
-	var $options = $popover.children('.popover-inner').children('.todo-option');
-	$options.mouseenter(function() {
-	    $(this).addClass('ow-hover');
-	});
-	$options.mouseleave(function() {
-	    $(this).removeClass('ow-hover');
+
+	    var $options = $popover.children('.popover-inner').children('.todo-option');
+	    $options.mouseenter(function() {
+		console.log('called');
+		// Add a background if it's not the currently selected option
+		var parent = $(this).parent().parent().parent().parent().data('object');
+		if ($(this).attr('todo_id') != parent.todo_id) {
+		    $(this).addClass('ow-hover');
+		}
+	    });
+	    $options.mouseleave(function() {
+		$(this).removeClass('ow-hover');
+	    });
 	});
     };
+    // Read the current object properties and update the
+    // DOM element to reflect any changes
+    this.update_dom = function() {
+	// node_id
+	this.$element.attr('node_id', this.node_id);
+	this.$element.data('node_id', this.node_id);
+	// todo_id
+	this.$element.data('todo_id', this.todo_id);
+	var new_todo = '[]';
+	if (typeof this.todo_states == 'undefined') {
+	    var num_todo_states = 0;
+	}
+	else {
+	    var num_todo_states = this.todo_states.length;
+	}
+	for (var i=0; i<num_todo_states; i++) {
+	    if (this.todo_states[i].todo_id == this.todo_id) {
+		new_todo = this.todo_states[i].todo;
+	    }
+	}
+	this.$todo_state.html(new_todo);
+	this.populate_todo_states(this.$popover.children('.popover-inner'));
+	// Text div
+	this.$text.html(this.text);
+	// Title div
+	this.$title.html(this.title);
+    };
+    
     this.set_indent = function($target, offset) {
 	var indent = (this.icon_width + 4) * offset;
 	$target.css('margin-left', indent + 'px');
@@ -280,6 +298,59 @@ var outline_heading = function(args) {
 	    // in aniticipation of the user needing them
 	    if ($(this).data('populated') == false) {
 		$(this).data('object').populate_children();
+	    }
+	});
+    };
+    this.populate_todo_states = function($container) {
+	var new_string = '';
+	var active;
+	if (typeof this.todo_states == 'undefined') {
+	    var num_todo_states = 0;
+	}
+	else {
+	    var num_todo_states = this.todo_states.length;
+	}
+	for (var i=0; i<num_todo_states; i++) {
+	    if (this.todo_id == this.todo_states[i].todo_id) {
+		active = true;
+	    }
+	    else {
+		active = false;
+	    }
+	    new_string += '        <div todo_id="' + this.todo_states[i].todo_id + '"';
+	    new_string += ' class="todo-option"';
+	    if (active) {
+		new_string += ' selected="selected"';
+	    }
+	    new_string += '>';
+	    new_string += this.todo_states[i].todo;
+	    new_string += '</div>\n';
+	}
+	// Commit to document
+	$container.html(new_string);
+	// Connect handler to change todo state when option is clicked
+	$container.children('.todo-option').click(function() {
+	    var new_id = Number($(this).attr('todo_id'));
+	    var $popover = $(this).parent().parent();
+	    var heading = $popover.parent().parent().data('object');
+	    // Avoid dismissing if same todo state selected
+	    var url = '/gtd/nodes/' + heading.node_id + '/edit/';
+	    var data = {
+		format: 'json',
+		todo_id: new_id,
+	    };
+	    if (new_id != heading.todo_id) {
+		// If todo state is being changed then...
+		$.getJSON(url, data, function(response) {
+		    // (callback) update the document todo states after change
+		    if (response['status']=='success') {
+			heading.todo_id = response['todo_id'];
+			heading.update_dom();
+			heading.$todo_state.mouseenter();
+			heading.$todo_state.mouseleave(); // Avoid stale css
+		    }
+		});
+		$popover.hide();
 	    }
 	});
     };

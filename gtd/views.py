@@ -325,7 +325,7 @@ def edit_node(request, node_id, scope_id):
     if scope_id:
         url_kwargs['scope_id'] = scope_id
     base_url = reverse('gtd.views.display_node', kwargs=url_kwargs)
-    node = Node.objects.get(id=node_id)
+    node = Node.objects.get(pk=node_id)
     breadcrumb_list = node.get_hierarchy()
     if request.method == "POST": # Form submission
         form = NodeForm(request.POST, instance=node)
@@ -334,7 +334,28 @@ def edit_node(request, node_id, scope_id):
             url_kwargs['node_id'] = node_id
             redirect_url = reverse('gtd.views.display_node', kwargs=url_kwargs)
             return redirect(redirect_url)
+    elif request.GET['format'] == 'json':
+        # The node is being edited using JSON (by AJAX?)
+        new_todo_id = request.GET['todo_id']
+        if new_todo_id == '0':
+            new_todo = None
+        else:
+            new_todo = get_object_or_404(TodoState, pk=new_todo_id)
+        node.todo_state = new_todo
+        node.save()
+        if node.todo_state:
+            processed_id = node.todo_state.pk
+        else:
+            processed_id = 0
+        # Prepare a confirmation response
+        data = {
+            'status': 'success',
+            'node_id': node.pk,
+            'todo_id': processed_id,
+            }
+        return HttpResponse(json.dumps(data))
     else: # Blank form
+        
         form = NodeForm(instance=node)
     return render_to_response('node_edit.html',
                               locals(),

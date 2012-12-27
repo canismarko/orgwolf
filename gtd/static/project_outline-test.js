@@ -24,6 +24,12 @@ var second_dict = {
     todo_id: '2',
     todo: 'NEXT',
 };
+var todo_state_list = [
+    {todo_id: 1,
+     todo: 'NEXT'},
+    {todo_id: 2,
+     todo: 'DONE'},
+];
 var ajax_timer = 30; // how long fake ajax request takes (in milliseconds)
 // Setup fake AJAX responses
 $.mockjax({
@@ -44,6 +50,7 @@ $.mockjax({
 	    {
 		node_id: 2,
 		title: 'Expense reports',
+		todo_id: 2,
 		todo: 'NEXT',
 		tags: ':comp:',
 		text: 'From Korea-Japan',
@@ -113,6 +120,24 @@ $.mockjax({
 	]
     }
 });
+$.mockjax({
+    url: '/gtd/nodes/1/edit/',
+    responseTime: ajax_timer,
+    responseText: {
+	status: 'success',
+	node_id: 1,
+	todo_id: 2,
+    }
+});
+$.mockjax({
+    url: '/gtd/nodes/5/edit/',
+    responseTime: ajax_timer,
+    responseText: {
+	status: 'success',
+	node_id: 5,
+	todo_id: 0,
+    }
+});
 
 var module_name = 'outline-appliance-test.js - ';
 module(module_name + 'Heading');
@@ -147,13 +172,13 @@ test('save heading object in DOM element data()', function() {
 test('create new heading object from sparse data', function() {
     var test_heading = new outline_heading(sparse_dict);
     equal(test_heading.title, 'test_title', 'Title is set');
-    equal(test_heading.todo_id, null, 'Todo ID is set');
-    equal(test_heading.todo, '', 'Todo state is set');
+    equal(test_heading.todo_id, 0, 'Todo ID is set');
+    equal(test_heading.todo, '[None]', 'Todo state is set');
     equal(test_heading.tags, null, 'Tag string is set');
 });
 test('heading as_html method', function() {
     var test_heading = new outline_heading(sparse_dict);
-    var expected_html = '<div class="heading" node_id="1">\n  <div class="ow-hoverable">\n    <i class="clickable icon-chevron-right"></i>\n    <span class="todo-state">[]</span>\n    <div class="popover right">\n      <div class="arrow"></div>\n      <div class="popover-title">Todo State</div>\n      <div class="popover-inner">\n      </div>\n    </div>\n    <div class="clickable">\n      test_title\n    </div>\n    <div class="ow-buttons">\n      <i class="icon-plus"></i>\n      <i class="icon-ok"></i>\n    </div>\n  </div>\n  <div class=\"ow-text\"></div>\n  <div class="children">\n    <div class="loading">\n      <em>Loading...</em>\n    </div>\n  </div>\n</div>\n';
+    var expected_html = '<div class="heading" node_id="1">\n  <div class="ow-hoverable">\n    <i class="clickable icon-chevron-right"></i>\n    <span class="todo-state"></span>\n    <div class="popover right">\n      <div class="arrow"></div>\n      <div class="popover-title">Todo State</div>\n      <div class="popover-inner">\n      </div>\n    </div>\n    <div class="clickable ow-title"></div>\n    <div class="ow-buttons">\n      <i class="icon-plus"></i>\n      <i class="icon-ok"></i>\n    </div>\n  </div>\n  <div class=\"ow-text\"></div>\n  <div class="children">\n    <div class="loading">\n      <em>Loading...</em>\n    </div>\n  </div>\n</div>\n';
     equal(test_heading.as_html(), expected_html, 'outline_heading.as_html() output');
 });
 
@@ -186,6 +211,94 @@ test('heading create_div method', function() {
 	test_heading.$element.children('.children').css('display'),
 	'none',
 	'Initial children div is not displayed'
+    );
+});
+
+test('update_dom method', function() {
+    var test_heading = new outline_heading(full_dict);
+    test_heading.todo = "NEXT";
+    test_heading.todo_states = todo_state_list;
+    equal(
+	typeof test_heading.update_dom,
+	'function',
+	'update_dom() method exists'
+    );
+    var $workspace = $('#test_workspace');
+    $workspace.html('');
+    test_heading.create_div($workspace);
+    var $heading = test_heading.$element;
+    // Test heading.node_id
+    equal(
+	$heading.attr('node_id'),
+	1,
+	'Initial attribute: node_id set'
+    );
+    test_heading.node_id = 2;
+    test_heading.update_dom();
+    equal(
+	$heading.attr('node_id'),
+	2,
+	'Updated attribute: node_id'
+    );
+    equal(
+	$heading.data('node_id'),
+	2,
+	'Update data: node_id'
+    );
+    // Test heading.text
+    equal(
+	test_heading.$text.html(),
+	test_heading.text,
+	'Initial element: ow-text'
+    );
+    test_heading.text = 'Some other text here';
+    test_heading.update_dom();
+    equal(
+	test_heading.$text.html(),
+	'Some other text here',
+	'Update element: ow-text'
+    );
+    // Test heading.title
+    equal(
+	test_heading.$title.html(),
+	test_heading.title,
+	'Initial element: ow-title'
+    );
+    test_heading.title = 'New title';
+    test_heading.update_dom();
+    equal(
+	test_heading.$title.html(),
+	'New title',
+	'Update element: ow-title'
+    );
+    // Test heading.todo_id
+    equal(
+	$heading.data('todo_id'),
+	1,
+	'Initial data: todo_id'
+    );
+    equal(
+	test_heading.$todo_state.html(),
+	'NEXT',
+	'Initial element: $todo_state'
+    );
+    test_heading.todo_id = 2;
+    test_heading.update_dom();
+    equal(
+	$heading.data('todo_id'),
+	2,
+	'Update data: todo_id'
+    );
+    equal(
+	test_heading.$todo_state.html(),
+	'DONE',
+	'Update element: $todo_state'
+    );
+    
+    strictEqual(
+	$heading.data('object'),
+	test_heading,
+	'Updated data: object'
     );
 });
 
@@ -305,7 +418,6 @@ asyncTest('Toggle clickable region on heading', function() {
 		'block',
 		'CSS display set properly'
 	    );
-		// This should actually pass but is being run too early I think
 	});
 	start();
     }, (ajax_timer * 1.1 + 5));
@@ -471,17 +583,13 @@ test('Todo state popover', function() {
 	'todo_id attribute set'
     );
     equal(
-	$popover.find('.todo-option[todo_id="2"]').html(),
-	'NEXT*',
-	'Current todo state has an asterisk'
-    );
-    equal(
 	$popover.find('.todo-option[todo_id="1"]').html(),
 	'TODO',
 	'Other todo state has a white background'
     );
     // Hover-over
     var $option1 = $popover.find('.todo-option[todo_id="1"]')
+    heading.$todo_state.click(); // To create the popover
     $option1.mouseenter();
     equal(
 	$option1.css('background-color'),
@@ -492,9 +600,67 @@ test('Todo state popover', function() {
     equal(
 	$option1.css('background-color'),
 	'rgba(0, 0, 0, 0)',
-	'Hovered element has background set'
+	'Un-hovered element has white background'
     );
-    
+    // Selected option does not have background set
+    var $option2 = $popover.find('.todo-option[selected]');
+    equal(
+	$option2.length,
+	1,
+	'1 Selected todo-option found'
+    );
+    $option2.mouseenter();
+    equal(
+	$option2.css('background-color'),
+	'rgba(0, 0, 0, 0)',
+	'Selected element stays white on hover'
+    );
+});
+
+test('Popover populating method', function() {
+    setup();
+    // When '.todostate' spans are clicked, they become a combo select box.
+    var $workspace = $('#test_workspace');
+    var heading = new outline_heading(second_dict);
+    heading.todo_states = [
+	{todo_id: 1,
+	 todo: 'TODO'},
+	{todo_id: 2,
+	 todo: 'NEXT'},
+    ]
+    equal(
+	typeof heading.populate_todo_states,
+	'function',
+	'populate_todo_states method exists'
+    );
+    heading.create_div($workspace);
+    var $todo = heading.$element.find('.todo-state');
+    var $popover = heading.$element.find('.popover');
+    var $inner = $popover.children('.popover-inner')
+    $inner.html('');
+    equal(
+	$inner.html(),
+	'',
+	'Popover inner html cleared'
+    );
+    heading.populate_todo_states($popover.find('.popover-inner'));
+    equal(
+	$popover.children('.popover-inner').children('.todo-option').length,
+	2,
+	'Two todo states created'
+    );
+    var $option1 = $inner.children('.todo-option[todo_id="1"]');
+    var $option2 = $inner.children('.todo-option[todo_id="2"]');
+    equal(
+	$option1.attr('selected'),
+	undefined,
+	'Non-selected todo option does not have "selected" attribute set'
+    );
+    equal(
+	$option2.attr('selected'),
+	'selected',
+	'Selected todo option has "selected" attribute set'
+    );
 });
 
 asyncTest('Todo state changing functionality', function() {
@@ -508,10 +674,57 @@ asyncTest('Todo state changing functionality', function() {
 	 todo: 'NEXT'},
     ]
     test_outline.init();
+    var $heading1;
     setTimeout(function() {
 	start();
-	console.log($workspace.html());
+	$heading1 = $workspace.find('.heading[node_id="1"]');
+	equal(
+	    $heading1.data('node_id'),
+	    1,
+	    'Node 1 heading exists'
+	);
+	equal(
+	    $heading1.find('.todo-option[selected]').html(),
+	    'DONE',
+	    'Correct heading selected to start'
+	);
+	// Clicking on the selected node does nothing
+	$heading1.children('.ow-hoverable').children('.todo-state').click();
+	equal(
+	    $heading1.find('.popover').css('display'),
+	    'block',
+	    'Popover visible after mouseenter before clicking'
+	);
+	$heading1.find('.todo-option[selected]').click();
+	equal(
+	    $heading1.find('.popover').css('display'),
+	    'block',
+	    'Clicking Selected option does not dismiss popover'
+	);
+	// Now change it to the other todo state
+	$heading1.find('.todo-option[todo_id="2"]').click();
+	stop();
     }, (ajax_timer * 1.1 + 5));
+    setTimeout(function() {
+	start();
+	var heading = $heading1.data('object');
+	var $popover = $heading1.find('.popover-inner');
+	equal(
+	    heading.node_id,
+	    1,
+	    'Heading object successfully found after todo option click'
+	);
+	equal(
+	    heading.todo_id,
+	    2,
+	    'Todo state changed to 2'
+	);
+	equal(
+	    $popover.children('.todo-option[todo_id="2"]').attr('selected'),
+	    'selected',
+	    'Todo option 2 is now selected'
+	);
+    }, (ajax_timer * 3.3 + 5));
 });
 
 
@@ -570,8 +783,8 @@ asyncTest('converts initial workspace', function() {
 		equal($(this).data('tags'), '', 'Node 1 tags correct'); 
 	    }
 	    if( $(this).attr('node_id') == '2' ) {
-		equal($(this).data('todo_id'), null, 'Node 2 TodoState id correct');
-		equal($(this).data('todo'), '', 'Node 2 TodoState correct');
+		equal($(this).data('todo_id'), 2, 'Node 2 TodoState id correct');
+		equal($(this).data('todo'), 'NEXT', 'Node 2 TodoState correct');
 		equal($(this).data('title'), 'Expense reports', 'Node 2 title correct');
 		equal($(this).data('tags'), ':comp:', 'Node 2 tags correct'); 
 	    }
@@ -668,8 +881,9 @@ asyncTest('Set todo states', function() {
 		'NEXT state accessible through heading object'
 	    );
 	});
-	var $todo = $workspace.children('.heading').children('.ow-hoverable').children('.todo-state');
-	equal($todo.html(), 'DONE', 'Todo state element selected');
+	var $todo = $workspace.children('.heading[node_id="1"]').children('.ow-hoverable').children('.todo-state');
+	equal($todo.html(), 'NEXT', 'Todo state element selectable');
 	$todo.click();
+	$workspace.html(''); // To make the Qunit output pretty
     }, (ajax_timer*1.1+5));
 });

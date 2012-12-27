@@ -30,8 +30,10 @@ $('document').ready(function() {
     var outline = new project_outline({
 	$workspace: $('#outline-workspace'),
 	todo_states: [
-	    {% for todo_state in all_todo_states_qs %}{ todo_id: {{todo_state.pk}},
-							todo: '{{todo_state.as_html}}' },
+	    {todo_id: 0,
+	     todo: '[None]'},
+	    {% for todo_state in all_todo_states_qs %}{todo_id: {{todo_state.pk}},
+						       todo: '{{todo_state.as_html}}'},
 	    {% endfor %}]
 	});
     outline.init();
