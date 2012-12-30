@@ -5,6 +5,10 @@ import datetime as dt
 
 register = template.Library()
 
+@register.simple_tag
+def todo_states_json(args):
+    return 'hello'
+
 @register.filter
 def repeat_icon(value):
     if value:

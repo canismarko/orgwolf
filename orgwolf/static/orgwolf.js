@@ -28,6 +28,154 @@ $(document).ready(function(){
     });
 }); // End of onReady
 
+// jQuery plugin that allows for easily selecting todo states from a list
+(function( $ ){
+    $.fn.todoState = function(options) {
+	// Process options
+	var $todo = this;
+	// Remove any links that may be in the todo_state element
+	$todo.find('a').contents().unwrap();
+	var todo_id = $todo.data('todo_id');
+	var settings = $.extend(
+	    {
+		states: [
+		    {todo_id: 0, display: '[None]'},
+		],
+		node_id: 0,
+		click: (function() {}),
+		parent_elem: $todo.parent()
+	    }, options);
+	// Helper function gets todo state given a todo_id
+	var get_state = function(todo_id) {
+	    var new_state = undefined;
+	    for (var i=0; i<settings.states.length; i++) {
+		if (settings.states[i].todo_id == todo_id) {
+		    new_state = settings.states[i];
+		}
+	    }
+	    return new_state;
+	};
+	var hide_popover = function() {
+	    $popover.hide();
+	    $todo.unbind('.autohide');
+	};
+	// function shows the popover and binds dismissal events
+	var show_popover = function() {
+	    $popover.show();
+	    // Hide the popover if something else is clicked
+	    $('body').one('click.autohide', function() {
+		hide_popover();	
+	    });
+	    $popover.bind('click', function(e) {
+	    	e.stopPropagation();
+	    });
+	    $todo.bind('click.autohide', function() {
+		hide_popover();
+	    });
+	};
+	// todo_id 0 has some special properties
+	if (todo_id == 0) {
+	    settings.parent_elem.mouseenter(function() {
+		$todo.show();
+	    });
+	    settings.parent_elem.mouseleave(function() {
+		$todo.hide();
+	    });
+	    settings.parent_elem.mouseleave();
+	}
+	// Create the popover div and set its contents
+	var new_html = '';
+	new_html += '<div class="popover right todostate">\n';
+	new_html += '  <div class="arrow"></div>\n';
+	new_html += '  <div class="popover-title">Todo State</div>\n';
+	new_html += '  <div class="popover-inner">\n';
+	new_html += '  </div>\n';
+	new_html += '</div>\n';
+	$todo.after(new_html);
+	var $popover = $todo.next('.popover');
+	var $inner = $popover.children('.popover-inner');
+	// Set some css
+	$popover.hide();
+	$popover.css('position', 'absolute');
+	// Add the todo state options to popover inner
+	for (var i=0; i<settings.states.length; i++) {
+	    var option_html = '';
+	    option_html += '<div class="todo-option"';
+	    option_html += ' todo_id="';
+	    option_html += settings.states[i].todo_id;
+	    option_html += '"';
+	    if (settings.states[i].todo_id == todo_id) {
+		option_html += ' selected';
+	    }
+	    option_html += '>';
+	    option_html += settings.states[i].display;
+	    option_html += '</div>\n';
+	    $inner.append(option_html);
+	}
+	// Connect the todo states click functionality
+	$todo.bind('click', function(e) {
+	    e.stopPropagation();
+	    $('.popover.todostate').hide(); // Hide all the other popovers
+	    $todo = $(this);
+	    // ...set the position (move this to the click() handler)
+	    var new_left = $todo.position().left + $todo.width();
+	    $popover.css('left', new_left + 'px');
+	    var top = $todo.position().top;
+	    var height = $todo.height();
+	    var new_middle = top + (height/2);
+	    var new_top = new_middle - ($popover.height()/2);
+	    $popover.css('top', new_top + 'px');
+	    show_popover();
+	});
+	// Connect the hover functionality
+	var $options = $inner.children('.todo-option');
+	$options.mouseenter(function() {
+	    // Add the ow-hover class if it's not the currently selected option
+	    if ($(this).attr('todo_id') != todo_id) {
+		$(this).addClass('ow-hover');
+	    }
+	});
+	$options.mouseleave(function() {
+	    $(this).removeClass('ow-hover');
+	});
+	// Connect handler to change todo state when option is clicked
+	$options.bind('click', function() {
+	    var new_id = Number($(this).attr('todo_id'));
+	    var $popover = $(this).parent().parent();
+	    var heading = $popover.parent().parent().data('object');
+	    var url = '/gtd/nodes/' + settings.node_id + '/edit/';
+	    var data = {
+		format: 'json',
+		todo_id: new_id,
+	    };
+	    // Avoid dismissing if same todo state selected
+	    if (new_id != todo_id) {
+		// If todo state is being changed then...
+		$.getJSON(url, data, function(response) {
+		    // (callback) update the document todo states after change
+		    if (response['status']=='success') {
+			$todo.data('todo_id', response['todo_id']);
+			todo_id = response['todo_id'];
+			$todo.html(get_state(response['todo_id']).display);
+			$options.removeAttr('selected'); // clear selected
+			var s = '.todo-option[todo_id="';
+			s += response['todo_id'] + '"]';
+			$inner.children(s).attr('selected', '');
+			// Run the user submitted callback
+			settings.click(response);
+			// Kludge to avoid stale css
+			$todo.mouseenter();
+			$todo.mouseleave();
+		    }
+		});
+		hide_popover();
+	    }
+	});
+
+	return this;
+    };
+})(jQuery);
+
 // Begin implementation of hierarchical expanding project list
 var outline_heading = function(args) {
     this.ICON = 'icon-chevron-right';
@@ -84,12 +232,6 @@ var outline_heading = function(args) {
 	new_string += '    <i class="clickable ' + this.ICON + '"></i>\n';
 	// Todo state
 	new_string += '    <span class="todo-state"></span>\n';
-	// Todo selection popover
-	new_string += '    <div class="popover right">\n';
-	new_string += '      <div class="arrow"></div>\n';
-	new_string += '      <div class="popover-title">Todo State</div>\n';
-	new_string += '      <div class="popover-inner">\n';
-	new_string += '      </div>\n    </div>\n';
 	// title
 	new_string += '    <div class="clickable ow-title"></div>\n';
 	// Quick-action buttons
@@ -118,7 +260,6 @@ var outline_heading = function(args) {
 	var $clickable = $hoverable.children('.clickable');
 	var $todo_state = $hoverable.children('.todo-state');
 	var $buttons = $hoverable.children('.ow-buttons');
-	var $popover = $hoverable.children('.popover');
 	var $text = $element.children('.ow-text');
 	var $title = $hoverable.children('.ow-title');
 	this.$element = $element;
@@ -126,7 +267,6 @@ var outline_heading = function(args) {
 	this.$clickable = $clickable;
 	this.$todo_state = $todo_state;
 	this.$buttons =	$buttons;
-	this.$popover = $popover;
 	this.$text = $text;
 	this.$title = $title;
 	// Set initial dom data
@@ -146,7 +286,6 @@ var outline_heading = function(args) {
 	}
 	this.$clickable.data('$parent', this.$element);
 	// Populate popover children
-	this.populate_todo_states($popover.children('.popover-inner'));
 	// Set color based on indentation level
 	var color_i = this.level % this.COLORS.length;
 	this.color = this.COLORS[color_i-1];
@@ -155,15 +294,10 @@ var outline_heading = function(args) {
 	// Set initial CSS
 	this.$clickable.css('color', this.color);
 	this.$children.css('display', 'none');
-	$popover.css('position', 'absolute');
 	this.$buttons.css('visibility', 'hidden');
 	this.$text.css('display', 'none');
 	this.set_indent(this.$children, 1);
 	this.set_indent(this.$text, 1);
-	if (this.todo_id == 0) {
-	    $todo_state.css('display', 'none');
-	}
-	$popover.css('display', 'none');
 	// Attach event handlers
 	this.$clickable.click(function() {
 	    var saved_heading = $(this).data('$parent').data('object');
@@ -171,51 +305,22 @@ var outline_heading = function(args) {
 	});
 	this.$hoverable.mouseenter(function() {
 	    $buttons.css('visibility', 'visible');
-	    $todo_state.css('display', 'inline');
 	});
 	this.$hoverable.mouseleave(function() {
 	    $buttons.css('visibility', 'hidden');
-	    if (!$(this).parent().data('object').todo_id){
-		$todo_state.css('display', 'none');
-	    }
-	    $popover.css('display', 'none');
 	});
 	var todo_states = this.todo_states;
-	// Display a popover of todo states to choose from
-	this.$hoverable.children('.todo-state').click(function() {
-	    // First set the position
-	    var new_left = $todo_state.position().left + $todo_state.width();
-	    $popover.css('left', new_left + 'px');
-	    var top = $todo_state.position().top;
-	    var height = $todo_state.height();
-	    var new_middle = top + (height/2);
-	    var new_top = new_middle - ($popover.height()/2);
-	    $popover.css('top', new_top + 'px');
-	    // Then make it visible
-	    $popover.css('display', 'block');
-
-	    var $options = $popover.children('.popover-inner').children('.todo-option');
-	    $options.mouseenter(function() {
-		console.log('called');
-		// Add a background if it's not the currently selected option
-		var parent = $(this).parent().parent().parent().parent().data('object');
-		if ($(this).attr('todo_id') != parent.todo_id) {
-		    $(this).addClass('ow-hover');
-		}
-	    });
-	    $options.mouseleave(function() {
-		$(this).removeClass('ow-hover');
-	    });
-	});
     };
     // Read the current object properties and update the
     // DOM element to reflect any changes
     this.update_dom = function() {
+	var heading = this;
 	// node_id
 	this.$element.attr('node_id', this.node_id);
 	this.$element.data('node_id', this.node_id);
 	// todo_id
 	this.$element.data('todo_id', this.todo_id);
+	this.$todo_state.data('todo_id', this.todo_id);
 	var new_todo = '[]';
 	if (typeof this.todo_states == 'undefined') {
 	    var num_todo_states = 0;
@@ -225,11 +330,17 @@ var outline_heading = function(args) {
 	}
 	for (var i=0; i<num_todo_states; i++) {
 	    if (this.todo_states[i].todo_id == this.todo_id) {
-		new_todo = this.todo_states[i].todo;
+		new_todo = this.todo_states[i].display;
 	    }
 	}
 	this.$todo_state.html(new_todo);
-	this.populate_todo_states(this.$popover.children('.popover-inner'));
+	this.$todo_state.todoState({
+	    states: this.todo_states,
+	    node_id: this.node_id,
+	    click: function(ajax_response) {
+		heading.todo_id = ajax_response['todo_id'];
+	    }
+	});
 	// Text div
 	this.$text.html(this.text);
 	// Title div
@@ -323,36 +434,11 @@ var outline_heading = function(args) {
 		new_string += ' selected="selected"';
 	    }
 	    new_string += '>';
-	    new_string += this.todo_states[i].todo;
+	    new_string += this.todo_states[i].display;
 	    new_string += '</div>\n';
 	}
 	// Commit to document
 	$container.html(new_string);
-	// Connect handler to change todo state when option is clicked
-	$container.children('.todo-option').click(function() {
-	    var new_id = Number($(this).attr('todo_id'));
-	    var $popover = $(this).parent().parent();
-	    var heading = $popover.parent().parent().data('object');
-	    // Avoid dismissing if same todo state selected
-	    var url = '/gtd/nodes/' + heading.node_id + '/edit/';
-	    var data = {
-		format: 'json',
-		todo_id: new_id,
-	    };
-	    if (new_id != heading.todo_id) {
-		// If todo state is being changed then...
-		$.getJSON(url, data, function(response) {
-		    // (callback) update the document todo states after change
-		    if (response['status']=='success') {
-			heading.todo_id = response['todo_id'];
-			heading.update_dom();
-			heading.$todo_state.mouseenter();
-			heading.$todo_state.mouseleave(); // Avoid stale css
-		    }
-		});
-		$popover.hide();
-	    }
-	});
     };
 };
 

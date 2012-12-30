@@ -37,6 +37,7 @@ from orgwolf.models import OrgWolfUser as User
 from gtd.forms import NodeForm
 from gtd.models import Node, TodoState, node_repeat, Text, Location, Tool, Context
 from gtd.views import parse_url
+from gtd.templatetags.gtd_extras import overdue, upcoming
 
 class EditNode(TestCase):
     def setUp(self):
@@ -144,6 +145,7 @@ class EditNode(TestCase):
             node.todo_state,
             'Node does not start out actionable'
             )
+        # Execute edit via AJAX
         url = '/gtd/nodes/' + str(node.pk) + '/edit/'
         data = {
             'format': 'json',
@@ -197,6 +199,28 @@ class EditNode(TestCase):
             node.todo_state,
             'node.todo_state not unset when todo_id: 0 passed to edit node'
             )
+    def test_edit_from_agenda(self):
+        # Login
+        self.assertTrue(
+            self.client.login(username='test', password='secret')
+            )
+        node = Node.objects.get(title='Buy cat food')
+        actionable = TodoState.objects.get(abbreviation='ACTN')
+        closed = TodoState.objects.get(abbreviation='DONE')
+        # Execute edit via AJAX
+        url = '/gtd/nodes/' + str(node.pk) + '/edit/'
+        data = {
+            'format': 'json',
+            'todo_id': closed.pk,
+            }
+        self.assertTrue(False, 'Write test for processing agenda information');
+        response = self.client.get(url, data)
+        self.assertEqual(
+            200,
+            response.status_code,
+            'getJSON call did not return HTTP 200'
+            )
+        jresponse = json.loads(response.content)
 
 class RepeatingNodeTest(TestCase):
     def setUp(self):
@@ -493,8 +517,6 @@ class UrlParse(TestCase):
         return_value = parse_url({})
         self.assertEqual(return_value.__class__.__name__, 'dict')
 
-from gtd.templatetags.gtd_extras import overdue, upcoming
-
 class OverdueFilter(TestCase):
     """Tests the `overdue` template filter that makes deadlines into
     prettier "in 1 day" strings, etc."""
@@ -511,3 +533,30 @@ class OverdueFilter(TestCase):
         self.assertEqual(overdue(tomorrow, future=True), 'in 1 day') 
         tomorrow = tomorrow + dt.timedelta(1)
         self.assertEqual(overdue(tomorrow, future=True), 'in 2 days')
+
+class TodoStateRetrieval(TestCase):
+    """Tests the methods of TodoState that retrieves the list of "in play" todo states"""
+    def setUp(self):
+        prepare_database()
+        # dummy_user = User.objects.get(pk=1)
+        actionable = TodoState.objects.get(abbreviation='ACTN')
+        closed = TodoState.objects.get(abbreviation='DONE')
+    def test_as_json(self):
+        self.assertEqual(
+            TodoState.as_json.__class__.__name__,
+            'function',
+            'TodoState.as_json() method doesn\'t exist'
+            )
+        self.assertEqual(
+            TodoState.as_json().__class__.__name__,
+            'unicode',
+            'TodoState.as_json() method doesn\'t return a unicode string'
+            )
+        result_str = TodoState.as_json()
+        result = json.loads(result_str)
+        self.assertEqual(
+            len(TodoState.get_active())+1,
+            len(result),
+            'TodoState.as_json() does not find all TodoState objects\n' +
+            'Expected: ' + str(len(TodoState.get_active())+1) + '\nGot: ' + str(len(result))
+            )

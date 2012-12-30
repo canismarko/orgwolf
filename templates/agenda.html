@@ -27,6 +27,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 }
 </style>
 {% endblock %}
+{% block script %}
+{{ block.super }}
+    <script type="text/javascript">
+    </script>
+{% endblock %}
 {% block content %}
 <h3>{{ agenda_dt.date }}</h3>
 <form action="" method="post" class="form-horizontal">
@@ -37,7 +42,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 <h4>Day Specific</h4>
 <table class="table table-condensed">
   {% for node in day_specific_nodes %}
-  <tr{% if node.overdue %} class="error"{% endif %}>
+  <tr{% if node.overdue %} class="error"{% endif %} node_id="{{ node.id }}">
     <td>
       <a href="{% url 'gtd.views.display_node' node_id=node.id %}" title="{{ node.hierarchy }}">{{ node.overdue }}</a>
     </td>
@@ -45,7 +50,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
       {{ node.repeats|repeat_icon }}
     </td>
     <td>
-      <a href="{% url 'gtd.views.display_node' node_id=node.id %}" title="{{ node.hierarchy }}">{{ node.todo_state.as_html }}</a>
+      <div class="todo-state" todo_id="{{ node.todo_state.pk }}">
+	<a href="{% url 'gtd.views.display_node' node_id=node.id %}" title="{{ node.hierarchy }}">{{ node.todo_state.as_html }}</a>
+      </div>
     </td>
     <td>
       <a href="{% url 'gtd.views.display_node' node_id=node.id %}" title="{{ node.hierarchy }}">{{ node.title }}</a>

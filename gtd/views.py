@@ -246,6 +246,7 @@ def agenda_display(request, date=None):
         new_dict['repeats'] = node.repeats
         new_dict['hierarchy'] = node.get_hierarchy_as_string()
         deadline_nodes.append(new_dict)
+    all_todo_states_json = TodoState.as_json()
     return render_to_response('agenda.html',
                               locals(),
                               RequestContext(request))
@@ -314,6 +315,7 @@ def display_node(request, node_id=None, scope_id=None):
     base_url = reverse('gtd.views.display_node', kwargs=url_kwargs)
     if node_id == None:
         node_id = 0
+    all_todo_states_json = TodoState.as_json(all_todo_states_qs)
     return render_to_response('node_view.html',
                               locals(),
                               RequestContext(request))
@@ -334,7 +336,7 @@ def edit_node(request, node_id, scope_id):
             url_kwargs['node_id'] = node_id
             redirect_url = reverse('gtd.views.display_node', kwargs=url_kwargs)
             return redirect(redirect_url)
-    elif request.GET['format'] == 'json':
+    elif request.GET.get('format') == 'json':
         # The node is being edited using JSON (by AJAX?)
         new_todo_id = request.GET['todo_id']
         if new_todo_id == '0':
@@ -342,6 +344,7 @@ def edit_node(request, node_id, scope_id):
         else:
             new_todo = get_object_or_404(TodoState, pk=new_todo_id)
         node.todo_state = new_todo
+        # node.auto_repeat = True
         node.save()
         if node.todo_state:
             processed_id = node.todo_state.pk

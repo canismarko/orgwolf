@@ -30,6 +30,7 @@ from datetime import datetime, timedelta
 import re
 import math
 import operator
+import json
 
 from orgwolf import settings
 from orgwolf.models import Color
@@ -65,6 +66,18 @@ class TodoState(models.Model):
         """Returns a queryset containing all the TodoState objects
         that are currently in play."""
         return TodoState.objects.all()
+    @staticmethod
+    def as_json(queryset=None):
+        new_array = [{'todo_id': 0, 'display': '[None]'}]
+        if not queryset:
+            queryset=TodoState.get_active()
+        for state in queryset:
+            new_dict = {
+                'todo_id': state.pk,
+                'display': state.as_html(),
+                }
+            new_array.append(new_dict)
+        return unicode(json.dumps(new_array))
     def as_html(self):
         """Converts this todostate to an HTML string that can be put into tempaltes"""
         html = conditional_escape(self.abbreviation)
