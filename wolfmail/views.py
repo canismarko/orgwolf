@@ -56,7 +56,7 @@ def convert_mail_to_node(request, url_label, message_id):
         initial_values = {}
         initial_values = {'title': message.subject}
         form = NodeForm(initial=initial_values)
-    return render_to_response('new_node.html',
+    return render_to_response('gtd/new_node.html',
                               locals(),
                               RequestContext(request))
 

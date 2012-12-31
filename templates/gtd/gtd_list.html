@@ -26,11 +26,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 {% block content %}
 
 {# Scope tabs #}
-{% include 'scope_tabs.html' %}
+{% include "gtd/scope_tabs.html" %}
 
 {# Filters #}
 <form action="" method="POST" class="form-inline">
-  {% include 'scope_filter.html' %}
+  {% include "gtd/scope_filter.html" %}
   Context:
   <select name="context">
     <option value="0"

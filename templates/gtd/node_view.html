@@ -39,7 +39,7 @@ $('document').ready(function() {
 {% block content %}
 
 {# Search box #}
-{% include 'search_box.html' %}
+{% include "gtd/search_box.html" %}
 
 {# Breadcrumb trail #}
 <a href="{{ base_url }}">Project List</a>
@@ -96,7 +96,7 @@ $('document').ready(function() {
 <form action="" method="POST" class="form-inline">
   <a href="new/" class="btn"><i class="icon-plus"></i>&nbsp;New Node</a>
   <div class="input-append">
-    {% include "scope_filter.html" %}
+    {% include "gtd/scope_filter.html" %}
     <input type="hidden" name="node_id" value="{{ parent_node.id }}" />
     <button type="submit" name="function" value="filter" class="btn">Filter</button>
   </div>

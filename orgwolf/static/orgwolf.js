@@ -28,14 +28,31 @@ $(document).ready(function(){
     });
 }); // End of onReady
 
-// jQuery plugin that allows for easily selecting todo states from a list
+
+/*************************************************
+* jQuery todoState plugin
+* 
+* Allows for AJAXically changing the todo-state of
+*   a heading.
+* 
+* Process the following elements:
+* - $(this) has the current state.
+*   - $(this).data('todo_id') should be the current
+*     todo id.
+* Options:
+* - states: array of JSON objects describing the
+*   all the "in play" todo states:
+*   {todo_id: <integer>, display: <string>}
+*   A todo_id of 0 has special meaning (None)
+* - node_id: id of the node to change by AJAX
+*************************************************/
 (function( $ ){
     $.fn.todoState = function(options) {
 	// Process options
 	var $todo = this;
 	// Remove any links that may be in the todo_state element
 	$todo.find('a').contents().unwrap();
-	var todo_id = $todo.data('todo_id');
+	var todo_id = $todo.attr('todo_id');
 	var settings = $.extend(
 	    {
 		states: [
@@ -321,6 +338,7 @@ var outline_heading = function(args) {
 	// todo_id
 	this.$element.data('todo_id', this.todo_id);
 	this.$todo_state.data('todo_id', this.todo_id);
+	this.$todo_state.attr('todo_id', this.todo_id);
 	var new_todo = '[]';
 	if (typeof this.todo_states == 'undefined') {
 	    var num_todo_states = 0;
@@ -487,3 +505,102 @@ var get_heading = function (node_id) {
     node_id = Number(node_id); // In case a string was passed
     return $('.heading[node_id="' + node_id + '"]');
 };
+
+
+/*************************************************
+* jQuery agenda plugin
+* 
+* Adds javascript functionality to the select
+* agenda element.
+* 
+* Process the following elements:
+* - $('.daily') becomes the day specific section
+* - $('.timely') becomes the time specific section
+* - $('.deadlines') becomes the deadline section
+* - $('form.date') allows the user to change the
+*   the day the agenda represents ajaxically. It
+*   should have a text input named "date"
+*************************************************/
+(function( $ ) {
+    $.fn.agenda = function(options) {
+	var $form = this.find('form.date');
+	var $text = $form.find('input[name="date"][type="text"]');
+	var $agenda = this;
+	// Initialize data container if it doesn't exist
+	if (!this.data('agenda')) {
+	    this.data('agenda', {}); // Default settings go here
+	}
+	var data = $.extend(this.data('agenda'), options);
+	// Try and get agenda date from div (otherwise set to today)
+	var get_date = function(date_string) {
+	    var RE = /(\d{4})-([01]?\d)-([0-3]?\d)/;
+	    var result = RE.exec(date_string);
+	    if (result) {
+		var year = Number(result[1]);
+		var month = Number(result[2])-1;
+		var day = Number(result[3]);
+		var new_date = new Date(year, month, day);
+	    }
+	    else {
+		new_date = undefined;
+	    }
+		return new_date
+	};
+	data.date = get_date(this.attr('date'));
+	if (!data.date) {
+	    var now = new Date();
+	    var today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+	    data.date = today;
+	}
+	this.data('agenda', data);
+	// function reloads the agenda ajaxically
+	var update_agenda = function() {
+	    var url = '/gtd/agenda/' + 
+		data.date.getFullYear() + '-' +
+		(data.date.getMonth()+1) + '-' +
+		data.date.getDate() + '/';
+	    $.getJSON(url, {format: 'json'}, function(response) {
+		// (callback) Update the sections with the new agenda
+		if (response.status == 'success') {
+		    $agenda.find('.daily').html(response.daily_html);
+		    $agenda.find('.timely').html(response.timely_html);
+		    $agenda.find('.deadlines').html(
+			response.deadlines_html);
+		    var date_string = '';
+		    var months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+				  'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+		    date_string += months[data.date.getMonth()] + '. ';
+		    date_string += data.date.getDate() + ', ';
+		    date_string += data.date.getFullYear();
+		    $agenda.children('.date:header').html(date_string);
+		};
+	    });
+	};
+	// Re-appropriate the form submit button for AJAX
+	$form.bind('submit', function() {
+	    var new_date = get_date($text.val());
+	    if (new_date) {
+		data.date = new_date;
+		$agenda.data('agenda', data);
+		update_agenda();
+	    }
+	    else {
+		// Improperly formatted date submitted
+		console.error('Improperly formatted date: ' + $text.val());
+	    }
+	    return false;
+	});
+	// Quick-change todo states
+	$agenda.find('.todo-state').each(function() {
+	    var node_id = $(this).parent().attr('node_id');
+	    $(this).todoState({
+		states: data.states,
+		node_id: node_id,
+		click: (function() {
+		    update_agenda();
+		})
+	    });
+	});
+	return this;
+    };
+})(jQuery);

@@ -1,0 +1,18 @@
+{% load gtd_extras %}
+{# Lists all the upcoming deadlines for agenda display (possibly as JSON) #}
+<tbody>
+  {% for node in deadline_nodes %}
+  <tr>
+    <td>
+      <a href="{% url 'gtd.views.display_node' node_id=node.id %}" title="{{ node.hierarchy }}">{{ node.overdue }}</a>
+    </td>
+    <td>
+      <a href="{% url 'gtd.views.display_node' node_id=node.id %}" title="{{ node.hierarchy }}">{{ node.deadline|date:"D d M Y" }}</a>
+    </td>
+    <td>
+      {% if node.deadline_time_specific %}<a href="{% url 'gtd.views.display_node' node_id=node.id %}" title="{{ node.hierarchy }}">{{ node.deadline|date:"G:i" }}</a>{% else %}&nbsp;{% endif %}
+    </td>
+    <td><a href="{% url 'gtd.views.display_node' node_id=node.id %}" title="{{ node.hierarchy }}">{{ node.title }}</a></td>
+  </tr>
+  {% endfor %}
+</tbody>

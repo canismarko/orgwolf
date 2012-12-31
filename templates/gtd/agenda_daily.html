@@ -1,0 +1,20 @@
+{# Lists all the day-specific nodes for agenda display (possibly as JSON) #}
+{% load gtd_extras %}
+<tbody>
+  {% for node in day_specific_nodes %}
+  <tr{% if node.overdue %} class="error"{% endif %} node_id="{{ node.id }}">
+    <td>
+      <a href="{% url 'gtd.views.display_node' node_id=node.id %}" title="{{ node.hierarchy }}">{{ node.overdue }}</a>
+    </td>
+    <td>
+      {{ node.repeats|repeat_icon }}
+    </td>
+    <td class="todo-state" todo_id="{{ node.todo_state.pk }}">
+	<a href="{% url 'gtd.views.display_node' node_id=node.id %}" title="{{ node.hierarchy }}">{{ node.todo_state.as_html }}</a>
+    </td>
+    <td>
+      <a href="{% url 'gtd.views.display_node' node_id=node.id %}" title="{{ node.hierarchy }}">{{ node.title }}</a>
+    </td>
+  </tr>
+  {% endfor %}
+</tbody>

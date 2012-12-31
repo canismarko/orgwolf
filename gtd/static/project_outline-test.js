@@ -1,8 +1,9 @@
 // Hold unit tests for the hierarchical expanding project outline view.
 // Implementation held in orgwolf.js
-var initial_html = $('#test_workspace').html();
+var $workspace = $('#test_workspace')
+var initial_html = $workspace.html();
 var setup = function() {
-    $('#test_workspace').html(initial_html);
+    $workspace.html(initial_html);
 };
 
 // Fix for bad global variables detection in firefox
@@ -927,7 +928,7 @@ test('popover populates with todo states', function() {
     var $workspace = $('#test_workspace')
     $workspace.html('<div id="todo-test">NEXT</div>');
     var $todo = $workspace.children('#todo-test');
-    $todo.data('todo_id', 1);
+    $todo.attr('todo_id', 1);
     $todo.todoState({
 	states: todo_state_list
     });
@@ -1004,10 +1005,9 @@ test('todo state click functionality', function() {
 });
 
 test('todo-option hover functionality', function() {
-    var $workspace = $('#test_workspace')
     $workspace.html('<div id="todo-test">NEXT</div>');
     var $todo = $workspace.children('#todo-test');
-    $todo.data('todo_id', 1);
+    $todo.attr('todo_id', 1);
     $todo.todoState({
 	states: todo_state_list
     });
@@ -1039,7 +1039,7 @@ asyncTest('Todo option click functionality', function() {
     $workspace.html('<div id="todo-test">NEXT</div>');
     $('body').data('test_value', false) // For testing callback
     var $todo = $workspace.children('#todo-test');
-    $todo.data('todo_id', 1);
+    $todo.attr('todo_id', 1);
     $todo.todoState({
 	states: todo_state_list,
 	node_id: 1,
@@ -1048,7 +1048,7 @@ asyncTest('Todo option click functionality', function() {
     var $popover = $todo.next('.popover');
     $todo.click();
     equal(
-    	$todo.data('todo_id'),
+    	$todo.attr('todo_id'),
     	1,
     	'Initial todo state set'
     );
@@ -1088,7 +1088,189 @@ asyncTest('Todo option click functionality', function() {
 	);
 	ok($('body').data('test_value'), 
 	   'Callback function was called after click');
-	$workspace.html(''); // To make the Qunit output pretty
     }, (ajax_timer * 1.1 + 5));
 });
 
+
+
+
+module_name = 'agenda jQuery plugin - ';
+module(module_name + 'Initialization');
+
+$.mockjax({
+    url: '/gtd/agenda/2012-12-19/',
+    responseTime: ajax_timer,
+    responseText: {
+	status: 'success',
+	agenda_date: '2012-12-19',
+	daily_html: '<tr node_id="22">\nyo, dawg\n</tr>\n',
+	timely_html: '<tr node_id="23">\nI heard you like trains\n</tr>\n',
+	deadlines_html: '<tr node_id="24">\nso I pimped yo ride\n</tr>\n'
+    }
+});
+
+var agenda_setup = function() {
+    var new_html = '';
+    new_html += '<div class="agenda">\n';
+    new_html += '  <h2 class="date">Today</h2>\n';
+    new_html += '  <h2 class="other">Daily</h2>\n';
+    new_html += '  <form class="date" action="">\n';
+    new_html += '    <input type="text" name="date"></input>\n';
+    new_html += '    <input type="submit"></input>\n';
+    new_html += '  </form>\n';
+    new_html += '  <table class="daily">\n';
+    new_html += '    <tr node_id="20"><td class="todo-state"></td></tr>\n';
+    new_html += '  </table>\n';
+    new_html += '  <table class="timely">\n';
+    new_html += '  </table>\n';
+    new_html += '  <table class="deadlines">\n';
+    new_html += '  </table>\n';
+    new_html += '</div>\n';
+    $workspace.html(new_html);
+    return $workspace.children('.agenda');
+}
+
+test('Agenda jquery plugin initialization', function() {
+    var $agenda = agenda_setup();
+    equal(
+	$agenda.length,
+	1,
+	'Test agenda div is selectable'
+    );
+    equal(
+	typeof $.fn.agenda,
+	'function',
+	'agenda plugin exists'
+    );
+    equal(
+	$agenda.agenda(),
+	$agenda,
+	'agenda plugin returns selecter (preserves chainability)'
+    );
+    // Date detection
+    var now = new Date();
+    var today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    deepEqual(
+	$agenda.data('agenda').date,
+	today,
+	'Date set to today if no \'date\' attribute set'
+    );
+    $agenda.attr('date', '1985-05-29');
+    $agenda.agenda();
+    deepEqual(
+	$agenda.data('agenda').date,
+	new Date(1985, 4, 29),
+	'Date detected from .agenda element \'date\' attribute'
+    );
+});
+
+module(module_name + 'Functionality');
+
+test('todoState plugin attached', function() {
+    var $agenda = agenda_setup();
+    $agenda.agenda({
+	states: [
+	    {
+		todo_id: 0,
+		display: '[None]'
+	    },
+	    {
+		todo_id: 1,
+		display: 'NEXT'
+	    }
+	]
+    });
+    equal(
+	$agenda.find('.todo-state').length,
+	1,
+	'Found a todo state'
+    );
+    var $popover = $agenda.find('.todo-state').next('.popover');
+    equal(
+	$popover.length,
+	1,
+	'todo state has a popover after it'
+    );
+    equal(
+	$popover.find('.todo-option').length,
+	2,
+	'states option passed through $.agenda() to $.todoState()'
+    );
+});
+
+asyncTest('Changing agenda date', function() {
+    var $agenda = agenda_setup();
+    $agenda.agenda();
+    var $form = $agenda.find('form.date');
+    $form.submit();
+    ok(true, 'Submitting the form did not reload the page');
+    // Now change the date
+    var $text = $form.find('input[name="date"][type="text"]');
+    equal(
+	$text.length,
+	1,
+	'Date text input found'
+    );
+    $text.val('2012-12-19');
+    $form.find('input[type="submit"]').click();
+    deepEqual(
+	$agenda.data('agenda').date,
+	new Date(2012, 11, 19),
+	'New date set when submit button is clicked'
+    );
+    setTimeout(function() {
+	// Is the new agenda populated correctly
+	start();
+	// Date title at top of page
+	equal(
+	    $agenda.children('.date:header').html(),
+	    'Dec. 19, 2012',
+	    '.date Header has been changed to reflect new date'
+	);
+	notEqual(
+	    $agenda.children('.other:header').html(),
+	    'Dec. 19, 2012',
+	    'Other header was not changed with new date'
+	);
+	// Day-specific items
+	var $daily = $agenda.find('.daily')
+	var $daily_item = $daily.children('tbody').children('tr');
+	equal(
+	    $daily_item.length,
+	    1,
+	    '1 day specific row added'
+	);
+	equal(
+	    $daily_item.attr('node_id'),
+	    22,
+	    'Day specific row has node_id attribute set'
+	)
+	// Time-specific items
+	var $timely = $agenda.find('.timely')
+	var $timely_item = $timely.children('tbody').children('tr');
+	equal(
+	    $timely_item.length,
+	    1,
+	    '1 time specific row added'
+	);
+	equal(
+	    $timely_item.attr('node_id'),
+	    23,
+	    'Time specific row has node_id attribute set'
+	)
+	// Upcoming deadlines
+	var $deadlines = $agenda.find('.deadlines')
+	var $deadlines_item = $deadlines.children('tbody').children('tr');
+	equal(
+	    $deadlines_item.length,
+	    1,
+	    '1 upcoming deadline row added'
+	);
+	equal(
+	    $deadlines_item.attr('node_id'),
+	    24,
+	    'Upcoming deadline row has node_id attribute set'
+	)
+    $workspace.html(''); // To make the Qunit output pretty
+    }, (ajax_timer * 1.1 + 5))
+});

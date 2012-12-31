@@ -21,14 +21,15 @@ from __future__ import unicode_literals
 from django.core.urlresolvers import reverse
 from django.shortcuts import render_to_response, redirect, get_object_or_404
 from django.template import RequestContext
+from django.template.loader import render_to_string
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponse, Http404, HttpResponseRedirect
 from django.db.models import Q
 from django.utils.timezone import get_current_timezone
+from itertools import chain
 import re
 import datetime
 import json
-from itertools import chain
 
 from gtd.models import TodoState, Node, Context, Scope, Text
 from wolfmail.models import MailItem, Label
@@ -165,7 +166,7 @@ def list_display(request, url_string=""):
         deadline_nodes.order_by('deadline'),
         other_nodes
         )
-    return render_to_response('gtd_list.html',
+    return render_to_response('gtd/gtd_list.html',
                               locals(),
                               RequestContext(request))        
 
@@ -247,7 +248,20 @@ def agenda_display(request, date=None):
         new_dict['hierarchy'] = node.get_hierarchy_as_string()
         deadline_nodes.append(new_dict)
     all_todo_states_json = TodoState.as_json()
-    return render_to_response('agenda.html',
+    if request.GET.get('format') == 'json':
+        # Render just the table rows for AJAX functionality
+        json_data = {'status': 'success'}
+        json_data['daily_html'] = render_to_string('gtd/agenda_daily.html',
+                                                locals(),
+                                                RequestContext(request));
+        json_data['timely_html'] = render_to_string('gtd/agenda_timely.html',
+                                      locals(),
+                                      RequestContext(request));
+        json_data['deadlines_html'] = render_to_string('gtd/agenda_deadlines.html',
+                                      locals(),
+                                      RequestContext(request));
+        return HttpResponse(json.dumps(json_data))
+    return render_to_response('gtd/agenda.html',
                               locals(),
                               RequestContext(request))
 
@@ -268,7 +282,7 @@ def capture_to_inbox(request):
             new_item.save()
             new_item.labels.add(Label.objects.get(name="Inbox"))
     # TODO: automatically redirect using django.messaging
-    return render_to_response('capture_success.html',
+    return render_to_response('gtd/capture_success.html',
                               locals(),
                               RequestContext(request))
 
@@ -316,7 +330,7 @@ def display_node(request, node_id=None, scope_id=None):
     if node_id == None:
         node_id = 0
     all_todo_states_json = TodoState.as_json(all_todo_states_qs)
-    return render_to_response('node_view.html',
+    return render_to_response('gtd/node_view.html',
                               locals(),
                               RequestContext(request))
 
@@ -360,7 +374,7 @@ def edit_node(request, node_id, scope_id):
     else: # Blank form
         
         form = NodeForm(instance=node)
-    return render_to_response('node_edit.html',
+    return render_to_response('gtd/node_edit.html',
                               locals(),
                               RequestContext(request))
 
@@ -401,7 +415,7 @@ def new_node(request, node_id, scope_id):
         initial_dict = {}
         projects = getattr(node, 'related_projects', None)
         form = NodeForm(parent=node)
-    return render_to_response('node_edit.html',
+    return render_to_response('gtd/node_edit.html',
                               locals(),
                               RequestContext(request))
 
@@ -440,6 +454,6 @@ def node_search(request):
     else:
         query = ''
     base_url = reverse('gtd.views.display_node')
-    return render_to_response('node_search.html',
+    return render_to_response('gtd/node_search.html',
                               locals(),
                               RequestContext(request))

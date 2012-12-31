@@ -24,7 +24,7 @@ Search{% if query %} results for {{ query }}{% endif %}
 {% block content %}
 
 {# Search box #}
-{% include 'search_box.html' %}
+{% include "gtd/search_box.html" %}
 
 {% if query %}
 {% if nodes_found.count > 0 %}
