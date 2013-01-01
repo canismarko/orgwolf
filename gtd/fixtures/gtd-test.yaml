@@ -1,0 +1,52 @@
+# Contexts
+- fields:
+    locations_available: [1]
+    name: Work
+    people_required: []
+    tools_available: [3, 4]
+  model: gtd.context
+  pk: 1
+- fields:
+    locations_available: [2]
+    name: Home
+    people_required: []
+    tools_available: []
+  model: gtd.context
+  pk: 2
+# Scopes
+- fields: {display: joe_corp, name: joe_corp, owner: null, public: false}
+  model: gtd.scope
+  pk: 1
+# Todo states
+- fields: {_color_alpha: 0.0, _color_rgb: 0, abbreviation: NEXT, actionable: true,
+    closed: false, display_text: Next Action, order: 50, owner: null}
+  model: gtd.todostate
+  pk: 1
+- fields: {_color_alpha: 0.0, _color_rgb: 0, abbreviation: ACTN, actionable: false,
+    closed: false, display_text: Future Action, order: 50, owner: null}
+  model: gtd.todostate
+  pk: 2
+- fields: {_color_alpha: 0.0, _color_rgb: 0, abbreviation: DONE, actionable: false,
+    closed: true, display_text: Completed, order: 50, owner: null}
+  model: gtd.todostate
+  pk: 3
+- fields: {_color_alpha: 0.0, _color_rgb: 0, abbreviation: SMDY, actionable: false,
+    closed: false, display_text: Someday Maybe, order: 50, owner: null}
+  model: gtd.todostate
+  pk: 4
+- fields: {_color_alpha: 0.0, _color_rgb: 0, abbreviation: DFRD, actionable: false,
+    closed: false, display_text: Deferred, order: 50, owner: null}
+  model: gtd.todostate
+  pk: 5
+- fields: {_color_alpha: 0.0, _color_rgb: 0, abbreviation: WAIT, actionable: false,
+    closed: true, display_text: Waiting For, order: 50, owner: null}
+  model: gtd.todostate
+  pk: 6
+- fields: {_color_alpha: 1.0, _color_rgb: 13260, abbreviation: CNCL, actionable: false,
+    closed: true, display_text: Cancelled, order: 50, owner: null}
+  model: gtd.todostate
+  pk: 7
+- fields: {_color_alpha: 0.0, _color_rgb: 0, abbreviation: HARD, actionable: false,
+    closed: false, display_text: Hard Scheduled, order: 45, owner: null}
+  model: gtd.todostate
+  pk: 8

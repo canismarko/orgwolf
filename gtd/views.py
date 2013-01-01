@@ -32,32 +32,10 @@ import datetime
 import json
 
 from gtd.models import TodoState, Node, Context, Scope, Text
+from gtd.shortcuts import parse_url, get_todo_states, get_todo_abbrevs
 from wolfmail.models import MailItem, Label
 from gtd.forms import NodeForm
 from orgwolf.models import OrgWolfUser as User
-
-def parse_url(raw_url):
-    """Detects context and scope information from the url that was requested.
-    Returns the results as a dictionary.
-    Note: this function will throw a 404 exception if any unprocessable bits are
-    passed so it's important for the calling view to strip any parts that
-    are specific to itself."""
-    pass
-
-def get_todo_states():
-    """Return a list of the "in-play" Todo states."""
-    # TODO: be more selective about returning todo_states
-    todo_states = TodoState.objects.all()
-    return todo_states
-
-def get_todo_abbrevs(todo_state_list=None):
-    """Return a list of the TODO State abbreviations corresponding to TodoState models. If a list of TodoState objects is passed, it will use that instead of retrieving a new list. This is recommended to avoid hitting the database unnecessarily."""
-    if not todo_state_list:
-        todo_state_list = get_todo_states()
-    abbreviation_list = []
-    for todo_state in todo_state_list:
-        abbreviation_list.append(todo_state.abbreviation)
-    return abbreviation_list
 
 def home(request):
     pass # Todo GTD/home view
@@ -68,7 +46,6 @@ def list_display(request, url_string=""):
     all_todo_states_query = TodoState.objects.all() # TODO: switch to userprofile
     all_contexts = Context.objects.all() # TODO: switch to userprofile
     all_scope_qs = Scope.objects.all()
-    scope = None
     todo_states_query = TodoState.objects.none()
     todo_abbrevs = get_todo_abbrevs(get_todo_states())
     todo_abbrevs_lc = []
@@ -76,8 +53,8 @@ def list_display(request, url_string=""):
         url_string = ""
     for todo_abbrev in todo_abbrevs:
         todo_abbrevs_lc.append(todo_abbrev.lower())
-    # Check for changes to the TODO and context filters
-    if request.method == "POST": 
+    # Handle requests to change the TODO, context and scope filters
+    if request.method == "POST":
         todo_regex = re.compile(r'todo(\d+)')
         new_context_id = 0
         todo_state_Q = Q()
@@ -110,41 +87,18 @@ def list_display(request, url_string=""):
         return redirect(new_url)
     nodes = Node.objects.none()
     # Get stored context value (or set if first visit)
-    if 'context' not in request.session: 
+    if 'context' not in request.session:
         request.session['context'] = None
     current_context = request.session['context']
-    # Build regular expression to decide what's a valid URL string
-    seperator = ""
-    regex_string = "("
-    for abbrev in todo_abbrevs:
-        regex_string += seperator + abbrev
-        seperator = "|"
-    # (Add more URL regex pieces here)
-    regex_string += seperator + "context"
-    regex_string += seperator + "scope)(\d*)"
-    regex = re.compile(regex_string, re.IGNORECASE)
-    regex_results = regex.findall(url_string)
-    for result in regex_results:
-        if result[0].lower() == "context": # URL asked for a context
-            try:
-                requested_context = Context.objects.get(id=result[1])
-            except Context.DoesNotExist:
-                pass
-            else:
-                if requested_context != current_context:
-                    # User is changing the context
-                    request.session['context'] = requested_context
-                    current_context = requested_context
-        if result[0].lower() == "scope": # URL asked for a scope
-            try:
-                scope = Scope.objects.get(id=result[1])
-            except Context.DoesNotExist:
-                pass
-        elif result[0].lower() in todo_abbrevs_lc: # It's a TodoState
-            todo_states_query = todo_states_query | TodoState.objects.filter(abbreviation__iexact=result[0])
-        # (Add more URL handling here)
+    # Retrieve the context objects based on url
+    url_data = parse_url(url_string)
+    if url_data.get('context') != current_context:
+        # User is changing the context
+        request.session['context'] = url_data.get('context')
+        current_context = url_data.get('context')
     # Filter by todo state (use of Q() objects means we only hit database once
     final_Q = Q()
+    todo_states_query = url_data.get('todo_states', [])
     for todo_state in todo_states_query:
         final_Q = final_Q | Q(todo_state=todo_state)
     nodes = Node.objects.filter(final_Q)
@@ -154,6 +108,7 @@ def list_display(request, url_string=""):
     except AttributeError:
         pass
     # And filter by scope
+    scope = url_data.get('scope', None)
     if scope:
         try:
             nodes = nodes.filter(scope=scope)

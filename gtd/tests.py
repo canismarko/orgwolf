@@ -27,6 +27,7 @@ from __future__ import unicode_literals
 import datetime as dt
 from django.test import TestCase
 from django.test.client import Client
+from django.http import Http404
 from django.utils.timezone import get_current_timezone
 import re
 import json
@@ -35,8 +36,8 @@ from orgwolf.tests import prepare_database
 from orgwolf.preparation import translate_old_text
 from orgwolf.models import OrgWolfUser as User
 from gtd.forms import NodeForm
-from gtd.models import Node, TodoState, node_repeat, Text, Location, Tool, Context
-from gtd.views import parse_url
+from gtd.models import Node, TodoState, node_repeat, Text, Location, Tool, Context, Scope
+from gtd.shortcuts import parse_url, get_todo_states, get_todo_abbrevs
 from gtd.templatetags.gtd_extras import overdue, upcoming
 
 class EditNode(TestCase):
@@ -509,13 +510,70 @@ class ContextFiltering(TestCase):
             self.client.session['context'],
             None)
 
+class TodoShortcuts(TestCase):
+    fixtures = ['gtd-test.yaml']
+    def test_gets_states(self):
+        self.assertEqual(
+            list(TodoState.objects.all()),
+            list(get_todo_states()),
+            )
+
 class UrlParse(TestCase):
     """Tests for the gtd url_parser that extracts context and scope information
     from the URL string and returns it as a useful dictionary."""
+    fixtures = ['test-users.yaml', 'gtd-test.yaml']
+    def setUp(self):
+        pass
     def test_function_exists(self):
         self.assertEqual(parse_url.__class__.__name__, 'function')
-        return_value = parse_url({})
+        return_value = parse_url('')
         self.assertEqual(return_value.__class__.__name__, 'dict')
+    def test_processes_context(self):
+        context2 = Context.objects.get(pk=2)
+        # Successfully finds an existing context
+        self.assertEqual(context2, parse_url('/context2/')['context'])
+        # Non-existent context raises 404
+        self.assertRaises(
+            Http404,
+            parse_url,
+            '/context99/'
+            )
+        # Finds a context if mixed in with scope
+        self.assertEqual(context2, parse_url('/scope1/context2/')['context'])
+    def test_processes_scope(self):
+        scope1 = Scope.objects.get(pk=1)
+        # Successfully finds an existing scope
+        self.assertEqual(scope1, parse_url('/scope1/')['scope'])
+        # Non-existent scope raises 404
+        self.assertRaises(
+            Http404,
+            parse_url,
+            '/scope99/'
+            )
+        # Finds a context if mixed in with scope
+        self.assertEqual(scope1, parse_url('/scope1/context1/')['scope'])
+    def test_processes_states(self):
+        hard = TodoState.objects.get(pk=8)
+        self.assertEqual(
+            hard,
+            parse_url('/hard/next/')['todo_states'][0]
+            )
+        self.assertEqual(
+            hard,
+            parse_url('/hard/scope1/context1/')['todo_states'][0]
+            )
+    def test_bad_urls(self):
+        """Tests to make sure that the system properly raises
+        404 errors when bad urls are passed"""
+        bad_urls = ['/junk/',
+                    '/junk/scope1/',
+                    '/scope1/junk/',
+                    ]
+        for url in bad_urls:
+            self.assertRaises(
+                Http404,
+                parse_url,
+                url)
 
 class OverdueFilter(TestCase):
     """Tests the `overdue` template filter that makes deadlines into
