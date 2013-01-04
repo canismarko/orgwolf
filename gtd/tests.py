@@ -27,34 +27,25 @@ from __future__ import unicode_literals
 import datetime as dt
 from django.test import TestCase
 from django.test.client import Client
+from django.db.models import Q
 from django.http import Http404
 from django.utils.timezone import get_current_timezone
 import re
 import json
 
-from orgwolf.tests import prepare_database
 from orgwolf.preparation import translate_old_text
 from orgwolf.models import OrgWolfUser as User
 from gtd.forms import NodeForm
-from gtd.models import Node, TodoState, node_repeat, Text, Location, Tool, Context, Scope
+from gtd.models import Node, TodoState, node_repeat, Location, Tool, Context, Scope
 from gtd.shortcuts import parse_url, get_todo_states, get_todo_abbrevs
 from gtd.templatetags.gtd_extras import overdue, upcoming
 
 class EditNode(TestCase):
+    fixtures = ['test-users.yaml', 'gtd-test.yaml', 'gtd-env.yaml']
     def setUp(self):
-        """
-        Creates a node in order to test editing functions
-        """
-        prepare_database()
-        dummy_user = User.objects.get(pk=1)
-        actionable = TodoState.objects.get(abbreviation='ACTN')
-        closed = TodoState.objects.get(abbreviation='DONE')
-        node = Node(owner=dummy_user,
-                    order=10,
-                    title='Buy cat food',
-                    todo_state=actionable)
-        node.save()
-             
+        self.assertTrue(
+            self.client.login(username='test', password='secret')
+            )
     def close_node_through_client(self, client, node=None):
         """
         Helper function that uses the client to edit a node
@@ -74,8 +65,8 @@ class EditNode(TestCase):
             regex = re.compile('http://testserver/gtd/nodes/' + str(node.id))
             post_data['title'] = node.title
         else: # new node
-            url = '/gtd/nodes/1/new/'
-            regex = re.compile('http://testserver/gtd/nodes/1/')
+            url = '/gtd/nodes/5/new/'
+            regex = re.compile('http://testserver/gtd/nodes/5/')
             post_data['title'] = 'new node 1'
         response = client.post(url, post_data, follow=True)
         self.assertEqual(200, response.status_code)
@@ -161,7 +152,7 @@ class EditNode(TestCase):
         jresponse = json.loads(response.content)
         # Check response object
         self.assertEqual(
-            1,
+            5,
             jresponse['node_id'],
             'JSON edit does not return correct node_id'
             )
@@ -200,45 +191,31 @@ class EditNode(TestCase):
             node.todo_state,
             'node.todo_state not unset when todo_id: 0 passed to edit node'
             )
-    def test_edit_from_agenda(self):
-        # Login
-        self.assertTrue(
-            self.client.login(username='test', password='secret')
-            )
-        node = Node.objects.get(title='Buy cat food')
-        actionable = TodoState.objects.get(abbreviation='ACTN')
-        closed = TodoState.objects.get(abbreviation='DONE')
-        # Execute edit via AJAX
-        url = '/gtd/nodes/' + str(node.pk) + '/edit/'
-        data = {
-            'format': 'json',
-            'todo_id': closed.pk,
-            }
-        self.assertTrue(False, 'Write test for processing agenda information');
-        response = self.client.get(url, data)
+
+class NodeMutators(TestCase):
+    fixtures = ['test-users.yaml', 'gtd-env.yaml', 'gtd-test.yaml']
+    def test_get_level(self):
+        f = Node.get_level
+        node = Node.objects.get(pk=1)
         self.assertEqual(
-            200,
-            response.status_code,
-            'getJSON call did not return HTTP 200'
+            f(node).__class__.__name__,
+            'int'
             )
-        jresponse = json.loads(response.content)
+        self.assertEqual(
+            f(node),
+            1
+            )
+        self.assertEqual(
+            f(Node.objects.get(pk=2)),
+            2
+            )
+        self.assertEqual(
+            f(Node.objects.get(pk=4)),
+            3
+            )
 
 class RepeatingNodeTest(TestCase):
-    def setUp(self):
-        prepare_database()
-        dummy_user = User(pk=1)
-        actionable = TodoState.objects.get(abbreviation='ACTN')
-        node = Node(owner=dummy_user,
-                    order=10,
-                    title='Buy cat food',
-                    scheduled=dt.datetime(2012, 12, 31, tzinfo=get_current_timezone()),
-                    repeats=True,
-                    repeating_number=3,
-                    repeating_unit='d',
-                    todo_state=actionable
-                    )
-        node.save()
-        
+    fixtures = ['test-users.yaml', 'gtd-test.yaml', 'gtd-env.yaml']
     def test_scheduled_repetition(self):
         """Make sure the item is rescheduled properly."""
         node = Node.objects.get(title='Buy cat food')
@@ -339,28 +316,7 @@ class RepeatingNodeTest(TestCase):
                          node.scheduled)
 
 class ParentStructure(TestCase):
-    def setUp(self):
-        prepare_database()
-        dummy_user = User.objects.get(pk=1)
-        root_node = Node(owner=dummy_user,
-                         order=10,
-                         title='Errands')
-        root_node.save()
-        child_node1 = Node(owner=dummy_user,
-                          order=10,
-                          title='Meijer',
-                          parent=root_node)
-        child_node1.save()
-        child_node2 = Node(owner=dummy_user,
-                          order=20,
-                          title='PetSmart',
-                          parent=root_node)
-        child_node2.save()
-        grandchild_node1 = Node(owner=dummy_user,
-                          order=10,
-                          title='Buy beer',
-                          parent=child_node1)                         
-        grandchild_node1.save()
+    fixtures = ['test-users.yaml', 'gtd-test.yaml', 'gtd-env.yaml']
     def test_primary_parent(self):
         target_parent = Node.objects.get(title='Errands')
         child = Node.objects.get(title='Meijer')
@@ -370,105 +326,9 @@ class ParentStructure(TestCase):
         parent = child.get_primary_parent()
         self.assertEqual(target_parent, parent)
 
-class TextHandling(TestCase):
-    def setUp(self):
-        prepare_database()
-        dummy_user = User.objects.get(pk=1)
-        root_node = Node(owner=dummy_user,
-                         order=10,
-                         title='Errands')
-        root_node.save()
-        child_node1 = Node(owner=dummy_user,
-                          order=10,
-                          title='Meijer',
-                          parent=root_node)
-        child_node1.save()
-        child_node2 = Node(owner=dummy_user,
-                          order=20,
-                          title='PetSmart',
-                          parent=root_node)
-        child_node2.save()
-        text1 = Text(owner=dummy_user,
-                     parent=root_node,
-                     text='When will I have time\n')
-        text1.save()
-        text2 = Text(owner=dummy_user,
-                     parent=child_node1,
-                     text='- Toilet paper\n')
-        text2.save()
-        text3 = Text(owner=dummy_user,
-                     parent=child_node1,
-                     text='- Milk\n')
-        text3.save()
-    def test_text_translate(self):
-        translate_old_text()
-        root_node = Node.objects.get(title='Errands')
-        self.assertEqual('When will I have time\n', root_node.text)
-        child_node1 = Node.objects.get(title='Meijer')
-        self.assertEqual('- Toilet paper\n- Milk\n', child_node1.text)
-
 class ContextFiltering(TestCase):
+    fixtures = ['test-users.yaml', 'gtd-test.yaml', 'gtd-env.yaml']
     def setUp(self):
-        prepare_database()
-        dummy_user = User.objects.get(pk=1)
-        next_state = TodoState.objects.get(abbreviation='NEXT')
-        # Create some locations
-        kalsec = Location(
-            display='Kalsec',
-            tag_string='work',
-            owner=dummy_user,
-            )
-        kalsec.save()
-        sheldon = Location(
-            display='Sheldon',
-            tag_string='home',
-            owner=dummy_user,
-            )
-        sheldon.save()
-        # Create some tools
-        computer = Tool(
-            display='Computer',
-            tag_string='comp',
-            owner=dummy_user,
-            )
-        computer.save()
-        phone = Tool(
-            display='Phone',
-            tag_string='phone',
-            owner=dummy_user,
-            )
-        phone.save()
-        # Create some contexts
-        work = Context(
-            name = 'Work',
-            )
-        work.save()
-        work.tools_available.add(computer)
-        work.tools_available.add(phone)
-        work.locations_available.add(kalsec)
-        home = Context(
-            name = 'Home',
-            )
-        home.save()
-        home.tools_available.add(computer)
-        home.tools_available.add(phone)
-        home.locations_available.add(sheldon)
-        # Create some nodes to play with
-        Node(
-            owner=dummy_user,
-            order=10,
-            title='Home Node',
-            todo_state=next_state,
-            tag_string=':home:',
-            ).save()
-        Node(
-            owner=dummy_user,
-            order=10,
-            title='Work Node',
-            todo_state=next_state,
-            tag_string=':work:',
-            ).save()
-        # Login
         self.assertTrue(
             self.client.login(username='test', password='secret')
             )
@@ -477,7 +337,7 @@ class ContextFiltering(TestCase):
         response = self.client.get('/gtd/lists/context0/')
         self.assertEqual(response.status_code, 404)
     def test_home_tag(self):
-        all_nodes_qs = Node.objects.all()
+        all_nodes_qs = Node.objects.filter(Q(tag_string=':work:')|Q(tag_string=':home:'))
         work = Context.objects.get(name='Work')
         home = Context.objects.get(name='Home')
         self.assertEqual(
@@ -511,7 +371,7 @@ class ContextFiltering(TestCase):
             None)
 
 class TodoShortcuts(TestCase):
-    fixtures = ['gtd-test.yaml']
+    fixtures = ['test-users.yaml', 'gtd-test.yaml', 'gtd-env.yaml']
     def test_gets_states(self):
         self.assertEqual(
             list(TodoState.objects.all()),
@@ -521,7 +381,7 @@ class TodoShortcuts(TestCase):
 class UrlParse(TestCase):
     """Tests for the gtd url_parser that extracts context and scope information
     from the URL string and returns it as a useful dictionary."""
-    fixtures = ['test-users.yaml', 'gtd-test.yaml']
+    fixtures = ['test-users.yaml', 'gtd-test.yaml', 'gtd-env.yaml']
     def setUp(self):
         pass
     def test_function_exists(self):
@@ -594,11 +454,7 @@ class OverdueFilter(TestCase):
 
 class TodoStateRetrieval(TestCase):
     """Tests the methods of TodoState that retrieves the list of "in play" todo states"""
-    def setUp(self):
-        prepare_database()
-        # dummy_user = User.objects.get(pk=1)
-        actionable = TodoState.objects.get(abbreviation='ACTN')
-        closed = TodoState.objects.get(abbreviation='DONE')
+    fixtures = ['test-users.yaml', 'gtd-test.yaml', 'gtd-env.yaml']
     def test_as_json(self):
         self.assertEqual(
             TodoState.as_json.__class__.__name__,

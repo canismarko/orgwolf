@@ -26,12 +26,9 @@ import datetime as dt
 
 from orgwolf.models import OrgWolfUser as User
 from plugins import orgmode
-from gtd.models import Node, Text, TodoState
+from gtd.models import Node, TodoState
 
 class RegexTest(TestCase):
-    def SetUp(self):
-        pass
-
     def test_heading_regex(self):
         """Make sure the regular expressions properly detect headings and
         (perhaps more importantly) don't detect non-headings"""
@@ -132,20 +129,22 @@ class RegexTest(TestCase):
              "2011", "07", "13", "Sat", "15", "17", ".3y"))
         # TODO: write unittests for valid dates (eg day between 1 and 31)
 
+class HelperFunctions(TestCase):
+    fixtures = ['test-users.yaml', 'gtd-env.yaml', 'gtd-test.yaml']
+    def test_heading_as_string(self):
+        node = Node.objects.get(pk=5)
+        f = orgmode.heading_as_string
+        expected_string = """* ACTN Buy cat food
+  SCHEDULED: <2012-12-31 Mon> DEADLINE: <2011-05-13 Fri> CLOSED: <2011-05-14 Sat 00:56>
+"""
+        self.assertEqual(
+            expected_string.split('\n'),
+            f(node, node.get_level()).split('\n')
+            )
+
 class TestOrgModePlugin(TestCase):
+    fixtures = ['test-users.yaml', 'gtd-env.yaml']
     def setUp(self):
-        # Todo: switch to prepare database
-        new_user = User()
-        new_user.save()
-        # Make the relevant nodes
-        new_state = TodoState(abbreviation='DONE',
-                              display_text='Done',
-                              owner=new_user)
-        new_state.save()
-        new_state = TodoState(abbreviation='NEXT',
-                              display_text='Next Action',
-                              owner=new_user)
-        new_state.save()
         # This is the test string
         self.org_file = """* Heading 0
 Some heading 1 text (no indent)
@@ -161,7 +160,7 @@ Some texts for heading 0-1
   SCHEDULED: <2012-10-21 Sun>
 ** NEXT Heading 1-0
 ** DONE Heading 1-1
-   SCHEDULED: <2012-10-19 Fri +2d> DEADLINE: <2012-10-22 Mon>
+   DEADLINE: <2012-10-22 Mon> SCHEDULED: <2012-10-19 Fri +2d>
 
    :PROPERTIES:
    :LAST_REPEAT: [2012-09-23 Sun 15:03]
@@ -179,6 +178,7 @@ Some texts for heading 0-1
         self.assertFalse(node.repeats_from_completion)
         self.assertEqual(2, node.repeating_number)
         self.assertEqual('d', node.repeating_unit)
+        self.assertFalse(node.closed)
 
     def test_heading_parameters(self):
         root_nodes = Node.objects.filter(parent=None)
@@ -201,6 +201,7 @@ Some texts for heading 0-1
             self.org_file).split('\n')
         output_string = orgmode.standardize_string(
             orgmode.export_to_string()).split('\n')
+        node = Node.objects.get(title='Heading 1-1')
         self.assertEqual(input_string, output_string)
         self.assertEqual(len(input_string), len(output_string))
         for line_index in range(0, len(input_string)):

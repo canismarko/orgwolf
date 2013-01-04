@@ -2,12 +2,11 @@
 from __future__ import unicode_literals
 from gtd.models import Node, TodoState
 from orgwolf.models import OrgWolfUser as User
+from orgwolf import wsgi # For unit testing code coverage
 
 """Hold some helper functions useful to all test suits"""
 def prepare_database():
-    dummy_user = User(username='test')
-    dummy_user.set_password('secret')
-    dummy_user.save()
+    dummy_user = User.objects.get(pk=1)
     TodoState(
         abbreviation='ACTN',
         display_text='Action',

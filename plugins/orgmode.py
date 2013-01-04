@@ -19,6 +19,7 @@
 
 from __future__ import unicode_literals
 from django.core.exceptions import ValidationError
+from django.db.models import signals
 from django.utils import unittest
 from datetime import datetime
 from django.utils import timezone
@@ -29,7 +30,7 @@ import io
 
 from orgwolf.models import OrgWolfUser as User
 from orgwolf.stack import Stack
-from gtd.models import Node, TodoState, Text, Scope
+from gtd.models import Node, TodoState, Scope, node_timestamp, node_repeat
 from gtd.views import get_todo_abbrevs
 
 ## Regular expressions used in this module for finding org-mode content
@@ -71,13 +72,9 @@ def reset_database(confirm=False):
     """
     if confirm == True:
         nodes = Node.objects.all()
-        texts = Text.objects.all()
         print("Deleting", nodes.count(), "nodes.")
         for node in nodes:
             node.delete()
-        print("Deleting", texts.count(), "text items.")
-        for text in texts:
-            text.delete()
     else:
         print("This function deletes the database. Pass argument confirm=True to pull the trigger.")
 
@@ -87,6 +84,7 @@ def import_structure(file=None, string=None, request=None, scope=None):
     resulting heirerarchy to the OrgWolf models in the gtd module. 
     # TODO: rewrite this without PyOrgMode
     """
+    # We want pre & post save signals skipped
     if file and string:
         raise AttributeError("Please supply either a file or a string, not both.")
     elif string:
@@ -194,6 +192,7 @@ def import_structure(file=None, string=None, request=None, scope=None):
                 new_node.tag_string = line['tag_string']
             else:
                 new_node.tag_string = ''
+            new_node.auto_close = False # Disable closed timestamp
             new_node.save()
             # Add scope (passed as argument or auto-detected)
             if scope:
@@ -250,10 +249,52 @@ def import_structure(file=None, string=None, request=None, scope=None):
                             parent.deadline = new_datetime
                             parent.deadline_time_specific = time_specific
                         elif match[0] == "CLOSED:":
-                            parent.closed = new_datetime               
+                            parent.closed = new_datetime
+                        parent.auto_close = False # Disable closed timestamp
                         parent.save()
             else: # It's just a regular text item
                 current_text += line['original']
+
+def heading_as_string(current_node, level):
+    heading_string = "*" * level + " "
+    date_data = {}
+    if hasattr(current_node.todo_state, 'abbreviation'):
+        heading_string += current_node.todo_state.abbreviation + " "
+    if current_node.priority != "":
+        heading_string += "[#" + current_node.priority + "] "
+    if current_node.title:
+        heading_string += current_node.title
+    if getattr(current_node, 'tag_string', None):
+        heading_string += " " + str(current_node.tag_string)
+    heading_string += "\n"
+    # add scheduled components
+    if current_node.scheduled or current_node.deadline or current_node.closed:
+        scheduled_string = " " * level # Indent
+    if current_node.scheduled:
+        scheduled_string += current_node.scheduled.strftime(" SCHEDULED: <%Y-%m-%d %a")
+        if current_node.scheduled_time_specific:
+            scheduled_string += current_node.scheduled.strftime(" %H:%M>")
+        else:
+            scheduled_string += ">"
+    if current_node.deadline:
+        scheduled_string += current_node.deadline.strftime(" DEADLINE: <%Y-%m-%d %a")
+        if current_node.deadline_time_specific:
+            scheduled_string += current_node.deadline.strftime(" %H:%M")
+        else:
+            scheduled_string += ">"
+    if current_node.closed:
+        scheduled_string += current_node.closed.strftime(" CLOSED: <%Y-%m-%d %a %H:%M>")
+    if current_node.scheduled or current_node.deadline or current_node.closed:
+        heading_string += scheduled_string + "\n"
+    # Check for text associated with this heading
+    if current_node.text:
+        heading_string += current_node.text
+    # Now we look for any child nodes and add their text
+    child_node_qs = Node.objects.filter(parent = current_node)
+    for child_node in child_node_qs:
+        heading_string += heading_as_string(child_node, level+1)
+    # Finally, return the completed string
+    return heading_string
 
 def export_to_string(node=None):
     """
@@ -268,44 +309,6 @@ def export_to_string(node=None):
         root_nodes_qs = Node.objects.filter(parent=node)
     # some more sinful recursion.
     # process each node and find and process its children recursively
-    def heading_as_string(current_node, level):
-        heading_string = "*" * level + " "
-        if hasattr(current_node.todo_state, 'abbreviation'):
-            heading_string += current_node.todo_state.abbreviation + " "
-        if current_node.priority != "":
-            heading_string += "[#" + current_node.priority + "] "
-        if current_node.title:
-            heading_string += current_node.title
-        if hasattr(current_node, 'tag_string'):
-            heading_string += " " + str(current_node.tag_string)
-        heading_string += "\n"
-        # add scheduled components
-        if current_node.scheduled or current_node.deadline or current_node.closed:
-            scheduled_string = " " * level # Indent
-            if current_node.scheduled:
-                scheduled_string += current_node.scheduled.strftime(" SCHEDULED: <%Y-%m-%d %a")
-                if current_node.scheduled_time_specific:
-                    scheduled_string += current_node.scheduled.strftime(" %H:%M>")
-                else:
-                    scheduled_string += ">"
-            if current_node.deadline:
-                scheduled_string += current_node.deadline.strftime(" DEADLINE: <%Y-%m-%d %a")
-                if current_node.deadline_time_specific:
-                    scheduled_string += current_node.deadline.strftime(" %H:%M")
-                else:
-                    scheduled_string += ">"
-            if current_node.closed:
-                scheduled_string += current_node.closed.strftime(" CLOSED: <%Y-%m-%d %a %H:%M>")
-            heading_string += scheduled_string + "\n"
-        # Check for text associated with this heading
-        if current_node.text:
-            heading_string += current_node.text
-        # Now we look for any child nodes and add their text
-        child_node_qs = Node.objects.filter(parent = current_node)
-        for child_node in child_node_qs:
-            heading_string += heading_as_string(child_node, level+1)
-        # Finally, return the completed string
-        return heading_string
     for root_node in root_nodes_qs:
         output_string += heading_as_string(root_node, 1)
     # Remove extra newline artifact

@@ -31,7 +31,7 @@ import re
 import datetime
 import json
 
-from gtd.models import TodoState, Node, Context, Scope, Text
+from gtd.models import TodoState, Node, Context, Scope
 from gtd.shortcuts import parse_url, get_todo_states, get_todo_abbrevs
 from wolfmail.models import MailItem, Label
 from gtd.forms import NodeForm
@@ -263,18 +263,15 @@ def display_node(request, node_id=None, scope_id=None):
     all_nodes_qs = Node.objects.all()
     all_todo_states_qs = TodoState.get_active()
     child_nodes_qs = all_nodes_qs
-    all_text_qs = Text.objects.all()
     all_scope_qs = Scope.objects.all()
     # If the user asked for a specific node
     if node_id:
-        node_text_qs = all_text_qs.filter(parent__id=node_id)
         child_nodes_qs = child_nodes_qs.filter(parent__id=node_id)
         parent_node = all_nodes_qs.get(id=node_id)
         parent_tags = parent_node.get_tags()
         breadcrumb_list = parent_node.get_hierarchy()
     else:
         child_nodes_qs = child_nodes_qs.filter(parent=None)
-        node_text_qs = all_text_qs.filter(parent=None)
     url_kwargs = {}
     # Filter by scope
     if scope_id:

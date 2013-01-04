@@ -186,6 +186,7 @@ class Node(models.Model):
     ORDER_STEP = 10
     SEARCH_FIELDS = ['title']
     auto_repeat = False
+    auto_close = True
     owner = models.ForeignKey(settings.AUTH_USER_MODEL, related_name="owned_node_set")
     users = models.ManyToManyField(settings.AUTH_USER_MODEL, blank=True)
     order = models.IntegerField() # TODO: autoincrement
@@ -249,7 +250,7 @@ class Node(models.Model):
         if agenda_dt:
             today = agenda_dt.date()
         else:
-            today = datetime.now().date()
+            today = datetime.now(get_current_timezone()).date()
         difference = (target_date.date() - today).days
         if abs(difference) == 1:
             pluralized = ''
@@ -267,6 +268,13 @@ class Node(models.Model):
         else: # Nothing but whitespace
             title = "[Blank]"
         return title
+    def get_level(self):
+        level = 1
+        node = self
+        while node.parent:
+            level += 1
+            node = node.parent
+        return level
     @staticmethod
     def get_all_projects():
         return Node.objects.filter(parent=None)
@@ -352,82 +360,84 @@ def node_timestamp(sender, **kwargs):
     If so, set the closed timestamp to now."""
     # This function check the passed instance node against
     # the version currently in the database.
-    instance = kwargs['instance']
-    if instance.is_closed():
-        if instance.id: # Existing node
-            old_node = Node.objects.get(id=instance.id)
-            if not old_node.is_closed():
+    if not kwargs['raw']:
+        instance = kwargs['instance']
+        if instance.is_closed() and instance.auto_close:
+            if instance.id: # Existing node
+                old_node = Node.objects.get(pk=instance.id)
+                if not old_node.is_closed():
+                    instance.closed = datetime.now(get_current_timezone())
+            else: # New node
                 instance.closed = datetime.now(get_current_timezone())
-        else: # New node
-            instance.closed = datetime.now(get_current_timezone())
 @receiver(signals.pre_save, sender=Node)
 def node_repeat(sender, **kwargs):
     """Handle repeating information if the Node has the Node.repeats
     flag set."""
-    def _get_new_time(original, number, unit):
-        """Helper function to determine new repeated timestamp"""
-        if unit == 'd': # Days
-            new = original + timedelta(days=number)
-        elif unit == 'w': # Weeks
-            new = original + timedelta(days=(number*7))
-        elif unit == 'm': # Months
-            month = ((original.month + number -1 ) % 12) + 1
-            # Make sure we're not setting Sep 31st of other non-dates
-            if month in (4, 6, 9, 11) and original.day == 31:
-                day = 30
-            elif month == 2 and original.day > 28:
-                day = 28
-            else:
-                day = original.day
-            year = int(
-                math.floor(
-                    original.year + ((original.month + number - 1) / 12)
+    if not kwargs['raw']:
+        def _get_new_time(original, number, unit):
+            """Helper function to determine new repeated timestamp"""
+            if unit == 'd': # Days
+                new = original + timedelta(days=number)
+            elif unit == 'w': # Weeks
+                new = original + timedelta(days=(number*7))
+            elif unit == 'm': # Months
+                month = ((original.month + number -1 ) % 12) + 1
+                # Make sure we're not setting Sep 31st of other non-dates
+                if month in (4, 6, 9, 11) and original.day == 31:
+                    day = 30
+                elif month == 2 and original.day > 28:
+                    day = 28
+                else:
+                    day = original.day
+                year = int(
+                    math.floor(
+                        original.year + ((original.month + number - 1) / 12)
+                        )
                     )
-                )
-            new = datetime(year=year,
-                           month=month,
-                           day=day,
-                           tzinfo=get_current_timezone())
-        elif unit == 'y': # Years
-            new = datetime(year=original.year+number,
-                           month=original.month,
-                           day=original.day,
-                           tzinfo=get_current_timezone())
-        else: # None of the above
-            raise ValueError
-        return new
-    # Code execution starts here
-    instance = kwargs['instance']
-    if instance.repeats and instance.auto_repeat:
-        if instance.id: # if existing node
-            old_node = Node.objects.get(pk=instance.pk)
-            if not (old_node.todo_state == instance.todo_state):
-                # Only if something has changed
-                if instance.scheduled: # Adjust Node.scheduled
-                    if instance.repeats_from_completion:
-                        original = datetime.now()
-                    else:
-                        original = instance.scheduled
-                    instance.scheduled = _get_new_time(original,
-                                                       instance.repeating_number,
-                                                       instance.repeating_unit)
-                if instance.deadline: # Adjust Node.deadline
-                    if instance.repeats_from_completion:
-                        original = datetime.now()
-                    else:
-                        original = instance.deadline
-                    instance.deadline = _get_new_time(original,
-                                                      instance.repeating_number,
-                                                      instance.repeating_unit)
-                # Make a record of what we just did
-                new_repetition = NodeRepetition()
-                new_repetition.node=instance
-                new_repetition.original_todo_state = old_node.todo_state
-                new_repetition.new_todo_state = instance.todo_state
-                new_repetition.timestamp = datetime.now(get_current_timezone())
-                new_repetition.save()
-                # Set the actual todo_state back to its original value
-                instance.todo_state = old_node.todo_state
+                new = datetime(year=year,
+                               month=month,
+                               day=day,
+                               tzinfo=get_current_timezone())
+            elif unit == 'y': # Years
+                new = datetime(year=original.year+number,
+                               month=original.month,
+                               day=original.day,
+                               tzinfo=get_current_timezone())
+            else: # None of the above
+                raise ValueError
+            return new
+        # Code execution starts here
+        instance = kwargs['instance']
+        if instance.repeats and instance.auto_repeat:
+            if instance.id: # if existing node
+                old_node = Node.objects.get(pk=instance.pk)
+                if not (old_node.todo_state == instance.todo_state):
+                    # Only if something has changed
+                    if instance.scheduled: # Adjust Node.scheduled
+                        if instance.repeats_from_completion:
+                            original = datetime.now(get_current_timezone())
+                        else:
+                            original = instance.scheduled
+                        instance.scheduled = _get_new_time(original,
+                                                           instance.repeating_number,
+                                                           instance.repeating_unit)
+                    if instance.deadline: # Adjust Node.deadline
+                        if instance.repeats_from_completion:
+                            original = datetime.now(get_current_timezone())
+                        else:
+                            original = instance.deadline
+                        instance.deadline = _get_new_time(original,
+                                                          instance.repeating_number,
+                                                          instance.repeating_unit)
+                    # Make a record of what we just did
+                    new_repetition = NodeRepetition()
+                    new_repetition.node=instance
+                    new_repetition.original_todo_state = old_node.todo_state
+                    new_repetition.new_todo_state = instance.todo_state
+                    new_repetition.timestamp = datetime.now(get_current_timezone())
+                    new_repetition.save()
+                    # Set the actual todo_state back to its original value
+                    instance.todo_state = old_node.todo_state
 
 @python_2_unicode_compatible
 class NodeRepetition(models.Model):
@@ -446,15 +456,3 @@ class NodeRepetition(models.Model):
         string += self.original_todo_state.abbreviation
         string += ' --> ' + self.new_todo_state.abbreviation
         return string
-
-@python_2_unicode_compatible
-class Text(models.Model):
-    """
-    Holds the text component associated with a Node object.
-    """
-    # TODO: Add support for lists, tables, etc.
-    text = models.TextField()
-    owner = models.ForeignKey(settings.AUTH_USER_MODEL)
-    parent = models.ForeignKey('Node', related_name='attached_text', blank=True, null=True)
-    def __str__(self):
-        return self.text

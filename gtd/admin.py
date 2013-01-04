@@ -32,7 +32,6 @@ class NodeAdmin(admin.ModelAdmin):
 
 admin.site.register(gtd.TodoState)
 admin.site.register(gtd.Node, NodeAdmin)
-admin.site.register(gtd.Text)
 admin.site.register(gtd.Context)
 admin.site.register(gtd.Tool)
 admin.site.register(gtd.Location)

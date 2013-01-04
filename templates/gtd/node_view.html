@@ -90,9 +90,6 @@ $('document').ready(function() {
   {% endif %}
 </dl>
 <p>{{ parent_node.text|linebreaks }}</p>
-{% for text in node_text_qs %}
-<div style="color:red">{{ text.text|linebreaks }}</div>
-{% endfor %}
 <form action="" method="POST" class="form-inline">
   <a href="new/" class="btn"><i class="icon-plus"></i>&nbsp;New Node</a>
   <div class="input-append">
