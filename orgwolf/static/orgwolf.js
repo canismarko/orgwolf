@@ -91,15 +91,29 @@ $(document).ready(function(){
 	    });
 	};
 	// todo_id 0 has some special properties
-	if (todo_id == 0) {
-	    settings.parent_elem.mouseenter(function() {
+	var bind_autohide = function() {
+	   var todo_id = $todo.attr('todo_id')
+	    if (todo_id == 0) {
+		settings.parent_elem.bind(
+		    'mouseenter.autohide',
+		    function() {
+			$todo.show();
+		    }
+		);
+		settings.parent_elem.bind(
+		    'mouseleave.autohide',
+		    function() {
+			$todo.hide();
+		    }
+		);
+		settings.parent_elem.mouseleave();
+	    }
+	    else {
 		$todo.show();
-	    });
-	    settings.parent_elem.mouseleave(function() {
-		$todo.hide();
-	    });
-	    settings.parent_elem.mouseleave();
+		settings.parent_elem.unbind('.autohide');
+	    }
 	}
+	bind_autohide();
 	// Create the popover div and set its contents
 	var new_html = '';
 	new_html += '<div class="popover right todostate">\n';
@@ -171,13 +185,14 @@ $(document).ready(function(){
 		$.getJSON(url, data, function(response) {
 		    // (callback) update the document todo states after change
 		    if (response['status']=='success') {
-			$todo.data('todo_id', response['todo_id']);
+			$todo.attr('todo_id', response['todo_id']);
 			todo_id = response['todo_id'];
 			$todo.html(get_state(response['todo_id']).display);
 			$options.removeAttr('selected'); // clear selected
 			var s = '.todo-option[todo_id="';
 			s += response['todo_id'] + '"]';
 			$inner.children(s).attr('selected', '');
+			bind_autohide();
 			// Run the user submitted callback
 			settings.click(response);
 			// Kludge to avoid stale css
@@ -496,6 +511,10 @@ var project_outline = function(args) {
 		var subheading = $(this).data('object');
 		subheading.populate_children();
 	    });
+	    var s = '<div class="add-heading">\n';
+	    s += '<i class="icon-plus-sign"></i>Add Heading\n';
+	    s += '</div>';
+	    workspace.$element.append(s);
 	});
     };
 };

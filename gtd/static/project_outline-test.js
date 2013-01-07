@@ -29,6 +29,8 @@ var second_dict = {
     todo: 'NEXT',
 };
 var todo_state_list = [
+    {todo_id: 0,
+     display: '[None]'},
     {todo_id: 1,
      display: 'NEXT'},
     {todo_id: 2,
@@ -541,8 +543,8 @@ test('Clickable TodoState elements', function() {
     );
     equal(
 	$popover.find('.todo-option').length,
-	2,
-	'Two todo state options in popover'
+	todo_state_list.length,
+	'Correct number of todo state options in popover'
     );
     // Now click the todo state and check properties
     $todo.click();
@@ -627,8 +629,8 @@ test('Popover populating method', function() {
     heading.populate_todo_states($popover.find('.popover-inner'));
     equal(
 	$popover.children('.popover-inner').children('.todo-option').length,
-	2,
-	'Two todo states created'
+	todo_state_list.length,
+	'Correct number of todo states created'
     );
     var $option1 = $inner.children('.todo-option[todo_id="1"]');
     var $option2 = $inner.children('.todo-option[todo_id="2"]');
@@ -772,12 +774,13 @@ asyncTest('converts initial workspace', function() {
 asyncTest('Populates children on outline init', function() {
     // See if the appliance properly converts the non-javascript
     // table to the outline workspace.
-    expect(4);
+    expect(5);
     var $workspace = $('#test_workspace');
     setup();
     var outline = new project_outline({$workspace: $workspace});
     outline.init();
     setTimeout(function() {
+	start()
 	$workspace.children('.heading').each(function() {
 	    equal(
 		$(this).data('populated'), 
@@ -790,7 +793,11 @@ asyncTest('Populates children on outline init', function() {
 		'Each heading has a $workspace data attribute'
 	    );
 	});
-	start()
+	equal(
+	    $workspace.children('.add-heading').length,
+	    1,
+	    'An .add-heading div was added to the end of the list'
+	);
     }, (ajax_timer * 3.3 + 5));
 });
 
@@ -836,8 +843,8 @@ asyncTest('Set todo states', function() {
 	todo_states: todo_state_list
     });
     outline.init();
-    equal(outline.todo_states[0].display, 'NEXT', 'NEXT todo state set');
-    equal(outline.todo_states[1].display, 'DONE', 'DONE todo state set');
+    equal(outline.todo_states[1].display, 'NEXT', 'NEXT todo state set');
+    equal(outline.todo_states[2].display, 'DONE', 'DONE todo state set');
     setTimeout(function() {
 	start();
 	$workspace.children('.heading').each(function() {
@@ -847,7 +854,7 @@ asyncTest('Set todo states', function() {
 		'Child ' + $(this).data('node_id') + ' has data(\'$workspace\')'
 	    );
 	    equal(
-		$(this).data('object').todo_states[0].display,
+		$(this).data('object').todo_states[1].display,
 		'NEXT',
 		'NEXT state accessible through heading object'
 	    );
@@ -935,7 +942,7 @@ test('popover populates with todo states', function() {
     var $popover = $todo.next('.popover');
     equal(
 	$popover.find('.todo-option').length,
-	2,
+	todo_state_list.length,
 	'Populated correct number of todo options'
     );
     equal(
@@ -1077,7 +1084,7 @@ asyncTest('Todo option click functionality', function() {
     setTimeout(function() {
 	start();
 	equal(
-	    $todo.data('todo_id'),
+	    $todo.attr('todo_id'),
 	    2,
 	    '$todo.data(\'todo_id\') is updated to reflect new todo state'
 	);
@@ -1089,6 +1096,82 @@ asyncTest('Todo option click functionality', function() {
 	ok($('body').data('test_value'), 
 	   'Callback function was called after click');
     }, (ajax_timer * 1.1 + 5));
+});
+
+asyncTest('Hidden status correct after click', function() {
+    var $workspace = $('#test_workspace')
+    $workspace.html('<div id="todo-test">NEXT</div>');
+    var $todo = $workspace.children('#todo-test');
+    $todo.attr('todo_id', 1);
+    $todo.todoState({
+	states: todo_state_list,
+	node_id: 5,
+	click: function() {$('body').data('test_value', true);}
+    });
+    var $popover = $todo.next('.popover');
+    equal(
+	$todo.css('display'),
+	'block',
+	'Non-zero todo state is visible before interaction'
+    )
+    $todo.click();
+    $popover.find('.todo-option[todo_id="0"]').click()
+    equal(
+	$popover.css('display'),
+	'none',
+	'Popover hidden after todo-option clicked'
+    );
+    setTimeout(function() {
+	start();
+	equal(
+	    $todo.attr('todo_id'),
+	    '0',
+	    '$todo element has todo_id attribute set'
+	)
+	equal(
+	    $todo.css('display'),
+	    'none',
+	    'Todo state is hidden after zero todo-state is chosen'
+	)
+    }, (ajax_timer * 1.1 + 5))
+});
+
+asyncTest('Auto-hide feature does not trigger for switching to regular nodes', function() {
+    var $workspace = $('#test_workspace')
+    $workspace.html('<div id="todo-test">NEXT</div>');
+    var $todo = $workspace.children('#todo-test');
+    $todo.attr('todo_id', 0);
+    $todo.todoState({
+	states: todo_state_list,
+	node_id: 1,
+	click: function() {$('body').data('test_value', true);}
+    });
+    var $popover = $todo.next('.popover');
+    equal(
+	$todo.css('display'),
+	'none',
+	'Zero todo state is hidden before interaction'
+    )
+    $todo.click();
+    $popover.find('.todo-option[todo_id="2"]').click()
+    equal(
+	$popover.css('display'),
+	'none',
+	'Popover hidden after todo-option clicked'
+    );
+    setTimeout(function() {
+	start();
+	equal(
+	    $todo.attr('todo_id'),
+	    '2',
+	    '$todo element has todo_id attribute set'
+	)
+	equal(
+	    $todo.css('display'),
+	    'block',
+	    'Todo state is visible after non-zero todo-state is chosen'
+	)
+    }, (ajax_timer * 1.1 + 5))
 });
 
 
