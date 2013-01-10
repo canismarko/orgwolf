@@ -85,7 +85,7 @@ def list_display(request, url_string=""):
         if new_context_id > 0:
             new_url += 'context' + str(new_context_id) + '/'
         return redirect(new_url)
-    nodes = Node.objects.none()
+    # nodes = Node.objects.none()
     # Get stored context value (or set if first visit)
     if 'context' not in request.session:
         request.session['context'] = None
@@ -101,7 +101,8 @@ def list_display(request, url_string=""):
     todo_states_query = url_data.get('todo_states', [])
     for todo_state in todo_states_query:
         final_Q = final_Q | Q(todo_state=todo_state)
-    nodes = Node.objects.filter(final_Q)
+    nodes = Node.get_owned(request)
+    nodes = nodes.filter(final_Q)
     # Now apply the context
     try:
         nodes = current_context.apply(nodes)
@@ -138,7 +139,7 @@ def agenda_display(request, date=None):
             new_url = "/gtd/agenda/" + request.POST['date']
             return redirect(new_url)
     deadline_period = 7 # In days # TODO: pull deadline period from user
-    all_nodes_qs = Node.objects.all()
+    all_nodes_qs = Node.get_owned(request)
     final_Q = Q()
     if date:
         try:
@@ -260,14 +261,14 @@ def display_node(request, node_id=None, scope_id=None):
             node.todo_state = TodoState.objects.get(pk=request.POST['new_todo'])
             node.auto_repeat = True
             node.save()
-    all_nodes_qs = Node.objects.all()
+    all_nodes_qs = Node.get_owned(request)
     all_todo_states_qs = TodoState.get_active()
     child_nodes_qs = all_nodes_qs
     all_scope_qs = Scope.objects.all()
     # If the user asked for a specific node
     if node_id:
         child_nodes_qs = child_nodes_qs.filter(parent__id=node_id)
-        parent_node = all_nodes_qs.get(id=node_id)
+        parent_node = Node.objects.get(id=node_id)
         parent_tags = parent_node.get_tags()
         breadcrumb_list = parent_node.get_hierarchy()
     else:
@@ -279,6 +280,12 @@ def display_node(request, node_id=None, scope_id=None):
         child_nodes_qs = child_nodes_qs.filter(scope=scope)
         url_kwargs['scope_id'] = scope_id
     base_url = reverse('gtd.views.display_node', kwargs=url_kwargs)
+    # Make sure user is authorized to see this node
+    if node_id:
+        if parent_node.owner != request.user:
+            new_url = reverse('django.contrib.auth.views.login')
+            new_url += '?next=' + base_url + node_id + '/'
+            return redirect(new_url)
     if node_id == None:
         node_id = 0
     all_todo_states_json = TodoState.as_json(all_todo_states_qs)
@@ -373,12 +380,15 @@ def new_node(request, node_id, scope_id):
 
 @login_required
 def get_children(request, parent_id):
+    """Looks up the child nodes of the given parent"""
     if int(parent_id) > 0:
         parent = get_object_or_404(Node, pk=parent_id)
     elif int(parent_id) == 0:
         parent = None
-    children_qs = Node.objects.filter(parent=parent)
+    all_nodes_qs = Node.get_owned(request)
+    children_qs = all_nodes_qs.filter(parent=parent)
     children = []
+    # Assemble the dictionary to return as JSON
     for child in children_qs:
         new_dict = {
             'node_id': child.pk,
@@ -390,6 +400,7 @@ def get_children(request, parent_id):
             new_dict['todo_id'] = child.todo_state.pk
             new_dict['todo'] = child.todo_state.as_html()
         children.append(new_dict)
+    # Meta data
     data = {
         'status': 'success',
         'parent_id': parent_id,

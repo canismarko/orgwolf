@@ -26,8 +26,9 @@ Replace this with more appropriate tests for your application.
 from __future__ import unicode_literals
 import datetime as dt
 from django.test import TestCase
-from django.test.client import Client
+from django.test.client import Client, RequestFactory
 from django.db.models import Q
+from django.contrib.auth.models import AnonymousUser
 from django.http import Http404
 from django.utils.timezone import get_current_timezone
 import re
@@ -473,4 +474,98 @@ class TodoStateRetrieval(TestCase):
             len(result),
             'TodoState.as_json() does not find all TodoState objects\n' +
             'Expected: ' + str(len(TodoState.get_active())+1) + '\nGot: ' + str(len(result))
+            )
+
+class MultiUser(TestCase):
+    """Tests for multi-user support in the gtd app"""
+    fixtures = ['test-users.yaml', 'gtd-env.yaml', 'gtd-test.yaml']
+    def setUp(self):
+        self.factory = RequestFactory()
+        self.user1 = User.objects.get(pk=1)
+        self.user2 = User.objects.get(pk=2)
+        self.client.login(username='ryan', password='secret')
+    def test_get_nodes(self):
+        self.assertEqual(
+            'function',
+            Node.get_owned.__class__.__name__
+            )
+        request = self.factory.get('/gtd/nodes')
+        request.user = self.user2
+        self.assertEqual(
+            'QuerySet',
+            Node.get_owned(request).__class__.__name__)
+        self.assertEqual(
+            list(Node.objects.filter(owner = self.user2)),
+            list(Node.get_owned(request))
+            )
+        request.user = AnonymousUser()
+        self.assertFalse(
+            request.user.is_authenticated()
+            )
+        self.assertEqual(
+            list(Node.objects.none()),
+            list(Node.get_owned(request))
+            )
+    def test_agenda_view(self):
+        response = self.client.get('/gtd/agenda/')
+        self.assertContains(
+            response,
+            'Ryan node',
+            status_code=200
+            )
+        self.assertNotContains(
+            response,
+            'test-users node',
+            status_code=200,
+            msg_prefix='Agenda view',
+            )
+    def test_list_view(self):
+        response = self.client.get('/gtd/lists/')
+        self.assertContains(
+            response,
+            'Ryan node',
+            status_code=200
+            )
+        self.assertNotContains(
+            response,
+            'test-users node',
+            status_code=200,
+            msg_prefix='List view',
+            )
+    def test_node_view(self):
+        response = self.client.get('/gtd/nodes/')
+        self.assertContains(
+            response,
+            'Ryan node',
+            status_code=200
+            )
+        self.assertNotContains(
+            response,
+            'test-users node',
+            status_code=200,
+            msg_prefix='node view',
+            )
+    def test_get_children_json(self):
+        response = self.client.get('/gtd/nodes/8/children/')
+        response_dict = json.loads(response.content)
+        children = response_dict['children']
+        self.assertEqual(
+            1,
+            len(children),
+            )
+        self.assertEqual(
+            Node.objects.get(pk=children[0]['node_id']).title,
+            'another ryan node'
+            )
+    def test_get_unauthorized_node(self):
+        """Trying to access another person's node by URL
+        should redirect the user to the login screen"""
+        response = self.client.get('/gtd/nodes/9/')
+        self.assertEqual(
+            302,
+            response.status_code,
+            )
+        self.assertEqual(
+            'http://testserver/accounts/login/?next=/gtd/nodes/9/',
+            response['Location']
             )

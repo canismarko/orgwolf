@@ -24,7 +24,7 @@
     is_superuser: true
     last_login: 2012-11-15 00:07:54.388929+00:00
     last_name: ''
-    password: pbkdf2_sha256$10000$usnxRJfAmroH$yD6oIaNBNsJ48CdExVGoCx/K2s0FyakDnWLA5dIS7+g=
+    password: pbkdf2_sha256$10000$5K1WOczXnrMr$+nhfqagCc85BGJKJy+tdYgqP3m0zxwScOpgm137TiDw=
     preferred_timezone: ''
     user_permissions: []
     username: ryan

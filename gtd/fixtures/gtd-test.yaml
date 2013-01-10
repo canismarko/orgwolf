@@ -188,3 +188,84 @@
     users: []
   model: gtd.node
   pk: 7
+- fields:
+    assigned: []
+    closed: 2011-05-13 20:56:00+00:00
+    deadline: 2011-05-13 04:00:00+00:00
+    deadline_time_specific: false
+    energy: null
+    opened: 2012-11-17 06:10:41.299824+00:00
+    order: 40
+    owner: 2
+    parent: null
+    priority: ''
+    related_projects: []
+    repeating_number: 3
+    repeating_unit: d
+    repeats: True
+    repeats_from_completion: false
+    scheduled: 2012-12-31 05:00:00+00:00
+    scheduled_time_specific: false
+    scope: [1]
+    tag_string: ''
+    text: ''
+    time_needed: null
+    title: Ryan node
+    todo_state: 2
+    users: []
+  model: gtd.node
+  pk: 8
+- fields:
+    assigned: []
+    closed: 2011-05-13 20:56:00+00:00
+    deadline: 2011-05-13 04:00:00+00:00
+    deadline_time_specific: false
+    energy: null
+    opened: 2012-11-17 06:10:41.299824+00:00
+    order: 40
+    owner: 1
+    parent: 8
+    priority: ''
+    related_projects: []
+    repeating_number: 3
+    repeating_unit: d
+    repeats: True
+    repeats_from_completion: false
+    scheduled: 2012-12-31 05:00:00+00:00
+    scheduled_time_specific: false
+    scope: [1]
+    tag_string: ''
+    text: ''
+    time_needed: null
+    title: test-users node
+    todo_state: 2
+    users: []
+  model: gtd.node
+  pk: 9
+- fields:
+    assigned: []
+    closed: 2011-05-13 20:56:00+00:00
+    deadline: 2011-05-13 04:00:00+00:00
+    deadline_time_specific: false
+    energy: null
+    opened: 2012-11-17 06:10:41.299824+00:00
+    order: 40
+    owner: 2
+    parent: 8
+    priority: ''
+    related_projects: []
+    repeating_number: 3
+    repeating_unit: d
+    repeats: True
+    repeats_from_completion: false
+    scheduled: 2012-12-31 05:00:00+00:00
+    scheduled_time_specific: false
+    scope: [1]
+    tag_string: ''
+    text: ''
+    time_needed: null
+    title: another ryan node
+    todo_state: 2
+    users: []
+  model: gtd.node
+  pk: 10

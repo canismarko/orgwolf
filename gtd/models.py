@@ -262,6 +262,15 @@ class Node(models.Model):
             return 'in %d day%s' % (abs(difference), pluralized)
         else:
             return '' 
+    @staticmethod
+    def get_owned(request):
+        """Get all the nodes owned by the user listed in the request"""
+        qs = Node.objects.all()
+        if request.user.is_authenticated():
+            qs = qs.filter(owner=request.user)
+        else:
+            qs = Node.objects.none()
+        return qs
     def get_title(self):
         if self.title.strip(' ').strip('\t'):
             title = self.title
