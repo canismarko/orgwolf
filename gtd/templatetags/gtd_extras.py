@@ -2,6 +2,7 @@ from django import template
 from django.utils.html import conditional_escape
 from django.utils.safestring import mark_safe
 import datetime as dt
+import markdown
 
 register = template.Library()
 
@@ -112,3 +113,10 @@ def overdue(item_dt, agenda_dt=None, future=False):
 def upcoming(item_dt, agenda_dt=None):
     """Wrapper for overdue()."""
     return overdue(item_dt, agenda_dt, future=True)
+
+@register.filter
+def markdown_text(raw_text):
+    raw_text = conditional_escape(raw_text)
+    html = markdown.markdown(raw_text)
+    html = '<div class="markdown">' + html + '</div>'
+    return mark_safe(html)

@@ -39,7 +39,7 @@ from orgwolf.models import OrgWolfUser as User
 from gtd.forms import NodeForm
 from gtd.models import Node, TodoState, node_repeat, Location, Tool, Context, Scope
 from gtd.shortcuts import parse_url, get_todo_states, get_todo_abbrevs
-from gtd.templatetags.gtd_extras import overdue, upcoming
+from gtd.templatetags.gtd_extras import overdue, upcoming, markdown_text
 
 class EditNode(TestCase):
     fixtures = ['test-users.yaml', 'gtd-test.yaml', 'gtd-env.yaml']
@@ -569,3 +569,34 @@ class MultiUser(TestCase):
             'http://testserver/accounts/login/?next=/gtd/nodes/9/',
             response['Location']
             )
+
+class Markdown(TestCase):
+    """Test the ability of node text to be converted using
+    markdown syntax"""
+    def setUp(self):
+        self.f = markdown_text
+    def test_info(self):
+        """Test class type, return value, etc"""
+        self.assertEqual(
+            'function',
+            self.f.__class__.__name__
+            )
+        self.assertEqual(
+            'SafeText',
+            self.f('').__class__.__name__
+            )
+        # Escapes html
+        self.assertEqual(
+            '<div class="markdown"><p>&amp;</p></div>',
+            self.f('&')
+            )
+        self.assertEqual(
+            '<div class="markdown"><p>&lt;h1&gt;</p></div>',
+            self.f('<h1>')
+            )
+    def test_heading(self):
+        self.assertEqual(
+            '<div class="markdown"><h1>Hello</h1></div>',
+            self.f('Hello\n=====')
+            )
+

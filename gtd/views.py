@@ -33,6 +33,7 @@ import json
 
 from gtd.models import TodoState, Node, Context, Scope
 from gtd.shortcuts import parse_url, get_todo_states, get_todo_abbrevs
+from gtd.templatetags.gtd_extras import markdown_text
 from wolfmail.models import MailItem, Label
 from gtd.forms import NodeForm
 from orgwolf.models import OrgWolfUser as User
@@ -85,7 +86,6 @@ def list_display(request, url_string=""):
         if new_context_id > 0:
             new_url += 'context' + str(new_context_id) + '/'
         return redirect(new_url)
-    # nodes = Node.objects.none()
     # Get stored context value (or set if first visit)
     if 'context' not in request.session:
         request.session['context'] = None
@@ -317,7 +317,6 @@ def edit_node(request, node_id, scope_id):
         else:
             new_todo = get_object_or_404(TodoState, pk=new_todo_id)
         node.todo_state = new_todo
-        # node.auto_repeat = True
         node.save()
         if node.todo_state:
             processed_id = node.todo_state.pk
@@ -394,7 +393,7 @@ def get_children(request, parent_id):
             'node_id': child.pk,
             'title': child.title,
             'tags': child.tag_string,
-            'text': child.text,
+            'text': markdown_text(child.text),
              }
         if hasattr(child.todo_state, 'pk'):
             new_dict['todo_id'] = child.todo_state.pk
