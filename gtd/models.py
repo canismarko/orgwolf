@@ -33,7 +33,7 @@ import operator
 import json
 
 from orgwolf import settings
-from orgwolf.models import Color
+from orgwolf.models import Color, HTMLEscaper
 
 @python_2_unicode_compatible
 class TodoState(models.Model):
@@ -378,6 +378,22 @@ def node_timestamp(sender, **kwargs):
                     instance.closed = datetime.now(get_current_timezone())
             else: # New node
                 instance.closed = datetime.now(get_current_timezone())
+
+@receiver(signals.pre_save, sender=Node)
+def clean_text(sender, **kwargs):
+    """pre_save receiver that cleans up the text before saving
+    eg. escape HTML"""
+    if not kwargs['raw']:
+        instance = kwargs['instance']
+        if instance.id:
+            old_text = Node.objects.get(pk=instance.id).text
+        else:
+            old_text = ''
+        if instance.text != old_text:
+            # only escape the text if it changed
+            parser = HTMLEscaper()
+            instance.text = parser.clean(instance.text)
+
 @receiver(signals.pre_save, sender=Node)
 def node_repeat(sender, **kwargs):
     """Handle repeating information if the Node has the Node.repeats

@@ -26,6 +26,28 @@ $(document).ready(function(){
 	var mod_width = $(this).width() - btn_width
 	$(this).width(mod_width);
     });
+    // Add django CSRF token to all AJAX POST requests
+    function getCookie(name) {
+	var cookieValue = null;
+	if (document.cookie && document.cookie != '') {
+            var cookies = document.cookie.split(';');
+            for (var i = 0; i < cookies.length; i++) {
+		var cookie = jQuery.trim(cookies[i]);
+		// Does this cookie string begin with the name we want?
+		if (cookie.substring(0, name.length + 1) == (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+		}
+            }
+	}
+	return cookieValue;
+    }
+    var csrftoken = getCookie('csrftoken');
+    $.ajaxSetup({
+	beforeSend: function(xhr) {
+	    xhr.setRequestHeader('X-CSRFToken', csrftoken);
+	}
+    });
 }); // End of onReady
 
 
@@ -182,9 +204,11 @@ $(document).ready(function(){
 	    // Avoid dismissing if same todo state selected
 	    if (new_id != todo_id) {
 		// If todo state is being changed then...
-		$.getJSON(url, data, function(response) {
+		$.post(url, data, function(response) {
+		    response = $.parseJSON(response);
 		    // (callback) update the document todo states after change
 		    if (response['status']=='success') {
+			old = $todo.attr('todo_id');
 			$todo.attr('todo_id', response['todo_id']);
 			todo_id = response['todo_id'];
 			$todo.html(get_state(response['todo_id']).display);
@@ -203,9 +227,55 @@ $(document).ready(function(){
 		hide_popover();
 	    }
 	});
-
 	return this;
     };
+})(jQuery);
+
+
+/*************************************************
+* jQuery Aloha plugin for AJAX text
+* 
+* This is a wrapper for the Aloha editor.
+* It returns the new text to the server via AJAX
+* 
+* Process the following elements:
+* - $(this) is the element that holds the text
+* 
+* Options:
+*   None
+*************************************************/
+(function( $ ){
+    $.fn.alohaText = function(options) {
+	$text_j = this;
+	Aloha.ready(function() {
+	    // Bind the aloha editor
+	    $text_a = Aloha.jQuery($text_j);
+	    $text_a.aloha()
+	});
+	return this;
+    };
+    // Bind the AJAX handler for changing the text
+    $('document').ready(function() {
+	Aloha.ready(function() {
+	    console.log('# Todo: Switch Aloha editor to PubSub');
+	    Aloha.bind('aloha-editable-deactivated', function(e, arg) {
+		editable = arg.editable
+		if (editable.snapshotContent!= editable.obj.html()) {
+		    // If they text was changed, submit the ajax request
+		    var $parent = editable.obj.parent();
+		    var url = '/gtd/nodes/' + $parent.attr('node_id') + '/edit/';
+		    var data = {
+			format: 'json',
+			node_id: $parent.attr('node_id'),
+			text: editable.obj.html()
+		    };
+		    $.post(url, data, function() {
+			console.log('# Todo: write callback function for aloha edit ajax request');
+		    });
+		}
+	    });
+	});
+    });
 })(jQuery);
 
 // Begin implementation of hierarchical expanding project list
@@ -317,7 +387,8 @@ var outline_heading = function(args) {
 	    this.$element.data('$workspace', this.$parent.data('$workspace'));
 	}
 	this.$clickable.data('$parent', this.$element);
-	// Populate popover children
+	// Bind Aloha editor
+	this.$text.alohaText();
 	// Set color based on indentation level
 	var color_i = this.level % this.COLORS.length;
 	this.color = this.COLORS[color_i-1];
@@ -374,8 +445,11 @@ var outline_heading = function(args) {
 		heading.todo_id = ajax_response['todo_id'];
 	    }
 	});
-	// Text div
+	// Text div (including aloha editor)
 	this.$text.html(this.text);
+	if (typeof this.$text.aloha == 'function') {
+	    this.$text.aloha();
+	}
 	// Title div
 	this.$title.html(this.title);
     };

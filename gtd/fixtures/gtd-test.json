@@ -1,0 +1,2477 @@
+[
+{
+  "pk": 1, 
+  "model": "gtd.todostate", 
+  "fields": {
+    "display_text": "Next Action", 
+    "actionable": true, 
+    "_color_rgb": 0, 
+    "_color_alpha": 0.0, 
+    "abbreviation": "NEXT", 
+    "closed": false, 
+    "owner": null, 
+    "order": 50
+  }
+},
+{
+  "pk": 2, 
+  "model": "gtd.todostate", 
+  "fields": {
+    "display_text": "Future Action", 
+    "actionable": false, 
+    "_color_rgb": 0, 
+    "_color_alpha": 0.0, 
+    "abbreviation": "ACTN", 
+    "closed": false, 
+    "owner": null, 
+    "order": 50
+  }
+},
+{
+  "pk": 3, 
+  "model": "gtd.todostate", 
+  "fields": {
+    "display_text": "Completed", 
+    "actionable": false, 
+    "_color_rgb": 0, 
+    "_color_alpha": 0.0, 
+    "abbreviation": "DONE", 
+    "closed": true, 
+    "owner": null, 
+    "order": 50
+  }
+},
+{
+  "pk": 4, 
+  "model": "gtd.todostate", 
+  "fields": {
+    "display_text": "Someday Maybe", 
+    "actionable": false, 
+    "_color_rgb": 0, 
+    "_color_alpha": 0.0, 
+    "abbreviation": "SMDY", 
+    "closed": false, 
+    "owner": null, 
+    "order": 50
+  }
+},
+{
+  "pk": 5, 
+  "model": "gtd.todostate", 
+  "fields": {
+    "display_text": "Deferred", 
+    "actionable": false, 
+    "_color_rgb": 0, 
+    "_color_alpha": 0.0, 
+    "abbreviation": "DFRD", 
+    "closed": false, 
+    "owner": null, 
+    "order": 50
+  }
+},
+{
+  "pk": 6, 
+  "model": "gtd.todostate", 
+  "fields": {
+    "display_text": "Waiting For", 
+    "actionable": false, 
+    "_color_rgb": 0, 
+    "_color_alpha": 0.0, 
+    "abbreviation": "WAIT", 
+    "closed": true, 
+    "owner": null, 
+    "order": 50
+  }
+},
+{
+  "pk": 7, 
+  "model": "gtd.todostate", 
+  "fields": {
+    "display_text": "Cancelled", 
+    "actionable": false, 
+    "_color_rgb": 13260, 
+    "_color_alpha": 1.0, 
+    "abbreviation": "CNCL", 
+    "closed": true, 
+    "owner": null, 
+    "order": 50
+  }
+},
+{
+  "pk": 8, 
+  "model": "gtd.todostate", 
+  "fields": {
+    "display_text": "Hard Scheduled", 
+    "actionable": false, 
+    "_color_rgb": 0, 
+    "_color_alpha": 0.0, 
+    "abbreviation": "HARD", 
+    "closed": false, 
+    "owner": null, 
+    "order": 45
+  }
+},
+{
+  "pk": 1, 
+  "model": "gtd.tag", 
+  "fields": {
+    "owner": 1, 
+    "tag_string": "work", 
+    "display": "Kalsec", 
+    "public": true
+  }
+},
+{
+  "pk": 2, 
+  "model": "gtd.tag", 
+  "fields": {
+    "owner": 1, 
+    "tag_string": "home", 
+    "display": "Sheldon", 
+    "public": true
+  }
+},
+{
+  "pk": 3, 
+  "model": "gtd.tag", 
+  "fields": {
+    "owner": 1, 
+    "tag_string": "comp", 
+    "display": "Computer", 
+    "public": true
+  }
+},
+{
+  "pk": 4, 
+  "model": "gtd.tag", 
+  "fields": {
+    "owner": 1, 
+    "tag_string": "phone", 
+    "display": "Phone", 
+    "public": true
+  }
+},
+{
+  "pk": 3, 
+  "model": "gtd.tool", 
+  "fields": {}
+},
+{
+  "pk": 4, 
+  "model": "gtd.tool", 
+  "fields": {}
+},
+{
+  "pk": 1, 
+  "model": "gtd.location", 
+  "fields": {
+    "tools_available": []
+  }
+},
+{
+  "pk": 2, 
+  "model": "gtd.location", 
+  "fields": {
+    "tools_available": []
+  }
+},
+{
+  "pk": 1, 
+  "model": "gtd.context", 
+  "fields": {
+    "people_required": [], 
+    "tools_available": [
+      3, 
+      4
+    ], 
+    "name": "Work", 
+    "locations_available": [
+      1
+    ]
+  }
+},
+{
+  "pk": 2, 
+  "model": "gtd.context", 
+  "fields": {
+    "people_required": [], 
+    "tools_available": [], 
+    "name": "Home", 
+    "locations_available": [
+      2
+    ]
+  }
+},
+{
+  "pk": 1, 
+  "model": "gtd.scope", 
+  "fields": {
+    "owner": null, 
+    "public": false, 
+    "name": "joe_corp", 
+    "display": "joe_corp"
+  }
+},
+{
+  "pk": 1, 
+  "model": "gtd.node", 
+  "fields": {
+    "text": "", 
+    "tag_string": "", 
+    "assigned": [], 
+    "deadline": null, 
+    "owner": 1, 
+    "opened": "2012-11-17T06:10:39.371Z", 
+    "title": "Tasks", 
+    "time_needed": null, 
+    "priority": "", 
+    "closed": "2012-12-30T21:42:25.223Z", 
+    "todo_state": 6, 
+    "scope": [], 
+    "energy": null, 
+    "repeating_number": null, 
+    "scheduled": null, 
+    "users": [], 
+    "parent": null, 
+    "repeating_unit": null, 
+    "related_projects": [], 
+    "scheduled_time_specific": false, 
+    "repeats_from_completion": false, 
+    "deadline_time_specific": false, 
+    "repeats": false, 
+    "order": 10
+  }
+},
+{
+  "pk": 2, 
+  "model": "gtd.node", 
+  "fields": {
+    "text": "   [2011-03-28 Mon]\n   [[file:~/org/joe_corp.org::*Start%20a%20money%20market%20account%20to%20hold%20savings][Start a money market account to hold savings]]\n", 
+    "tag_string": "", 
+    "assigned": [], 
+    "deadline": null, 
+    "owner": 1, 
+    "opened": "2012-11-17T06:10:39.658Z", 
+    "title": "Read section 195 Corporate tax law", 
+    "time_needed": null, 
+    "priority": "", 
+    "closed": "2012-12-27T23:00:00.101Z", 
+    "todo_state": 7, 
+    "scope": [
+      1
+    ], 
+    "energy": null, 
+    "repeating_number": null, 
+    "scheduled": null, 
+    "users": [], 
+    "parent": 1, 
+    "repeating_unit": null, 
+    "related_projects": [], 
+    "scheduled_time_specific": false, 
+    "repeats_from_completion": false, 
+    "deadline_time_specific": false, 
+    "repeats": false, 
+    "order": 10
+  }
+},
+{
+  "pk": 3, 
+  "model": "gtd.node", 
+  "fields": {
+    "text": "", 
+    "tag_string": "", 
+    "assigned": [], 
+    "deadline": null, 
+    "owner": 1, 
+    "opened": "2012-11-17T06:10:40.416Z", 
+    "title": "Google \"Quanta\" (ODM that Joe's friend works for)", 
+    "time_needed": null, 
+    "priority": "", 
+    "closed": "2011-05-27T19:53:00Z", 
+    "todo_state": 7, 
+    "scope": [
+      1
+    ], 
+    "energy": null, 
+    "repeating_number": null, 
+    "scheduled": null, 
+    "users": [], 
+    "parent": 1, 
+    "repeating_unit": null, 
+    "related_projects": [], 
+    "scheduled_time_specific": false, 
+    "repeats_from_completion": false, 
+    "deadline_time_specific": false, 
+    "repeats": false, 
+    "order": 20
+  }
+},
+{
+  "pk": 4, 
+  "model": "gtd.node", 
+  "fields": {
+    "text": "", 
+    "tag_string": "", 
+    "assigned": [], 
+    "deadline": null, 
+    "owner": 1, 
+    "opened": "2012-11-17T06:10:40.867Z", 
+    "title": "Research ODM", 
+    "time_needed": null, 
+    "priority": "", 
+    "closed": "2011-08-26T13:58:00Z", 
+    "todo_state": 7, 
+    "scope": [
+      1
+    ], 
+    "energy": null, 
+    "repeating_number": null, 
+    "scheduled": null, 
+    "users": [], 
+    "parent": 1, 
+    "repeating_unit": null, 
+    "related_projects": [], 
+    "scheduled_time_specific": false, 
+    "repeats_from_completion": false, 
+    "deadline_time_specific": false, 
+    "repeats": false, 
+    "order": 30
+  }
+},
+{
+  "pk": 5, 
+  "model": "gtd.node", 
+  "fields": {
+    "text": "", 
+    "tag_string": "", 
+    "assigned": [], 
+    "deadline": "2011-05-13T04:00:00Z", 
+    "owner": 1, 
+    "opened": "2012-11-17T06:10:41.299Z", 
+    "title": "E-mail Joe some product ideas", 
+    "time_needed": null, 
+    "priority": "", 
+    "closed": "2011-05-13T20:56:00Z", 
+    "todo_state": 3, 
+    "scope": [
+      1
+    ], 
+    "energy": null, 
+    "repeating_number": null, 
+    "scheduled": null, 
+    "users": [], 
+    "parent": 1, 
+    "repeating_unit": null, 
+    "related_projects": [], 
+    "scheduled_time_specific": false, 
+    "repeats_from_completion": false, 
+    "deadline_time_specific": false, 
+    "repeats": false, 
+    "order": 40
+  }
+},
+{
+  "pk": 6, 
+  "model": "gtd.node", 
+  "fields": {
+    "text": "", 
+    "tag_string": "", 
+    "assigned": [], 
+    "deadline": null, 
+    "owner": 1, 
+    "opened": "2012-11-17T06:10:41.881Z", 
+    "title": "Schedule next meeting with Joe", 
+    "time_needed": null, 
+    "priority": "", 
+    "closed": "2011-09-12T12:53:00Z", 
+    "todo_state": 3, 
+    "scope": [
+      1
+    ], 
+    "energy": null, 
+    "repeating_number": null, 
+    "scheduled": "2011-09-12T04:00:00Z", 
+    "users": [], 
+    "parent": 1, 
+    "repeating_unit": null, 
+    "related_projects": [], 
+    "scheduled_time_specific": false, 
+    "repeats_from_completion": false, 
+    "deadline_time_specific": false, 
+    "repeats": false, 
+    "order": 50
+  }
+},
+{
+  "pk": 7, 
+  "model": "gtd.node", 
+  "fields": {
+    "text": "", 
+    "tag_string": "", 
+    "assigned": [], 
+    "deadline": null, 
+    "owner": 1, 
+    "opened": "2012-11-17T06:10:42.454Z", 
+    "title": "", 
+    "time_needed": null, 
+    "priority": "", 
+    "closed": null, 
+    "todo_state": 4, 
+    "scope": [
+      1
+    ], 
+    "energy": null, 
+    "repeating_number": null, 
+    "scheduled": null, 
+    "users": [], 
+    "parent": null, 
+    "repeating_unit": null, 
+    "related_projects": [], 
+    "scheduled_time_specific": false, 
+    "repeats_from_completion": false, 
+    "deadline_time_specific": false, 
+    "repeats": false, 
+    "order": 20
+  }
+},
+{
+  "pk": 8, 
+  "model": "gtd.node", 
+  "fields": {
+    "text": "", 
+    "tag_string": "", 
+    "assigned": [], 
+    "deadline": null, 
+    "owner": 1, 
+    "opened": "2012-11-17T06:10:42.753Z", 
+    "title": "Weekly Meeting Notes", 
+    "time_needed": null, 
+    "priority": "", 
+    "closed": "2012-12-29T14:43:57.859Z", 
+    "todo_state": 3, 
+    "scope": [
+      1
+    ], 
+    "energy": null, 
+    "repeating_number": null, 
+    "scheduled": null, 
+    "users": [], 
+    "parent": null, 
+    "repeating_unit": null, 
+    "related_projects": [], 
+    "scheduled_time_specific": false, 
+    "repeats_from_completion": false, 
+    "deadline_time_specific": false, 
+    "repeats": false, 
+    "order": 30
+  }
+},
+{
+  "pk": 9, 
+  "model": "gtd.node", 
+  "fields": {
+    "text": "", 
+    "tag_string": "", 
+    "assigned": [], 
+    "deadline": null, 
+    "owner": 1, 
+    "opened": "2012-11-17T06:10:43.045Z", 
+    "title": "[2011-04-18 Mon]", 
+    "time_needed": null, 
+    "priority": "", 
+    "closed": null, 
+    "todo_state": null, 
+    "scope": [
+      1
+    ], 
+    "energy": null, 
+    "repeating_number": null, 
+    "scheduled": null, 
+    "users": [], 
+    "parent": 8, 
+    "repeating_unit": null, 
+    "related_projects": [], 
+    "scheduled_time_specific": false, 
+    "repeats_from_completion": false, 
+    "deadline_time_specific": false, 
+    "repeats": false, 
+    "order": 10
+  }
+},
+{
+  "pk": 10, 
+  "model": "gtd.node", 
+  "fields": {
+    "text": "    - Coordinate lab data across multiple systems\n    - What is the ODM component?\n", 
+    "tag_string": "", 
+    "assigned": [], 
+    "deadline": null, 
+    "owner": 1, 
+    "opened": "2012-11-17T06:10:43.336Z", 
+    "title": "Chem-lab equipment", 
+    "time_needed": null, 
+    "priority": "", 
+    "closed": null, 
+    "todo_state": null, 
+    "scope": [
+      1
+    ], 
+    "energy": null, 
+    "repeating_number": null, 
+    "scheduled": null, 
+    "users": [], 
+    "parent": 9, 
+    "repeating_unit": null, 
+    "related_projects": [], 
+    "scheduled_time_specific": false, 
+    "repeats_from_completion": false, 
+    "deadline_time_specific": false, 
+    "repeats": false, 
+    "order": 10
+  }
+},
+{
+  "pk": 11, 
+  "model": "gtd.node", 
+  "fields": {
+    "text": "    - Step into pilot-plant equipment manufacturing\n", 
+    "tag_string": "", 
+    "assigned": [], 
+    "deadline": null, 
+    "owner": 1, 
+    "opened": "2012-11-17T06:10:43.992Z", 
+    "title": "Food Production Support", 
+    "time_needed": null, 
+    "priority": "", 
+    "closed": null, 
+    "todo_state": null, 
+    "scope": [
+      1
+    ], 
+    "energy": null, 
+    "repeating_number": null, 
+    "scheduled": null, 
+    "users": [], 
+    "parent": 9, 
+    "repeating_unit": null, 
+    "related_projects": [], 
+    "scheduled_time_specific": false, 
+    "repeats_from_completion": false, 
+    "deadline_time_specific": false, 
+    "repeats": false, 
+    "order": 20
+  }
+},
+{
+  "pk": 12, 
+  "model": "gtd.node", 
+  "fields": {
+    "text": "", 
+    "tag_string": "", 
+    "assigned": [], 
+    "deadline": "2011-05-13T04:00:00Z", 
+    "owner": 1, 
+    "opened": "2012-11-17T06:10:44.458Z", 
+    "title": "Talk to Greg R. about how we buy our pilot plant equipt.", 
+    "time_needed": null, 
+    "priority": "", 
+    "closed": "2011-05-13T20:56:00Z", 
+    "todo_state": 7, 
+    "scope": [
+      1
+    ], 
+    "energy": null, 
+    "repeating_number": null, 
+    "scheduled": "2011-05-13T04:00:00Z", 
+    "users": [], 
+    "parent": 9, 
+    "repeating_unit": null, 
+    "related_projects": [], 
+    "scheduled_time_specific": false, 
+    "repeats_from_completion": false, 
+    "deadline_time_specific": false, 
+    "repeats": false, 
+    "order": 30
+  }
+},
+{
+  "pk": 13, 
+  "model": "gtd.node", 
+  "fields": {
+    "text": "", 
+    "tag_string": ":EM:", 
+    "assigned": [], 
+    "deadline": null, 
+    "owner": 1, 
+    "opened": "2012-11-17T06:10:45.172Z", 
+    "title": "Talk to Emily RE: MBA", 
+    "time_needed": null, 
+    "priority": "", 
+    "closed": "2011-06-20T20:48:00Z", 
+    "todo_state": 7, 
+    "scope": [
+      1
+    ], 
+    "energy": null, 
+    "repeating_number": null, 
+    "scheduled": null, 
+    "users": [], 
+    "parent": 9, 
+    "repeating_unit": null, 
+    "related_projects": [], 
+    "scheduled_time_specific": false, 
+    "repeats_from_completion": false, 
+    "deadline_time_specific": false, 
+    "repeats": false, 
+    "order": 40
+  }
+},
+{
+  "pk": 14, 
+  "model": "gtd.node", 
+  "fields": {
+    "text": "", 
+    "tag_string": "", 
+    "assigned": [], 
+    "deadline": null, 
+    "owner": 1, 
+    "opened": "2012-11-17T06:10:45.606Z", 
+    "title": "[2011-04-11 Mon]", 
+    "time_needed": null, 
+    "priority": "", 
+    "closed": null, 
+    "todo_state": null, 
+    "scope": [
+      1
+    ], 
+    "energy": null, 
+    "repeating_number": null, 
+    "scheduled": null, 
+    "users": [], 
+    "parent": 8, 
+    "repeating_unit": null, 
+    "related_projects": [], 
+    "scheduled_time_specific": false, 
+    "repeats_from_completion": false, 
+    "deadline_time_specific": false, 
+    "repeats": false, 
+    "order": 20
+  }
+},
+{
+  "pk": 15, 
+  "model": "gtd.node", 
+  "fields": {
+    "text": "    - Incorporate chemistry into our plan (lab equipment)\n      - Instruments\n      - Data recorders\n      - Integrate w/ computer network\n", 
+    "tag_string": "", 
+    "assigned": [], 
+    "deadline": null, 
+    "owner": 1, 
+    "opened": "2012-11-17T06:10:45.896Z", 
+    "title": "Ideas", 
+    "time_needed": null, 
+    "priority": "", 
+    "closed": null, 
+    "todo_state": null, 
+    "scope": [
+      1
+    ], 
+    "energy": null, 
+    "repeating_number": null, 
+    "scheduled": null, 
+    "users": [], 
+    "parent": 14, 
+    "repeating_unit": null, 
+    "related_projects": [], 
+    "scheduled_time_specific": false, 
+    "repeats_from_completion": false, 
+    "deadline_time_specific": false, 
+    "repeats": false, 
+    "order": 10
+  }
+},
+{
+  "pk": 16, 
+  "model": "gtd.node", 
+  "fields": {
+    "text": "", 
+    "tag_string": "", 
+    "assigned": [], 
+    "deadline": null, 
+    "owner": 1, 
+    "opened": "2012-11-17T06:10:46.777Z", 
+    "title": "[2011-03-28 Mon]", 
+    "time_needed": null, 
+    "priority": "", 
+    "closed": null, 
+    "todo_state": null, 
+    "scope": [
+      1
+    ], 
+    "energy": null, 
+    "repeating_number": null, 
+    "scheduled": null, 
+    "users": [], 
+    "parent": 8, 
+    "repeating_unit": null, 
+    "related_projects": [], 
+    "scheduled_time_specific": false, 
+    "repeats_from_completion": false, 
+    "deadline_time_specific": false, 
+    "repeats": false, 
+    "order": 30
+  }
+},
+{
+  "pk": 17, 
+  "model": "gtd.node", 
+  "fields": {
+    "text": "", 
+    "tag_string": "", 
+    "assigned": [], 
+    "deadline": null, 
+    "owner": 1, 
+    "opened": "2012-11-17T06:10:47.084Z", 
+    "title": "Original Design Manufacturer (ODM)", 
+    "time_needed": null, 
+    "priority": "", 
+    "closed": null, 
+    "todo_state": null, 
+    "scope": [
+      1
+    ], 
+    "energy": null, 
+    "repeating_number": null, 
+    "scheduled": null, 
+    "users": [], 
+    "parent": 16, 
+    "repeating_unit": null, 
+    "related_projects": [], 
+    "scheduled_time_specific": false, 
+    "repeats_from_completion": false, 
+    "deadline_time_specific": false, 
+    "repeats": false, 
+    "order": 10
+  }
+},
+{
+  "pk": 18, 
+  "model": "gtd.node", 
+  "fields": {
+    "text": "", 
+    "tag_string": "", 
+    "assigned": [], 
+    "deadline": null, 
+    "owner": 1, 
+    "opened": "2012-11-17T06:10:47.383Z", 
+    "title": "Ex. Quanta", 
+    "time_needed": null, 
+    "priority": "", 
+    "closed": null, 
+    "todo_state": null, 
+    "scope": [
+      1
+    ], 
+    "energy": null, 
+    "repeating_number": null, 
+    "scheduled": null, 
+    "users": [], 
+    "parent": 17, 
+    "repeating_unit": null, 
+    "related_projects": [], 
+    "scheduled_time_specific": false, 
+    "repeats_from_completion": false, 
+    "deadline_time_specific": false, 
+    "repeats": false, 
+    "order": 10
+  }
+},
+{
+  "pk": 19, 
+  "model": "gtd.node", 
+  "fields": {
+    "text": "    Up to $5000 write-off for new small-businesses\n", 
+    "tag_string": "", 
+    "assigned": [], 
+    "deadline": null, 
+    "owner": 1, 
+    "opened": "2012-11-17T06:10:47.699Z", 
+    "title": "Section 195 Corporate Tax Law", 
+    "time_needed": null, 
+    "priority": "", 
+    "closed": null, 
+    "todo_state": null, 
+    "scope": [
+      1
+    ], 
+    "energy": null, 
+    "repeating_number": null, 
+    "scheduled": null, 
+    "users": [], 
+    "parent": 16, 
+    "repeating_unit": null, 
+    "related_projects": [], 
+    "scheduled_time_specific": false, 
+    "repeats_from_completion": false, 
+    "deadline_time_specific": false, 
+    "repeats": false, 
+    "order": 20
+  }
+},
+{
+  "pk": 20, 
+  "model": "gtd.node", 
+  "fields": {
+    "text": "", 
+    "tag_string": "", 
+    "assigned": [], 
+    "deadline": null, 
+    "owner": 1, 
+    "opened": "2012-11-17T06:10:48.166Z", 
+    "title": "Answer: Can I see myself doing this for 20-30 years.", 
+    "time_needed": null, 
+    "priority": "", 
+    "closed": null, 
+    "todo_state": null, 
+    "scope": [
+      1
+    ], 
+    "energy": null, 
+    "repeating_number": null, 
+    "scheduled": null, 
+    "users": [], 
+    "parent": 16, 
+    "repeating_unit": null, 
+    "related_projects": [], 
+    "scheduled_time_specific": false, 
+    "repeats_from_completion": false, 
+    "deadline_time_specific": false, 
+    "repeats": false, 
+    "order": 30
+  }
+},
+{
+  "pk": 21, 
+  "model": "gtd.node", 
+  "fields": {
+    "text": "", 
+    "tag_string": "", 
+    "assigned": [], 
+    "deadline": null, 
+    "owner": 1, 
+    "opened": "2012-11-17T06:10:48.465Z", 
+    "title": "[2011-03-14 Mon]", 
+    "time_needed": null, 
+    "priority": "", 
+    "closed": null, 
+    "todo_state": null, 
+    "scope": [
+      1
+    ], 
+    "energy": null, 
+    "repeating_number": null, 
+    "scheduled": null, 
+    "users": [], 
+    "parent": 8, 
+    "repeating_unit": null, 
+    "related_projects": [], 
+    "scheduled_time_specific": false, 
+    "repeats_from_completion": false, 
+    "deadline_time_specific": false, 
+    "repeats": false, 
+    "order": 40
+  }
+},
+{
+  "pk": 22, 
+  "model": "gtd.node", 
+  "fields": {
+    "text": "", 
+    "tag_string": "", 
+    "assigned": [], 
+    "deadline": null, 
+    "owner": 1, 
+    "opened": "2012-11-17T06:10:48.747Z", 
+    "title": "Monday at 7am Eastern", 
+    "time_needed": null, 
+    "priority": "", 
+    "closed": null, 
+    "todo_state": null, 
+    "scope": [
+      1
+    ], 
+    "energy": null, 
+    "repeating_number": null, 
+    "scheduled": null, 
+    "users": [], 
+    "parent": 21, 
+    "repeating_unit": null, 
+    "related_projects": [], 
+    "scheduled_time_specific": false, 
+    "repeats_from_completion": false, 
+    "deadline_time_specific": false, 
+    "repeats": false, 
+    "order": 10
+  }
+},
+{
+  "pk": 23, 
+  "model": "gtd.node", 
+  "fields": {
+    "text": "    - Joe wants to get MBA in Taiwan\n    - Provide a link to China for small-medium manufacturing?\n", 
+    "tag_string": "", 
+    "assigned": [], 
+    "deadline": null, 
+    "owner": 1, 
+    "opened": "2012-11-17T06:10:49.005Z", 
+    "title": "International Angle", 
+    "time_needed": null, 
+    "priority": "", 
+    "closed": null, 
+    "todo_state": null, 
+    "scope": [
+      1
+    ], 
+    "energy": null, 
+    "repeating_number": null, 
+    "scheduled": null, 
+    "users": [], 
+    "parent": 21, 
+    "repeating_unit": null, 
+    "related_projects": [], 
+    "scheduled_time_specific": false, 
+    "repeats_from_completion": false, 
+    "deadline_time_specific": false, 
+    "repeats": false, 
+    "order": 20
+  }
+},
+{
+  "pk": 24, 
+  "model": "gtd.node", 
+  "fields": {
+    "text": "    - Involve China (Joe)\n    - Involve technical background (Mark)\n", 
+    "tag_string": "", 
+    "assigned": [], 
+    "deadline": null, 
+    "owner": 1, 
+    "opened": "2012-11-17T06:10:49.603Z", 
+    "title": "Major requirements", 
+    "time_needed": null, 
+    "priority": "", 
+    "closed": null, 
+    "todo_state": null, 
+    "scope": [
+      1
+    ], 
+    "energy": null, 
+    "repeating_number": null, 
+    "scheduled": null, 
+    "users": [], 
+    "parent": 21, 
+    "repeating_unit": null, 
+    "related_projects": [], 
+    "scheduled_time_specific": false, 
+    "repeats_from_completion": false, 
+    "deadline_time_specific": false, 
+    "repeats": false, 
+    "order": 30
+  }
+},
+{
+  "pk": 25, 
+  "model": "gtd.node", 
+  "fields": {
+    "text": "    - Bi-weekly call as above\n", 
+    "tag_string": "", 
+    "assigned": [], 
+    "deadline": null, 
+    "owner": 1, 
+    "opened": "2012-11-17T06:10:50.176Z", 
+    "title": "Time committment", 
+    "time_needed": null, 
+    "priority": "", 
+    "closed": null, 
+    "todo_state": null, 
+    "scope": [
+      1
+    ], 
+    "energy": null, 
+    "repeating_number": null, 
+    "scheduled": null, 
+    "users": [], 
+    "parent": 21, 
+    "repeating_unit": null, 
+    "related_projects": [], 
+    "scheduled_time_specific": false, 
+    "repeats_from_completion": false, 
+    "deadline_time_specific": false, 
+    "repeats": false, 
+    "order": 40
+  }
+},
+{
+  "pk": 26, 
+  "model": "gtd.node", 
+  "fields": {
+    "text": "     Must play well with Requirements above.\n", 
+    "tag_string": "", 
+    "assigned": [], 
+    "deadline": "2011-03-28T04:00:00Z", 
+    "owner": 1, 
+    "opened": "2012-11-17T06:10:50.627Z", 
+    "title": "MW Think of technical pursuits I would like to follow", 
+    "time_needed": null, 
+    "priority": "", 
+    "closed": "2011-03-29T12:32:00Z", 
+    "todo_state": 3, 
+    "scope": [
+      1
+    ], 
+    "energy": null, 
+    "repeating_number": null, 
+    "scheduled": null, 
+    "users": [], 
+    "parent": 25, 
+    "repeating_unit": null, 
+    "related_projects": [], 
+    "scheduled_time_specific": false, 
+    "repeats_from_completion": false, 
+    "deadline_time_specific": false, 
+    "repeats": false, 
+    "order": 10
+  }
+},
+{
+  "pk": 27, 
+  "model": "gtd.node", 
+  "fields": {
+    "text": "", 
+    "tag_string": "", 
+    "assigned": [], 
+    "deadline": null, 
+    "owner": 1, 
+    "opened": "2012-11-17T06:10:51.391Z", 
+    "title": "Financial Commitment", 
+    "time_needed": null, 
+    "priority": "", 
+    "closed": null, 
+    "todo_state": null, 
+    "scope": [
+      1
+    ], 
+    "energy": null, 
+    "repeating_number": null, 
+    "scheduled": null, 
+    "users": [], 
+    "parent": 21, 
+    "repeating_unit": null, 
+    "related_projects": [], 
+    "scheduled_time_specific": false, 
+    "repeats_from_completion": false, 
+    "deadline_time_specific": false, 
+    "repeats": false, 
+    "order": 50
+  }
+},
+{
+  "pk": 28, 
+  "model": "gtd.node", 
+  "fields": {
+    "text": "     Joe: <$60,000 over 2.5 yrs.\n", 
+    "tag_string": "", 
+    "assigned": [], 
+    "deadline": "2011-03-28T04:00:00Z", 
+    "owner": 1, 
+    "opened": "2012-11-17T06:10:51.690Z", 
+    "title": "MW Sort through budget and find amount I could save and MBA(?)", 
+    "time_needed": null, 
+    "priority": "", 
+    "closed": "2011-03-29T12:32:00Z", 
+    "todo_state": 3, 
+    "scope": [
+      1
+    ], 
+    "energy": null, 
+    "repeating_number": null, 
+    "scheduled": null, 
+    "users": [], 
+    "parent": 27, 
+    "repeating_unit": null, 
+    "related_projects": [], 
+    "scheduled_time_specific": false, 
+    "repeats_from_completion": false, 
+    "deadline_time_specific": false, 
+    "repeats": false, 
+    "order": 10
+  }
+},
+{
+  "pk": 29, 
+  "model": "gtd.node", 
+  "fields": {
+    "text": "", 
+    "tag_string": "", 
+    "assigned": [], 
+    "deadline": null, 
+    "owner": 1, 
+    "opened": "2012-11-17T06:10:52.429Z", 
+    "title": "Take education plans into account", 
+    "time_needed": null, 
+    "priority": "", 
+    "closed": null, 
+    "todo_state": null, 
+    "scope": [
+      1
+    ], 
+    "energy": null, 
+    "repeating_number": null, 
+    "scheduled": null, 
+    "users": [], 
+    "parent": 27, 
+    "repeating_unit": null, 
+    "related_projects": [], 
+    "scheduled_time_specific": false, 
+    "repeats_from_completion": false, 
+    "deadline_time_specific": false, 
+    "repeats": false, 
+    "order": 20
+  }
+},
+{
+  "pk": 30, 
+  "model": "gtd.node", 
+  "fields": {
+    "text": "   Proposed Agenda (feel free to add if it will let you):\n   - Communication methods\n     - Default time zone\n   - Time commitment\n   - Financial commitment\n   - Decide on an ultimate goal\n   - Brainstorm for basic ideas of how to get there\n", 
+    "tag_string": "", 
+    "assigned": [], 
+    "deadline": null, 
+    "owner": 1, 
+    "opened": "2012-11-17T06:10:52.711Z", 
+    "title": "Start a money market account to hold savings", 
+    "time_needed": null, 
+    "priority": "", 
+    "closed": "2011-05-06T20:44:00Z", 
+    "todo_state": 7, 
+    "scope": [
+      1
+    ], 
+    "energy": null, 
+    "repeating_number": null, 
+    "scheduled": null, 
+    "users": [], 
+    "parent": 27, 
+    "repeating_unit": null, 
+    "related_projects": [], 
+    "scheduled_time_specific": false, 
+    "repeats_from_completion": false, 
+    "deadline_time_specific": false, 
+    "repeats": false, 
+    "order": 30
+  }
+},
+{
+  "pk": 31, 
+  "model": "gtd.node", 
+  "fields": {
+    "text": "", 
+    "tag_string": "", 
+    "assigned": [], 
+    "deadline": null, 
+    "owner": 1, 
+    "opened": "2012-11-17T06:10:54.159Z", 
+    "title": "Audio Equipment", 
+    "time_needed": null, 
+    "priority": "", 
+    "closed": "2012-12-27T23:04:04.760Z", 
+    "todo_state": 1, 
+    "scope": [
+      1
+    ], 
+    "energy": null, 
+    "repeating_number": null, 
+    "scheduled": null, 
+    "users": [], 
+    "parent": null, 
+    "repeating_unit": null, 
+    "related_projects": [], 
+    "scheduled_time_specific": false, 
+    "repeats_from_completion": false, 
+    "deadline_time_specific": false, 
+    "repeats": false, 
+    "order": 40
+  }
+},
+{
+  "pk": 32, 
+  "model": "gtd.node", 
+  "fields": {
+    "text": "", 
+    "tag_string": ":Joe:", 
+    "assigned": [], 
+    "deadline": null, 
+    "owner": 1, 
+    "opened": "2012-11-17T06:10:54.491Z", 
+    "title": "Mention to Joe the idea of making audio recording equipment", 
+    "time_needed": null, 
+    "priority": "", 
+    "closed": "2011-06-06T15:46:00Z", 
+    "todo_state": 3, 
+    "scope": [
+      1
+    ], 
+    "energy": null, 
+    "repeating_number": null, 
+    "scheduled": null, 
+    "users": [], 
+    "parent": 31, 
+    "repeating_unit": null, 
+    "related_projects": [], 
+    "scheduled_time_specific": false, 
+    "repeats_from_completion": false, 
+    "deadline_time_specific": false, 
+    "repeats": false, 
+    "order": 10
+  }
+},
+{
+  "pk": 33, 
+  "model": "gtd.node", 
+  "fields": {
+    "text": "", 
+    "tag_string": "", 
+    "assigned": [], 
+    "deadline": "2011-12-06T05:00:00Z", 
+    "owner": 1, 
+    "opened": "2012-11-17T06:10:54.948Z", 
+    "title": "Ask Erik about audio gear ideas", 
+    "time_needed": null, 
+    "priority": "", 
+    "closed": "2011-12-09T14:42:00Z", 
+    "todo_state": 7, 
+    "scope": [
+      1
+    ], 
+    "energy": null, 
+    "repeating_number": null, 
+    "scheduled": "2011-12-06T05:00:00Z", 
+    "users": [], 
+    "parent": 31, 
+    "repeating_unit": null, 
+    "related_projects": [], 
+    "scheduled_time_specific": false, 
+    "repeats_from_completion": false, 
+    "deadline_time_specific": false, 
+    "repeats": false, 
+    "order": 20
+  }
+},
+{
+  "pk": 34, 
+  "model": "gtd.node", 
+  "fields": {
+    "text": "", 
+    "tag_string": "", 
+    "assigned": [], 
+    "deadline": "2011-12-06T05:00:00Z", 
+    "owner": 1, 
+    "opened": "2012-11-17T06:10:55.780Z", 
+    "title": "Ask Ryan about audio gear ideas", 
+    "time_needed": null, 
+    "priority": "", 
+    "closed": "2011-12-09T14:42:00Z", 
+    "todo_state": 7, 
+    "scope": [
+      1
+    ], 
+    "energy": null, 
+    "repeating_number": null, 
+    "scheduled": "2011-12-06T05:00:00Z", 
+    "users": [], 
+    "parent": 31, 
+    "repeating_unit": null, 
+    "related_projects": [], 
+    "scheduled_time_specific": false, 
+    "repeats_from_completion": false, 
+    "deadline_time_specific": false, 
+    "repeats": false, 
+    "order": 30
+  }
+},
+{
+  "pk": 35, 
+  "model": "gtd.node", 
+  "fields": {
+    "text": "", 
+    "tag_string": "", 
+    "assigned": [], 
+    "deadline": "2011-11-03T04:00:00Z", 
+    "owner": 1, 
+    "opened": "2012-11-17T06:10:56.619Z", 
+    "title": "E-mail JC/IG/BH/GVG about audio gear ideas", 
+    "time_needed": null, 
+    "priority": "", 
+    "closed": "2011-10-30T22:04:00Z", 
+    "todo_state": 7, 
+    "scope": [
+      1
+    ], 
+    "energy": null, 
+    "repeating_number": null, 
+    "scheduled": null, 
+    "users": [], 
+    "parent": 31, 
+    "repeating_unit": null, 
+    "related_projects": [], 
+    "scheduled_time_specific": false, 
+    "repeats_from_completion": false, 
+    "deadline_time_specific": false, 
+    "repeats": false, 
+    "order": 40
+  }
+},
+{
+  "pk": 36, 
+  "model": "gtd.node", 
+  "fields": {
+    "text": "Some text", 
+    "tag_string": "", 
+    "assigned": [], 
+    "deadline": null, 
+    "owner": 1, 
+    "opened": "2012-11-17T06:10:57.258Z", 
+    "title": "Underwater SCUBA communication", 
+    "time_needed": null, 
+    "priority": "", 
+    "closed": null, 
+    "todo_state": 1, 
+    "scope": [
+      1
+    ], 
+    "energy": null, 
+    "repeating_number": null, 
+    "scheduled": null, 
+    "users": [], 
+    "parent": null, 
+    "repeating_unit": null, 
+    "related_projects": [], 
+    "scheduled_time_specific": false, 
+    "repeats_from_completion": null, 
+    "deadline_time_specific": false, 
+    "repeats": false, 
+    "order": 50
+  }
+},
+{
+  "pk": 37, 
+  "model": "gtd.node", 
+  "fields": {
+    "text": "", 
+    "tag_string": "", 
+    "assigned": [], 
+    "deadline": null, 
+    "owner": 1, 
+    "opened": "2012-11-17T06:10:57.599Z", 
+    "title": "Pressure relieving earplugs (Docks pro plugs)", 
+    "time_needed": null, 
+    "priority": "", 
+    "closed": null, 
+    "todo_state": null, 
+    "scope": [
+      1
+    ], 
+    "energy": null, 
+    "repeating_number": null, 
+    "scheduled": null, 
+    "users": [], 
+    "parent": 36, 
+    "repeating_unit": null, 
+    "related_projects": [], 
+    "scheduled_time_specific": false, 
+    "repeats_from_completion": false, 
+    "deadline_time_specific": false, 
+    "repeats": false, 
+    "order": 10
+  }
+},
+{
+  "pk": 38, 
+  "model": "gtd.node", 
+  "fields": {
+    "text": "", 
+    "tag_string": "", 
+    "assigned": [], 
+    "deadline": "2011-07-18T04:00:00Z", 
+    "owner": 1, 
+    "opened": "2012-11-17T06:10:57.964Z", 
+    "title": "Research techniques for underwater audio transmission", 
+    "time_needed": null, 
+    "priority": "", 
+    "closed": "2011-07-19T12:34:00Z", 
+    "todo_state": 3, 
+    "scope": [
+      1
+    ], 
+    "energy": null, 
+    "repeating_number": null, 
+    "scheduled": null, 
+    "users": [], 
+    "parent": 36, 
+    "repeating_unit": null, 
+    "related_projects": [], 
+    "scheduled_time_specific": false, 
+    "repeats_from_completion": false, 
+    "deadline_time_specific": false, 
+    "repeats": false, 
+    "order": 20
+  }
+},
+{
+  "pk": 39, 
+  "model": "gtd.node", 
+  "fields": {
+    "text": "", 
+    "tag_string": "", 
+    "assigned": [], 
+    "deadline": null, 
+    "owner": 1, 
+    "opened": "2012-11-17T06:10:58.547Z", 
+    "title": "SCUBA GPS", 
+    "time_needed": null, 
+    "priority": "", 
+    "closed": null, 
+    "todo_state": 8, 
+    "scope": [
+      1
+    ], 
+    "energy": null, 
+    "repeating_number": null, 
+    "scheduled": null, 
+    "users": [], 
+    "parent": null, 
+    "repeating_unit": null, 
+    "related_projects": [], 
+    "scheduled_time_specific": false, 
+    "repeats_from_completion": false, 
+    "deadline_time_specific": false, 
+    "repeats": false, 
+    "order": 60
+  }
+},
+{
+  "pk": 40, 
+  "model": "gtd.node", 
+  "fields": {
+    "text": "", 
+    "tag_string": "", 
+    "assigned": [], 
+    "deadline": "2011-08-15T04:00:00Z", 
+    "owner": 1, 
+    "opened": "2012-11-17T06:10:58.904Z", 
+    "title": "Research acoustic positioning", 
+    "time_needed": null, 
+    "priority": "", 
+    "closed": "2011-08-16T12:49:00Z", 
+    "todo_state": 3, 
+    "scope": [
+      1
+    ], 
+    "energy": null, 
+    "repeating_number": null, 
+    "scheduled": null, 
+    "users": [], 
+    "parent": 39, 
+    "repeating_unit": null, 
+    "related_projects": [], 
+    "scheduled_time_specific": false, 
+    "repeats_from_completion": false, 
+    "deadline_time_specific": false, 
+    "repeats": false, 
+    "order": 10
+  }
+},
+{
+  "pk": 41, 
+  "model": "gtd.node", 
+  "fields": {
+    "text": "", 
+    "tag_string": "", 
+    "assigned": [], 
+    "deadline": null, 
+    "owner": 1, 
+    "opened": "2012-11-17T06:10:59.569Z", 
+    "title": "Send contact request to Microflown through website", 
+    "time_needed": null, 
+    "priority": "", 
+    "closed": "2011-09-19T18:36:00Z", 
+    "todo_state": 3, 
+    "scope": [
+      1
+    ], 
+    "energy": null, 
+    "repeating_number": null, 
+    "scheduled": null, 
+    "users": [], 
+    "parent": 39, 
+    "repeating_unit": null, 
+    "related_projects": [], 
+    "scheduled_time_specific": false, 
+    "repeats_from_completion": false, 
+    "deadline_time_specific": false, 
+    "repeats": false, 
+    "order": 20
+  }
+},
+{
+  "pk": 42, 
+  "model": "gtd.node", 
+  "fields": {
+    "text": "", 
+    "tag_string": "", 
+    "assigned": [], 
+    "deadline": null, 
+    "owner": 1, 
+    "opened": "2012-11-17T06:11:00.017Z", 
+    "title": "Look at watch batteries on Duracell website", 
+    "time_needed": null, 
+    "priority": "", 
+    "closed": "2011-09-25T03:54:00Z", 
+    "todo_state": 3, 
+    "scope": [
+      1
+    ], 
+    "energy": null, 
+    "repeating_number": null, 
+    "scheduled": null, 
+    "users": [], 
+    "parent": 39, 
+    "repeating_unit": null, 
+    "related_projects": [], 
+    "scheduled_time_specific": false, 
+    "repeats_from_completion": false, 
+    "deadline_time_specific": false, 
+    "repeats": false, 
+    "order": 30
+  }
+},
+{
+  "pk": 43, 
+  "model": "gtd.node", 
+  "fields": {
+    "text": "", 
+    "tag_string": "", 
+    "assigned": [], 
+    "deadline": null, 
+    "owner": 1, 
+    "opened": "2012-11-17T06:11:00.507Z", 
+    "title": "Boxee rip-off", 
+    "time_needed": null, 
+    "priority": "", 
+    "closed": null, 
+    "todo_state": null, 
+    "scope": [
+      1
+    ], 
+    "energy": null, 
+    "repeating_number": null, 
+    "scheduled": null, 
+    "users": [], 
+    "parent": null, 
+    "repeating_unit": null, 
+    "related_projects": [], 
+    "scheduled_time_specific": false, 
+    "repeats_from_completion": false, 
+    "deadline_time_specific": false, 
+    "repeats": false, 
+    "order": 70
+  }
+},
+{
+  "pk": 44, 
+  "model": "gtd.node", 
+  "fields": {
+    "text": "\n", 
+    "tag_string": "", 
+    "assigned": [], 
+    "deadline": "2011-12-07T05:00:00Z", 
+    "owner": 1, 
+    "opened": "2012-11-17T06:11:00.782Z", 
+    "title": "Look up how websites identify boxee agent", 
+    "time_needed": null, 
+    "priority": "", 
+    "closed": "2011-12-09T14:42:00Z", 
+    "todo_state": 7, 
+    "scope": [
+      1
+    ], 
+    "energy": null, 
+    "repeating_number": null, 
+    "scheduled": null, 
+    "users": [], 
+    "parent": 43, 
+    "repeating_unit": null, 
+    "related_projects": [], 
+    "scheduled_time_specific": false, 
+    "repeats_from_completion": false, 
+    "deadline_time_specific": false, 
+    "repeats": false, 
+    "order": 10
+  }
+},
+{
+  "pk": 45, 
+  "model": "gtd.node", 
+  "fields": {
+    "text": "", 
+    "tag_string": "", 
+    "assigned": [], 
+    "deadline": null, 
+    "owner": 1, 
+    "opened": "2012-11-17T06:11:01.539Z", 
+    "title": "Purchasing", 
+    "time_needed": null, 
+    "priority": "", 
+    "closed": null, 
+    "todo_state": null, 
+    "scope": [
+      1
+    ], 
+    "energy": null, 
+    "repeating_number": null, 
+    "scheduled": null, 
+    "users": [], 
+    "parent": null, 
+    "repeating_unit": null, 
+    "related_projects": [], 
+    "scheduled_time_specific": false, 
+    "repeats_from_completion": false, 
+    "deadline_time_specific": false, 
+    "repeats": false, 
+    "order": 80
+  }
+},
+{
+  "pk": 46, 
+  "model": "gtd.node", 
+  "fields": {
+    "text": "", 
+    "tag_string": "", 
+    "assigned": [], 
+    "deadline": null, 
+    "owner": 1, 
+    "opened": "2012-11-17T06:11:01.838Z", 
+    "title": "E-mail Tyler to set up appointment", 
+    "time_needed": null, 
+    "priority": "", 
+    "closed": "2012-01-17T14:34:00Z", 
+    "todo_state": 3, 
+    "scope": [
+      1
+    ], 
+    "energy": null, 
+    "repeating_number": null, 
+    "scheduled": "2012-01-09T05:00:00Z", 
+    "users": [], 
+    "parent": 45, 
+    "repeating_unit": null, 
+    "related_projects": [], 
+    "scheduled_time_specific": false, 
+    "repeats_from_completion": false, 
+    "deadline_time_specific": false, 
+    "repeats": false, 
+    "order": 10
+  }
+},
+{
+  "pk": 47, 
+  "model": "gtd.node", 
+  "fields": {
+    "text": "", 
+    "tag_string": "", 
+    "assigned": [], 
+    "deadline": "2012-02-23T05:00:00Z", 
+    "owner": 1, 
+    "opened": "2012-11-17T06:11:02.461Z", 
+    "title": "Google camera tri-pods", 
+    "time_needed": null, 
+    "priority": "", 
+    "closed": "2012-02-24T14:58:00Z", 
+    "todo_state": 7, 
+    "scope": [
+      1
+    ], 
+    "energy": null, 
+    "repeating_number": null, 
+    "scheduled": null, 
+    "users": [], 
+    "parent": 45, 
+    "repeating_unit": null, 
+    "related_projects": [], 
+    "scheduled_time_specific": false, 
+    "repeats_from_completion": false, 
+    "deadline_time_specific": false, 
+    "repeats": false, 
+    "order": 20
+  }
+},
+{
+  "pk": 48, 
+  "model": "gtd.node", 
+  "fields": {
+    "text": "", 
+    "tag_string": "", 
+    "assigned": [], 
+    "deadline": null, 
+    "owner": 1, 
+    "opened": "2012-11-17T06:11:03.117Z", 
+    "title": "Purchasing 101", 
+    "time_needed": null, 
+    "priority": "", 
+    "closed": null, 
+    "todo_state": null, 
+    "scope": [
+      1
+    ], 
+    "energy": null, 
+    "repeating_number": null, 
+    "scheduled": null, 
+    "users": [], 
+    "parent": 45, 
+    "repeating_unit": null, 
+    "related_projects": [], 
+    "scheduled_time_specific": false, 
+    "repeats_from_completion": false, 
+    "deadline_time_specific": false, 
+    "repeats": false, 
+    "order": 30
+  }
+},
+{
+  "pk": 49, 
+  "model": "gtd.node", 
+  "fields": {
+    "text": "", 
+    "tag_string": "", 
+    "assigned": [], 
+    "deadline": null, 
+    "owner": 1, 
+    "opened": "2012-11-17T06:11:03.476Z", 
+    "title": "The earlier we get purchasing involved the better.", 
+    "time_needed": null, 
+    "priority": "", 
+    "closed": null, 
+    "todo_state": null, 
+    "scope": [
+      1
+    ], 
+    "energy": null, 
+    "repeating_number": null, 
+    "scheduled": null, 
+    "users": [], 
+    "parent": 48, 
+    "repeating_unit": null, 
+    "related_projects": [], 
+    "scheduled_time_specific": false, 
+    "repeats_from_completion": false, 
+    "deadline_time_specific": false, 
+    "repeats": false, 
+    "order": 10
+  }
+},
+{
+  "pk": 50, 
+  "model": "gtd.node", 
+  "fields": {
+    "text": "    - Price\n    - Availability\n    - Supplier list\n    - Kosher/FEMA/GRAS/Halaal\n", 
+    "tag_string": "", 
+    "assigned": [], 
+    "deadline": null, 
+    "owner": 1, 
+    "opened": "2012-11-17T06:11:03.816Z", 
+    "title": "How do you decide where to buy?", 
+    "time_needed": null, 
+    "priority": "", 
+    "closed": null, 
+    "todo_state": null, 
+    "scope": [
+      1
+    ], 
+    "energy": null, 
+    "repeating_number": null, 
+    "scheduled": null, 
+    "users": [], 
+    "parent": 48, 
+    "repeating_unit": null, 
+    "related_projects": [], 
+    "scheduled_time_specific": false, 
+    "repeats_from_completion": false, 
+    "deadline_time_specific": false, 
+    "repeats": false, 
+    "order": 20
+  }
+},
+{
+  "pk": 51, 
+  "model": "gtd.node", 
+  "fields": {
+    "text": "", 
+    "tag_string": "", 
+    "assigned": [], 
+    "deadline": null, 
+    "owner": 1, 
+    "opened": "2012-11-17T06:11:04.962Z", 
+    "title": "Do we have formal preferred suppliers?", 
+    "time_needed": null, 
+    "priority": "", 
+    "closed": null, 
+    "todo_state": null, 
+    "scope": [
+      1
+    ], 
+    "energy": null, 
+    "repeating_number": null, 
+    "scheduled": null, 
+    "users": [], 
+    "parent": 48, 
+    "repeating_unit": null, 
+    "related_projects": [], 
+    "scheduled_time_specific": false, 
+    "repeats_from_completion": false, 
+    "deadline_time_specific": false, 
+    "repeats": false, 
+    "order": 30
+  }
+},
+{
+  "pk": 52, 
+  "model": "gtd.node", 
+  "fields": {
+    "text": "", 
+    "tag_string": "", 
+    "assigned": [], 
+    "deadline": null, 
+    "owner": 1, 
+    "opened": "2012-11-17T06:11:05.593Z", 
+    "title": "If so, what makes them \"preferred\"?", 
+    "time_needed": null, 
+    "priority": "", 
+    "closed": null, 
+    "todo_state": null, 
+    "scope": [
+      1
+    ], 
+    "energy": null, 
+    "repeating_number": null, 
+    "scheduled": null, 
+    "users": [], 
+    "parent": 51, 
+    "repeating_unit": null, 
+    "related_projects": [], 
+    "scheduled_time_specific": false, 
+    "repeats_from_completion": false, 
+    "deadline_time_specific": false, 
+    "repeats": false, 
+    "order": 10
+  }
+},
+{
+  "pk": 53, 
+  "model": "gtd.node", 
+  "fields": {
+    "text": "", 
+    "tag_string": "", 
+    "assigned": [], 
+    "deadline": null, 
+    "owner": 1, 
+    "opened": "2012-11-17T06:11:06.683Z", 
+    "title": "What information can the lab staff provide to make decision easier?", 
+    "time_needed": null, 
+    "priority": "", 
+    "closed": null, 
+    "todo_state": null, 
+    "scope": [
+      1
+    ], 
+    "energy": null, 
+    "repeating_number": null, 
+    "scheduled": null, 
+    "users": [], 
+    "parent": 48, 
+    "repeating_unit": null, 
+    "related_projects": [], 
+    "scheduled_time_specific": false, 
+    "repeats_from_completion": false, 
+    "deadline_time_specific": false, 
+    "repeats": false, 
+    "order": 40
+  }
+},
+{
+  "pk": 54, 
+  "model": "gtd.node", 
+  "fields": {
+    "text": "", 
+    "tag_string": "", 
+    "assigned": [], 
+    "deadline": null, 
+    "owner": 1, 
+    "opened": "2012-11-17T06:11:07.439Z", 
+    "title": "How do we decide when to buy", 
+    "time_needed": null, 
+    "priority": "", 
+    "closed": null, 
+    "todo_state": null, 
+    "scope": [
+      1
+    ], 
+    "energy": null, 
+    "repeating_number": null, 
+    "scheduled": null, 
+    "users": [], 
+    "parent": 48, 
+    "repeating_unit": null, 
+    "related_projects": [], 
+    "scheduled_time_specific": false, 
+    "repeats_from_completion": false, 
+    "deadline_time_specific": false, 
+    "repeats": false, 
+    "order": 50
+  }
+},
+{
+  "pk": 55, 
+  "model": "gtd.node", 
+  "fields": {
+    "text": "", 
+    "tag_string": "", 
+    "assigned": [], 
+    "deadline": null, 
+    "owner": 1, 
+    "opened": "2012-11-17T06:11:08.502Z", 
+    "title": "Multi-vitamins", 
+    "time_needed": null, 
+    "priority": "", 
+    "closed": null, 
+    "todo_state": null, 
+    "scope": [
+      1
+    ], 
+    "energy": null, 
+    "repeating_number": null, 
+    "scheduled": null, 
+    "users": [], 
+    "parent": null, 
+    "repeating_unit": null, 
+    "related_projects": [], 
+    "scheduled_time_specific": false, 
+    "repeats_from_completion": false, 
+    "deadline_time_specific": false, 
+    "repeats": false, 
+    "order": 90
+  }
+},
+{
+  "pk": 56, 
+  "model": "gtd.node", 
+  "fields": {
+    "text": "", 
+    "tag_string": "", 
+    "assigned": [], 
+    "deadline": null, 
+    "owner": 1, 
+    "opened": "2012-11-17T06:11:08.836Z", 
+    "title": "Marketing is important", 
+    "time_needed": null, 
+    "priority": "", 
+    "closed": null, 
+    "todo_state": null, 
+    "scope": [
+      1
+    ], 
+    "energy": null, 
+    "repeating_number": null, 
+    "scheduled": null, 
+    "users": [], 
+    "parent": 55, 
+    "repeating_unit": null, 
+    "related_projects": [], 
+    "scheduled_time_specific": false, 
+    "repeats_from_completion": false, 
+    "deadline_time_specific": false, 
+    "repeats": false, 
+    "order": 10
+  }
+},
+{
+  "pk": 57, 
+  "model": "gtd.node", 
+  "fields": {
+    "text": "", 
+    "tag_string": "", 
+    "assigned": [], 
+    "deadline": null, 
+    "owner": 1, 
+    "opened": "2012-11-17T06:11:09.127Z", 
+    "title": "Equipment", 
+    "time_needed": null, 
+    "priority": "", 
+    "closed": null, 
+    "todo_state": null, 
+    "scope": [
+      1
+    ], 
+    "energy": null, 
+    "repeating_number": null, 
+    "scheduled": null, 
+    "users": [], 
+    "parent": 55, 
+    "repeating_unit": null, 
+    "related_projects": [], 
+    "scheduled_time_specific": false, 
+    "repeats_from_completion": false, 
+    "deadline_time_specific": false, 
+    "repeats": false, 
+    "order": 20
+  }
+},
+{
+  "pk": 58, 
+  "model": "gtd.node", 
+  "fields": {
+    "text": "", 
+    "tag_string": "", 
+    "assigned": [], 
+    "deadline": null, 
+    "owner": 1, 
+    "opened": "2012-11-17T06:11:09.426Z", 
+    "title": "Store-front", 
+    "time_needed": null, 
+    "priority": "", 
+    "closed": null, 
+    "todo_state": null, 
+    "scope": [
+      1
+    ], 
+    "energy": null, 
+    "repeating_number": null, 
+    "scheduled": null, 
+    "users": [], 
+    "parent": 55, 
+    "repeating_unit": null, 
+    "related_projects": [], 
+    "scheduled_time_specific": false, 
+    "repeats_from_completion": false, 
+    "deadline_time_specific": false, 
+    "repeats": false, 
+    "order": 30
+  }
+},
+{
+  "pk": 59, 
+  "model": "gtd.node", 
+  "fields": {
+    "text": "", 
+    "tag_string": "", 
+    "assigned": [], 
+    "deadline": null, 
+    "owner": 1, 
+    "opened": "2012-11-17T06:11:09.767Z", 
+    "title": "Regulatory", 
+    "time_needed": null, 
+    "priority": "", 
+    "closed": null, 
+    "todo_state": null, 
+    "scope": [
+      1
+    ], 
+    "energy": null, 
+    "repeating_number": null, 
+    "scheduled": null, 
+    "users": [], 
+    "parent": 55, 
+    "repeating_unit": null, 
+    "related_projects": [], 
+    "scheduled_time_specific": false, 
+    "repeats_from_completion": false, 
+    "deadline_time_specific": false, 
+    "repeats": false, 
+    "order": 40
+  }
+},
+{
+  "pk": 60, 
+  "model": "gtd.node", 
+  "fields": {
+    "text": "", 
+    "tag_string": "", 
+    "assigned": [], 
+    "deadline": null, 
+    "owner": 1, 
+    "opened": "2012-11-17T06:27:13.314Z", 
+    "title": "sdkj", 
+    "time_needed": null, 
+    "priority": "", 
+    "closed": null, 
+    "todo_state": null, 
+    "scope": [], 
+    "energy": null, 
+    "repeating_number": null, 
+    "scheduled": null, 
+    "users": [], 
+    "parent": 1, 
+    "repeating_unit": null, 
+    "related_projects": [], 
+    "scheduled_time_specific": false, 
+    "repeats_from_completion": false, 
+    "deadline_time_specific": false, 
+    "repeats": false, 
+    "order": 60
+  }
+},
+{
+  "pk": 61, 
+  "model": "gtd.node", 
+  "fields": {
+    "text": "", 
+    "tag_string": "", 
+    "assigned": [], 
+    "deadline": null, 
+    "owner": 1, 
+    "opened": "2012-11-17T06:27:47.808Z", 
+    "title": "sdkj", 
+    "time_needed": null, 
+    "priority": "", 
+    "closed": null, 
+    "todo_state": null, 
+    "scope": [], 
+    "energy": null, 
+    "repeating_number": null, 
+    "scheduled": null, 
+    "users": [], 
+    "parent": 1, 
+    "repeating_unit": null, 
+    "related_projects": [], 
+    "scheduled_time_specific": false, 
+    "repeats_from_completion": false, 
+    "deadline_time_specific": false, 
+    "repeats": false, 
+    "order": 70
+  }
+},
+{
+  "pk": 62, 
+  "model": "gtd.node", 
+  "fields": {
+    "text": "Hello, Korea", 
+    "tag_string": "", 
+    "assigned": [], 
+    "deadline": null, 
+    "owner": 1, 
+    "opened": "2012-11-18T15:35:16.678Z", 
+    "title": "Korea", 
+    "time_needed": null, 
+    "priority": "", 
+    "closed": null, 
+    "todo_state": null, 
+    "scope": [], 
+    "energy": null, 
+    "repeating_number": null, 
+    "scheduled": null, 
+    "users": [], 
+    "parent": null, 
+    "repeating_unit": null, 
+    "related_projects": [], 
+    "scheduled_time_specific": false, 
+    "repeats_from_completion": null, 
+    "deadline_time_specific": false, 
+    "repeats": false, 
+    "order": 100
+  }
+},
+{
+  "pk": 63, 
+  "model": "gtd.node", 
+  "fields": {
+    "text": "Goodbye, Korea.", 
+    "tag_string": "", 
+    "assigned": [], 
+    "deadline": "2012-12-31T05:00:00Z", 
+    "owner": 1, 
+    "opened": "2012-11-18T15:36:20.573Z", 
+    "title": "Buy plane ticket to Korea", 
+    "time_needed": null, 
+    "priority": "", 
+    "closed": "2012-12-29T18:25:11.540Z", 
+    "todo_state": 5, 
+    "scope": [], 
+    "energy": null, 
+    "repeating_number": 3, 
+    "scheduled": "2012-12-19T05:00:00Z", 
+    "users": [], 
+    "parent": 62, 
+    "repeating_unit": "w", 
+    "related_projects": [], 
+    "scheduled_time_specific": true, 
+    "repeats_from_completion": false, 
+    "deadline_time_specific": false, 
+    "repeats": true, 
+    "order": 0
+  }
+},
+{
+  "pk": 64, 
+  "model": "gtd.node", 
+  "fields": {
+    "text": "", 
+    "tag_string": "", 
+    "assigned": [], 
+    "deadline": "2012-11-24T19:00:00Z", 
+    "owner": 1, 
+    "opened": "2012-11-18T15:37:10.631Z", 
+    "title": "Buy some vitamins from Meijer", 
+    "time_needed": null, 
+    "priority": "", 
+    "closed": "2012-11-18T15:38:55.285Z", 
+    "todo_state": 3, 
+    "scope": [
+      1
+    ], 
+    "energy": null, 
+    "repeating_number": 4, 
+    "scheduled": "2012-11-19T05:00:00Z", 
+    "users": [], 
+    "parent": 55, 
+    "repeating_unit": "d", 
+    "related_projects": [], 
+    "scheduled_time_specific": false, 
+    "repeats_from_completion": false, 
+    "deadline_time_specific": true, 
+    "repeats": true, 
+    "order": 50
+  }
+},
+{
+  "pk": 65, 
+  "model": "gtd.node", 
+  "fields": {
+    "text": "", 
+    "tag_string": ":home:", 
+    "assigned": [], 
+    "deadline": null, 
+    "owner": 1, 
+    "opened": "2012-11-19T00:14:47.961Z", 
+    "title": "Halleluyah - Home", 
+    "time_needed": null, 
+    "priority": "", 
+    "closed": null, 
+    "todo_state": 1, 
+    "scope": [], 
+    "energy": null, 
+    "repeating_number": null, 
+    "scheduled": null, 
+    "users": [], 
+    "parent": null, 
+    "repeating_unit": null, 
+    "related_projects": [], 
+    "scheduled_time_specific": false, 
+    "repeats_from_completion": null, 
+    "deadline_time_specific": false, 
+    "repeats": false, 
+    "order": 110
+  }
+},
+{
+  "pk": 66, 
+  "model": "gtd.node", 
+  "fields": {
+    "text": "", 
+    "tag_string": ":work:", 
+    "assigned": [], 
+    "deadline": null, 
+    "owner": 1, 
+    "opened": "2012-11-19T00:17:08.649Z", 
+    "title": "Halleluyah - work", 
+    "time_needed": null, 
+    "priority": "", 
+    "closed": null, 
+    "todo_state": 1, 
+    "scope": [], 
+    "energy": null, 
+    "repeating_number": null, 
+    "scheduled": null, 
+    "users": [], 
+    "parent": null, 
+    "repeating_unit": null, 
+    "related_projects": [], 
+    "scheduled_time_specific": false, 
+    "repeats_from_completion": null, 
+    "deadline_time_specific": false, 
+    "repeats": false, 
+    "order": 120
+  }
+},
+{
+  "pk": 67, 
+  "model": "gtd.node", 
+  "fields": {
+    "text": "", 
+    "tag_string": ":comp:", 
+    "assigned": [], 
+    "deadline": null, 
+    "owner": 1, 
+    "opened": "2012-11-19T00:22:30.446Z", 
+    "title": "do anywhere", 
+    "time_needed": null, 
+    "priority": "", 
+    "closed": "2012-11-19T01:24:33.923Z", 
+    "todo_state": 1, 
+    "scope": [], 
+    "energy": null, 
+    "repeating_number": 3, 
+    "scheduled": "2012-12-09T05:00:00Z", 
+    "users": [], 
+    "parent": null, 
+    "repeating_unit": "w", 
+    "related_projects": [], 
+    "scheduled_time_specific": false, 
+    "repeats_from_completion": false, 
+    "deadline_time_specific": false, 
+    "repeats": true, 
+    "order": 130
+  }
+},
+{
+  "pk": 68, 
+  "model": "gtd.node", 
+  "fields": {
+    "text": "", 
+    "tag_string": "", 
+    "assigned": [], 
+    "deadline": null, 
+    "owner": 1, 
+    "opened": "2012-11-22T15:05:20.041Z", 
+    "title": "Test child", 
+    "time_needed": null, 
+    "priority": "", 
+    "closed": null, 
+    "todo_state": null, 
+    "scope": [
+      1
+    ], 
+    "energy": null, 
+    "repeating_number": null, 
+    "scheduled": null, 
+    "users": [], 
+    "parent": 26, 
+    "repeating_unit": null, 
+    "related_projects": [], 
+    "scheduled_time_specific": false, 
+    "repeats_from_completion": null, 
+    "deadline_time_specific": false, 
+    "repeats": false, 
+    "order": 0
+  }
+},
+{
+  "pk": 69, 
+  "model": "gtd.node", 
+  "fields": {
+    "text": "", 
+    "tag_string": "", 
+    "assigned": [], 
+    "deadline": null, 
+    "owner": 1, 
+    "opened": "2012-11-24T14:47:01.310Z", 
+    "title": "Test grandchild", 
+    "time_needed": null, 
+    "priority": "", 
+    "closed": null, 
+    "todo_state": null, 
+    "scope": [
+      1
+    ], 
+    "energy": null, 
+    "repeating_number": null, 
+    "scheduled": null, 
+    "users": [], 
+    "parent": 68, 
+    "repeating_unit": null, 
+    "related_projects": [], 
+    "scheduled_time_specific": false, 
+    "repeats_from_completion": null, 
+    "deadline_time_specific": false, 
+    "repeats": false, 
+    "order": 0
+  }
+},
+{
+  "pk": 1, 
+  "model": "gtd.noderepetition", 
+  "fields": {
+    "node": 64, 
+    "original_todo_state": 3, 
+    "new_todo_state": 5, 
+    "timestamp": "2012-11-18T15:39:14.182Z"
+  }
+},
+{
+  "pk": 2, 
+  "model": "gtd.noderepetition", 
+  "fields": {
+    "node": 63, 
+    "original_todo_state": 1, 
+    "new_todo_state": 5, 
+    "timestamp": "2012-11-18T15:39:53.492Z"
+  }
+},
+{
+  "pk": 3, 
+  "model": "gtd.noderepetition", 
+  "fields": {
+    "node": 63, 
+    "original_todo_state": 5, 
+    "new_todo_state": 3, 
+    "timestamp": "2012-11-18T15:40:47.411Z"
+  }
+},
+{
+  "pk": 4, 
+  "model": "gtd.noderepetition", 
+  "fields": {
+    "node": 67, 
+    "original_todo_state": 5, 
+    "new_todo_state": 3, 
+    "timestamp": "2012-11-19T01:24:33.925Z"
+  }
+},
+{
+  "pk": 5, 
+  "model": "gtd.noderepetition", 
+  "fields": {
+    "node": 63, 
+    "original_todo_state": 1, 
+    "new_todo_state": 5, 
+    "timestamp": "2012-12-29T18:18:08.046Z"
+  }
+},
+{
+  "pk": 6, 
+  "model": "gtd.noderepetition", 
+  "fields": {
+    "node": 63, 
+    "original_todo_state": 1, 
+    "new_todo_state": 5, 
+    "timestamp": "2012-12-29T18:18:14.521Z"
+  }
+},
+{
+  "pk": 7, 
+  "model": "gtd.noderepetition", 
+  "fields": {
+    "node": 63, 
+    "original_todo_state": 5, 
+    "new_todo_state": 3, 
+    "timestamp": "2012-12-29T18:24:24.412Z"
+  }
+}
+]

@@ -20,6 +20,8 @@
 from django.db import models
 from django.contrib.auth.models import User, AbstractUser
 from django.db.models.signals import post_save
+from django.utils.html import conditional_escape as escape
+from HTMLParser import HTMLParser
 
 class OrgWolfUser(AbstractUser):
     """Holds profile information for users."""
@@ -84,3 +86,32 @@ class Color:
         """Sets the alpha value (between 0 and 1)."""
         self._alpha = int(new_alpha * 100)
 
+class HTMLEscaper(HTMLParser):
+    # Default list of html tags to allow
+    ALLOWED_TAGS = ['h1', 'h2', 'h3', 'h4', 'h5', 'h6',
+                    'ul', 'ol', 'li',
+                    'div', 'p', 'hr', 'a',
+                    'sup', 'sub',
+                    ]
+    def __init__(self, white_tags=None):
+        HTMLParser.__init__(self)
+        self.found = False
+    def reset(self):
+        HTMLParser.reset(self)
+        self._cleaned = unicode('')
+    def clean(self, data):
+        self.feed(data)        
+        return self._cleaned
+    def handle_starttag(self, tag, attrs):
+        self.found = True
+        new_string = '<' + tag + '>'
+        if not tag in self.ALLOWED_TAGS:
+            new_string = escape(new_string)
+        self._cleaned += new_string
+    def handle_endtag(self, tag):
+        new_string = '</' + tag + '>'
+        if not tag in self.ALLOWED_TAGS:
+            new_string = escape(new_string)
+        self._cleaned += new_string
+    def handle_data(self, data):
+        self._cleaned += escape(data)

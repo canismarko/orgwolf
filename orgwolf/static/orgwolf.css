@@ -74,12 +74,3 @@ div.ow-hoverable, div.clickable, div.ow-buttons
     margin-top: 20px;
     line-height: 120%;
 }
-.markdown h1
-{
-    font-size: 20px;
-    height: 22px;
-}
-.markdown h2
-{
-    font-size: 12pt;
-}

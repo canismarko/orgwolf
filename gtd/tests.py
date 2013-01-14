@@ -28,6 +28,7 @@ import datetime as dt
 from django.test import TestCase
 from django.test.client import Client, RequestFactory
 from django.db.models import Q
+from django.utils.html import conditional_escape
 from django.contrib.auth.models import AnonymousUser
 from django.http import Http404
 from django.utils.timezone import get_current_timezone
@@ -39,7 +40,7 @@ from orgwolf.models import OrgWolfUser as User
 from gtd.forms import NodeForm
 from gtd.models import Node, TodoState, node_repeat, Location, Tool, Context, Scope
 from gtd.shortcuts import parse_url, get_todo_states, get_todo_abbrevs
-from gtd.templatetags.gtd_extras import overdue, upcoming, markdown_text
+from gtd.templatetags.gtd_extras import overdue, upcoming, escape_html
 
 class EditNode(TestCase):
     fixtures = ['test-users.yaml', 'gtd-test.yaml', 'gtd-env.yaml']
@@ -60,7 +61,6 @@ class EditNode(TestCase):
                      'priority': '',
                      'deadline': '',
                      'todo_state': closed_todo.id}
-
         if node: # existing node
             url = '/gtd/nodes/' + str(node.id) + '/edit/'
             regex = re.compile('http://testserver/gtd/nodes/' + str(node.id))
@@ -126,10 +126,8 @@ class EditNode(TestCase):
         self.assertEqual(todo_state, node.todo_state)
     
     def test_edit_by_json(self):
+        # Tests changing the todo state of a node via JSON
         # Login
-        self.assertTrue(
-            self.client.login(username='test', password='secret')
-            )
         node = Node.objects.get(title='Buy cat food')
         actionable = TodoState.objects.get(abbreviation='ACTN')
         closed = TodoState.objects.get(abbreviation='DONE')
@@ -144,7 +142,7 @@ class EditNode(TestCase):
             'format': 'json',
             'todo_id': closed.pk,
             }
-        response = self.client.get(url, data)
+        response = self.client.post(url, data)
         self.assertEqual(
             200,
             response.status_code,
@@ -177,9 +175,9 @@ class EditNode(TestCase):
         # Check about setting to no node
         data = {
             'format': 'json',
-            'todo_id': 0,
+            'todo_id': '0',
             }
-        response = self.client.get(url, data)
+        response = self.client.post(url, data)
         self.assertEqual(
             200,
             response.status_code,
@@ -191,6 +189,27 @@ class EditNode(TestCase):
             None,
             node.todo_state,
             'node.todo_state not unset when todo_id: 0 passed to edit node'
+            )
+
+    def test_text_through_json(self):
+        node = Node.objects.get(pk=1)
+        self.assertEqual(
+            '',
+            node.text
+            )
+        url = '/gtd/nodes/' + str(node.pk) + '/edit/'
+        text = '<strong>evilness</strong>'
+        data = {'format': 'json',
+                'text': text}
+        response = self.client.post(url, data)
+        self.assertEqual(
+            200,
+            response.status_code
+            )
+        node = Node.objects.get(pk = node.pk)
+        self.assertEqual(
+            conditional_escape(text),
+            node.text
             )
 
 class NodeMutators(TestCase):
@@ -570,11 +589,11 @@ class MultiUser(TestCase):
             response['Location']
             )
 
-class Markdown(TestCase):
+class HTMLEscape(TestCase):
     """Test the ability of node text to be converted using
     markdown syntax"""
     def setUp(self):
-        self.f = markdown_text
+        self.f = escape_html
     def test_info(self):
         """Test class type, return value, etc"""
         self.assertEqual(
@@ -585,18 +604,14 @@ class Markdown(TestCase):
             'SafeText',
             self.f('').__class__.__name__
             )
-        # Escapes html
+        # Escapes non-whitelist html
         self.assertEqual(
-            '<div class="markdown"><p>&amp;</p></div>',
-            self.f('&')
+            '<div>&amp;</div>',
+            self.f('<div>&</div>')
             )
+        # Ignores whitelist HTML
         self.assertEqual(
-            '<div class="markdown"><p>&lt;h1&gt;</p></div>',
+            '<h1>',
             self.f('<h1>')
-            )
-    def test_heading(self):
-        self.assertEqual(
-            '<div class="markdown"><h1>Hello</h1></div>',
-            self.f('Hello\n=====')
             )
 

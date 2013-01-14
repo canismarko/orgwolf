@@ -23,7 +23,7 @@ from django.shortcuts import render_to_response, redirect, get_object_or_404
 from django.template import RequestContext
 from django.template.loader import render_to_string
 from django.contrib.auth.decorators import login_required
-from django.http import HttpResponse, Http404, HttpResponseRedirect
+from django.http import HttpResponse, HttpResponseRedirect, Http404, HttpResponseBadRequest
 from django.db.models import Q
 from django.utils.timezone import get_current_timezone
 from itertools import chain
@@ -33,7 +33,7 @@ import json
 
 from gtd.models import TodoState, Node, Context, Scope
 from gtd.shortcuts import parse_url, get_todo_states, get_todo_abbrevs
-from gtd.templatetags.gtd_extras import markdown_text
+from gtd.templatetags.gtd_extras import escape_html
 from wolfmail.models import MailItem, Label
 from gtd.forms import NodeForm
 from orgwolf.models import OrgWolfUser as User
@@ -302,35 +302,39 @@ def edit_node(request, node_id, scope_id):
     base_url = reverse('gtd.views.display_node', kwargs=url_kwargs)
     node = Node.objects.get(pk=node_id)
     breadcrumb_list = node.get_hierarchy()
-    if request.method == "POST": # Form submission
+    if request.method == "POST" and request.POST.get('format') == 'json':
+        # Handle JSON requests
+        post = request.POST
+        try:
+            node = Node.get_owned(request).get(pk=node_id)
+            # node = Node.get_owned(request).get(pk=post['node_id'])
+        except Node.DoesNotExist:
+            # If the node is not accessible return a 404
+            return HttpResponse(json.dumps({'status': '404'}))
+        node.text = post.get('text', node.text)
+        new_todo_id = post.get('todo_id', None)
+        if new_todo_id == '0':
+            node.todo_state = None
+        elif new_todo_id > 0:
+            try:
+                node.todo_state = TodoState.objects.get(pk=new_todo_id)
+            except:
+                return HttpResponseBadRequest('Invalid todo_id: %s' % new_todo_id)
+        node.save()
+        data = {
+            'status': 'success',
+            'node_id': node.pk,
+            'todo_id': getattr(node.todo_state, 'pk', 0)
+            }
+        return HttpResponse(json.dumps(data))
+    elif request.method == "POST": # Form submission
         form = NodeForm(request.POST, instance=node)
         if form.is_valid():
             form.save()
             url_kwargs['node_id'] = node_id
             redirect_url = reverse('gtd.views.display_node', kwargs=url_kwargs)
             return redirect(redirect_url)
-    elif request.GET.get('format') == 'json':
-        # The node is being edited using JSON (by AJAX?)
-        new_todo_id = request.GET['todo_id']
-        if new_todo_id == '0':
-            new_todo = None
-        else:
-            new_todo = get_object_or_404(TodoState, pk=new_todo_id)
-        node.todo_state = new_todo
-        node.save()
-        if node.todo_state:
-            processed_id = node.todo_state.pk
-        else:
-            processed_id = 0
-        # Prepare a confirmation response
-        data = {
-            'status': 'success',
-            'node_id': node.pk,
-            'todo_id': processed_id,
-            }
-        return HttpResponse(json.dumps(data))
     else: # Blank form
-        
         form = NodeForm(instance=node)
     return render_to_response('gtd/node_edit.html',
                               locals(),
@@ -393,7 +397,7 @@ def get_children(request, parent_id):
             'node_id': child.pk,
             'title': child.title,
             'tags': child.tag_string,
-            'text': markdown_text(child.text),
+            'text': escape_html(child.text),
              }
         if hasattr(child.todo_state, 'pk'):
             new_dict['todo_id'] = child.todo_state.pk

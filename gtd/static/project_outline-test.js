@@ -129,20 +129,12 @@ $.mockjax({
 $.mockjax({
     url: '/gtd/nodes/1/edit/',
     responseTime: ajax_timer,
-    responseText: {
-	status: 'success',
-	node_id: 1,
-	todo_id: 2,
-    }
+    responseText: '{"status": "success", "node_id": 1, "todo_id": 2}'
 });
 $.mockjax({
     url: '/gtd/nodes/5/edit/',
     responseTime: ajax_timer,
-    responseText: {
-	status: 'success',
-	node_id: 5,
-	todo_id: 0,
-    }
+    responseText: '{"status": "success", "node_id": 5, "todo_id": 0}'
 });
 
 var module_name = 'outline-appliance-test.js - ';
@@ -681,6 +673,7 @@ asyncTest('Todo state changing functionality', function() {
 	);
 	// Now change it to the other todo state
 	$heading1.find('.todo-option[todo_id="2"]').click();
+	console.log($heading1.find('.todo-option[todo_id="2"]'));
 	stop();
     }, (ajax_timer * 1.1 + 5));
     setTimeout(function() {
@@ -702,7 +695,7 @@ asyncTest('Todo state changing functionality', function() {
 	    'selected',
 	    'Todo option 2 is now selected'
 	);
-    }, (ajax_timer * 3.3 + 5));
+    }, (ajax_timer * 4.4 + 5));
 });
 
 
@@ -1356,4 +1349,57 @@ asyncTest('Changing agenda date', function() {
 	)
     $workspace.html(''); // To make the Qunit output pretty
     }, (ajax_timer * 1.1 + 5))
+});
+
+
+
+module_name = 'Aloha editor - ';
+module(module_name);
+test('Basic functionality', function() {
+    equal(
+	typeof $.fn.alohaText,
+	'function',
+	'alohaText plugin exists'
+    );
+    var $workspace = $('#test_workspace');
+    $workspace.html('<div class="ow-text">Hello</div>')
+    $text = $workspace.children('.ow-text');
+    console.log($text);
+    deepEqual(
+	$text.alohaText(),
+	$text,
+	'alohaText plugin preverves chainability'
+    );
+    $text.todoState();
+    ok(
+	$text.hasClass('aloha-editable'),
+	'Plugin adds \'aloha-editable\' class'
+    );
+});
+
+asyncTest('Project outline incoroporation', function() {
+    var $workspace = Aloha.jQuery('#test_workspace');
+    var outline = new project_outline({
+	$workspace: $workspace,
+	todo_states: todo_state_list
+    });
+    outline.init();
+    setTimeout(function() {
+	start();
+	$text = Aloha.jQuery('.ow-text');
+	ok(
+	    $text.hasClass('aloha-editable'),
+	    'Aloha editor attached'
+	);
+	ok(
+	    !$text.hasClass('aloha-editable-active'),
+	    'Not aloha editable before being clicked'
+	);
+	$text.trigger('aloha-editable-activated');
+	console.log($text.attr('class'));
+	ok(
+	    $text.hasClass('aloha-editable-active'),
+	    'Aloha editable after calling click()'
+	);
+    }, (ajax_timer * 1.1 + 5));
 });
