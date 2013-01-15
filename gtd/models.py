@@ -192,6 +192,7 @@ class Node(models.Model):
     order = models.IntegerField() # TODO: autoincrement
     title = models.TextField(blank=True)
     todo_state = models.ForeignKey('TodoState', blank=True, null=True)
+    archived = models.BooleanField(default=False)
     text = models.TextField(blank=True)
     # Determine where this heading is
     parent = models.ForeignKey('self', blank=True, null=True, related_name='child_heading_set')
@@ -261,11 +262,16 @@ class Node(models.Model):
         elif difference > 0 and future:
             return 'in %d day%s' % (abs(difference), pluralized)
         else:
-            return '' 
+            return ''
     @staticmethod
-    def get_owned(request):
+    def get_active():
+        """Get all the nodes that aren't archived"""
+        nodes_qs = Node.objects.filter(archived=False)
+        return nodes_qs
+    @staticmethod
+    def get_owned(request, get_archived=False):
         """Get all the nodes owned by the user listed in the request"""
-        qs = Node.objects.all()
+        qs = Node.get_active()
         if request.user.is_authenticated():
             qs = qs.filter(owner=request.user)
         else:

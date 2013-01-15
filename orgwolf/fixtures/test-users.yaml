@@ -11,7 +11,7 @@
     password: pbkdf2_sha256$10000$TXWFXvLKJ1q6$DNoWmCIPmReotfX0wurUzSIITqPHV76lXPeC7OCFeHI=
     preferred_timezone: ''
     user_permissions: []
-    username: test
+    username: mwolf
   model: orgwolf.orgwolfuser
   pk: 1
 - fields:

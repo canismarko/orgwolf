@@ -233,6 +233,12 @@ class NodeMutators(TestCase):
             f(Node.objects.get(pk=4)),
             3
             )
+    def test_get_active(self):
+        f = Node.get_active
+        self.assertEqual(
+            list(Node.objects.filter(archived=False)),
+            list(Node.get_active())
+            )
 
 class RepeatingNodeTest(TestCase):
     fixtures = ['test-users.yaml', 'gtd-test.yaml', 'gtd-env.yaml']

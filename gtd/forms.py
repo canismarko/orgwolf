@@ -84,6 +84,7 @@ class NodeForm(forms.ModelForm):
                   'repeating_number',
                   'repeating_unit',
                   'repeats_from_completion',
+                  'archived',
                   'related_projects',
                   'text',
                   'tag_string',
