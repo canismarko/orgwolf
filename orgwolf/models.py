@@ -92,6 +92,7 @@ class HTMLEscaper(HTMLParser):
                     'ul', 'ol', 'li',
                     'div', 'p', 'hr', 'a',
                     'sup', 'sub',
+                    'table', 'tbody', 'tr', 'td',
                     ]
     def __init__(self, white_tags=None):
         HTMLParser.__init__(self)
