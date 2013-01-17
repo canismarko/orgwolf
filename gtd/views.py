@@ -300,6 +300,7 @@ def edit_node(request, node_id, scope_id):
     if scope_id:
         url_kwargs['scope_id'] = scope_id
     base_url = reverse('gtd.views.display_node', kwargs=url_kwargs)
+    new = "No"
     node = Node.objects.get(pk=node_id)
     breadcrumb_list = node.get_hierarchy()
     if request.method == "POST" and request.POST.get('format') == 'json':
@@ -371,7 +372,10 @@ def new_node(request, node_id, scope_id):
             form.save()
             if hasattr(form.parent, 'pk'):
                 url_kwargs['node_id'] = form.parent.pk
-            redirect_url = reverse('gtd.views.display_node', kwargs=url_kwargs)
+            if 'add-another' in request.POST:
+                redirect_url = reverse('gtd.views.new_node', kwargs=url_kwargs)
+            else:
+                redirect_url = reverse('gtd.views.display_node', kwargs=url_kwargs)
             return redirect(redirect_url)
     else: # Blank form
         initial_dict = {}

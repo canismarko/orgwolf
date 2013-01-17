@@ -35,6 +35,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 {% for node in breadcrumb_list %}&gt;
   <a href="{{ base_url }}{{ node.id }}/">{{node.display}}</a>
 {% endfor %}
+{% if new = "Yes" %}
+  &gt; New Node
+{% endif %}
 <h3>
   {% if new = "Yes" %}
   New Node
@@ -44,7 +47,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 </h3>
 <form action="" method="POST" class="form-horizontal">
 {% csrf_token %}
-<input type="submit" value="Save" class="btn"/><a href="../" class="btn">Cancel</a>
+<input type="submit" value="Save" class="btn"/>
+{% if new == "Yes" %}
+<input type="submit" value="Save and Add Another" name="add-another" class="btn add-another"/>
+{% endif %}
+<a href="../">Cancel</a>
 <table>
 {{ form.as_table }}
 </table>
