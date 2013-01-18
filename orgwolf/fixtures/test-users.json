@@ -1,0 +1,40 @@
+[
+{
+  "pk": 1, 
+  "model": "orgwolf.orgwolfuser", 
+  "fields": {
+    "username": "test", 
+    "first_name": "", 
+    "last_name": "", 
+    "is_active": true, 
+    "is_superuser": true, 
+    "is_staff": true, 
+    "last_login": "2013-01-17T22:39:22.120Z", 
+    "preferred_timezone": "", 
+    "groups": [], 
+    "user_permissions": [], 
+    "password": "pbkdf2_sha256$10000$TXWFXvLKJ1q6$DNoWmCIPmReotfX0wurUzSIITqPHV76lXPeC7OCFeHI=",
+    "email": "", 
+    "date_joined": "2012-10-30T16:46:22.571Z"
+  }
+},
+{
+  "pk": 2, 
+  "model": "orgwolf.orgwolfuser", 
+  "fields": {
+    "username": "ryan", 
+    "first_name": "", 
+    "last_name": "", 
+    "is_active": true, 
+    "is_superuser": true, 
+    "is_staff": true, 
+    "last_login": "2012-11-15T05:07:54.388Z", 
+    "preferred_timezone": "", 
+    "groups": [], 
+    "user_permissions": [], 
+    "password": "pbkdf2_sha256$10000$5K1WOczXnrMr$+nhfqagCc85BGJKJy+tdYgqP3m0zxwScOpgm137TiDw=", 
+    "email": "", 
+    "date_joined": "2012-11-15T04:49:45Z"
+  }
+}
+]

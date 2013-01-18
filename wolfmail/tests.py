@@ -19,7 +19,7 @@ class SimpleTest(TestCase):
 
 class MultiUser(TestCase):
     """Tests for multi-user support in the gtd app"""
-    fixtures = ['test-users.yaml', 'gtd-env.yaml', 'gtd-test.yaml']
+    fixtures = ['test-users.json', 'gtd-env.json', 'gtd-test.json']
     def setUp(self):
         self.factory = RequestFactory()
         self.user1 = User.objects.get(pk=1)

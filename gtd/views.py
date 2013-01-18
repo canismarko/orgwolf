@@ -148,7 +148,7 @@ def agenda_display(request, date=None):
             raise Http404
     else:
         agenda_date = datetime.date.today()
-    agenda_dt = datetime.datetime(year=agenda_date.year, month=agenda_date.month, day=agenda_date.day, hour=23, minute=59, second=59)
+    agenda_dt = datetime.datetime(year=agenda_date.year, month=agenda_date.month, day=agenda_date.day, hour=23, minute=59, second=59, tzinfo=get_current_timezone())
     # Determine query filters for "Today" section
     date_Q = Q(scheduled__lte=agenda_dt)
     time_specific_Q = Q(scheduled_time_specific=False)
@@ -329,6 +329,7 @@ def edit_node(request, node_id, scope_id):
             }
         return HttpResponse(json.dumps(data))
     elif request.method == "POST": # Form submission
+        post = request.POST
         form = NodeForm(request.POST, instance=node)
         if form.is_valid():
             form.save()

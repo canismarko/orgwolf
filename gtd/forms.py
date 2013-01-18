@@ -135,6 +135,16 @@ class NodeForm(forms.ModelForm):
             if project.pk == self.instance.get_primary_parent().pk:
                 raise ValidationError('related_project [%s] is already primary project for this Node.' % project)
         return data
+    def clean_repeating_number(self):
+        """Ensure the repeating number is positive."""
+        # This models.PositiveIntegerField could in theory be used but
+        # zero values are not acceptable in this case.
+        num = self.cleaned_data['repeating_number']
+        if num or num == 0 or num == '0':
+            num = int(num)
+            if num <= 0:
+                raise forms.ValidationError('Repeating number must be greater than zero')
+        return num
     def clean(self):
         # Combine date and time fields for scheduled and deadline info
         local_tz = timezone.get_current_timezone()

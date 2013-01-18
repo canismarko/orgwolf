@@ -43,7 +43,7 @@ from gtd.shortcuts import parse_url, get_todo_states, get_todo_abbrevs
 from gtd.templatetags.gtd_extras import overdue, upcoming, escape_html
 
 class EditNode(TestCase):
-    fixtures = ['test-users.yaml', 'gtd-test.yaml', 'gtd-env.yaml']
+    fixtures = ['test-users.json', 'gtd-test.json', 'gtd-env.json']
     def setUp(self):
         self.assertTrue(
             self.client.login(username='test', password='secret')
@@ -213,7 +213,7 @@ class EditNode(TestCase):
             )
 
 class NodeMutators(TestCase):
-    fixtures = ['test-users.yaml', 'gtd-env.yaml', 'gtd-test.yaml']
+    fixtures = ['test-users.json', 'gtd-env.json', 'gtd-test.json']
     def test_get_level(self):
         f = Node.get_level
         node = Node.objects.get(pk=1)
@@ -241,7 +241,7 @@ class NodeMutators(TestCase):
             )
 
 class RepeatingNodeTest(TestCase):
-    fixtures = ['test-users.yaml', 'gtd-test.yaml', 'gtd-env.yaml']
+    fixtures = ['test-users.json', 'gtd-test.json', 'gtd-env.json']
     def test_scheduled_repetition(self):
         """Make sure the item is rescheduled properly."""
         node = Node.objects.get(title='Buy cat food')
@@ -341,8 +341,40 @@ class RepeatingNodeTest(TestCase):
         self.assertEqual(dt.datetime(2012, 12, 25, 0, 0, tzinfo=get_current_timezone()),
                          node.scheduled)
 
+class FormValidation(TestCase):
+    fixtures = ['test-users.json', 'gtd-env.json']
+    def setUp(self):
+        self.client.login(username='test', password='secret')
+        self.form = NodeForm()
+    def test_repeating_number(self):
+        """See if the program properly fails with nonsense values
+        for repeating unit (eg -4, 0)"""
+        data = {
+            'title': 'woah'
+            }
+        response = self.client.post('/gtd/nodes/new/', data)
+        self.assertRedirects(response, '/gtd/nodes/')
+        data = {
+            'title': 'woah',
+            'repeating_number': -1,
+            }
+        response = self.client.post('/gtd/nodes/1/edit/', data)
+        self.assertEqual(
+            200,
+            response.status_code
+            )
+        data = {
+            'title': 'woah',
+            'repeating_number': '0',
+            }
+        response = self.client.post('/gtd/nodes/1/edit/', data)
+        self.assertEqual(
+            200,
+            response.status_code
+            )
+
 class ParentStructure(TestCase):
-    fixtures = ['test-users.yaml', 'gtd-test.yaml', 'gtd-env.yaml']
+    fixtures = ['test-users.json', 'gtd-test.json', 'gtd-env.json']
     def test_primary_parent(self):
         target_parent = Node.objects.get(title='Errands')
         child = Node.objects.get(title='Meijer')
@@ -353,7 +385,7 @@ class ParentStructure(TestCase):
         self.assertEqual(target_parent, parent)
 
 class ContextFiltering(TestCase):
-    fixtures = ['test-users.yaml', 'gtd-test.yaml', 'gtd-env.yaml']
+    fixtures = ['test-users.json', 'gtd-test.json', 'gtd-env.json']
     def setUp(self):
         self.assertTrue(
             self.client.login(username='test', password='secret')
@@ -397,7 +429,7 @@ class ContextFiltering(TestCase):
             None)
 
 class TodoShortcuts(TestCase):
-    fixtures = ['test-users.yaml', 'gtd-test.yaml', 'gtd-env.yaml']
+    fixtures = ['test-users.json', 'gtd-test.json', 'gtd-env.json']
     def test_gets_states(self):
         self.assertEqual(
             list(TodoState.objects.all()),
@@ -407,7 +439,7 @@ class TodoShortcuts(TestCase):
 class UrlParse(TestCase):
     """Tests for the gtd url_parser that extracts context and scope information
     from the URL string and returns it as a useful dictionary."""
-    fixtures = ['test-users.yaml', 'gtd-test.yaml', 'gtd-env.yaml']
+    fixtures = ['test-users.json', 'gtd-test.json', 'gtd-env.json']
     def setUp(self):
         pass
     def test_function_exists(self):
@@ -480,7 +512,7 @@ class OverdueFilter(TestCase):
 
 class TodoStateRetrieval(TestCase):
     """Tests the methods of TodoState that retrieves the list of "in play" todo states"""
-    fixtures = ['test-users.yaml', 'gtd-test.yaml', 'gtd-env.yaml']
+    fixtures = ['test-users.json', 'gtd-test.json', 'gtd-env.json']
     def test_as_json(self):
         self.assertEqual(
             TodoState.as_json.__class__.__name__,
@@ -503,7 +535,7 @@ class TodoStateRetrieval(TestCase):
 
 class MultiUser(TestCase):
     """Tests for multi-user support in the gtd app"""
-    fixtures = ['test-users.yaml', 'gtd-env.yaml', 'gtd-test.yaml']
+    fixtures = ['test-users.json', 'gtd-env.json', 'gtd-test.json']
     def setUp(self):
         self.factory = RequestFactory()
         self.user1 = User.objects.get(pk=1)

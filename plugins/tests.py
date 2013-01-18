@@ -130,7 +130,7 @@ class RegexTest(TestCase):
         # TODO: write unittests for valid dates (eg day between 1 and 31)
 
 class HelperFunctions(TestCase):
-    fixtures = ['test-users.yaml', 'gtd-env.yaml', 'gtd-test.yaml']
+    fixtures = ['test-users.json', 'gtd-env.json', 'gtd-test.json']
     def test_heading_as_string(self):
         node = Node.objects.get(pk=5)
         f = orgmode.heading_as_string
@@ -143,7 +143,7 @@ class HelperFunctions(TestCase):
             )
 
 class TestOrgModePlugin(TestCase):
-    fixtures = ['test-users.yaml', 'gtd-env.yaml']
+    fixtures = ['test-users.json', 'gtd-env.json']
     def setUp(self):
         # This is the test string
         self.org_file = """* Heading 0
