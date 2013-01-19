@@ -101,7 +101,7 @@ def list_display(request, url_string=""):
     todo_states_query = url_data.get('todo_states', [])
     for todo_state in todo_states_query:
         final_Q = final_Q | Q(todo_state=todo_state)
-    nodes = Node.get_owned(request)
+    nodes = Node.get_owned(request.user)
     nodes = nodes.filter(final_Q)
     # Now apply the context
     try:
@@ -139,7 +139,7 @@ def agenda_display(request, date=None):
             new_url = "/gtd/agenda/" + request.POST['date']
             return redirect(new_url)
     deadline_period = 7 # In days # TODO: pull deadline period from user
-    all_nodes_qs = Node.get_owned(request)
+    all_nodes_qs = Node.get_owned(request.user)
     final_Q = Q()
     if date:
         try:
@@ -261,7 +261,7 @@ def display_node(request, node_id=None, scope_id=None):
             node.todo_state = TodoState.objects.get(pk=request.POST['new_todo'])
             node.auto_repeat = True
             node.save()
-    all_nodes_qs = Node.get_owned(request)
+    all_nodes_qs = Node.get_owned(request.user)
     all_todo_states_qs = TodoState.get_active()
     child_nodes_qs = all_nodes_qs
     all_scope_qs = Scope.objects.all()
@@ -307,8 +307,7 @@ def edit_node(request, node_id, scope_id):
         # Handle JSON requests
         post = request.POST
         try:
-            node = Node.get_owned(request).get(pk=node_id)
-            # node = Node.get_owned(request).get(pk=post['node_id'])
+            node = Node.get_owned(request.user).get(pk=node_id)
         except Node.DoesNotExist:
             # If the node is not accessible return a 404
             return HttpResponse(json.dumps({'status': '404'}))
@@ -328,6 +327,18 @@ def edit_node(request, node_id, scope_id):
             'todo_id': getattr(node.todo_state, 'pk', 0)
             }
         return HttpResponse(json.dumps(data))
+    elif request.method == "POST" and request.POST.get('function') == 'reorder':
+        # User is trying to move the node up or down
+        if 'move_up' in request.POST:
+            node.move_up()
+        elif 'move_down' in request.POST:
+            node.move_down()
+        else:
+            return HttpResponseBadRequest('Missing request data')
+        if node.parent:
+            url_kwargs['node_id'] = node.parent.pk
+        redirect_url = reverse('gtd.views.display_node', kwargs=url_kwargs)
+        return redirect(redirect_url)
     elif request.method == "POST": # Form submission
         post = request.POST
         form = NodeForm(request.POST, instance=node)
@@ -393,7 +404,7 @@ def get_children(request, parent_id):
         parent = get_object_or_404(Node, pk=parent_id)
     elif int(parent_id) == 0:
         parent = None
-    all_nodes_qs = Node.get_owned(request)
+    all_nodes_qs = Node.get_owned(request.user)
     children_qs = all_nodes_qs.filter(parent=parent)
     children = []
     # Assemble the dictionary to return as JSON

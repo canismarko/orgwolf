@@ -17,11 +17,12 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #######################################################################
 
+from django.db import transaction
 from django.shortcuts import get_object_or_404
 from django.http import Http404
 import re
 
-from gtd.models import TodoState, Context, Scope
+from gtd.models import TodoState, Context, Scope, Node
 
 def get_todo_states():
     """Return a list of the "in-play" Todo states."""
@@ -85,3 +86,22 @@ def parse_url(raw_url):
             context_id = result.groups()[1]
             data['context'] = get_object_or_404(Context, pk=context_id)
     return data
+
+@transaction.commit_on_success
+def reset_order(parent=None, recursive=False, step=Node.ORDER_STEP):
+    """Processes all nodes of given parent in their natural ordering and
+    sets all the orders to be in appropriate increments and enforcing the
+    uniqueness contraint.
+    Warning: with recursive=True, this function hits the database a lot 
+    and should probably not be used by views or models unless absolutely
+    necessary."""
+    def reset_children(parent):
+        cur_order = 0
+        children = Node.objects.filter(parent=parent)
+        for child in children:
+            cur_order += step
+            child.order = cur_order
+            child.save()
+            if recursive:
+                reset_children(child)
+    reset_children(parent)

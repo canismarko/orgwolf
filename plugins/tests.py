@@ -134,8 +134,8 @@ class HelperFunctions(TestCase):
     def test_heading_as_string(self):
         node = Node.objects.get(pk=5)
         f = orgmode.heading_as_string
-        expected_string = """* ACTN Buy cat food
-  SCHEDULED: <2012-12-31 Mon> DEADLINE: <2011-05-13 Fri> CLOSED: <2011-05-14 Sat 00:56>
+        expected_string = """** ACTN Buy cat food
+   SCHEDULED: <2012-12-31 Mon> DEADLINE: <2011-05-13 Fri> CLOSED: <2011-05-14 Sat 00:56>
 """
         self.assertEqual(
             expected_string.split('\n'),

@@ -19,7 +19,7 @@
 
 from __future__ import unicode_literals
 from django.core.exceptions import ValidationError
-from django.db import models
+from django.db import models, transaction
 from django.db.models import Q, signals
 from django.dispatch import receiver
 from django.utils.encoding import python_2_unicode_compatible
@@ -176,20 +176,16 @@ class Scope(models.Model):
 @python_2_unicode_compatible
 class Node(models.Model):
     """
-    Django model that holds some sort of divisional heading. 
-    Similar to orgmode '*** Heading' syntax. 
-    It can have todo states associated with it as well as 
-    scheduling and other information. Each Node object must
-    be associated with a project. A project is a Node with 
-    no parent (a top level Node)
-    """
+    Django model that holds some sort of divisional heading. Similar to 
+    orgmode's '*** Heading' syntax. It can have todo states associated 
+    with it as well as scheduling and other information."""
     ORDER_STEP = 10
     SEARCH_FIELDS = ['title']
     auto_repeat = False
     auto_close = True
     owner = models.ForeignKey(settings.AUTH_USER_MODEL, related_name="owned_node_set")
     users = models.ManyToManyField(settings.AUTH_USER_MODEL, blank=True)
-    order = models.IntegerField() # TODO: autoincrement
+    order = models.IntegerField()
     title = models.TextField(blank=True)
     todo_state = models.ForeignKey('TodoState', blank=True, null=True)
     archived = models.BooleanField(default=False)
@@ -233,6 +229,7 @@ class Node(models.Model):
     scope = models.ManyToManyField('Scope', blank=True)
     class Meta:
         ordering = ['order']
+        unique_together = (('parent', 'order'),)
     # Methods retrieve statuses of this object
     def is_todo(self):
         if self.todo_state:
@@ -269,11 +266,11 @@ class Node(models.Model):
         nodes_qs = Node.objects.filter(archived=False)
         return nodes_qs
     @staticmethod
-    def get_owned(request, get_archived=False):
+    def get_owned(user, get_archived=False):
         """Get all the nodes owned by the user listed in the request"""
         qs = Node.get_active()
-        if request.user.is_authenticated():
-            qs = qs.filter(owner=request.user)
+        if user.is_authenticated():
+            qs = qs.filter(owner=user)
         else:
             qs = Node.objects.none()
         return qs
@@ -337,6 +334,46 @@ class Node(models.Model):
             tag_Q = tag_Q | Q(tag_string = tag_string)
         tags_qs = tags_qs.filter(tag_Q)
         return tags_qs
+    # Re-arrangement methods, effectively these are setters for Node.order
+    @transaction.commit_on_success
+    def _rearrange(self, steps):
+        """Changes the order of the node, slides it in between the other nodes.
+        Positive values for `step` move the node farther down the list and
+        negative values move it farther up the list. Zero does nothing."""
+        nodes_qs = Node.get_owned(self.owner)
+        if steps > 0:
+            sign = 1
+            remainder_qs = nodes_qs.filter(parent=self.parent, 
+                                           order__gt=self.order)
+        elif steps < 0:
+            sign = -1
+            remainder_qs = nodes_qs.filter(parent=self.parent,
+                                           order__lt=self.order).reverse()
+        else: # No change
+            remainder_qs = Node.objects.none()
+        if not remainder_qs.exists():
+            return
+        steps = abs(steps)
+        other_node = remainder_qs[steps-1]
+        # Go through scenarios in order of simplicity
+        # This allows us to minimize database hits for large moves
+        if steps == 1:
+            # Swap the two nodes next to each other
+            other_order = other_node.order
+            other_node.order = self.order
+            self.order = -1
+            self.save()
+            other_node.save()
+            self.order = other_order
+            self.save()
+        else:
+            assert False, 'Re-arranging by more than 1 step not yet implemented'
+            # Todo: rearrange by steps greater than 1
+    def move_up(self):
+        self._rearrange(-1)
+    def move_down(self):
+        self._rearrange(1)
+        
     # Methods return miscellaneous information
     @staticmethod
     def search(query):
@@ -399,6 +436,37 @@ def clean_text(sender, **kwargs):
             # only escape the text if it changed
             parser = HTMLEscaper()
             instance.text = parser.clean(instance.text)
+
+@receiver(signals.pre_save, sender=Node)
+def node_auto_increment(sender, **kwargs):
+    """If the user does not specify an order for a new node, this receiver
+    will find the current highest order and add it to the end"""
+    instance = kwargs['instance']
+    auto = False
+    exists = False
+    if instance.id:
+        # Check if the node does actually exist
+        # This is mostly to avoid problems with installing data from fixtures
+        try:
+            old_node = Node.objects.get(pk=instance.id)
+        except Node.DoesNotExist:
+            old_node = None
+        else:
+            exists = True
+    if not exists and instance.order == None:
+        # If it's a new node with no order, then auto_increment the order field
+        auto = True
+    elif exists:
+        if (old_node.parent != instance.parent) and (old_node.order == instance.order):
+            auto = True
+    if auto:
+        # Now actually increment if necessary
+        other_nodes = Node.get_owned(instance.owner).filter(parent=instance.parent).reverse()
+        if other_nodes.count() > 0:
+            last_order = other_nodes[0].order
+        else:
+            last_order = 0
+        instance.order = last_order + Node.ORDER_STEP
 
 @receiver(signals.pre_save, sender=Node)
 def node_repeat(sender, **kwargs):

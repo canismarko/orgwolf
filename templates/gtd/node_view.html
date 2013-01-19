@@ -133,8 +133,12 @@ $('document').ready(function() {
     <td class="ow-tags">{{ node.tag_string }}</td>
     <td>
       <div class="btn-group">
-	<button class="btn"><i class="icon-arrow-up"></i><span class="alt">Up</span></button>
-	<button class="btn"><i class="icon-arrow-down"></i><span class="alt">Down</span></button>
+	<form action="{% url 'gtd.views.edit_node' node.id %}" method="POST">
+	  <input type="hidden" name="function" value="reorder"></input>
+	  {% csrf_token %}
+	  <button class="btn" type="submit" name="move_up"><i class="icon-arrow-up"></i><span class="alt">Up</span></button>
+	  <button class="btn" type="submit" name="move_down"><i class="icon-arrow-down"></i><span class="alt">Down</span></button>
+	</form>
       </div>
     </td>
   </tr>
