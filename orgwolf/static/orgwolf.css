@@ -34,6 +34,7 @@ span.alt
 {
     visibility: hidden;
 }
+/* Node_view */
 .odd-heading
 {
     background-color: #B6D6DB;
@@ -43,6 +44,19 @@ span.alt
     background-color: white; 
    /* Todo: figure out how to do this using background: transparent */
 }
+.ow-move form
+{
+    margin: 0px;
+}
+.ow-move .btn
+{
+
+}
+dd.todo
+{
+    display: inline-block;
+}
+/* Javascript outline appliance */
 .clickable, .add-heading, .todo-state
 {
     cursor: pointer;

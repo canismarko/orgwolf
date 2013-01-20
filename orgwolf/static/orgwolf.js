@@ -114,7 +114,8 @@ $(document).ready(function(){
 	};
 	// todo_id 0 has some special properties
 	var bind_autohide = function() {
-	   var todo_id = $todo.attr('todo_id')
+	    var todo_id = $todo.attr('todo_id');
+	    console.log($todo.length);
 	    if (todo_id == 0) {
 		settings.parent_elem.bind(
 		    'mouseenter.autohide',
@@ -170,7 +171,7 @@ $(document).ready(function(){
 	    e.stopPropagation();
 	    $('.popover.todostate').hide(); // Hide all the other popovers
 	    $todo = $(this);
-	    // ...set the position (move this to the click() handler)
+	    // ...set the position
 	    var new_left = $todo.position().left + $todo.width();
 	    $popover.css('left', new_left + 'px');
 	    var top = $todo.position().top;

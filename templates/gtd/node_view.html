@@ -23,7 +23,16 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 {% else %}Projects
 {% endif %}
 {% endblock %}
-
+{% block style %}
+<!-- Node view style block -->
+{{ block.super }}
+<style type="text/css">
+.todo
+{
+    cursor: pointer;
+}
+</style>
+{% endblock %}
 {% block script %}
 <!-- Node view script block -->
 {{ block.super }}
@@ -37,32 +46,45 @@ $('document').ready(function() {
 	todo_states: {% autoescape off %}{{ all_todo_states_json }}{% endautoescape %}
 	});
     outline.init();
+    {% if parent_node %}
+    $('.todo').todoState({
+    	node_id: {{ parent_node.pk }},
+    	states: {% autoescape off %}{{ all_todo_states_json_full }}{% endautoescape %},
+	click: function(ajax_response) {
+	    $('.new_todo').removeClass('active');
+	    new_sel = '.new_todo[value="' + ajax_response['todo_id'] + '"]';
+	    $(new_sel).addClass('active');
+	}
+    });
+    {% endif %}
 });
 
 </script>
 {% endblock %}
 
 {% block content %}
-
 {# Search box #}
 {% include "gtd/search_box.html" %}
 
 {# Breadcrumb trail #}
-<a href="{{ base_url }}">Project List</a>
+    <a href="{{ base_url }}">Project List</a>
 {% for node in breadcrumb_list %}&gt;
-  <a href="{{ base_url }}{{node.id}}/">{{node.display}}</a>
+    <a href="{{ base_url }}{{node.id}}/">{{node.display}}</a>
 {% endfor %}
 
-<h3>{{ parent_node.get_title }}</h3>
-{% if node_id %}
-<form action="" method="POST">
+    <h3>{{ parent_node.get_title }}</h3>
+    {% if node_id %}
+<form action="edit/" method="POST">
   <div class="btn-toolbar">
     <div class="btn-group">
       <a href="edit/" class="btn">Edit</a><span class="alt"> |</span>
     </div>
     <div class="btn-group">
+      <button type="submit" name="new_todo" value="0" class="btn new_todo{% if not parent_node.todo_state %} active{% endif %}">
+	[None]
+      </button>
       {% for todo_state in all_todo_states_qs %}
-      <button type="submit" name="new_todo" value="{{ todo_state.id }}" class="btn{% if todo_state = parent_node.todo_state %} active{% endif %}">
+      <button type="submit" name="new_todo" value="{{ todo_state.id }}" class="btn new_todo{% if todo_state = parent_node.todo_state %} active{% endif %}">
 	{{ todo_state.as_html }}
       </button>
       {% endfor %}
@@ -73,9 +95,13 @@ $('document').ready(function() {
 </form>
 {% endif %}
 <dl>
-  {% if parent_node.todo_state %}
+  {% if parent_node %}
   <dt>Status:</dt>
-  <dd>{{ parent_node.todo_state.display_text}}</dd>
+  {% if parent_node.todo_state %}
+  <dd class="todo" todo_id="{{ parent_node.todo_state.pk }}">{{ parent_node.todo_state.as_html }} - {{ parent_node.todo_state.display_text}}</dd>
+  {% else %}
+  <dd class="todo" todo_id="0">[None]</dd>
+  {% endif %}
   {% endif %}
   {% if parent_node.scheduled %}
   <dt>Scheduled: </dt>
@@ -84,9 +110,37 @@ $('document').ready(function() {
     {{ parent_node.scheduled.time }}
     {% endif %}</dd>
   {% endif %}
+  # TODO: deadline and scheduled seem to be UTC times instead localtime
   {% if parent_node.repeats %}
   <dt><i class="icon-repeat"></i>Repeats:</dt>
-  <dd>Every {{ parent_node.repeating_number}}{{ parent_node.repeating_unit }}</dd>
+  <dd>Every {{ parent_node.repeating_number}}{{ parent_node.repeating_unit }}
+    {% if parent_node.repeats_from_completion %}(from completion)
+    {% else %}(from scheduled date)
+    {% endif %}
+  </dd>
+  {% endif %}
+  {% if parent_node.deadline %}
+  <dt>Deadline: </dt>
+  <dd>{{ parent_node.deadline.date }}
+    {% if parent_node.deadline_time_specific %}
+    {{ parent_node.deadline.time }}
+    {% endif %}</dd>
+  {% endif %}
+  {% if parent_node.priority %}
+  <dt>Priority:</dt>
+  <dd>{{ parent_node.priority }}</dd>
+  {% endif %}
+  {% if parent_node.scope.all %}
+  <dt>Scopes:</dt>
+    {% for scope in parent_node.scope.all %}
+    <dd>{{ scope.display }}</dd>
+    {% endfor %}
+  {% endif %}
+  {% if parent_node.related_projects.all %}
+  <dt>Related Projects:</dt>
+    {% for project in parent_node.related_projects.all %}
+    <dd>{{ project.title }}</dd>
+    {% endfor %}
   {% endif %}
   {% if parent_tags %}
   <dt>Tags: </dt>
@@ -131,15 +185,15 @@ $('document').ready(function() {
       <a href="{{ base_url }}{{ node.id }}">{{ node.get_title }}</a>
     </td>
     <td class="ow-tags">{{ node.tag_string }}</td>
-    <td>
-      <div class="btn-group">
+    <td class="ow-move">
 	<form action="{% url 'gtd.views.edit_node' node.id %}" method="POST">
-	  <input type="hidden" name="function" value="reorder"></input>
-	  {% csrf_token %}
+	  <div class="btn-group">
 	  <button class="btn" type="submit" name="move_up"><i class="icon-arrow-up"></i><span class="alt">Up</span></button>
 	  <button class="btn" type="submit" name="move_down"><i class="icon-arrow-down"></i><span class="alt">Down</span></button>
+	  </div>
+	  <input type="hidden" name="function" value="reorder"></input>
+	  {% csrf_token %}
 	</form>
-      </div>
     </td>
   </tr>
   {% endfor %}

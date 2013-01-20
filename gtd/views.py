@@ -255,12 +255,6 @@ def display_node(request, node_id=None, scope_id=None):
             if request.POST['node_id']:
                 url_kwargs['node_id'] = request.POST['node_id']
             return redirect(reverse('gtd.views.display_node', kwargs=url_kwargs))
-        if request.POST['function'] == 'change_todo_state':
-            # User has asked to change TodoState
-            node = Node.objects.get(pk=node_id)
-            node.todo_state = TodoState.objects.get(pk=request.POST['new_todo'])
-            node.auto_repeat = True
-            node.save()
     all_nodes_qs = Node.get_owned(request.user)
     all_todo_states_qs = TodoState.get_active()
     child_nodes_qs = all_nodes_qs
@@ -289,6 +283,10 @@ def display_node(request, node_id=None, scope_id=None):
     if node_id == None:
         node_id = 0
     all_todo_states_json = TodoState.as_json(all_todo_states_qs)
+    all_todo_states_json_full = TodoState.as_json(
+        queryset=all_todo_states_qs,
+        full=True,
+        )
     return render_to_response('gtd/node_view.html',
                               locals(),
                               RequestContext(request))
@@ -307,7 +305,8 @@ def edit_node(request, node_id, scope_id):
         # Handle JSON requests
         post = request.POST
         try:
-            node = Node.get_owned(request.user).get(pk=node_id)
+            node = Node.get_owned(request.user,
+                                  get_archived=True).get(pk=node_id)
         except Node.DoesNotExist:
             # If the node is not accessible return a 404
             return HttpResponse(json.dumps({'status': '404'}))
@@ -318,13 +317,15 @@ def edit_node(request, node_id, scope_id):
         elif new_todo_id > 0:
             try:
                 node.todo_state = TodoState.objects.get(pk=new_todo_id)
-            except:
+            except TodoState.DoesNotExist:
                 return HttpResponseBadRequest('Invalid todo_id: %s' % new_todo_id)
         node.save()
         data = {
             'status': 'success',
             'node_id': node.pk,
-            'todo_id': getattr(node.todo_state, 'pk', 0)
+            'todo_id': getattr(node.todo_state, 'pk', 0),
+ 
+            
             }
         return HttpResponse(json.dumps(data))
     elif request.method == "POST" and request.POST.get('function') == 'reorder':
@@ -337,6 +338,19 @@ def edit_node(request, node_id, scope_id):
             return HttpResponseBadRequest('Missing request data')
         if node.parent:
             url_kwargs['node_id'] = node.parent.pk
+        redirect_url = reverse('gtd.views.display_node', kwargs=url_kwargs)
+        return redirect(redirect_url)
+    elif request.method == "POST" and request.POST.get('function') == 'change_todo_state':
+        # User has asked to change TodoState
+        new_todo_id = request.POST['new_todo']
+        if new_todo_id == '0':
+            node.todo_state = None
+        else:
+            node.todo_state = TodoState.objects.get(pk=new_todo_id)
+        node.auto_repeat = True
+        node.save()
+        todo_state = node.todo_state
+        url_kwargs['node_id'] = node.pk
         redirect_url = reverse('gtd.views.display_node', kwargs=url_kwargs)
         return redirect(redirect_url)
     elif request.method == "POST": # Form submission

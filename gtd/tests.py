@@ -124,7 +124,7 @@ class EditNode(TestCase):
         node.todo_state = todo_state
         node.save()
         self.assertEqual(todo_state, node.todo_state)
-    
+
     def test_edit_by_json(self):
         # Tests changing the todo state of a node via JSON
         # Login

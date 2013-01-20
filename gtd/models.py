@@ -37,6 +37,7 @@ from orgwolf.models import Color, HTMLEscaper
 
 @python_2_unicode_compatible
 class TodoState(models.Model):
+    class_size = models.IntegerField(default=0)
     abbreviation = models.CharField(max_length=10, unique=True)
     display_text = models.CharField(max_length=30)
     actionable = models.BooleanField(default=True)
@@ -67,7 +68,7 @@ class TodoState(models.Model):
         that are currently in play."""
         return TodoState.objects.all()
     @staticmethod
-    def as_json(queryset=None):
+    def as_json(queryset=None, full=False):
         new_array = [{'todo_id': 0, 'display': '[None]'}]
         if not queryset:
             queryset=TodoState.get_active()
@@ -76,6 +77,8 @@ class TodoState(models.Model):
                 'todo_id': state.pk,
                 'display': state.as_html(),
                 }
+            if full:
+                new_dict['display'] += ' - ' + state.display_text
             new_array.append(new_dict)
         return unicode(json.dumps(new_array))
     def as_html(self):
@@ -204,10 +207,10 @@ class Node(models.Model):
     repeats = models.BooleanField(default=False)
     repeating_number = models.IntegerField(blank=True, null=True)
     repeating_unit = models.CharField(max_length=1, blank=True, null=True,
-                                      choices=(('d', 'Day'),
-                                               ('w', 'Week'),
-                                               ('m', 'Month'),
-                                               ('y', 'Year')))
+                                      choices=(('d', 'Days'),
+                                               ('w', 'Weeks'),
+                                               ('m', 'Months'),
+                                               ('y', 'Years')))
     # If repeats_from_completions is True, then when the system repeats this node,
     # it will schedule it from the current time rather than the original scheduled time.
     repeats_from_completion = models.NullBooleanField(default=False)
@@ -216,7 +219,6 @@ class Node(models.Model):
                                 choices=(('A', 'A'),
                                          ('B', 'B'),
                                          ('C', 'C')))
-    # priority = models.ForeignKey('Priority', blank=True, null=True)
     tag_string = models.TextField(blank=True) # Org-mode style string (eg ":comp:home:RN:")
     energy = models.CharField(max_length=2, blank=True, null=True,
                               choices=(('High', 'HI'),
@@ -268,7 +270,10 @@ class Node(models.Model):
     @staticmethod
     def get_owned(user, get_archived=False):
         """Get all the nodes owned by the user listed in the request"""
-        qs = Node.get_active()
+        if get_archived:
+            qs = Node.objects.all()
+        else:
+            qs = Node.get_active()
         if user.is_authenticated():
             qs = qs.filter(owner=user)
         else:
@@ -546,8 +551,8 @@ class NodeRepetition(models.Model):
     this class when their state is changed.
     """
     node = models.ForeignKey('Node')
-    original_todo_state = models.ForeignKey('TodoState', related_name='repetitions_original_set', blank=True)
-    new_todo_state = models.ForeignKey('TodoState', related_name='repetitions_new_set', blank=True)
+    original_todo_state = models.ForeignKey('TodoState', related_name='repetitions_original_set', blank=True, null=True)
+    new_todo_state = models.ForeignKey('TodoState', related_name='repetitions_new_set', blank=True, null=True)
     timestamp = models.DateTimeField()
     def __str__(self):
         string = ''
