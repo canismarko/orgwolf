@@ -1,0 +1,10 @@
+<form action="{% url 'orgwolf.views.new_user' %}" method="POST">
+  <table id="new_user">
+    {{ new_user_form.as_table }}
+    <tr>
+      <td>&nbsp;</td>
+      <td><button type="submit" class="btn"><i class="icon-plus"></i>Create</button></td>
+    </tr>
+  </table>
+  {% csrf_token %}
+</form>

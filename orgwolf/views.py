@@ -17,19 +17,61 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #######################################################################
 
+from django.core.urlresolvers import reverse
 from django.shortcuts import render_to_response, redirect
 from django.template import RequestContext
+from django.contrib.auth import authenticate, login
+from django.contrib.auth.forms import AuthenticationForm
 from django.contrib.auth.decorators import login_required
 from datetime import datetime
 
 from orgwolf.models import OrgWolfUser as User
-from orgwolf.forms import FeedbackForm
+from orgwolf.forms import FeedbackForm, RegistrationForm
 from wolfmail.models import MailItem, Label
 
 def home(request):
-    return render_to_response('home.html',
-                              locals(),
-                              RequestContext(request))
+    if request.user.is_authenticated():
+        return render_to_response('home.html',
+                                  locals(),
+                                  RequestContext(request))
+    else:
+        form = AuthenticationForm()
+        new_user_form = RegistrationForm()
+        new_user_form.fields['username'].help_text = ''
+        return render_to_response('landing.html',
+                                  locals(),
+                                  RequestContext(request))
+
+def new_user(request):
+    """New user registration"""
+    if request.method == 'POST':
+        # Validate and create new user
+        data = request.POST.copy()
+        data['last_login'] = data.get('last_login', datetime.now())
+        data['date_joined'] = data.get('date_joined', datetime.now())
+        data['home'] = data.get('home', 'gtd.views.display_node')
+        new_user_form = RegistrationForm(data)
+        if new_user_form.is_valid():
+            # Create the new user and log her in
+            new_user = User()
+            new_user.username = data['username']
+            new_user.set_password(data['password'])
+            new_user.home = data['home']
+            new_user.save()
+            user = authenticate(username=data['username'],
+                                password=data['password'])
+            if user != None:
+                login(request, user)
+                return redirect(reverse(user.home))
+        # Show the standard new user registration page
+        return render_to_response('registration/new_user.html',
+                                  locals(),
+                                  RequestContext(request))
+    else:
+        new_user_form = RegistrationForm()
+        return render_to_response('registration/new_user.html',
+                                  locals(),
+                                  RequestContext(request))
 
 @login_required
 def feedback(request):

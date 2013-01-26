@@ -17,9 +17,12 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 {% endcomment %}
+{% block title %}
+New User Registration - OrgWolf
+{% endblock %}
 {% block nav %}
-{# Remove the navbar for login pages #}
+{# Remove the navbar for registration pages #}
 {% endblock %}
 {% block content %}
-{% include 'registration/login_form.html' %}
+{% include 'registration/new_user_form.html' %}
 {% endblock %}

@@ -31,9 +31,10 @@ urlpatterns = patterns('',
                        url(r'^gtd/', include('gtd.urls')),
                        url(r'^messaging/', include('wolfmail.urls')),
                        url(r'^wolfmail/', include('wolfmail.urls')),
-                       # Login stuff
+                       # Authentication stuff
                        url(r'^accounts/login/', login),
                        url(r'^accounts/logout/', logout),
+                       url(r'^accounts/register/', 'orgwolf.views.new_user'),
 
                        #Uncomment the admin/doc line below to enable admin documentation
                        url(r'^admin/doc/', include('django.contrib.admindocs.urls')),

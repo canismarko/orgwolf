@@ -26,6 +26,7 @@ from HTMLParser import HTMLParser
 class OrgWolfUser(AbstractUser):
     """Holds profile information for users."""
     preferred_timezone = models.CharField(max_length=25, blank=True)
+    home = models.CharField(max_length=100)
 
 class Color:
     """

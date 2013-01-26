@@ -1,0 +1,14 @@
+<table id="login">
+  <form action="{% url 'django.contrib.auth.views.login' %}" method="post">
+    {{ form.as_table }}
+    {% csrf_token %}
+    <tr>
+      <td>&nbsp;</td>
+      <td>
+	<input type="submit" value="Login" class="btn"/>
+	<a href="{{ next_page }}" class="cancel">Cancel</a>
+	<input type="hidden" name="next" value="{{ next }}" />
+      </td>
+    </tr>
+  </form>
+</table>

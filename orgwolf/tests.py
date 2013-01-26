@@ -6,6 +6,7 @@ from gtd.models import Node, TodoState
 from orgwolf.models import OrgWolfUser as User
 from orgwolf import wsgi # For unit testing code coverage
 from orgwolf.models import HTMLEscaper
+from orgwolf.forms import RegistrationForm
 
 class HTMLParserTest(TestCase):
     """Check OrgWolf's HTML Parsing object that is used to escape
@@ -79,4 +80,81 @@ class HTMLParserTest(TestCase):
         self.assertEqual(
             '<hr></hr>',
             self.parser.clean('<hr />')
+            )
+
+class NewUser(TestCase):
+    """Check new user registration"""
+    def setUp(self):
+        self.url = '/accounts/register/'
+    def test_registration_form(self):
+        url = '/accounts/register/'
+        response = self.client.get(url)
+        form = RegistrationForm()
+        self.assertContains(response,
+                            form.as_table(),
+                            )
+        self.assertContains(response,
+                            '<form'
+                            )
+        self.assertContains(response,
+                            '<button type="submit"'
+                            )
+    def test_registration_via_client(self):
+        self.assertFalse(
+            User.objects.all().exists()
+            )
+        url = self.url
+        data = {
+            'username': 'test3',
+            'password': 'secret',
+            'password_2': 'secret'
+            }
+        response = self.client.post(url, data, follow=True)
+        self.assertTrue(
+            User.objects.all().exists(),
+            'User object was created upon form submission'
+            )
+        # User starts out authenticated
+        self.assertEqual(
+            200,
+            response.status_code
+            )
+        self.assertEqual(
+            'http://testserver/gtd/nodes/',
+            response.redirect_chain[-1][0]
+            )
+    def test_bad_registration(self):
+        """Tests failure of bad credentials or invalid data for login"""
+        data = {
+            'username': '',
+            'password': 'secret'
+            }
+        response = self.client.post(self.url, data)
+        self.assertFalse(
+            User.objects.all().exists(),
+            'Blank username does not trigger validation error'
+            )
+        data = {
+            'username': 'test',
+            'password': 'secret',
+            'password_2': ''
+            }
+        response = self.client.post(self.url, data)
+        self.assertFalse(
+            User.objects.all().exists(),
+            'password_2 left blank does not trigger validation error'
+            )
+        data = {
+            'username': 'test',
+            'password': 'secret',
+            'password_2': 'secert'
+            }
+        response = self.client.post(self.url, data)
+        self.assertFalse(
+            User.objects.all().exists(),
+            'non-matching passwords do not trigger validation error'
+            )
+        self.assertContains(
+            response,
+            'Passwords do not match'
             )
