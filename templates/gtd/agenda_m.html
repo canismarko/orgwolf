@@ -1,0 +1,59 @@
+{% extends 'mobile.html' %}
+{% block content %}
+<div class="center" data-role="controlgroup" data-type="horizontal">
+  <a href="{% url 'gtd.views.agenda_display' yesterday %}" data-role="button" data-icon="arrow-l" data-iconpos="notext"></a>
+  <a href="#" data-role="button">{{ agenda_date }}</a>
+  <a href="{% url 'gtd.views.agenda_display' %}" data-role="button">Today</a>
+  <a href="{% url 'gtd.views.agenda_display' tomorrow %}" data-role="button" data-icon="arrow-r" data-iconpos="notext"></a>
+</div>
+
+<ul data-role="listview">
+
+  {% if day_specific_nodes %}
+  <li data-role="list-divider">Day Specific<span class="ui-li-count">{{ day_specific_nodes|length }}</span></li>
+  {% for node in day_specific_nodes %}
+  <li>
+    <a href="{% url 'gtd.views.display_node' node_id=node.id %}" title="{{ node.hierarchy }}"{% if node.overdue %} class="overdue"{% endif %}>
+      <h3>{{ node.title }}</h3>
+      <p>{{ node.todo_state.as_html }}{% if node.overdue %}<strong> [{{ node.overdue }}]</strong>{% endif %}</p>
+      <p><emph>{{ node.hierarchy }}</emph></p>
+      <p class="ui-li-aside"><strong>{{ node.tag_string }}</strong></p>
+      </a>
+  </li>
+  {% endfor %}
+  {% endif %}
+
+
+  {% if time_specific_nodes %}
+  <li data-role="list-divider">Time Specific<span class="ui-li-count">{{ time_specific_nodes|length }}</span></li>
+  {% for node in time_specific_nodes %}
+  <li>
+    <a href="{% url 'gtd.views.display_node' node_id=node.id %}" title="{{ node.hierarchy }}"{% if node.overdue %} class="overdue"{% endif %}>
+      <h3>{{ node.scheduled|date:"G:i" }} {{ node.title }}</h3>
+      <p>{{ node.todo_state.as_html }}{% if node.overdue %}<strong> [{{ node.overdue }}]</strong>{% endif %}</p>
+      <p><emph>{{ node.hierarchy }}</emph></p>
+      <p class="ui-li-aside"><strong>{{ node.tag_string }}</strong></p>
+      </a>
+  </li>
+  {% endfor %}
+  {% endif %}
+
+
+  {% if deadline_nodes %}
+  <li data-role="list-divider">Upcoming Deadlines<span class="ui-li-count">{{ day_specific_nodes|length }}</span></li>
+  {% for node in deadline_nodes %}
+  <li>
+    <a href="{% url 'gtd.views.display_node' node_id=node.id %}" 
+       title="{{ node.hierarchy }}">
+      <h3>{{ node.title }}</h3>
+      <p>{% if node.todo_state %}{{ node.todo_state.as_html }} - {% endif %}
+	Due {{ node.deadline|date:"D d M Y" }}
+      {% if node.deadline_time_specific %}at {{ node.deadline|date:"G:i" }}{% endif %}</p>
+      </a>
+  </li>
+  {% endfor %}
+  {% endif %}
+</ul>
+
+
+{% endblock %}

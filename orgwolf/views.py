@@ -31,14 +31,23 @@ from wolfmail.models import MailItem, Label
 
 def home(request):
     if request.user.is_authenticated():
-        return render_to_response('home.html',
+        if request.is_mobile:
+            template = 'home_m.html'
+        else:
+            template = 'home.html'
+        # return redirect(reverse('gtd.views.agenda_display'))
+        return render_to_response(template,
                                   locals(),
                                   RequestContext(request))
     else:
         form = AuthenticationForm()
         new_user_form = RegistrationForm()
         new_user_form.fields['username'].help_text = ''
-        return render_to_response('landing.html',
+        if request.is_mobile:
+            template = 'landing_m.html'
+        else:
+            template = 'landing.html'
+        return render_to_response(template,
                                   locals(),
                                   RequestContext(request))
 

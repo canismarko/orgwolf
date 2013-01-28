@@ -1,0 +1,27 @@
+{% extends 'mobile.html' %}
+{% block header %}
+{% endblock %}
+{% block content %}
+<div data-role="content">
+  <div data-role="collapsible" data-collapsed="false" data-theme="a" data-content-theme="a">
+    <h3>Already Registered? Login here.</h3>
+    <p>
+      <form action="{% url 'django.contrib.auth.views.login' %}" method="post">{{ form.as_p }}
+	{% csrf_token %}
+	<input type="submit" value="Login"></input>
+      </form>
+    </p>
+  </div>
+
+  <div data-role="collapsible" data-collapsed="false" data-theme="a" data-content-theme="a">
+    <h3>New user? Register here.</h3>
+    <p>
+      <form action="{% url 'orgwolf.views.new_user' %}" method="post">
+      {{ new_user_form.as_p }}
+      {% csrf_token %}
+      <input type="submit" value="Register"></input>
+      </form>
+    </p>
+  </div>
+</div>
+{% endblock %}

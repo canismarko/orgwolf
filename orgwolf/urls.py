@@ -35,6 +35,7 @@ urlpatterns = patterns('',
                        url(r'^accounts/login/', login),
                        url(r'^accounts/logout/', logout),
                        url(r'^accounts/register/', 'orgwolf.views.new_user'),
+                       url(r'^accounts/profile/', 'orgwolf.views.home'),
 
                        #Uncomment the admin/doc line below to enable admin documentation
                        url(r'^admin/doc/', include('django.contrib.admindocs.urls')),

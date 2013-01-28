@@ -39,7 +39,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
     </option>
     {% for context in all_contexts %}
     <option value="{{context.id}}"
-	    {% if current_context.id = context.id %} selected="selected"{% endif %}>
+	    {% if current_context.id = context.id %}selected="selected"{% endif %}>
       {{context.name}}
     </option>
     {% endfor %}

@@ -118,11 +118,12 @@ def list_display(request, url_string=""):
     # Put nodes with deadlines first
     deadline_nodes = nodes.exclude(deadline=None)
     other_nodes = nodes.filter(deadline=None)
-    nodes = chain(
-        deadline_nodes.order_by('deadline'),
-        other_nodes
-        )
-    return render_to_response('gtd/gtd_list.html',
+    nodes = deadline_nodes.order_by('deadline') | other_nodes
+    if request.is_mobile:
+        template = 'gtd/gtd_list_m.html'
+    else:
+        template = 'gtd/gtd_list.html'
+    return render_to_response(template,
                               locals(),
                               RequestContext(request))        
 
@@ -149,6 +150,9 @@ def agenda_display(request, date=None):
     else:
         agenda_date = datetime.date.today()
     agenda_dt = datetime.datetime(year=agenda_date.year, month=agenda_date.month, day=agenda_date.day, hour=23, minute=59, second=59, tzinfo=get_current_timezone())
+    one_day = datetime.timedelta(days=1)
+    tomorrow = agenda_date + one_day
+    yesterday = agenda_date - one_day
     # Determine query filters for "Today" section
     date_Q = Q(scheduled__lte=agenda_dt)
     time_specific_Q = Q(scheduled_time_specific=False)
@@ -182,6 +186,7 @@ def agenda_display(request, date=None):
         new_dict['title'] = node.title
         new_dict['repeats'] = node.repeats
         new_dict['hierarchy'] = node.get_hierarchy_as_string()
+        new_dict['tag_string'] = node.tag_string
         day_specific_nodes.append(new_dict)
     for node in time_specific_nodes_qs:
         new_dict = {}
@@ -200,6 +205,7 @@ def agenda_display(request, date=None):
         new_dict['deadline'] = node.deadline
         new_dict['deadline_time_specific'] = node.deadline_time_specific
         new_dict['title'] = node.title
+        new_dict['todo_state'] = node.todo_state
         new_dict['repeats'] = node.repeats
         new_dict['hierarchy'] = node.get_hierarchy_as_string()
         deadline_nodes.append(new_dict)
@@ -217,7 +223,11 @@ def agenda_display(request, date=None):
                                       locals(),
                                       RequestContext(request));
         return HttpResponse(json.dumps(json_data))
-    return render_to_response('gtd/agenda.html',
+    if request.is_mobile:
+        template = 'gtd/agenda_m.html'
+    else:
+        template = 'gtd/agenda.html'
+    return render_to_response(template,
                               locals(),
                               RequestContext(request))
 
@@ -287,7 +297,11 @@ def display_node(request, node_id=None, scope_id=None):
         queryset=all_todo_states_qs,
         full=True,
         )
-    return render_to_response('gtd/node_view.html',
+    if request.is_mobile:
+        template = 'gtd/node_view_m.html'
+    else:
+        template = 'gtd/node_view.html'
+    return render_to_response(template,
                               locals(),
                               RequestContext(request))
 
@@ -363,7 +377,11 @@ def edit_node(request, node_id, scope_id):
             return redirect(redirect_url)
     else: # Blank form
         form = NodeForm(instance=node)
-    return render_to_response('gtd/node_edit.html',
+    if request.is_mobile:
+        template = 'gtd/node_edit_m.html'
+    else:
+        template = 'gtd/node_edit.html'
+    return render_to_response(template,
                               locals(),
                               RequestContext(request))
 

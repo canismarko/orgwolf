@@ -1,0 +1,62 @@
+{% load gtd_extras %}
+{% load nav %}
+<!DOC html>
+<html>
+  <head>
+    <title>{% block title %}Todo: Add page title{% endblock %}</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" type="text/css" href="{{ STATIC_URL }}jquery.mobile-1.2.0.css" />
+    <link rel="stylesheet" type="text/css" href="{{ STATIC_URL }}orgwolf_m.css" />
+    <script src="{{ STATIC_URL }}jquery-1.8.3.min.js"></script>
+    <script src="{{ STATIC_URL }}jquery.cookie.js"></script>
+    <script src="{{ STATIC_URL }}jquery.mobile-1.2.0.js"></script>
+    <script src="{{ STATIC_URL }}orgwolf_m.js"></script>
+    {% block style %}
+    <style type="text/css">
+    a.logo
+    {
+	text-decoration: none;
+	color: white !important;
+    }
+    </style>
+    {% endblock %}
+  </head>
+  <body>
+    <div data-role="page" id="main">
+      {% block header  %}
+      <div data-role="header">
+	<a href="/" data-icon="home">Home</a>
+	<h1><a href="/" class="logo">OrgWolf</a></h1>
+	<a href="#options-popup" data-rel="popup" data-icon="gear" id="options-btn">Options</a>
+	<div data-role="popup" id="options-popup">
+	  <ul data-role="listview">
+	    <li><a href="https://github.com/m3wolf/orgwolf/issues/new/">Feedback</a></li>
+	    <li><a href="/admin/">Admin</a></li>
+	    <li><a href="/accounts/logout/">Logout ({{ request.user }})</a></li>
+	  </ul>
+	</div>
+	{% block nav %}
+	<div data-role="navbar">
+	  <ul>
+	    <li>
+	      {% nav_link Agenda 'gtd.views.agenda_display' %}
+	    </li>
+	    <li>
+	      {% nav_link Actions 'gtd.views.list_display' '/next' %}
+	    </li>
+	    <li>
+	      {% nav_link Projects 'gtd.views.display_node' %}
+	    </li>
+	  </ul>
+	</div>
+      </div>
+      {% endblock %}
+      {% endblock %}
+
+      {% block content %}
+      {% endblock %}
+    </div>
+    {% block other_pages %}
+    {% endblock %}
+  </body>
+</html>
