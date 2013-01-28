@@ -23,6 +23,32 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 {% else %}ToDo Lists
 {% endif %}
 {% endblock %}
+
+{% block script %}
+{{ block.super }}
+<script>
+    $('document').ready(function() {
+	$('#gtd-list').nodeList({
+	    states: {% autoescape off %}{{ all_todo_states_json }}{% endautoescape %}
+	});
+    });
+</script>
+{% endblock %}
+
+{% block style %}
+{{ block.super }}
+<style type="text/css">
+#gtd-list .todo-state
+{
+    display: inline-block
+}
+#gtd-list td.todo-col
+{
+    width: 100px;
+}
+</style>
+{% endblock %}
+
 {% block content %}
 
 {# Scope tabs #}
@@ -58,18 +84,25 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 </form>
 {# Display nodes (if any exist #}
 {% if nodes %}
-<table class="table table-condensed">
+<table class="table table-condensed" id="gtd-list">
   <tr>
     <th>State</th>
     <th>Description</th>
     <th>Tags</th>
   </tr>
   {% for node in nodes %}
-  <tr>
-    <td>
-      <a href="{% url 'gtd.views.display_node' node_id=node.id %}" title="{{ node.get_hierarchy_as_string }}">{{ node.todo_state.as_html }}</a>
+  <tr class="list-node" node_id="{{ node.pk }}">
+    <td class="todo-col">
+      <div class="todo-state" todo_id="{{ node.todo_state.pk }}">
+	<a href="{% url 'gtd.views.display_node' node_id=node.id %}" title="{{ node.get_hierarchy_as_string }}">{{ node.todo_state.as_html }}</a>
+      </div>
     </td>
-    <td><a href="{% url 'gtd.views.display_node' node_id=node.id %}" title="{{ node.get_hierarchy_as_string }}">{{ node.title }}</a>{% if node.deadline %} Due {{ node.deadline|upcoming }}{% endif %}</td>
+    <td>
+      <a href="{% url 'gtd.views.display_node' node_id=node.id %}" title="{{ node.get_hierarchy_as_string }}">
+	{{ node.title }}
+      </a>
+      {% if node.deadline %}Due {{ node.deadline|upcoming }}{% endif %}
+      </td>
     <td><a href="{% url 'gtd.views.display_node' node_id=node.id %}" title="{{ node.get_hierarchy_as_string }}">{{ node.tag_string }}</a></td>
   </tr>
   {% endfor %}

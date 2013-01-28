@@ -115,7 +115,6 @@ $(document).ready(function(){
 	// todo_id 0 has some special properties
 	var bind_autohide = function() {
 	    var todo_id = $todo.attr('todo_id');
-	    console.log($todo.length);
 	    if (todo_id == 0) {
 		settings.parent_elem.bind(
 		    'mouseenter.autohide',
@@ -277,6 +276,40 @@ $(document).ready(function(){
 	    });
 	});
     });
+})(jQuery);
+
+
+/*************************************************
+* jQuery nodeList plugin
+* 
+* Implements javascript for a next-actions style
+* list.
+* 
+* Process the following elements:
+* - $(this) is the element that holds the text
+* 
+* Options:
+* - states: list of all todo state to be included
+*   in the list.
+*************************************************/
+(function( $ ) {
+    $.fn.nodeList = function(args) {
+	this.find('.list-node').each(function() {
+	    var node_id = $(this).attr('node_id');
+	    var $todo = $(this).find('.todo-state');
+	    var todo_id = $todo.attr('todo_id');
+	    // Reset blank todo states to zero for proper handling
+	    if (todo_id == '') {
+		$todo.attr('todo_id', 0);
+		$todo.html('[None]');
+	    }
+	    $todo.todoState({
+		states: args.states,
+		node_id: node_id
+	    });
+	});
+	return this;
+    }
 })(jQuery);
 
 // Begin implementation of hierarchical expanding project list

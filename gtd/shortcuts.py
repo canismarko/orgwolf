@@ -39,6 +39,18 @@ def get_todo_abbrevs(todo_state_list=None):
         abbreviation_list.append(todo_state.abbreviation)
     return abbreviation_list
 
+def order_by_date(qs, field):
+    """Accepts a queryset (nominally of Node objects) and
+    sorts them by date. Similar to queryset.order_by('data')
+    except more fine-grained."""
+    return qs.extra(
+        select={
+            'date_is_null': '{0} IS NULL'.format(field),
+            },
+        order_by=['date_is_null', field]
+        )
+                    
+
 def parse_url(raw_url):
     """Detects context and scope information from the url that was requested.
     Returns the results as a dictionary.

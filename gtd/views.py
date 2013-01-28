@@ -32,7 +32,7 @@ import datetime
 import json
 
 from gtd.models import TodoState, Node, Context, Scope
-from gtd.shortcuts import parse_url, get_todo_states, get_todo_abbrevs
+from gtd.shortcuts import parse_url, get_todo_states, get_todo_abbrevs, order_by_date
 from gtd.templatetags.gtd_extras import escape_html
 from wolfmail.models import MailItem, Label
 from gtd.forms import NodeForm
@@ -47,6 +47,7 @@ def list_display(request, url_string=""):
     all_todo_states_query = TodoState.objects.all() # TODO: switch to userprofile
     all_contexts = Context.objects.all() # TODO: switch to userprofile
     all_scope_qs = Scope.objects.all()
+    all_todo_states_json = TodoState.as_json()
     todo_states_query = TodoState.objects.none()
     todo_abbrevs = get_todo_abbrevs(get_todo_states())
     todo_abbrevs_lc = []
@@ -116,9 +117,11 @@ def list_display(request, url_string=""):
         except Node.ObjectDoesNotExist:
             pass
     # Put nodes with deadlines first
-    deadline_nodes = nodes.exclude(deadline=None)
-    other_nodes = nodes.filter(deadline=None)
-    nodes = deadline_nodes.order_by('deadline') | other_nodes
+    nodes = order_by_date(nodes, 'deadline')
+    # deadline_nodes = nodes.exclude(deadline=None)
+    # other_nodes = nodes.filter(deadline=None)
+    # nodes = deadline_nodes.order_by('deadline') | other_nodes
+    # nodes = nodes.order_by('-deadline')
     if request.is_mobile:
         template = 'gtd/gtd_list_m.html'
     else:

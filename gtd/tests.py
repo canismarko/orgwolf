@@ -39,7 +39,7 @@ from orgwolf.preparation import translate_old_text
 from orgwolf.models import OrgWolfUser as User
 from gtd.forms import NodeForm
 from gtd.models import Node, TodoState, node_repeat, Location, Tool, Context, Scope
-from gtd.shortcuts import parse_url, get_todo_states, get_todo_abbrevs, reset_order
+from gtd.shortcuts import parse_url, get_todo_states, get_todo_abbrevs, reset_order, order_by_date
 from gtd.templatetags.gtd_extras import overdue, upcoming, escape_html
 
 class EditNode(TestCase):
@@ -641,12 +641,42 @@ class ContextFiltering(TestCase):
             self.client.session['context'],
             None)
 
-class TodoShortcuts(TestCase):
+class Shortcuts(TestCase):
     fixtures = ['test-users.json', 'gtd-test.json', 'gtd-env.json']
     def test_gets_states(self):
         self.assertEqual(
             list(TodoState.objects.all()),
             list(get_todo_states()),
+            )
+    def test_order_by_date(self):
+        """Tests the gtd.shortcuts.order_by_date function."""
+        # First make sure the method actual does something
+        self.assertEqual(
+            'function',
+            order_by_date.__class__.__name__
+            )
+        original_qs = Node.objects.all()
+        result_qs = order_by_date(original_qs, 'scheduled')
+        self.assertEqual(
+            'QuerySet',
+            result_qs.__class__.__name__
+            )
+        self.assertNotEqual(
+            original_qs,
+            result_qs,
+            'gtd.shortcuts.order_by_date() method does not modify queryset'
+            )
+        # Now Check the actual contents of the returned queryset
+        scheduled_qs = original_qs.exclude(scheduled=None)
+        unscheduled_qs = original_qs.filter(scheduled=None)
+        self.maxDiff = None
+        self.assertEqual(
+            list(unscheduled_qs),
+            list(result_qs)[-unscheduled_qs.count():]
+            )
+        self.assertEqual(
+            list(scheduled_qs.order_by('scheduled')),
+            list(result_qs)[:scheduled_qs.count()]
             )
 
 class UrlParse(TestCase):

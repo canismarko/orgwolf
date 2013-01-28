@@ -1347,13 +1347,12 @@ asyncTest('Changing agenda date', function() {
 	    24,
 	    'Upcoming deadline row has node_id attribute set'
 	)
-    $workspace.html(''); // To make the Qunit output pretty
     }, (ajax_timer * 1.1 + 5))
 });
 
 
 
-module_name = 'Aloha editor - ';
+module_name = 'Aloha editor';
 module(module_name);
 test('Basic functionality', function() {
     equal(
@@ -1396,10 +1395,51 @@ asyncTest('Project outline incoroporation', function() {
 	    'Not aloha editable before being clicked'
 	);
 	$text.trigger('aloha-editable-activated');
-	console.log($text.attr('class'));
-	ok(
-	    $text.hasClass('aloha-editable-active'),
-	    'Aloha editable after calling click()'
-	);
     }, (ajax_timer * 1.1 + 5));
+});
+
+
+
+
+module_name = 'Node List Plugin';
+module(module_name);
+var setup_node_list = function() {
+    var new_html = '<table>\n';
+    new_html += '\t<tr class="list-node" node_id="1">\n';
+    new_html += '\t\t<td class="todo-state" todo_id="1">NEXT</td>\n';
+    new_html += '\t</tr>\n';
+    new_html += '</table>\n';
+    $workspace.html(new_html);
+    return $workspace.children('table');
+};
+test('nodeList plugin initialization', function() {
+    $list = setup_node_list();
+    equal(
+	$list.length,
+	1,
+	'List table is selectable'
+    );
+    equal(
+	typeof $.fn.nodeList,
+	'function',
+	'agenda plugin exists'
+    );
+    equal(
+	$list.nodeList({
+	    states: todo_state_list
+	}),
+	$list,
+	'nodeList plugin return selector (preserves chainability');
+    var $popover = $list.find('.popover');
+    equal(
+	1,
+	$popover.length,
+	'Plugin creates popovers'
+    );
+    equal(
+	$popover.find('.todo-option').length,
+	todo_state_list.length,
+	'Plugin passes along todo states to todoState plugin'
+    );
+    $workspace.html(''); // To make the Qunit output pretty
 });
