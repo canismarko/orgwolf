@@ -38,15 +38,18 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 {{ block.super }}
 <script>
 $('document').ready(function() {
+    // Aloha text editor
     Aloha.ready(function() {
-	$('#parent-text').alohaText();
+    	$('#parent-text').alohaText();
     });
+    // Project outline applicance
     var outline = new project_outline({
 	$workspace: $('#outline-workspace'),
 	todo_states: {% autoescape off %}{{ all_todo_states_json }}{% endautoescape %}
 	});
     outline.init();
     {% if parent_node %}
+    // todoState chooser for the parent's todo_state
     $('.todo').todoState({
     	node_id: {{ parent_node.pk }},
     	states: {% autoescape off %}{{ all_todo_states_json_full }}{% endautoescape %},
@@ -56,6 +59,41 @@ $('document').ready(function() {
 	    $(new_sel).addClass('active');
 	}
     });
+    // Modal node edit form
+    var edit_url = "{% url 'gtd.views.edit_node' node_id=parent_node.pk %}";
+    $.get(edit_url,
+	  {format: 'modal_form'},
+	  function(response) {
+	      $('#outline-workspace').after(response);
+	      var $modal = $('#edit-modal');
+	      $modal.modal( {show: false} );
+	      var $button = $('#edit-button')
+	      $button.attr('href', '#');
+	      $button.click(function(e) {
+		  e.stopPropagation();
+		  $('#edit-modal').modal('toggle');
+	      });
+	      var $form = $modal.find('#edit-form');
+	      $form.submit(function() {
+		  // Handle submission of the form
+		  var data = $form.serialize();
+		  data += '&format=json';
+		  $.post(edit_url, data, function(r) {
+		      r = $.parseJSON(r)
+		      if (r.status == 'success') {
+			  // Success! Now update the page
+			  $modal.modal('hide');
+			  node = $.parseJSON(r.node_data)[0];
+			  $('.update').each(function() {
+			      new_html = node.fields[$(this).attr('data-field')];
+			      console.log(node.fields);
+			      $(this).html(new_html);
+			  });
+		  }
+		  });
+		  return false;
+	      });
+	  });
     {% endif %}
 });
 
@@ -72,12 +110,12 @@ $('document').ready(function() {
     <a href="{{ base_url }}{{node.id}}/">{{node.display}}</a>
 {% endfor %}
 
-    <h3>{{ parent_node.get_title }}</h3>
+    <h3 class="update" data-field="title">{{ parent_node.get_title }}</h3>
     {% if node_id %}
 <form action="edit/" method="POST">
   <div class="btn-toolbar">
     <div class="btn-group">
-      <a href="edit/" class="btn">Edit</a><span class="alt"> |</span>
+      <a href="edit/" class="btn" id="edit-button">Edit</a><span class="alt"> |</span>
     </div>
     <div class="btn-group">
       <button type="submit" name="new_todo" value="0" class="btn new_todo{% if not parent_node.todo_state %} active{% endif %}">

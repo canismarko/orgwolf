@@ -18,6 +18,7 @@
 #######################################################################
 
 from __future__ import unicode_literals
+from django.core import serializers
 from django.core.urlresolvers import reverse
 from django.shortcuts import render_to_response, redirect, get_object_or_404
 from django.template import RequestContext
@@ -318,7 +319,7 @@ def edit_node(request, node_id, scope_id):
     new = "No"
     node = Node.objects.get(pk=node_id)
     breadcrumb_list = node.get_hierarchy()
-    if request.method == "POST" and request.POST.get('format') == 'json':
+    if request.is_ajax() and request.POST.get('format') == 'json':
         # Handle JSON requests
         post = request.POST
         try:
@@ -327,24 +328,45 @@ def edit_node(request, node_id, scope_id):
         except Node.DoesNotExist:
             # If the node is not accessible return a 404
             return HttpResponse(json.dumps({'status': '404'}))
-        node.text = post.get('text', node.text)
-        new_todo_id = post.get('todo_id', None)
-        if new_todo_id == '0':
-            node.todo_state = None
-        elif new_todo_id > 0:
-            try:
-                node.todo_state = TodoState.objects.get(pk=new_todo_id)
-            except TodoState.DoesNotExist:
-                return HttpResponseBadRequest('Invalid todo_id: %s' % new_todo_id)
-        node.save()
-        data = {
-            'status': 'success',
-            'node_id': node.pk,
-            'todo_id': getattr(node.todo_state, 'pk', 0),
- 
-            
-            }
+        if post['form'] == 'modal':
+            # Form posted from the modal javascript dialog
+            form = NodeForm(post, instance=node)
+            if form.is_valid():
+                form.save()
+                # Prepare the response
+                node_data = serializers.serialize(
+                    'json', Node.objects.filter(pk=node.pk))
+                data = {
+                    'status': 'success',
+                    'node_id': node.pk,
+                    'node_data': node_data,
+                    }
+            else:
+                return HttpResponseBadRequest(form.errors)
+        else:
+            node.text = post.get('text', node.text)
+            new_todo_id = post.get('todo_id', None)
+            if new_todo_id == '0':
+                node.todo_state = None
+            elif new_todo_id > 0:
+                try:
+                    node.todo_state = TodoState.objects.get(pk=new_todo_id)
+                except TodoState.DoesNotExist:
+                    return HttpResponseBadRequest('Invalid todo_id: %s' % new_todo_id)
+            node.save()
+            data = {
+                'status': 'success',
+                'node_id': node.pk,
+                'todo_id': getattr(node.todo_state, 'pk', 0),
+
+
+                }
         return HttpResponse(json.dumps(data))
+    if request.is_ajax() and request.GET.get('format') == 'modal_form':
+        form = NodeForm(instance=node)
+        return render_to_response('gtd/node_edit_modal.html',
+                                  locals(),
+                                  RequestContext(request))
     elif request.method == "POST" and request.POST.get('function') == 'reorder':
         # User is trying to move the node up or down
         if 'move_up' in request.POST:
@@ -357,7 +379,7 @@ def edit_node(request, node_id, scope_id):
             url_kwargs['node_id'] = node.parent.pk
         redirect_url = reverse('gtd.views.display_node', kwargs=url_kwargs)
         return redirect(redirect_url)
-    elif request.method == "POST" and request.POST.get('function') == 'change_todo_state':
+    elif request.method == 'POST' and request.POST.get('function') == 'change_todo_state':
         # User has asked to change TodoState
         new_todo_id = request.POST['new_todo']
         if new_todo_id == '0':
