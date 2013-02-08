@@ -20,6 +20,7 @@
 from __future__ import unicode_literals
 from django.core import serializers
 from django.core.urlresolvers import reverse
+from django.forms.models import model_to_dict
 from django.shortcuts import render_to_response, redirect, get_object_or_404
 from django.template import RequestContext
 from django.template.loader import render_to_string
@@ -328,22 +329,26 @@ def edit_node(request, node_id, scope_id):
         except Node.DoesNotExist:
             # If the node is not accessible return a 404
             return HttpResponse(json.dumps({'status': '404'}))
-        if post['form'] == 'modal':
+        if post.get('form') == 'modal':
             # Form posted from the modal javascript dialog
+            print post.get('todo_state').__class__
+            if post.get('todo_state') == '0':
+                post.pop('todo_state')
             form = NodeForm(post, instance=node)
             if form.is_valid():
                 form.save()
+                node = Node.objects.get(pk=node.pk)
                 # Prepare the response
-                node_data = serializers.serialize(
-                    'json', Node.objects.filter(pk=node.pk))
+                node_data = node.as_json()
                 data = {
                     'status': 'success',
                     'node_id': node.pk,
                     'node_data': node_data,
                     }
             else:
+                print form.errors
                 return HttpResponseBadRequest(form.errors)
-        else:
+        else: # ...if post.get('form') == 'modal'...
             node.text = post.get('text', node.text)
             new_todo_id = post.get('todo_id', None)
             if new_todo_id == '0':

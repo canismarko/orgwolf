@@ -27,6 +27,7 @@ from __future__ import unicode_literals
 import datetime as dt
 from django.test import TestCase
 from django.test.client import Client, RequestFactory
+from django.forms.models import model_to_dict
 from django.db.models import Q
 from django.utils.html import conditional_escape
 from django.contrib.auth.models import AnonymousUser
@@ -142,7 +143,10 @@ class EditNode(TestCase):
             'format': 'json',
             'todo_id': closed.pk,
             }
-        response = self.client.post(url, data)
+        response = self.client.post(
+            url, data,
+            HTTP_X_REQUESTED_WITH='XMLHttpRequest',
+            )
         self.assertEqual(
             200,
             response.status_code,
@@ -177,7 +181,10 @@ class EditNode(TestCase):
             'format': 'json',
             'todo_id': '0',
             }
-        response = self.client.post(url, data)
+        response = self.client.post(
+            url, data,
+            HTTP_X_REQUESTED_WITH='XMLHttpRequest',
+            )
         self.assertEqual(
             200,
             response.status_code,
@@ -192,6 +199,7 @@ class EditNode(TestCase):
             )
 
     def test_text_through_json(self):
+        """Check JSON editing (ie using Aloha editor)"""
         node = Node.objects.get(pk=1)
         self.assertEqual(
             '',
@@ -201,7 +209,10 @@ class EditNode(TestCase):
         text = '<strong>evilness</strong>'
         data = {'format': 'json',
                 'text': text}
-        response = self.client.post(url, data)
+        response = self.client.post(
+            url, data,
+            HTTP_X_REQUESTED_WITH='XMLHttpRequest',
+            )
         self.assertEqual(
             200,
             response.status_code
@@ -210,6 +221,36 @@ class EditNode(TestCase):
         self.assertEqual(
             conditional_escape(text),
             node.text
+            )
+    def test_edit_node_through_json(self):
+        """Tests AJAX editing of entire node at once via form-like submission"""
+        node = Node.objects.get(pk=1)
+        node.todo_state = TodoState.objects.get(pk=1)
+        node.save()
+        self.assertEqual(
+            1,
+            node.todo_state.pk
+            )
+        url = '/gtd/nodes/{0}/edit/'.format(node.pk)
+        data = model_to_dict(node)
+        data['form'] = 'modal'
+        data['format'] = 'json'
+        data['repeating_unit'] = ''
+        data['repeating_number'] = ''
+        data['scheduled'] = ''
+        data['deadline'] = ''
+        data['todo_state'] = 0
+        response = self.client.post(
+            url, data,
+            HTTP_X_REQUESTED_WITH='XMLHttpRequest',
+            )
+        self.assertEqual(
+            200,
+            response.status_code)
+        node = Node.objects.get(pk=1)
+        self.assertEqual(
+            None,
+            node.todo_state
             )
 
 class NodeOrder(TestCase):
@@ -677,6 +718,28 @@ class Shortcuts(TestCase):
         self.assertEqual(
             list(scheduled_qs.order_by('scheduled')),
             list(result_qs)[:scheduled_qs.count()]
+            )
+    def test_node_as_json(self):
+        node = Node.objects.get(pk=1)
+        self.assertEqual(
+            'instancemethod',
+            node.as_json.__class__.__name__
+            )
+        response = node.as_json()
+        self.assertEqual(
+            'str',
+            response.__class__.__name__
+            )
+        response_dict = json.loads(response)
+        self.assertEqual(
+            node.title,
+            response_dict['title']
+            )
+        self.assertEqual(
+            '{0} - {1}'.format(
+                node.todo_state.as_html(),
+                node.todo_state.display_text),
+            response_dict['todo_html'],
             )
 
 class UrlParse(TestCase):

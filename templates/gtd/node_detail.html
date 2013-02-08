@@ -3,14 +3,14 @@
   {% if parent_node %}
   <dt>Status:</dt>
   {% if parent_node.todo_state %}
-  <dd class="todo" todo_id="{{ parent_node.todo_state.pk }}">{{ parent_node.todo_state.as_html }} - {{ parent_node.todo_state.display_text}}</dd>
+  <dd class="todo update" todo_id="{{ parent_node.todo_state.pk }}" data-field="todo_html">{{ parent_node.todo_state.as_html }} - {{ parent_node.todo_state.display_text}}</dd>
   {% else %}
-  <dd class="todo" todo_id="0">[None]</dd>
+  <dd class="todo update" todo_id="0" data-field="todo_state">[None]</dd>
   {% endif %}
   {% endif %}
   {% if parent_node.scheduled %}
   <dt>Scheduled: </dt>
-  <dd>{{ parent_node.scheduled.date }}
+  <dd class="update" data-field="scheduled">{{ parent_node.scheduled.date }}
     {% if parent_node.scheduled_time_specific %}
     {{ parent_node.scheduled.time }}
     {% endif %}</dd>

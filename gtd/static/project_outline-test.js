@@ -1,10 +1,7 @@
 // Hold unit tests for the hierarchical expanding project outline view.
 // Implementation held in orgwolf.js
-var $workspace = $('#test_workspace')
-var initial_html = $workspace.html();
-var setup = function() {
-    $workspace.html(initial_html);
-};
+var $workspace = $('#test_workspace');
+var $fixture = $('#qunit-fixture');
 
 // Fix for bad global variables detection in firefox
 var console, getInterface;
@@ -136,6 +133,12 @@ $.mockjax({
     responseTime: ajax_timer,
     responseText: '{"status": "success", "node_id": 5, "todo_id": 0}'
 });
+// For testing modal edit dialog
+$.mockjax({
+    url: '/gtd/nodes/6/edit/',
+    responseTime: ajax_timer,
+    responseText: '<div class="modal hide fade" id="node-edit-modal">\n<div class="modal-body"><p>One fine body</p></div>\n</div>'
+});
 
 var module_name = 'outline-appliance-test.js - ';
 module(module_name + 'Heading');
@@ -184,7 +187,6 @@ test('heading create_div method', function() {
     // Make sure the outline_heading objects create_div method works as expected
     var test_heading = new outline_heading(full_dict);
     var $workspace = $('#test_workspace');
-    $workspace.html('');
     test_heading.create_div($workspace);
     var $heading = $('#test_workspace').children('.heading');
     equal($heading.length, 1, '1 heading created');
@@ -222,7 +224,6 @@ test('update_dom method', function() {
 	'update_dom() method exists'
     );
     var $workspace = $('#test_workspace');
-    $workspace.html('');
     test_heading.create_div($workspace);
     var $heading = test_heading.$element;
     // Test heading.node_id
@@ -324,7 +325,6 @@ test('outline indentations', function() {
 });
 
 test('add function buttons', function() {
-    setup();
     var $workspace = $('#test_workspace');
     var heading = new outline_heading(full_dict);
     heading.create_div($workspace);
@@ -402,7 +402,6 @@ test('Heading toggle() method', function() {
 
 asyncTest('Toggle clickable region on heading', function() {
     var $workspace = $('#test_workspace');
-    setup();
     var outline = new project_outline({$workspace: $workspace});
     outline.init();
     setTimeout(function() {
@@ -431,7 +430,6 @@ asyncTest('Toggle clickable region on heading', function() {
 
 test('Hovering actions', function() {
     // When an .ow-hoverable action is hovered over, the relevant buttons show
-    setup();
     var $workspace = $('#test_workspace');
     var heading = new outline_heading(sparse_dict);
     heading.todo_states = [
@@ -505,7 +503,6 @@ test('Hovering actions', function() {
 });
 
 test('Clickable TodoState elements', function() {
-    setup();
     // When '.todostate' spans are clicked, they become a selection popover.
     var $workspace = $('#test_workspace');
     var heading = new outline_heading(second_dict);
@@ -548,7 +545,6 @@ test('Clickable TodoState elements', function() {
 });
 
 test('Todo state popover', function() {
-    setup();
     // When '.todostate' spans are clicked, they become a combo select box.
     var $workspace = $('#test_workspace');
     var heading = new outline_heading(second_dict);
@@ -598,7 +594,6 @@ test('Todo state popover', function() {
 });
 
 test('Popover populating method', function() {
-    setup();
     // When '.todostate' spans are clicked, they become a combo select box.
     var $workspace = $('#test_workspace');
     var heading = new outline_heading(second_dict);
@@ -640,7 +635,6 @@ test('Popover populating method', function() {
 
 asyncTest('Todo state changing functionality', function() {
     var $workspace = $('#test_workspace');
-    setup();
     var test_outline = new project_outline({$workspace: $workspace});
     test_outline.todo_states = todo_state_list;
     test_outline.init();
@@ -673,7 +667,6 @@ asyncTest('Todo state changing functionality', function() {
 	);
 	// Now change it to the other todo state
 	$heading1.find('.todo-option[todo_id="2"]').click();
-	console.log($heading1.find('.todo-option[todo_id="2"]'));
 	stop();
     }, (ajax_timer * 1.1 + 5));
     setTimeout(function() {
@@ -736,7 +729,6 @@ asyncTest('converts initial workspace', function() {
     // See if the function finds the existing workspace and sets the right number of children with the right attributes and data
     expect(10);
     var $workspace = $('#test_workspace');
-    setup();
     var test_outline = new project_outline({$workspace: $workspace});
     test_outline.init();
     setTimeout(function() {
@@ -769,7 +761,6 @@ asyncTest('Populates children on outline init', function() {
     // table to the outline workspace.
     expect(5);
     var $workspace = $('#test_workspace');
-    setup();
     var outline = new project_outline({$workspace: $workspace});
     outline.init();
     setTimeout(function() {
@@ -796,7 +787,6 @@ asyncTest('Populates children on outline init', function() {
 
 asyncTest('Alternate colors', function() {
     var $workspace = $('#test_workspace');
-    setup();
     var outline = new project_outline({$workspace: $workspace});
     var expected_colors = ['blue', 'brown', 'purple', 'red', 'green', 'teal', 'slateblue', 'darkred'];
     outline.init();
@@ -830,7 +820,6 @@ asyncTest('Alternate colors', function() {
 asyncTest('Set todo states', function() {
     expect(7);
     var $workspace = $('#test_workspace');
-    setup();
     var outline = new project_outline({
 	$workspace: $workspace,
 	todo_states: todo_state_list
@@ -870,10 +859,7 @@ test('Todo state jquery plugin initialization', function() {
 	'function',
 	'todoState plugin exists'
     );
-    // Set up some dummy data
-    var $workspace = $('#test_workspace')
-    $workspace.html('<div id="todo-test">NEXT</div>');
-    var $todo = $workspace.children('#todo-test');
+    var $todo = $('#todo-test');
     equal(
 	$todo.next('.popover').length,
 	0,
@@ -924,10 +910,7 @@ test('Todo state jquery plugin initialization', function() {
 });
 
 test('popover populates with todo states', function() {
-    // Set up some dummy data
-    var $workspace = $('#test_workspace')
-    $workspace.html('<div id="todo-test">NEXT</div>');
-    var $todo = $workspace.children('#todo-test');
+    var $todo = $('#todo-test');
     $todo.attr('todo_id', 1);
     $todo.todoState({
 	states: todo_state_list
@@ -956,9 +939,7 @@ test('popover populates with todo states', function() {
 });
 
 test('todo state click functionality', function() {
-    var $workspace = $('#test_workspace')
-    $workspace.html('<div id="todo-test">NEXT</div>');
-    var $todo = $workspace.children('#todo-test');
+    var $todo = $('#todo-test');
     $todo.todoState({
 	states: todo_state_list
     });
@@ -983,6 +964,8 @@ test('todo state click functionality', function() {
 	'Popover starts out valign->middle of the todo state'
     );
     // Make sure it goes away when another element is clicked
+    var $workspace = $('#test_workspace');
+    console.log($workspace.html());
     $workspace.click();
     equal(
 	$popover.css('display'),
@@ -1005,8 +988,7 @@ test('todo state click functionality', function() {
 });
 
 test('todo-option hover functionality', function() {
-    $workspace.html('<div id="todo-test">NEXT</div>');
-    var $todo = $workspace.children('#todo-test');
+    var $todo = $('#todo-test');
     $todo.attr('todo_id', 1);
     $todo.todoState({
 	states: todo_state_list
@@ -1035,15 +1017,13 @@ test('todo-option hover functionality', function() {
 });
 
 asyncTest('Todo option click functionality', function() {
-    var $workspace = $('#test_workspace')
-    $workspace.html('<div id="todo-test">NEXT</div>');
-    $('body').data('test_value', false) // For testing callback
-    var $todo = $workspace.children('#todo-test');
+    $fixture.data('test_value', false) // For testing callback
+    var $todo = $('#todo-test');
     $todo.attr('todo_id', 1);
     $todo.todoState({
 	states: todo_state_list,
 	node_id: 1,
-	click: function() {$('body').data('test_value', true);}
+	click: function() {$fixture.data('test_value', true);}
     });
     var $popover = $todo.next('.popover');
     $todo.click();
@@ -1086,15 +1066,13 @@ asyncTest('Todo option click functionality', function() {
 	    'DONE',
 	    'todo state html is updated to reflect new todo state'
 	);
-	ok($('body').data('test_value'), 
+	ok($fixture.data('test_value'), 
 	   'Callback function was called after click');
     }, (ajax_timer * 1.1 + 5));
 });
 
 asyncTest('Hidden status correct after click', function() {
-    var $workspace = $('#test_workspace')
-    $workspace.html('<div id="todo-test">NEXT</div>');
-    var $todo = $workspace.children('#todo-test');
+    var $todo = $('#todo-test');
     $todo.attr('todo_id', 1);
     $todo.todoState({
 	states: todo_state_list,
@@ -1130,9 +1108,7 @@ asyncTest('Hidden status correct after click', function() {
 });
 
 asyncTest('Auto-hide feature does not trigger for switching to regular nodes', function() {
-    var $workspace = $('#test_workspace')
-    $workspace.html('<div id="todo-test">NEXT</div>');
-    var $todo = $workspace.children('#todo-test');
+    var $todo = $('#todo-test')
     $todo.attr('todo_id', 0);
     $todo.todoState({
 	states: todo_state_list,
@@ -1185,29 +1161,8 @@ $.mockjax({
     }
 });
 
-var agenda_setup = function() {
-    var new_html = '';
-    new_html += '<div class="agenda">\n';
-    new_html += '  <h2 class="date">Today</h2>\n';
-    new_html += '  <h2 class="other">Daily</h2>\n';
-    new_html += '  <form class="date" action="">\n';
-    new_html += '    <input type="text" name="date"></input>\n';
-    new_html += '    <input type="submit"></input>\n';
-    new_html += '  </form>\n';
-    new_html += '  <table class="daily">\n';
-    new_html += '    <tr node_id="20"><td class="todo-state"></td></tr>\n';
-    new_html += '  </table>\n';
-    new_html += '  <table class="timely">\n';
-    new_html += '  </table>\n';
-    new_html += '  <table class="deadlines">\n';
-    new_html += '  </table>\n';
-    new_html += '</div>\n';
-    $workspace.html(new_html);
-    return $workspace.children('.agenda');
-}
-
 test('Agenda jquery plugin initialization', function() {
-    var $agenda = agenda_setup();
+    var $agenda = $('#agenda-div');
     equal(
 	$agenda.length,
 	1,
@@ -1243,7 +1198,7 @@ test('Agenda jquery plugin initialization', function() {
 module(module_name + 'Functionality');
 
 test('todoState plugin attached', function() {
-    var $agenda = agenda_setup();
+    var $agenda = $('#agenda-div');
     $agenda.agenda({
 	states: [
 	    {
@@ -1275,7 +1230,7 @@ test('todoState plugin attached', function() {
 });
 
 asyncTest('Changing agenda date', function() {
-    var $agenda = agenda_setup();
+    var $agenda = $('#agenda-div');
     $agenda.agenda();
     var $form = $agenda.find('form.date');
     $form.submit();
@@ -1360,10 +1315,8 @@ test('Basic functionality', function() {
 	'function',
 	'alohaText plugin exists'
     );
-    var $workspace = $('#test_workspace');
-    $workspace.html('<div class="ow-text">Hello</div>')
-    $text = $workspace.children('.ow-text');
-    console.log($text);
+    var $fixture = $('#qunit-fixture');
+    $text = $fixture.children('.ow-text');
     deepEqual(
 	$text.alohaText(),
 	$text,
@@ -1400,20 +1353,10 @@ asyncTest('Project outline incoroporation', function() {
 
 
 
-
 module_name = 'Node List Plugin';
 module(module_name);
-var setup_node_list = function() {
-    var new_html = '<table>\n';
-    new_html += '\t<tr class="list-node" node_id="1">\n';
-    new_html += '\t\t<td class="todo-state" todo_id="1">NEXT</td>\n';
-    new_html += '\t</tr>\n';
-    new_html += '</table>\n';
-    $workspace.html(new_html);
-    return $workspace.children('table');
-};
 test('nodeList plugin initialization', function() {
-    $list = setup_node_list();
+    $list = $('#node-list');
     equal(
 	$list.length,
 	1,
@@ -1441,5 +1384,48 @@ test('nodeList plugin initialization', function() {
 	todo_state_list.length,
 	'Plugin passes along todo states to todoState plugin'
     );
-    $workspace.html(''); // To make the Qunit output pretty
 });
+
+
+
+module_name = 'Node Edit Dialog';
+module(module_name);
+var setup = function() {
+};
+asyncTest('Check basic functionality', function() {
+    equal(
+	'function',
+	typeof $.fn.nodeEdit,
+	'nodeEdit is a function'
+    );
+    var $workspace = $('#node-edit-test');
+    var $button = $('#edit-btn');
+    equal(
+	$workspace.length,
+	1,
+	'div id="node-edit-test" found'
+    );
+    equal(
+	$button.length,
+	1,
+	'<a id="edit-btn" found'
+    );
+    $button.nodeEdit({url: '/gtd/nodes/6/edit/',
+		      target: '#node-detail',
+		     });
+    setTimeout(function() {
+	start();
+	var $modal = $button.siblings('#node-edit-modal');
+	equal(
+	    $modal.length,
+	    1,
+	    'dialog found'
+	);
+	equal(
+	    $modal.css('display'),
+	    'none',
+	    'Modal starts out hidden'
+	);
+    }, (ajax_timer * 1.1) + 5);
+});
+

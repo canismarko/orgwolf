@@ -731,3 +731,65 @@ var get_heading = function (node_id) {
 	return this;
     };
 })(jQuery);
+
+/*************************************************
+* jQuery node edit plugin
+* 
+* Modal dialog that allows editing of nodes
+* 
+* Accepts the following options:
+* - obj['url'] is the RESTFUL URL for editing
+*   a node
+* - obj['target'] is the jQuery selector for the
+*   element to search for .update elements.
+* Process the following elements:
+* - $(this) is the button that triggers the modal
+* - .update (with obj['target']) will be updated
+*   with returned data once form is submitted.
+*   - attribute data-field holds the name of the
+*   field to use for .update purposes.
+*************************************************/
+
+(function( $ ) {
+    $.fn.nodeEdit = function(args) {
+	var $target = $(args['target']);
+	var $button = this;
+	var edit_url = args['url'];
+	var callback = args['callback'];
+	$.get(edit_url,
+	      {format: 'modal_form'},
+	      function(response) {
+		  $button.after(response);
+		  var $modal = $button.siblings().first();
+		  $modal.modal( {show: false} );
+		  $button.click(function(e) {
+		      e.preventDefault();
+		      $modal.modal('toggle');
+		  });
+		  var $form = $modal.find('form');
+		  $form.submit(function(e) {
+		      // Handle submission of the form
+		      e.preventDefault();
+		      var data = $form.serialize();
+		      data += '&format=json';
+		      $.post(edit_url, data, function(r) {
+			  r = $.parseJSON(r)
+			  if (r.status == 'success') {
+			      // Success! Now update the page
+			      $modal.modal('hide');
+			      node = $.parseJSON(r.node_data);
+			      $target.find('.update').each(function() {
+				  var field = $(this).attr('data-field');
+				  var new_html = node[field];
+				  $(this).html(new_html);
+			      });
+			      // User supplied callback function
+			      if (typeof callback != 'undefined') {
+				  callback(node);
+				  }
+			  }
+		      });
+		  });
+	      });
+    };
+})(jQuery);

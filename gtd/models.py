@@ -21,6 +21,7 @@ from __future__ import unicode_literals
 from django.core.exceptions import ValidationError
 from django.db import models, transaction
 from django.db.models import Q, signals
+from django.forms.models import model_to_dict
 from django.dispatch import receiver
 from django.utils.encoding import python_2_unicode_compatible
 from django.utils.timezone import get_current_timezone
@@ -309,11 +310,13 @@ class Node(models.Model):
         hierarchy_list = []
         current_parent = self
         hierarchy_list.append({'display': current_parent.get_title(),
-                                'id': current_parent.id})
+                               'id': current_parent.id,
+                               'pk': current_parent.pk})
         while(current_parent.parent != None):
             current_parent = current_parent.parent
             hierarchy_list.append({'display': current_parent.get_title(),
-                                    'id': current_parent.id})
+                                   'id': current_parent.id,
+                                   'pk': current_parent.pk})
         hierarchy_list.reverse()
         return hierarchy_list
     def get_hierarchy_as_string(self):
@@ -329,6 +332,21 @@ class Node(models.Model):
             string += self.todo_state.as_html() + ' '
         string += self.title
         return string
+    def as_json(self):
+        """Process the instance into a json string. Output contains
+        a few extra attributes for AJAX processing."""
+        new_dict = model_to_dict(self)
+        # convert dates to strings
+        for field in ['closed', 'scheduled', 'deadline']:
+            if new_dict[field]:
+                new_dict[field] = new_dict[field].ctime()
+        # Include the todo_state html
+        if self.todo_state:
+            new_dict['todo_html'] = self.todo_state.as_html()
+            new_dict['todo_html'] += ' - ' + self.todo_state.display_text
+        else:
+            new_dict['todo_html'] = '[None]'
+        return json.dumps(new_dict)
     def get_tags(self):
         tag_strings = self.tag_string.split(":")
         tag_string = tag_strings[1:len(tag_strings)-1] # Get rid of the empty first and last elements
