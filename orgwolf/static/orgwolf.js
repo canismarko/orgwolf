@@ -294,7 +294,7 @@ $(document).ready(function(){
 	    $text_a.aloha()
 	});
 	return this;
-    // }; // Uncomment this if ahola breaks
+    }; // Uncomment this if ahola breaks
     // Bind the AJAX handler for changing the text
 	$('document').ready(function() {
 	    Aloha.ready(function() {
@@ -305,19 +305,25 @@ $(document).ready(function(){
 			// If they text was changed, submit the ajax request
 			var $parent = editable.obj.parent();
 			var url = '/gtd/nodes/' + $parent.attr('node_id') + '/edit/';
-			var data = {
+			// Clean up the text a bit
+			var new_text = editable.obj.html();
+			var r = /\s*(.*)/;
+			new_text = r.exec(new_text)[1];
+			console.log(new_text);
+			new_text = new_text.replace(/<p><\/p>/g, '');
+			console.log(new_text);
+			var payload = {
 			    format: 'json',
 			    node_id: $parent.attr('node_id'),
-			    text: editable.obj.html()
+			    text: new_text
 			};
-			$.post(url, data, function() {
+			$.post(url, payload, function(r) {
 			    console.log('# Todo: write callback function for aloha edit ajax request');
 			});
 		    }
 		});
 	    });
 	});
-    };
 })(jQuery);
 
 
@@ -811,22 +817,34 @@ var get_heading = function (node_id) {
 		      var $modal = $button.siblings().first();
 		      data.$modal = $modal
 		      $modal.modal( {show: false} );
+		      // Extract values and save to .data()
+		      data.todo_id = $modal.find('#id_todo_state').find('option[selected]').attr('value');
+		      // Even handlers for new form
 		      $button.click(function(e) {
 			  e.preventDefault();
 			  $modal.modal('toggle');
+		      });
+		      $modal.on('hidden', function () {
+			  methods['reset']({ $elem: $button });
 		      });
 		      var $form = $modal.find('form');
 		      $form.submit(function(e) {
 			  // Handle submission of the form
 			  e.preventDefault();
-			  var data = $form.serialize();
-			  data += '&format=json';
-			  $.post(edit_url, data, function(r) {
+			  var payload = $form.serialize();
+			  payload += '&format=json';
+			  $.post(edit_url, payload, function(r) {
 			      r = $.parseJSON(r)
 			      if (r.status == 'success') {
 				  // Success! Now update the page
-				  $modal.modal('hide');
 				  node = $.parseJSON(r.node_data);
+				  // Update data
+				  var data = $button.data('nodeEdit');
+				  data.todo_id = node.todo_state;
+				  console.log(data.todo_id);
+				  $button.data('nodeEdit', data);
+				  // Update DOM
+				  $modal.modal('hide');
 				  $target.find('.update').each(function() {
 				      var field = $(this).attr('data-field');
 				      var new_html = node[field];
@@ -845,16 +863,40 @@ var get_heading = function (node_id) {
 	    $button.data('nodeEdit', data);
 	}, // end of init
 	update: function ( args ) {
+	    // Updates the DOM to reflect changes made through other sources
 	    var $this = this;
 	    var data = $this.data('nodeEdit');
 	    var $modal = data.$modal;
 	    if ( typeof args.todo_id != 'undefined' ) {
+		data.todo_id = args.todo_id;
 		var $select = $modal.find('#id_todo_state');
 		$select.find('option').removeAttr('selected');
 		var $new_opt = $select.find('option[value="' + args.todo_id +  '"]');
 		$new_opt.attr('selected', 'selected');
 	    }
-	} // end of update
+	    $this.data('nodeEdit', data); // Write the settings
+	}, // end of update method
+	reset: function ( args ) {
+	    // Resets the values in the modal to the saved versions
+	    if ( typeof args == 'undefined' ) {
+		args = {};
+	    }
+	    if ( typeof args.$elem != 'undefined' ) {
+		var $elem = args.$elem;
+	    } else {
+		var $elem = this;
+	    }
+	    return $elem.each(function() {
+		var $this = $(this);
+		var data = $this.data('nodeEdit');
+		var $modal = data.$modal;
+		// Reset the todo_state select element
+		var $todo = $modal.find('#id_todo_state')
+		$todo.find('option').removeAttr('selected');
+		var sel = 'option[value="' + data.todo_id + '"]';
+		$todo.find(sel).attr('selected', 'selected');
+	    });
+	} // end of reset method
     };
 
     // Method selection magic

@@ -1294,9 +1294,7 @@ asyncTest('Changing agenda date', function() {
     var $agenda = $('#agenda-div');
     $agenda.agenda();
     var $form = $agenda.find('form.date');
-    $form.submit();
-    ok(true, 'Submitting the form did not reload the page');
-    // Now change the date
+    // Change the date
     var $text = $form.find('input[name="date"][type="text"]');
     equal(
 	$text.length,
@@ -1480,10 +1478,11 @@ asyncTest('Check basic functionality', function() {
 	    1,
 	    'dialog found'
 	);
+	var data = $button.data('nodeEdit');
 	equal(
-	    $modal.css('display'),
-	    'none',
-	    'Modal starts out hidden'
+	    data.todo_id,
+	    1,
+	    'data.(\'nodeEdit\').todo_id set correctly'
 	);
     }, (ajax_timer * 1.1) + 5);
 });
@@ -1510,6 +1509,12 @@ asyncTest('nodeEdit(\'update\') method', function() {
 	    'selected',
 	    'New option has selected attribute'
 	);
+	var settings = $button.data('nodeEdit');
+	equal(
+	    settings.todo_id,
+	    2,
+	    '.data(\'nodeEdit\') is updated'
+	);
     }, ajax_timer * 1.1 + 5);
 });
 asyncTest('nodeEdit(\'reset\') method', function() {
@@ -1519,8 +1524,16 @@ asyncTest('nodeEdit(\'reset\') method', function() {
 		     });
     setTimeout( function() {
 	start();
-	ok(false, '# Todo: write node edit modal reset method');
+	var $modal = $button.data('nodeEdit').$modal;
+	var $select = $modal.find('#id_todo_state');
+	$select.find('option').removeAttr('selected');
+	$select.find('option[value="2"]').attr('selected', 'selected');
 	$button.nodeEdit('reset');
+	equal(
+	    $select.find('option[selected]').attr('value'),
+	    "1",
+	    'Todostate select element is reset upon calling reset method'
+	);
     }, ajax_timer * 1.1 + 5);
 });
 

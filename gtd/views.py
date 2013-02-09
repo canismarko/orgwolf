@@ -368,6 +368,7 @@ def edit_node(request, node_id, scope_id):
                 }
         return HttpResponse(json.dumps(data))
     if request.is_ajax() and request.GET.get('format') == 'modal_form':
+        # User asked for the modal form used in jQuery plugins
         form = NodeForm(instance=node)
         return render_to_response('gtd/node_edit_modal.html',
                                   locals(),
