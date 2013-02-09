@@ -133,12 +133,29 @@ $.mockjax({
     responseTime: ajax_timer,
     responseText: '{"status": "success", "node_id": 5, "todo_id": 0}'
 });
+// For testing todo buttons plugin
+$.mockjax({
+    url: '/gtd/nodes/7/edit/',
+    responseTime: ajax_timer,
+    responseText: '{"status": "success", "todo_id": 1}'
+});
 // For testing modal edit dialog
+var options = "";
+for ( var i = 0; i < todo_state_list.length; i++ ) {
+    var state = todo_state_list[i];
+    options += '<option value="' + state.todo_id + '"';
+    if ( i == 1 ) {
+	options += ' selected';
+    }
+    options += '>';
+    options += state.display + '</option>';
+}
 $.mockjax({
     url: '/gtd/nodes/6/edit/',
     responseTime: ajax_timer,
-    responseText: '<div class="modal hide fade" id="node-edit-modal">\n<div class="modal-body"><p>One fine body</p></div>\n</div>'
+    responseText: '<div class="modal hide fade" id="node-edit-modal">\n<div class="modal-body"><select id="id_todo_state">' + options + '</select></div>\n</div>'
 });
+
 
 var module_name = 'outline-appliance-test.js - ';
 module(module_name + 'Heading');
@@ -851,7 +868,7 @@ asyncTest('Set todo states', function() {
 
 
 module_name = 'todoState jQuery plugin - ';
-module(module_name + 'Base functionality');
+module(module_name + 'init method');
 
 test('Todo state jquery plugin initialization', function() {
     equal(
@@ -1143,7 +1160,51 @@ asyncTest('Auto-hide feature does not trigger for switching to regular nodes', f
     }, (ajax_timer * 1.1 + 5))
 });
 
-
+module(module_name + 'update method');
+test('Update method changes settings', function() {
+    var $todo = $('#todo-test');
+    $todo.attr('todo_id', 1);
+    $todo.todoState({
+	states: todo_state_list
+    });
+    var settings = $todo.data('todoState');
+    equal(
+	settings.todo_id,
+	1,
+	'Correct initial settings.todo_id'
+    );
+    $todo.todoState('update', {
+	todo_id: "2"
+	});
+    settings = $todo.data('todoState');
+    equal(
+	settings.todo_id,
+	2,
+	'settings.todo_id correct after update method called'
+    );
+    equal(
+	$todo.attr('todo_id'),
+	"2",
+	'todo_id attribute set after update method called'
+    );
+    var $popover = $todo.siblings('.popover');
+    var $selected = $popover.find('.todo-option[selected]');
+    var $option2 = $popover.find('.todo-option[todo_id="2"]');
+    equal(
+	$selected.length,
+	1,
+	'Only one option is selected'
+    );
+    ok(
+	$option2.attr('selected'),
+	'todo option 2 has \'selected\' attribute'
+    );
+    equal(
+	$todo.html(),
+	todo_state_list[2].display,
+	'todo_state display is updated'
+    );
+});
 
 
 module_name = 'agenda jQuery plugin - ';
@@ -1316,7 +1377,7 @@ test('Basic functionality', function() {
 	'alohaText plugin exists'
     );
     var $fixture = $('#qunit-fixture');
-    $text = $fixture.children('.ow-text');
+    var $text = $fixture.children('.ow-text');
     deepEqual(
 	$text.alohaText(),
 	$text,
@@ -1338,7 +1399,7 @@ asyncTest('Project outline incoroporation', function() {
     outline.init();
     setTimeout(function() {
 	start();
-	$text = Aloha.jQuery('.ow-text');
+	var $text = Aloha.jQuery('.ow-text');
 	ok(
 	    $text.hasClass('aloha-editable'),
 	    'Aloha editor attached'
@@ -1356,7 +1417,7 @@ asyncTest('Project outline incoroporation', function() {
 module_name = 'Node List Plugin';
 module(module_name);
 test('nodeList plugin initialization', function() {
-    $list = $('#node-list');
+    var $list = $('#node-list');
     equal(
 	$list.length,
 	1,
@@ -1390,8 +1451,6 @@ test('nodeList plugin initialization', function() {
 
 module_name = 'Node Edit Dialog';
 module(module_name);
-var setup = function() {
-};
 asyncTest('Check basic functionality', function() {
     equal(
 	'function',
@@ -1429,3 +1488,115 @@ asyncTest('Check basic functionality', function() {
     }, (ajax_timer * 1.1) + 5);
 });
 
+asyncTest('nodeEdit(\'update\') method', function() {
+    var $button = $('#edit-btn');
+    $button.nodeEdit({url: '/gtd/nodes/6/edit/',
+		      target: '#node-detail',
+		     });
+    setTimeout( function() {
+	start();
+	$button.nodeEdit('update', { todo_id: 2});
+	var $modal = $button.siblings('#node-edit-modal');
+	var $select = $modal.find('#id_todo_state');
+	var $option = $select.find('option[value="2"]');
+	var $selected = $select.find('option[selected]');
+	equal(
+	    $selected.length,
+	    1,
+	    'Only one option is selected'
+	)
+	equal(
+	    $option.attr('selected'),
+	    'selected',
+	    'New option has selected attribute'
+	);
+    }, ajax_timer * 1.1 + 5);
+});
+asyncTest('nodeEdit(\'reset\') method', function() {
+   var $button = $('#edit-btn');
+    $button.nodeEdit({url: '/gtd/nodes/6/edit/',
+		      target: '#node-detail',
+		     });
+    setTimeout( function() {
+	start();
+	ok(false, '# Todo: write node edit modal reset method');
+	$button.nodeEdit('reset');
+    }, ajax_timer * 1.1 + 5);
+});
+
+
+module_name = 'Todo State Buttons';
+module(module_name);
+test('Plugin exists', function() {
+    equal(
+	'function',
+	typeof $.fn.todoButtons,
+	'todoButtons is a function'
+    );
+    var $buttons = $('#todo-buttons');
+    var r = $buttons.todoButtons();
+    equal(
+	r,
+	$buttons,
+	'Plugin prefers chainability'
+    );
+});
+
+asyncTest('Button clicks', function() {
+    var $buttons = $('#todo-buttons');
+    $buttons.todoButtons();
+    var $button0 = $buttons.find('button[value=0]');
+    var $button1 = $buttons.find('button[value=1]');
+    ok(
+	$button0.hasClass('active'),
+	'Button 0 starts out active'
+    );
+    ok(
+	!$button1.hasClass('active'),
+	'Button 1 starts out inactive'
+    );
+    $button1.click();
+    setTimeout(function() {
+	start();
+	ok(
+	    $button1.hasClass('active'),
+	    'Clicked button becomes active'
+	);
+	ok(
+	    !$button0.hasClass('active'),
+	    'Other button becomes inactive'
+	);
+    }, ajax_timer * 1.1 + 5);
+});
+
+test('todoButtons(\'update\') method', function() {
+    var $buttons = $('#todo-buttons');
+    $buttons.todoButtons();
+    var $button0 = $buttons.find('button[value=0]');
+    var $button1 = $buttons.find('button[value=1]');
+    $buttons.todoButtons('update', {todo_id: 1});
+    ok(
+	$button1.hasClass('active'),
+	'New button is activated'
+    );
+});
+
+asyncTest('callback', function() {
+    var $buttons = $('#todo-buttons');
+    $buttons.data('test_value', false);
+    $buttons.todoButtons({ 
+	callback: function() {
+	    $buttons.data('test_value', true);
+	}
+    });
+    var $button0 = $buttons.find('button[value=0]');
+    var $button1 = $buttons.find('button[value=1]');
+    $button1.click();
+    setTimeout( function() {
+	start();
+	ok(
+	    $buttons.data('test_value'),
+	    'callback function executed'
+	);
+    }, ajax_timer * 1.1 + 5);
+})

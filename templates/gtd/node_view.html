@@ -49,34 +49,32 @@ $('document').ready(function() {
 	});
     outline.init();
     {% if parent_node %}
-    // todoState chooser for the parent's todo_state
-    var todo_setup = function() {
-	$('.todo').todoState({
-    	    node_id: {{ parent_node.pk }},
-    	    states: {% autoescape off %}{{ all_todo_states_json_full }}{% endautoescape %},
-	    click: function(ajax_response) {
-		$('.new_todo').removeClass('active');
-		new_sel = '.new_todo[value="' + ajax_response['todo_id'] + '"]';
-		$(new_sel).addClass('active');
-	    }
-	});
+    var update_todo = function ( todo_id ) {
+	$('#parent-todo').todoState('update', { todo_id: todo_id });
+	$('#edit-button').nodeEdit('update', { todo_id: todo_id });
+	$('#todo-buttons').todoButtons('update', { todo_id: todo_id });
     };
-    todo_setup();
+    // todoState chooser for the parent's todo_state
+    $('#parent-todo').todoState({
+    	node_id: {{ parent_node.pk }},
+    	states: {% autoescape off %}{{ all_todo_states_json_full }}{% endautoescape %},
+	click: function(d) {
+	    update_todo( d.todo_id );
+	}
+    });
     // Modal node edit form
     $('#edit-button').nodeEdit({
 	url: '{% url 'gtd.views.edit_node' node_id=parent_node.pk %}',
 	target: '#node-detail',
 	callback: function(d) {
-	    // Custom changes to this specific page
-	    console.log(d);
-	    $('.todo').attr('todo_id', d['todo_state']);
-	    todo_setup();
-	    $('button.new_todo').removeClass('active');
-	    var s = 'button.new_todo[value="' + d['todo_state'] + '"]';
-	    $(s).addClass('active');
-	    console.log('# Todo: convert nodeEdit callback to buttons appliance');
-	    console.log('# Todo: convert nodeEdit callback to todoState(\'update\')');
+	    update_todo( d.todo_state );
 	}				
+    });
+    // Todo buttons plugin
+    $('#todo-buttons').todoButtons( { 
+	callback: function(d) {
+	    update_todo( d.todo_id );
+	}
     });
     {% endif %}
 });
@@ -98,7 +96,7 @@ $('document').ready(function() {
     <h3 class="update" data-field="title">{{ parent_node.get_title }}</h3>
     {% if node_id %}
   <form action="edit/" method="POST">
-    <div class="btn-toolbar">
+    <div class="btn-toolbar" id="todo-buttons" node_id="{{ parent_node.pk }}">
       <div class="btn-group">
 	<a href="edit/" class="btn" id="edit-button">Edit</a><span class="alt"> |</span>
       </div>

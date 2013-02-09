@@ -69,165 +69,206 @@ $(document).ready(function(){
 * - node_id: id of the node to change by AJAX
 *************************************************/
 (function( $ ){
-    $.fn.todoState = function(options) {
-	// Process options
-	var $todo = this;
-	// Remove any links that may be in the todo_state element
-	$todo.find('a').contents().unwrap();
-	var todo_id = $todo.attr('todo_id');
-	var settings = $.extend(
-	    {
-		states: [
-		    {todo_id: 0, display: '[None]'},
-		],
-		node_id: 0,
-		click: (function() {}),
-		parent_elem: $todo.parent()
-	    }, options);
-	// Helper function gets todo state given a todo_id
-	var get_state = function(todo_id) {
-	    var new_state = undefined;
-	    for (var i=0; i<settings.states.length; i++) {
-		if (settings.states[i].todo_id == todo_id) {
-		    new_state = settings.states[i];
-		}
-	    }
-	    return new_state;
-	};
-	var hide_popover = function() {
-	    $popover.hide();
-	    $todo.unbind('.autohide');
-	};
-	// function shows the popover and binds dismissal events
-	var show_popover = function() {
-	    $popover.show();
-	    // Hide the popover if something else is clicked
-	    $('body').one('click.autohide', function() {
-		hide_popover();	
-	    });
-	    $popover.bind('click', function(e) {
-	    	e.stopPropagation();
-	    });
-	    $todo.bind('click.autohide', function() {
-		hide_popover();
-	    });
-	};
-	// todo_id 0 has some special properties
-	var bind_autohide = function() {
-	    var todo_id = $todo.attr('todo_id');
-	    if (todo_id == 0) {
-		settings.parent_elem.bind(
-		    'mouseenter.autohide',
-		    function() {
+    // Define different methods inside this plugin
+    var methods = {
+	// Plugin initialization
+	init: function( options ) {
+	    return this.each(function() {
+		// Process options
+		var $todo = $(this);
+		// Remove any links that may be in the todo_state element
+		$todo.find('a').contents().unwrap();
+		var todo_id = $todo.attr('todo_id');
+		var settings = $.extend(
+		    {
+			states: [
+			    {todo_id: 0, display: '[None]'},
+			],
+			todo_id: todo_id,
+			node_id: 0,
+			click: (function() {}),
+			parent_elem: $todo.parent()
+		    }, options);
+		// Helper function gets todo state given a todo_id
+		var get_state = function(todo_id) {
+		    var new_state = undefined;
+		    for (var i=0; i<settings.states.length; i++) {
+			if (settings.states[i].todo_id == todo_id) {
+			    new_state = settings.states[i];
+			}
+		    }
+		    return new_state;
+		};
+		var hide_popover = function() {
+		    $popover.hide();
+		    $todo.unbind('.autohide');
+		};
+		// function shows the popover and binds dismissal events
+		var show_popover = function() {
+		    $popover.show();
+		    // Hide the popover if something else is clicked
+		    $('body').one('click.autohide', function() {
+			hide_popover();	
+		    });
+		    $popover.bind('click', function(e) {
+	    		e.stopPropagation();
+		    });
+		    $todo.bind('click.autohide', function() {
+			hide_popover();
+		    });
+		};
+		// todo_id 0 has some special properties
+		var bind_autohide = function() {
+		    var todo_id = $todo.attr('todo_id');
+		    if (todo_id == 0) {
+			settings.parent_elem.bind(
+			    'mouseenter.autohide',
+			    function() {
+				$todo.show();
+			    }
+			);
+			settings.parent_elem.bind(
+			    'mouseleave.autohide',
+			    function() {
+				$todo.hide();
+			    }
+			);
+			settings.parent_elem.mouseleave();
+		    }
+		    else {
 			$todo.show();
+			settings.parent_elem.unbind('.autohide');
 		    }
-		);
-		settings.parent_elem.bind(
-		    'mouseleave.autohide',
-		    function() {
-			$todo.hide();
+		}
+		bind_autohide();
+		// Create the popover div and set its contents
+		var new_html = '';
+		new_html += '<div class="popover right todostate">\n';
+		new_html += '  <div class="arrow"></div>\n';
+		new_html += '  <div class="popover-title">Todo State</div>\n';
+		new_html += '  <div class="popover-inner">\n';
+		new_html += '  </div>\n';
+		new_html += '</div>\n';
+		$todo.after(new_html);
+		var $popover = $todo.next('.popover');
+		var $inner = $popover.children('.popover-inner');
+		// Set some css
+		$popover.hide();
+		$popover.css('position', 'absolute');
+		// Add the todo state options to popover inner
+		for (var i=0; i<settings.states.length; i++) {
+		    var option_html = '';
+		    option_html += '<div class="todo-option"';
+		    option_html += ' todo_id="';
+		    option_html += settings.states[i].todo_id;
+		    option_html += '"';
+		    if (settings.states[i].todo_id == todo_id) {
+			option_html += ' selected';
 		    }
-		);
-		settings.parent_elem.mouseleave();
-	    }
-	    else {
-		$todo.show();
-		settings.parent_elem.unbind('.autohide');
-	    }
-	}
-	bind_autohide();
-	// Create the popover div and set its contents
-	var new_html = '';
-	new_html += '<div class="popover right todostate">\n';
-	new_html += '  <div class="arrow"></div>\n';
-	new_html += '  <div class="popover-title">Todo State</div>\n';
-	new_html += '  <div class="popover-inner">\n';
-	new_html += '  </div>\n';
-	new_html += '</div>\n';
-	$todo.after(new_html);
-	var $popover = $todo.next('.popover');
-	var $inner = $popover.children('.popover-inner');
-	// Set some css
-	$popover.hide();
-	$popover.css('position', 'absolute');
-	// Add the todo state options to popover inner
-	for (var i=0; i<settings.states.length; i++) {
-	    var option_html = '';
-	    option_html += '<div class="todo-option"';
-	    option_html += ' todo_id="';
-	    option_html += settings.states[i].todo_id;
-	    option_html += '"';
-	    if (settings.states[i].todo_id == todo_id) {
-		option_html += ' selected';
-	    }
-	    option_html += '>';
-	    option_html += settings.states[i].display;
-	    option_html += '</div>\n';
-	    $inner.append(option_html);
-	}
-	// Connect the todo states click functionality
-	$todo.bind('click', function(e) {
-	    e.stopPropagation();
-	    $('.popover.todostate').hide(); // Hide all the other popovers
-	    $todo = $(this);
-	    // ...set the position
-	    var new_left = $todo.position().left + $todo.width();
-	    $popover.css('left', new_left + 'px');
-	    var top = $todo.position().top;
-	    var height = $todo.height();
-	    var new_middle = top + (height/2);
-	    var new_top = new_middle - ($popover.height()/2);
-	    $popover.css('top', new_top + 'px');
-	    show_popover();
-	});
-	// Connect the hover functionality
-	var $options = $inner.children('.todo-option');
-	$options.mouseenter(function() {
-	    // Add the ow-hover class if it's not the currently selected option
-	    if ($(this).attr('todo_id') != todo_id) {
-		$(this).addClass('ow-hover');
-	    }
-	});
-	$options.mouseleave(function() {
-	    $(this).removeClass('ow-hover');
-	});
-	// Connect handler to change todo state when option is clicked
-	$options.bind('click', function() {
-	    var new_id = Number($(this).attr('todo_id'));
-	    var $popover = $(this).parent().parent();
-	    var heading = $popover.parent().parent().data('object');
-	    var url = '/gtd/nodes/' + settings.node_id + '/edit/';
-	    var data = {
-		format: 'json',
-		todo_id: new_id,
-	    };
-	    // Avoid dismissing if same todo state selected
-	    if (new_id != todo_id) {
-		// If todo state is being changed then...
-		$.post(url, data, function(response) {
-		    response = $.parseJSON(response);
-		    // (callback) update the document todo states after change
-		    if (response['status']=='success') {
-			old = $todo.attr('todo_id');
-			$todo.attr('todo_id', response['todo_id']);
-			todo_id = response['todo_id'];
-			$todo.html(get_state(response['todo_id']).display);
-			$options.removeAttr('selected'); // clear selected
-			var s = '.todo-option[todo_id="';
-			s += response['todo_id'] + '"]';
-			$inner.children(s).attr('selected', '');
-			bind_autohide();
-			// Run the user submitted callback
-			settings.click(response);
-			// Kludge to avoid stale css
-			$todo.mouseenter();
-			$todo.mouseleave();
+		    option_html += '>';
+		    option_html += settings.states[i].display;
+		    option_html += '</div>\n';
+		    $inner.append(option_html);
+		}
+		// Connect the todo states click functionality
+		$todo.bind('click', function(e) {
+		    e.stopPropagation();
+		    $('.popover.todostate').hide(); // Hide all the other popovers
+		    $todo = $(this);
+		    // ...set the position
+		    var new_left = $todo.position().left + $todo.width();
+		    $popover.css('left', new_left + 'px');
+		    var top = $todo.position().top;
+		    var height = $todo.height();
+		    var new_middle = top + (height/2);
+		    var new_top = new_middle - ($popover.height()/2);
+		    $popover.css('top', new_top + 'px');
+		    show_popover();
+		});
+		// Connect the hover functionality
+		var $options = $inner.children('.todo-option');
+		$options.mouseenter(function() {
+		    // Add the ow-hover class if it's not the currently selected option
+		    if ($(this).attr('todo_id') != todo_id) {
+			$(this).addClass('ow-hover');
 		    }
 		});
-		hide_popover();
-	    }
-	});
-	return this;
+		$options.mouseleave(function() {
+		    $(this).removeClass('ow-hover');
+		});
+		// Connect handler to change todo state when option is clicked
+		$options.bind('click', function() {
+		    var new_id = Number($(this).attr('todo_id'));
+		    var $popover = $(this).parent().parent();
+		    var heading = $popover.parent().parent().data('object');
+		    var url = '/gtd/nodes/' + settings.node_id + '/edit/';
+		    var payload = {
+			format: 'json',
+			todo_id: new_id,
+		    };
+		    // Avoid dismissing if same todo state selected
+		    if (new_id != todo_id) {
+			// If todo state is being changed then...
+			$.post(url, payload, function(response) {
+			    response = $.parseJSON(response);
+			    // (callback) update the document todo states after change
+			    if (response['status']=='success') {
+				var old = $todo.attr('todo_id');
+				$todo.attr('todo_id', response['todo_id']);
+				todo_id = response['todo_id'];
+				$todo.html(get_state(response['todo_id']).display);
+				$options.removeAttr('selected'); // clear selected
+				var s = '.todo-option[todo_id="';
+				s += response['todo_id'] + '"]';
+				$inner.children(s).attr('selected', '');
+				bind_autohide();
+				// Run the user submitted callback
+				settings.click(response);
+				// Kludge to avoid stale css
+				$todo.mouseenter();
+				$todo.mouseleave();
+			    }
+			});
+			hide_popover();
+		    }
+		});
+		// save the options
+		$todo.data('todoState', settings);
+	    });
+	}, // end of init method
+	update: function( options ) {
+	    // Update the parameters of the todoState with new values
+	    this.each( function() {
+		var $todo = $(this);
+		var data = $todo.data('todoState');
+		var $popover = $todo.next('.popover');
+		if ( typeof options.todo_id != 'undefined' ) {
+		    // if a new todo_id is being assigned
+		    data.todo_id = options.todo_id;
+		    $todo.attr('todo_id', options.todo_id);
+		    var s_all = '.todo-option';
+		    var s_new = s_all + '[todo_id="' + options.todo_id + '"]';
+		    $popover.find(s_all).removeAttr('selected');
+		    $popover.find(s_new).attr('selected', 'selected');
+		    var new_todo = data.states.filter( function ( state ) { 
+			return state.todo_id == options.todo_id;
+		    })[0];
+		    $todo.html(new_todo.display);
+		}
+		$todo.data('todoState', data);
+	    });
+	} // end of update method
+    };
+
+    // Method selection magic
+    $.fn.todoState = function( method ) {
+	if ( methods[method] ) {
+	    return methods[method].apply( this, Array.prototype.slice.call( arguments, 1));
+	} else if ( typeof method === 'object' || !method ) {
+	    return methods.init.apply( this, arguments );
+	} else {
+	    $.error( 'Method ' + method + ' does not exist on jQuery.todoState' );
+	}
     };
 })(jQuery);
 
@@ -246,36 +287,37 @@ $(document).ready(function(){
 *************************************************/
 (function( $ ){
     $.fn.alohaText = function(options) {
-	$text_j = this;
+	var $text_j = this;
 	Aloha.ready(function() {
 	    // Bind the aloha editor
-	    $text_a = Aloha.jQuery($text_j);
+	    var $text_a = Aloha.jQuery($text_j);
 	    $text_a.aloha()
 	});
 	return this;
-    };
+    // }; // Uncomment this if ahola breaks
     // Bind the AJAX handler for changing the text
-    $('document').ready(function() {
-	Aloha.ready(function() {
-	    console.log('# Todo: Switch Aloha editor to PubSub');
-	    Aloha.bind('aloha-editable-deactivated', function(e, arg) {
-		editable = arg.editable
-		if (editable.snapshotContent!= editable.obj.html()) {
-		    // If they text was changed, submit the ajax request
-		    var $parent = editable.obj.parent();
-		    var url = '/gtd/nodes/' + $parent.attr('node_id') + '/edit/';
-		    var data = {
-			format: 'json',
-			node_id: $parent.attr('node_id'),
-			text: editable.obj.html()
-		    };
-		    $.post(url, data, function() {
-			console.log('# Todo: write callback function for aloha edit ajax request');
-		    });
-		}
+	$('document').ready(function() {
+	    Aloha.ready(function() {
+		console.log('# Todo: Switch Aloha editor to PubSub');
+		Aloha.bind('aloha-editable-deactivated', function(e, arg) {
+		    editable = arg.editable
+		    if (editable.snapshotContent!= editable.obj.html()) {
+			// If they text was changed, submit the ajax request
+			var $parent = editable.obj.parent();
+			var url = '/gtd/nodes/' + $parent.attr('node_id') + '/edit/';
+			var data = {
+			    format: 'json',
+			    node_id: $parent.attr('node_id'),
+			    text: editable.obj.html()
+			};
+			$.post(url, data, function() {
+			    console.log('# Todo: write callback function for aloha edit ajax request');
+			});
+		    }
+		});
 	    });
 	});
-    });
+    };
 })(jQuery);
 
 
@@ -314,6 +356,7 @@ $(document).ready(function(){
 
 // Begin implementation of hierarchical expanding project list
 var outline_heading = function(args) {
+    console.log('# Todo: translate outline heading to jQuery plugin');
     this.ICON = 'icon-chevron-right';
     this.title = args['title'];
     if (typeof args['text'] == 'undefined') {
@@ -713,7 +756,7 @@ var get_heading = function (node_id) {
 	    }
 	    else {
 		// Improperly formatted date submitted
-		console.error('Improperly formatted date: ' + $text.val());
+		jQuery.error('Improperly formatted date: ' + $text.val());
 	    }
 	    return false;
 	});
@@ -751,45 +794,175 @@ var get_heading = function (node_id) {
 *************************************************/
 
 (function( $ ) {
-    $.fn.nodeEdit = function(args) {
-	var $target = $(args['target']);
-	var $button = this;
-	var edit_url = args['url'];
-	var callback = args['callback'];
-	$.get(edit_url,
-	      {format: 'modal_form'},
-	      function(response) {
-		  $button.after(response);
-		  var $modal = $button.siblings().first();
-		  $modal.modal( {show: false} );
-		  $button.click(function(e) {
-		      e.preventDefault();
-		      $modal.modal('toggle');
-		  });
-		  var $form = $modal.find('form');
-		  $form.submit(function(e) {
-		      // Handle submission of the form
-		      e.preventDefault();
-		      var data = $form.serialize();
-		      data += '&format=json';
-		      $.post(edit_url, data, function(r) {
-			  r = $.parseJSON(r)
-			  if (r.status == 'success') {
-			      // Success! Now update the page
-			      $modal.modal('hide');
-			      node = $.parseJSON(r.node_data);
-			      $target.find('.update').each(function() {
-				  var field = $(this).attr('data-field');
-				  var new_html = node[field];
-				  $(this).html(new_html);
-			      });
-			      // User supplied callback function
-			      if (typeof callback != 'undefined') {
-				  callback(node);
-				  }
-			  }
+    // Define different methods inside this plugin
+    var methods = {
+	// Initialization
+	init: function( args ) {
+	    var $target = $(args['target']);
+	    var $button = this;
+	    var edit_url = args['url'];
+	    var callback = args['callback'];
+	    var data = {};
+	    data.$target = $target;
+	    $.get(edit_url,
+		  {format: 'modal_form'},
+		  function(response) {
+		      $button.after(response);
+		      var $modal = $button.siblings().first();
+		      data.$modal = $modal
+		      $modal.modal( {show: false} );
+		      $button.click(function(e) {
+			  e.preventDefault();
+			  $modal.modal('toggle');
 		      });
+		      var $form = $modal.find('form');
+		      $form.submit(function(e) {
+			  // Handle submission of the form
+			  e.preventDefault();
+			  var data = $form.serialize();
+			  data += '&format=json';
+			  $.post(edit_url, data, function(r) {
+			      r = $.parseJSON(r)
+			      if (r.status == 'success') {
+				  // Success! Now update the page
+				  $modal.modal('hide');
+				  node = $.parseJSON(r.node_data);
+				  $target.find('.update').each(function() {
+				      var field = $(this).attr('data-field');
+				      var new_html = node[field];
+				      $(this).html(new_html);
+				  });
+				  // User supplied callback function
+				  if (typeof callback != 'undefined') {
+				      callback(node);
+				  }
+			      }
+			  });
+		      });
+		      // Save settings
+		      $button.data('nodeEdit', data);
 		  });
-	      });
+	    $button.data('nodeEdit', data);
+	}, // end of init
+	update: function ( args ) {
+	    var $this = this;
+	    var data = $this.data('nodeEdit');
+	    var $modal = data.$modal;
+	    if ( typeof args.todo_id != 'undefined' ) {
+		var $select = $modal.find('#id_todo_state');
+		$select.find('option').removeAttr('selected');
+		var $new_opt = $select.find('option[value="' + args.todo_id +  '"]');
+		$new_opt.attr('selected', 'selected');
+	    }
+	} // end of update
+    };
+
+    // Method selection magic
+    $.fn.nodeEdit = function( method ) {
+	if ( methods[method] ) {
+	    return methods[method].apply( this, Array.prototype.slice.call( arguments, 1));
+	} else if ( typeof method === 'object' || !method ) {
+	    return methods.init.apply( this, arguments );
+	} else {
+	    $.error( 'Method ' + method + ' does not exist on jQuery.nodeEdit' );
+	}
+    };
+})(jQuery);
+
+/*************************************************
+* jQuery todoButtons plugin
+* 
+* Adds javascript functionality to a series of
+* buttons to be used for easily changing todostate
+* 
+* Process the following elements:
+* - $(this) is an element with a series of buttons
+* 
+* Options:
+* - callback: a function to run upon successful
+*   JSON response
+*************************************************/
+(function( $ ){
+    // Define different methods inside this plugin
+    var methods = {
+	// Initialization
+	init: function( args ) {
+	    return this.each(function() {
+		// Handle some setup stuff first (settings, etc.)
+		if ( typeof args == 'undefined' ) {
+		    args = {};
+		};
+		var $this = $(this);
+		var data = {};
+		data.node_id = $this.attr('node_id');
+		data.url = '/gtd/nodes/' + data.node_id + '/edit/';
+		data.sel = 'button';
+		var $buttons = $this.find(data.sel)
+		// Bind to each buttons click event
+		$buttons.bind('click.buttons', function(e) {
+		    e.preventDefault();
+		    var $btn = $(this);
+		    var new_todo_id = $btn.attr('value');
+		    var payload = {
+			format: 'json',
+			todo_id: new_todo_id
+		    };
+		    // Submit the change to server
+		    jQuery.post(data.url, payload, function(r) {
+			//data = $this.data('todobuttons'); // Read in settings
+			r = $.parseJSON(r);
+			if ( r.status == 'success' ) {
+			    // Call the update method to update the DOM
+			    methods['update']({ todo_id: r.todo_id,
+						$elem: $this });
+			    // Call user-submitted callback
+			    if ( typeof args.callback != 'undefined' ) {
+				args.callback(r);
+			    }
+			}
+		    });
+		});
+		// Save settings to element
+		$this.data('todobuttons', data);
+	    });
+	}, // end of init method
+	// Method accepts new data and updates the DOM elements and jQuery.data()
+	update: function( args ) {
+	    if (typeof args.$elem == 'undefined') {
+		var $elem = this;
+	    } else {
+		var $elem = args.$elem;
+	    }
+	    return $elem.each(function() {
+		var $this = $(this);
+		var data = $this.data('todobuttons'); // Read in settings
+		// Make sure the plugin has been initialized
+		if ( !data ) {
+		    method['init']();
+		};
+		// Now update the element
+		if ( typeof args.todo_id != 'undefined' ) {
+		    data.todo_id = args.todo_id;
+		}
+		// Clear all active states
+		$(data.sel).removeClass('active');
+		// And activate the new button
+		var new_sel = data.sel + '[value="' + data.todo_id + '"]';
+		$this.find(new_sel).addClass('active');
+		// Write the new settings
+		$this.data('todobuttons', data);
+	    });
+	} // end of update method
+    };
+	
+    // Method selection magic
+    $.fn.todoButtons = function( method ) {
+	if ( methods[method] ) {
+	    return methods[method].apply( this, Array.prototype.slice.call( arguments, 1));
+	} else if ( typeof method === 'object' || !method ) {
+	    return methods.init.apply( this, arguments );
+	} else {
+	    $.error( 'Method ' + method + ' does not exist on jQuery.todoButtons' );
+	}
     };
 })(jQuery);

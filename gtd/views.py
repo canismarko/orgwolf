@@ -348,7 +348,7 @@ def edit_node(request, node_id, scope_id):
             else:
                 print form.errors
                 return HttpResponseBadRequest(form.errors)
-        else: # ...if post.get('form') == 'modal'...
+        else: # if post.get('form') != 'modal':
             node.text = post.get('text', node.text)
             new_todo_id = post.get('todo_id', None)
             if new_todo_id == '0':

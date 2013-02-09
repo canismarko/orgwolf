@@ -57,7 +57,7 @@ dd.todo
     display: inline-block;
 }
 /* Javascript outline appliance */
-.clickable, .add-heading, .todo-state
+.clickable, .add-heading, .todo-state, .todo-option
 {
     cursor: pointer;
 }
@@ -72,7 +72,10 @@ div.ow-hoverable, div.clickable, div.ow-buttons
 .todo-option
 {
     margin: 3px;
-    cursor: default;
+}
+.todo-option[selected]
+{
+    cursor: auto;
 }
 .ow-hover
 {
