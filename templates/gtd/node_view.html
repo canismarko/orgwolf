@@ -43,11 +43,9 @@ $('document').ready(function() {
     	$('#parent-text').alohaText();
     });
     // Project outline applicance
-    var outline = new project_outline({
-	$workspace: $('#outline-workspace'),
-	todo_states: {% autoescape off %}{{ all_todo_states_json }}{% endautoescape %}
-	});
-    outline.init();
+    $('#outline-workspace').nodeOutline( {
+	todo_states: {% autoescape off %}{{ all_todo_states_json }}{% endautoescape %}  
+    });
     {% if parent_node %}
     var update_todo = function ( todo_id ) {
 	$('#parent-todo').todoState('update', { todo_id: todo_id });
@@ -119,32 +117,39 @@ $('document').ready(function() {
   {# Parent node item details #}
   <dl>
     {% include 'gtd/node_detail.html' %}
+    <span node_id="{{ node_id }}">
+      <dt>Text:</dt>
+      <dd>
+	<div id="parent-text" class="update" data-field="text">
+	  {{ parent_node.text|escape_html }}
+	</div>
+      </dd>
   </dl>
-
-  <div node_id="{{ node_id }}">
-    <div id="parent-text" class="update" data-field="text">
-      {{ parent_node.text|escape_html }}
+  <form action="" method="POST" class="form-inline">
+    <a href="new/" class="btn"><i class="icon-plus"></i>&nbsp;New Node</a>
+    <div class="input-append">
+      {% include "gtd/scope_filter.html" %}
+      <input type="hidden" name="node_id" value="{{ parent_node.id }}" />
+      <button type="submit" name="function" value="filter" class="btn">Filter</button>
     </div>
-
-    <form action="" method="POST" class="form-inline">
-      <a href="new/" class="btn"><i class="icon-plus"></i>&nbsp;New Node</a>
-      <div class="input-append">
-	{% include "gtd/scope_filter.html" %}
-	<input type="hidden" name="node_id" value="{{ parent_node.id }}" />
-	<button type="submit" name="function" value="filter" class="btn">Filter</button>
-      </div>
-      {% csrf_token %}
-    </form>
-  </div>
+    {% csrf_token %}
+  </form>
+  </span>
 </div><!-- /div id="node-detail"-->
+
 {# List of child nodes as links #}
+<strong>Children:</strong>
 <div id="node-workspace">
-  {% comment %}
-  Used as a place to put twisty drop downs of all Nodes. 
-  Populated with javascript
-  {% endcomment %}
+  <!-- Used as a place to put twisty drop downs of all Nodes.  -->
+  <!-- Populated with javascript -->
 </div>
+
 <div id="outline-workspace" node_id="{{ node_id }}">
+  {% if show_all %}
+  <a href="{{ base_url }}{{ parent_node.pk }}" class="btn">Hide archived</a>
+  {% else %}
+  <a href="{{ base_url }}all/{{ parent_node.pk }}" class="btn">Show archived</a>
+  {% endif %}
   <table class="table" id="non-js-table" node_id="{{ node_id }}">
     <tr>
       <th>State</th>

@@ -493,6 +493,36 @@ class NodeMutators(TestCase):
             list(Node.objects.filter(archived=False)),
             list(Node.get_active())
             )
+    def test_get_title(self):
+        node = Node.objects.get(pk=1)
+        self.assertEqual(
+            node.title,
+            node.get_title()
+            )
+        node.archived = True
+        self.assertEqual(
+            '({0})'.format(node.title),
+            node.get_title()
+            )
+        node.title = '\t'
+        self.assertEqual(
+            '([Blank])',
+            node.get_title()
+            )
+
+class NodeArchive(TestCase):
+    fixtures = ['test-users.json', 'gtd-test.json', 'gtd-env.json']
+    def test_auto_archive(self):
+        """Test that a node being closed gets auto archived"""
+        node = Node.objects.get(pk=5)
+        self.assertFalse(node.archived)
+        self.assertFalse(node.todo_state.closed)
+        done = TodoState.objects.get(pk=3)
+        node.todo_state = done
+        node.save()
+        node = Node.objects.get(pk=5)
+        self.assertTrue(node.todo_state.closed)
+        self.assertTrue(node.archived)
 
 class RepeatingNodeTest(TestCase):
     fixtures = ['test-users.json', 'gtd-test.json', 'gtd-env.json']

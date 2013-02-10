@@ -284,7 +284,9 @@ class Node(models.Model):
         if self.title.strip(' ').strip('\t'):
             title = self.title
         else: # Nothing but whitespace
-            title = "[Blank]"
+            title = '[Blank]'
+        if self.archived:
+            title = '({0})'.format(title)
         return title
     def get_level(self):
         level = 1
@@ -560,6 +562,16 @@ def node_repeat(sender, **kwargs):
                     new_repetition.save()
                     # Set the actual todo_state back to its original value
                     instance.todo_state = old_node.todo_state
+
+@receiver(signals.pre_save, sender=Node)
+def auto_archive(sender, **kwargs):
+    """pre_save receiver that archives the node if it's being closed"""
+    if not kwargs['raw']:
+        instance = kwargs['instance']
+        if instance.pk and getattr(instance.todo_state, 'closed', False):
+            old_node = Node.objects.get(pk=instance.pk)
+            if not getattr(old_node.todo_state, 'closed', False):
+                instance.archived = True
 
 @python_2_unicode_compatible
 class NodeRepetition(models.Model):

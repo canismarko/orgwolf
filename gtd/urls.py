@@ -32,8 +32,8 @@ urlpatterns = patterns('gtd.views',
 
                        url(r'^toinbox/$', 'capture_to_inbox'),
 
-                       url(r'^nodes/(?:scope(?P<scope_id>\d+)/)?$', 'display_node'),
-                       url(r'^nodes/(?:scope(?P<scope_id>\d+)/)?(?P<node_id>\d+)/$', 'display_node'),
+                       url(r'^nodes/(?P<show_all>all/)?(?:scope(?P<scope_id>\d+)/)?$', 'display_node'),
+                       url(r'^nodes/(?P<show_all>all/)?(?:scope(?P<scope_id>\d+)/)?(?P<node_id>\d+)/$', 'display_node'),
                        url(r'^nodes/(?:scope(?P<scope_id>\d+)/)?(?P<node_id>\d+)/edit/', 'edit_node'),
                        url(r'^nodes/(?:scope(?P<scope_id>\d+)/)?(?:(?P<node_id>\d+)/)?new/', 'new_node'),
                        url(r'^nodes/(\d+)/children/$', 'get_children'),

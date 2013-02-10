@@ -162,8 +162,12 @@ module(module_name + 'Heading');
 
 test('outline object', function() {
     // Check if outline functionality exists
-    equal(typeof project_outline, 'function', 'project_outline function exists')
+    equal(
+	typeof $.fn.nodeOutline,
+	'function',
+	'project_outline function exists')
 });
+var outline_heading = $.fn.nodeOutline({ get_proto: true });
 test('heading object', function() {
     // Check that the heading object exists
     equal(typeof outline_heading, 'function', 'heading function exists')
@@ -176,11 +180,12 @@ test('create new heading object from full data', function() {
     equal(test_heading.todo, 'DONE', 'Todo state is set');
     equal(test_heading.tags, ':comp:', 'Tag string is set');
 });
+
 test('save heading object in DOM element data()', function() {
     var $workspace = $('#test_workspace');
     var heading = new outline_heading(full_dict);
     heading.create_div($workspace);
-    var saved_heading = heading.$element.data('object');
+    var saved_heading = heading.$element.data('nodeOutline');
     equal(
 	saved_heading.node_id,
 	1,
@@ -194,6 +199,7 @@ test('create new heading object from sparse data', function() {
     equal(test_heading.todo, '[None]', 'Todo state is set');
     equal(test_heading.tags, null, 'Tag string is set');
 });
+
 test('heading as_html method', function() {
     var test_heading = new outline_heading(sparse_dict);
     var expected_html = '<div class="heading" node_id="1">\n  <div class="ow-hoverable">\n    <i class="clickable icon-chevron-right"></i>\n    <span class="todo-state"></span>\n    <div class="clickable ow-title"></div>\n    <div class="ow-buttons">\n      <i class="icon-plus"></i>\n      <i class="icon-ok"></i>\n    </div>\n  </div>\n  <div class=\"ow-text\"></div>\n  <div class="children">\n    <div class="loading">\n      <em>Loading...</em>\n    </div>\n  </div>\n</div>\n';
@@ -208,22 +214,11 @@ test('heading create_div method', function() {
     var $heading = $('#test_workspace').children('.heading');
     equal($heading.length, 1, '1 heading created');
     equal(test_heading.$element.attr('node_id'), '1', 'node_id set');
-    equal(test_heading.$element.data('title'), 'test_title', 'title data attribute set');
-    equal(
-	test_heading.$element.data('text'), 
-	'here\' some text that goes with it',
-	'text data attribute set'
-    );
     equal(
 	test_heading.$element.children('.ow-text').text(),
 	'here\' some text that goes with it',
 	'text element created'
     );	
-    equal(test_heading.$element.data('node_id'), 1, 'node_id data attribute set');
-    equal(test_heading.$element.data('todo_id'), 1, 'todo_id data attribute set');
-    equal(test_heading.$element.data('todo'), 'DONE', 'todo data attribute set');
-    equal(test_heading.$element.data('tags'), ':comp:', 'tags data attribute set');
-    equal(test_heading.$element.data('level'), 1, 'level data attribute set for root heading');
     equal(
 	test_heading.$element.children('.children').css('display'),
 	'none',
@@ -256,11 +251,6 @@ test('update_dom method', function() {
 	2,
 	'Updated attribute: node_id'
     );
-    equal(
-	$heading.data('node_id'),
-	2,
-	'Update data: node_id'
-    );
     // Test heading.text
     equal(
 	test_heading.$text.html(),
@@ -277,39 +267,24 @@ test('update_dom method', function() {
     // Test heading.title
     equal(
 	test_heading.$title.html(),
-	test_heading.title,
+	'<strong>' + test_heading.title + '</strong>',
 	'Initial element: ow-title'
     );
     test_heading.title = 'New title';
     test_heading.update_dom();
     equal(
 	test_heading.$title.html(),
-	'New title',
+	'<strong>New title</strong>',
 	'Update element: ow-title'
     );
     // Test heading.todo_id
-    equal(
-	$heading.data('todo_id'),
-	1,
-	'Initial data: todo_id'
-    );
     equal(
 	test_heading.$todo_state.html(),
 	'NEXT',
 	'Initial element: $todo_state'
     );
-    equal(
-	test_heading.$todo_state.data('todo_id'),
-	1,
-	'Initial data ($todo_id): todo_id'
-    );
     test_heading.todo_id = 2;
     test_heading.update_dom();
-    equal(
-	$heading.data('todo_id'),
-	2,
-	'Update data: todo_id'
-    );
     equal(
 	test_heading.$todo_state.html(),
 	'DONE',
@@ -321,7 +296,7 @@ test('update_dom method', function() {
 	'Update data ($todo_id): todo_id'
     );
     strictEqual(
-	$heading.data('object'),
+	$heading.data('nodeOutline'),
 	test_heading,
 	'Updated data: object'
     );
@@ -338,7 +313,6 @@ test('outline indentations', function() {
     var $first = get_heading(1);
     second_heading.create_div($first.children('.children'));
     var $second = get_heading(5);
-    equal($second.data('level'), 2, 'Set child data("level") attribute');
 });
 
 test('add function buttons', function() {
@@ -376,27 +350,6 @@ test('add function buttons', function() {
     var $buttons = heading.$element.children('div.ow-buttons').children('i');
 });
 
-asyncTest('populate children', function() {
-    var $workspace = $('#test_workspace');
-    var first = new outline_heading(full_dict);
-    first.create_div($workspace);
-    first.populate_children();
-    setTimeout(function() {
-	equal(
-	    first.$element.find('.heading[node_id="2"]').data('title'),
-	    'Buy a puppy',
-	    'First child title data attribute set'
-	);
-	equal(
-	    first.$element.data('populated'),
-	    true,
-	    'Parent \'populated\' data attribute set'
-	);
-	strictEqual(first.$element.data('populated'), true);
-	start();
-    }, (ajax_timer * 1.1 + 5));
-});
-
 test('Heading toggle() method', function() {
     var $workspace = $('#test_workspace');
     var heading = new outline_heading(full_dict);
@@ -419,8 +372,7 @@ test('Heading toggle() method', function() {
 
 asyncTest('Toggle clickable region on heading', function() {
     var $workspace = $('#test_workspace');
-    var outline = new project_outline({$workspace: $workspace});
-    outline.init();
+    $workspace.nodeOutline();
     setTimeout(function() {
 	$workspace.find('.heading').each(function() {
 	    // Check if all subheadings start unpopulated
@@ -434,7 +386,9 @@ asyncTest('Toggle clickable region on heading', function() {
 	    });
 	});
 	$workspace.find('.heading').each(function() {
-	    $(this).children('.ow-hoverable').children('.clickable').click();
+	    var $clickable = $(this).children('.ow-hoverable').children('.clickable');
+	    $clickable.data('$parent').data('nodeOutline').has_children = true;
+	    $clickable.click()
 	    equal(
 		$(this).children('.children').css('display'),
 		'block',
@@ -482,22 +436,12 @@ test('Hovering actions', function() {
 	'[]',
 	'Todo state div has \'[]\' as text'
     );
-    equal(
-	$hoverable.children('.todo-state').css('display'),
-	'none',
-	'Empty todo state is not displayed before mouse over'
-    );
     // Tests after hover over
     $hoverable.mouseenter();
     equal(
 	$hoverable.children('.ow-buttons').css('visibility'),
 	'visible',
 	'Buttons div is visible after mouse enter'
-    );
-    equal(
-	$hoverable.children('.todo-state').css('display'),
-	'inline',
-	'Empty Todo state div is display after mouse enter'
     );
     // Tests after hover out
     $hoverable.mouseleave();
@@ -529,7 +473,7 @@ test('Clickable TodoState elements', function() {
     var $popover = heading.$element.find('.popover');
     equal(
 	$popover.css('position'), 
-	'absolute', 
+	'absolute',
 	'Todo state element uses absolute positioning'
     );
     equal(
@@ -652,15 +596,16 @@ test('Popover populating method', function() {
 
 asyncTest('Todo state changing functionality', function() {
     var $workspace = $('#test_workspace');
-    var test_outline = new project_outline({$workspace: $workspace});
-    test_outline.todo_states = todo_state_list;
-    test_outline.init();
+    $workspace.nodeOutline({ todo_states: todo_state_list });
+    // var test_outline = new project_outline({$workspace: $workspace});
+    // test_outline.todo_states = todo_state_list;
+    // test_outline.init();
     var $heading1;
     setTimeout(function() {
 	start();
 	$heading1 = $workspace.find('.heading[node_id="1"]');
 	equal(
-	    $heading1.data('node_id'),
+	    $heading1.length,
 	    1,
 	    'Node 1 heading exists'
 	);
@@ -688,7 +633,7 @@ asyncTest('Todo state changing functionality', function() {
     }, (ajax_timer * 1.1 + 5));
     setTimeout(function() {
 	start();
-	var heading = $heading1.data('object');
+	var heading = $heading1.data('nodeOutline');
 	var $popover = $heading1.find('.popover-inner');
 	equal(
 	    heading.node_id,
@@ -713,62 +658,14 @@ asyncTest('Todo state changing functionality', function() {
 
 module(module_name + 'Outline setup');
 
-test('outline regular expressions', function() {
-    // See that the regular expressions for cleaning up content are correct
-
-    // removing anchors...
-    var outline = new project_outline({$workspace: $('#test_workspace')});
-    equal(typeof outline.A_RE, 'string', 'Anchors regular expression exists');
-    var r = new RegExp(outline.A_RE, 'g');
-    equal(r.exec('<a>'), '<a>', 'Matches simple opening anchor');
-    var r = new RegExp(outline.A_RE, 'g');
-    equal(r.exec('</a>'), '</a>', 'Matches simple closing anchor');
-    var r = new RegExp(outline.A_RE, 'g');
-    equal(r.exec('<a href="colon">'), '<a href="colon">', 'Match anchor with href');
-    equal(
-	'<a href="stuff">Hello, world</a>'.replace(r, ''),
-	'Hello, world',
-	'Replace anchors'
-    );
-    // stripping whitespace...
-    equal(typeof outline.WS_RE, 'string', 'Whitespace regular expression exists');
-    var r = new RegExp(outline.WS_RE, 'g');
-    equal(r.exec('test string')[1], 'test string', 'No whitespace to strip');
-    var r = new RegExp(outline.WS_RE, 'g');
-    equal(r.exec('  \t \n \ntest string \n ')[1], 'test string', 'Surrounded by whitespace');
-    var r = new RegExp(outline.WS_RE, 'g');
-    equal(r.exec('\t \ntest st\nring \n\t')[1], 'test st\nring', 'Enclosed newline preserved');
-    var r = new RegExp(outline.WS_RE, 'g');
-    equal(r.exec('\n\t')[1], '', 'Only whitespace');
-});
-
 asyncTest('converts initial workspace', function() {
     // See if the function finds the existing workspace and sets the right number of children with the right attributes and data
-    expect(10);
     var $workspace = $('#test_workspace');
-    var test_outline = new project_outline({$workspace: $workspace});
-    test_outline.init();
+    $workspace.nodeOutline();
+    // var test_outline = new project_outline({$workspace: $workspace});
+    // test_outline.init();
     setTimeout(function() {
 	equal($('#test_workspace > div.heading').length, 2, 'correct number of .heading divs');
-	equal(
-	    test_outline.$workspace.data('node_id'),
-	    0,
-	    'Set workspace node_id data attribute'
-	);
-	$('#test_workspace > div.heading').each(function() {
-	    if( $(this).attr('node_id') == '1' ) {
-		equal($(this).data('todo_id'), 1, 'Node 1 TodoState id correct');
-		equal($(this).data('todo'), 'DONE', 'Node 1 TodoState correct');
-		equal($(this).data('title'), 'Tasks', 'Node 1 title correct');
-		equal($(this).data('tags'), '', 'Node 1 tags correct'); 
-	    }
-	    if( $(this).attr('node_id') == '2' ) {
-		equal($(this).data('todo_id'), 2, 'Node 2 TodoState id correct');
-		equal($(this).data('todo'), 'NEXT', 'Node 2 TodoState correct');
-		equal($(this).data('title'), 'Expense reports', 'Node 2 title correct');
-		equal($(this).data('tags'), ':comp:', 'Node 2 tags correct'); 
-	    }
-	});
 	start();
     }, (ajax_timer * 1.1 + 5));
 });
@@ -778,20 +675,19 @@ asyncTest('Populates children on outline init', function() {
     // table to the outline workspace.
     expect(5);
     var $workspace = $('#test_workspace');
-    var outline = new project_outline({$workspace: $workspace});
-    outline.init();
+    $workspace.nodeOutline();
     setTimeout(function() {
 	start()
 	$workspace.children('.heading').each(function() {
 	    equal(
-		$(this).data('populated'), 
+		$(this).data('nodeOutline').populated, 
 		true,
 		'Heading ' + $(this).data('node_id') + ' populated'
 	    );
 	    equal(
-		$(this).data('$workspace').attr('id'),
-		'test_workspace',
-		'Each heading has a $workspace data attribute'
+	    	$(this).data('nodeOutline').$workspace.attr('id'),
+	    	'test_workspace',
+	    	'Each heading has a $workspace data attribute'
 	    );
 	});
 	equal(
@@ -804,25 +700,14 @@ asyncTest('Populates children on outline init', function() {
 
 asyncTest('Alternate colors', function() {
     var $workspace = $('#test_workspace');
-    var outline = new project_outline({$workspace: $workspace});
     var expected_colors = ['blue', 'brown', 'purple', 'red', 'green', 'teal', 'slateblue', 'darkred'];
-    outline.init();
-    deepEqual(
-	outline.COLORS,
-	expected_colors,
-	'project_outline object has colors set'
-    );
+    $workspace.nodeOutline();
     setTimeout(function() {
 	$workspace.children('.heading').each(function() {
 	    deepEqual(
-		$(this).data('object').COLORS, 
+		$(this).data('nodeOutline').COLORS, 
 		expected_colors, 
 		'outline_heading object has COLORS set'
-	    );
-	    equal(
-		$(this).data('level'),
-		1, 
-		'Level has been set' + $(this).data('title')
 	    );
 	    equal(
 		$(this).children('.ow-hoverable').children('.clickable').css('color'), 
@@ -835,25 +720,21 @@ asyncTest('Alternate colors', function() {
 });
 
 asyncTest('Set todo states', function() {
-    expect(7);
+    expect(5);
     var $workspace = $('#test_workspace');
-    var outline = new project_outline({
-	$workspace: $workspace,
+    $workspace.nodeOutline({
 	todo_states: todo_state_list
     });
-    outline.init();
-    equal(outline.todo_states[1].display, 'NEXT', 'NEXT todo state set');
-    equal(outline.todo_states[2].display, 'DONE', 'DONE todo state set');
     setTimeout(function() {
 	start();
 	$workspace.children('.heading').each(function() {
 	    equal(
-		$(this).data('$workspace').attr('id'),
+		$(this).data('nodeOutline').$workspace.attr('id'),
 		'test_workspace',
 		'Child ' + $(this).data('node_id') + ' has data(\'$workspace\')'
 	    );
 	    equal(
-		$(this).data('object').todo_states[1].display,
+		$(this).data('nodeOutline').todo_states[1].display,
 		'NEXT',
 		'NEXT state accessible through heading object'
 	    );
@@ -982,7 +863,6 @@ test('todo state click functionality', function() {
     );
     // Make sure it goes away when another element is clicked
     var $workspace = $('#test_workspace');
-    console.log($workspace.html());
     $workspace.click();
     equal(
 	$popover.css('display'),
@@ -1389,12 +1269,11 @@ test('Basic functionality', function() {
 });
 
 asyncTest('Project outline incoroporation', function() {
-    var $workspace = Aloha.jQuery('#test_workspace');
-    var outline = new project_outline({
-	$workspace: $workspace,
+    var $workspace = $('#test_workspace');
+    $workspace.nodeOutline( {
 	todo_states: todo_state_list
-    });
-    outline.init();
+    } );
+    $workspace = Aloha.jQuery('#test_workspace');
     setTimeout(function() {
 	start();
 	var $text = Aloha.jQuery('.ow-text');

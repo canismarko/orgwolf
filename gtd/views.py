@@ -258,7 +258,7 @@ def capture_to_inbox(request):
                               RequestContext(request))
 
 @login_required
-def display_node(request, node_id=None, scope_id=None):
+def display_node(request, show_all=False, node_id=None, scope_id=None):
     """Displays a node as a list of links to its children.
     If no node_id is specified, shows the projects list."""
     if request.method == "POST":
@@ -270,7 +270,7 @@ def display_node(request, node_id=None, scope_id=None):
             if request.POST['node_id']:
                 url_kwargs['node_id'] = request.POST['node_id']
             return redirect(reverse('gtd.views.display_node', kwargs=url_kwargs))
-    all_nodes_qs = Node.get_owned(request.user)
+    all_nodes_qs = Node.get_owned(request.user, get_archived=show_all)
     all_todo_states_qs = TodoState.get_active()
     child_nodes_qs = all_nodes_qs
     all_scope_qs = Scope.objects.all()

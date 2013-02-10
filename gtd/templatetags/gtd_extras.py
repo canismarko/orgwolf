@@ -116,17 +116,9 @@ def upcoming(item_dt, agenda_dt=None):
     """Wrapper for overdue()."""
     return overdue(item_dt, agenda_dt, future=True)
 
-# @register.filter
-# def markdown_text(raw_text):
-#     # Deprecated
-#     # Switched from markdown to HTML
-#     raw_text = conditional_escape(raw_text)
-#     html = markdown.markdown(raw_text)
-#     html = '<div class="markdown">' + html + '</div>'
-#     return mark_safe(html)
 @register.filter
 def escape_html(raw_text):
     parser = HTMLEscaper()
     new_html = parser.clean(raw_text)
     new_text = markdown(new_html)
-    return mark_safe(new_text)
+    return mark_safe(new_html)
