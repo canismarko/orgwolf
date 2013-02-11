@@ -70,12 +70,13 @@ class TodoState(models.Model):
         return TodoState.objects.all()
     @staticmethod
     def as_json(queryset=None, full=False):
-        new_array = [{'todo_id': 0, 'display': '[None]'}]
+        new_array = [{'todo_id': 0, 'display': '[None]', 'full': ''}]
         if not queryset:
             queryset=TodoState.get_active()
         for state in queryset:
             new_dict = {
                 'todo_id': state.pk,
+                'full': state.display_text,
                 'display': state.as_html(),
                 }
             if full:
@@ -344,6 +345,7 @@ class Node(models.Model):
                 new_dict[field] = new_dict[field].ctime()
         # Include the todo_state html
         if self.todo_state:
+            new_dict['todo_abbr'] = self.todo_state.as_html()
             new_dict['todo_html'] = self.todo_state.as_html()
             new_dict['todo_html'] += ' - ' + self.todo_state.display_text
         else:

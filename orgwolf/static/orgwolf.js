@@ -114,6 +114,11 @@ $(document).ready(function(){
 	    		e.stopPropagation();
 		    });
 		    $todo.bind('click.autohide', function() {
+			$(this).tooltip({
+			    delay: {show:1000, hide: 100},
+			    title: 'click to change',
+			    placement: 'right'
+			});
 			hide_popover();
 		    });
 		};
@@ -122,19 +127,6 @@ $(document).ready(function(){
 		    var todo_id = $todo.attr('todo_id');
 		    if (todo_id == 0) {
 			$todo.hide();
-		    // 	settings.parent_elem.bind(
-		    // 	    'mouseenter.autohide',
-		    // 	    function() {
-		    // 		$todo.show();
-		    // 	    }
-		    // 	);
-		    // 	settings.parent_elem.bind(
-		    // 	    'mouseleave.autohide',
-		    // 	    function() {
-		    // 		$todo.hide();
-		    // 	    }
-		    // 	);
-		    // 	settings.parent_elem.mouseleave();
 		    } else {
 			$todo.show();
 			settings.parent_elem.unbind('.autohide');
@@ -175,6 +167,7 @@ $(document).ready(function(){
 		    e.stopPropagation();
 		    $('.popover.todostate').hide(); // Hide all the other popovers
 		    $todo = $(this);
+		    $todo.tooltip('destroy')
 		    // ...set the position
 		    var new_left = $todo.position().left + $todo.width();
 		    $popover.css('left', new_left + 'px');
@@ -189,7 +182,8 @@ $(document).ready(function(){
 		var $options = $inner.children('.todo-option');
 		$options.mouseenter(function() {
 		    // Add the ow-hover class if it's not the currently selected option
-		    if ($(this).attr('todo_id') != todo_id) {
+		    if ( ! $(this).attr('selected') ) {
+// 		    if ($(this).attr('todo_id') != todo_id) {
 			$(this).addClass('ow-hover');
 		    }
 		});
@@ -381,6 +375,9 @@ var get_heading = function (node_id) {
 	init: function( args ) {
 	    // Begin implementation of hierarchical expanding project list
 	    var outline_heading = function( args ) {
+		if ( ! args ) {
+		    args = {};
+		}
 		this.ICON = 'icon-chevron-right';
 		this.title = args['title'];
 		this.has_children = false;
@@ -404,6 +401,7 @@ var get_heading = function (node_id) {
 		if (typeof args['parent_id'] == 'undefined' ) {
 		    // Root level heading
 		    this.level = 1;
+	    	    this.todo_states = { todo_id: 0, display: '[None]' }
 		    this.COLORS = ['black'];
 		}
 		else { // Find the parent and get its info
@@ -412,6 +410,7 @@ var get_heading = function (node_id) {
 		    this.$parent = $(s);
 		    var parent = this.$parent.data('nodeOutline');
 		    if (typeof parent == 'undefined') {
+	    		this.todo_states = { todo_id: 0, display: '[None]' };
 			this.COLORS = ['black']; // Default if no colors set
 		    } else {
 			this.COLORS = this.$parent.data('nodeOutline').COLORS;
@@ -434,13 +433,14 @@ var get_heading = function (node_id) {
 		    new_string += '  <div class="ow-hoverable">\n';
 		    new_string += '    <i class="clickable ' + this.ICON + '"></i>\n';
 		    // Todo state
-		    new_string += '    <span class="todo-state"></span>\n';
+		    new_string += '    <span class="todo-state update" data-field="todo_abbr"></span>\n';
 		    // title
 		    new_string += '    <div class="clickable ow-title"></div>\n';
 		    // Quick-action buttons
 		    new_string += '    <div class="ow-buttons">\n';
-		    new_string += '      <i class="icon-plus"></i>\n';
-		    new_string += '      <i class="icon-ok"></i>\n';
+		    new_string += '      <i class="icon-pencil" title="Edit"></i>\n';		    
+		    new_string += '      <i class="icon-th-list" title="Detail view"></i>\n';
+		    new_string += '      <i class="icon-plus" title="New subheading"></i>\n';
 		    new_string += '    </div>\n';
 		    new_string += '  </div>\n';
 		    // Child containers
@@ -452,13 +452,24 @@ var get_heading = function (node_id) {
 		    new_string += '  </div>\n</div>\n';
 		    return new_string;
 		};
+		this.set_autohide = function ( $hover_target, $hide_target ) {
+		    $hover_target.bind( 'mouseenter.autohide', function() {
+			$hide_target.css('visibility', 'visible');
+		    });
+		    $hover_target.bind( 'mouseleave.autohide', function() {
+			$hide_target.css('visibility', 'hidden');
+		    });
+		    $hide_target.css('visibility', 'hidden');
+		};
 		this.create_div = function( $container ) {
 		    // Create a new "<div></div>" element representing this heading
+		    var node_id = this.node_id;
 		    $container.append(this.as_html());
 		    var new_selector = '.heading';
 		    new_selector += '[node_id="' + this.node_id + '"]';
 		    // Set selectors
 		    var $element = $(new_selector);
+		    $element.hide();
 		    var $hoverable = $element.children('.ow-hoverable');
 		    if ( typeof parent != 'undefined' ) {
 			var $workspace = parent.$workspace
@@ -477,7 +488,7 @@ var get_heading = function (node_id) {
 		    this.$clickable = $clickable;
 		    this.$todo_state = $todo_state;
 		    this.$icon = $icon;
-		    this.$buttons =	$buttons;
+		    this.$buttons = $buttons;
 		    this.$text = $text;
 		    this.$title = $title;
 		    this.populated = false;
@@ -486,6 +497,15 @@ var get_heading = function (node_id) {
 		    // Set jquery data
 		    this.$element.data('nodeOutline', this);
 		    this.$clickable.data('$parent', this.$element);
+		    // Apply tooltips
+		    $buttons.children('i').tooltip({
+			delay: {show:1000, hide: 100}
+		    });
+		    $todo_state.tooltip({
+			delay: {show:1000, hide: 100},
+			title: 'click to change',
+			placement: 'right'
+		    });
 		    // Bind Aloha editor
 		    if ( this.$text.text() != '' ) {
 			this.$text.alohaText();
@@ -493,7 +513,8 @@ var get_heading = function (node_id) {
 		    // Set color based on indentation level
 		    var color_i = this.level % this.COLORS.length;
 		    this.color = this.COLORS[color_i-1];
-		    this.$children = this.$element.children('.children');
+		    var $children = this.$element.children('.children');
+		    this.$children = $children;
 		    this.$text = this.$element.children('.ow-text');
 		    // Set initial CSS
 		    this.$clickable.css('color', this.color);
@@ -509,13 +530,81 @@ var get_heading = function (node_id) {
 			    saved_heading.toggle();
 			}
 		    });
-		    this.$hoverable.mouseenter(function() {
-			$buttons.css('visibility', 'visible');
+		    this.set_autohide( this.$hoverable, $buttons );
+		    this.$buttons.find('.icon-th-list').click( function() {
+			window.location = '/gtd/nodes/' + node_id + '/';
 		    });
-		    this.$hoverable.mouseleave(function() {
-			$buttons.css('visibility', 'hidden');
+		    this.$buttons.find('.icon-pencil').click( function() {
+			// Modal dialog for editing this heading
+			var $this = $(this);
+			var $hoverable = $this.parent().parent();
+			var $heading = $hoverable.parent();
+			$hoverable.unbind('.autohide');
+			if ( ! $this.data('nodeEdit') ) {
+			    $this.nodeEdit( {
+				show: true,
+				target: $hoverable,
+				node_id: node_id,
+				changed: function(node) {
+				    $hoverable.find('.todo-state').todoState(
+					'update', {todo_id: node.todo_state}
+				    );
+				    // this.$todo_state.todoState({
+				    // 	states: this.todo_states,
+				    // 	node_id: this.node_id,
+				    // 	click: function(ajax_response) {
+				    // 	    heading.todo_id = ajax_response['todo_id'];
+				    // 	}
+    				    // });
+				},
+				on_modal: function($modal) {
+				    // disable the hovering feature while the modal is active
+
+				    $modal.on('show', function() {
+					$this.parent().parent().unbind('.autohide');
+				    });
+				    $modal.on('hidden', function() {
+					new outline_heading().set_autohide( $modal.parent().parent(), $modal.parent());
+				    });
+				}
+			    });
+			}
+		    });
+		    this.$buttons.find('.icon-plus').click( function() {
+			// Modal dialog for new children of this heading
+			var $this = $(this);
+			$this.parent().parent().unbind('.autohide');
+			if ( ! $this.data('nodeEdit') ) {
+			    $this.nodeEdit( {
+				show: true,
+				parent_id: node_id,
+				changed: function(node) {
+				    new_heading = new outline_heading( {
+					title: node.title,
+					text: node.text,
+					node_id: node.id,
+					todo_id: node.todo_state,
+					tags: node.tag_string,
+					parent_id: node_id
+				    });
+				    new_heading.create_div( $children );
+				    new_heading.$parent.data('nodeOutline').toggle('open');
+				},
+				on_modal: function($modal) {
+				    // disable the hovering feature while the modal is active
+
+				    $modal.on('show', function() {
+					$this.parent().parent().unbind('.autohide');
+				    });
+				    $modal.on('hidden', function() {
+					new outline_heading().set_autohide( $modal.parent().parent(), $modal.parent());
+				    });
+				}
+			    });
+			}
 		    });
 		    var todo_states = this.todo_states;
+		    $element.slideToggle();
 		};
 		// Read the current object properties and update the
 		// DOM element to reflect any changes
@@ -526,6 +615,13 @@ var get_heading = function (node_id) {
 		    // todo_id
 		    this.$todo_state.data('todo_id', this.todo_id);
 		    this.$todo_state.attr('todo_id', this.todo_id);
+		    if ( this.todo_states[this.todo_id] ) {
+			this.$todo_state.attr(
+			    'title', 
+			    this.todo_states[this.todo_id].full +
+				' (click to change)'
+			);
+		    }
 		    var new_todo = '[]';
 		    if (typeof this.todo_states == 'undefined') {
 			var num_todo_states = 0;
@@ -552,7 +648,7 @@ var get_heading = function (node_id) {
 			this.$text.aloha();
 		    }
 		    // Title div
-		    this.$title.html('<strong>' + this.title + '</strong>');
+		    this.$title.html('<strong class="update" data-field="title">' + this.title + '</strong>');
 		};
 		
 		this.set_indent = function($target, offset) {
@@ -604,10 +700,10 @@ var get_heading = function (node_id) {
 			parent.$element.data('nodeOutline', parent);
 		    });
 		};
-		this.toggle = function() {
+		this.toggle = function( direction ) {
 		    // Show or hide the children div based on present state
 		    var $icon = this.$element.children('.ow-hoverable').children('i.clickable');
-		    if ($icon.hasClass('icon-chevron-right')) {
+		    if ($icon.hasClass('icon-chevron-right' || direction == 'open')) {
 			var new_icon_class = 'icon-chevron-down';
 			$icon.removeClass('icon-chevron-right');
 		    }
@@ -616,6 +712,7 @@ var get_heading = function (node_id) {
 			$icon.removeClass('icon-chevron-down');
 		    }
 		    $icon.addClass(new_icon_class);
+		    var outline = this;
 		    this.$text.slideToggle();
 		    this.$children.slideToggle();
 		    this.$children.children('.heading').each(function() {
@@ -657,7 +754,7 @@ var get_heading = function (node_id) {
 	    }; // end of outline_heading prototype
 	    // Code execution starts here
 	    $this = this;
-	    $this.html(''); // Clear old content
+	    $this.html('<strong>Children:</strong><br />\n<div class="children"></div>'); // Clear old content
 	    if ( !args ) {
 		args = {};
 	    }
@@ -678,31 +775,46 @@ var get_heading = function (node_id) {
 		node_id: $this.attr('node_id'),
 		title: 'Outline Workspace',
 	    });
-	    workspace.$children = $this;
+	    workspace.$children = $this.children('.children');
 	    workspace.$element = $this;
 	    workspace.$element.addClass('heading');
 	    workspace.$workspace = this;
 	    workspace.$element.data('nodeOutline', workspace);
 	    workspace.level = 0;
-	    workspace.todo_states = data.todo_states;
 	    workspace.COLORS = COLORS;
 	    workspace.color = workspace.COLORS[0];
-	    $this.data('nodeOutline', workspace);
+	    workspace.todo_states = data.todo_states;
 	    // Create all the first two levels of nodes
 	    workspace.populate_children(function() {
-		workspace.$element.children('.heading').each(function() {
+		workspace.$children.children('.heading').each(function() {
 		    var subheading = $(this).data('nodeOutline');
 		    subheading.populate_children();
 		});
-		var s = '<div class="add-heading">\n';
+		// Button for adding a new child node
+		var s = '<div class="ow-buttons" id="add-heading">\n';
 		s += '<i class="icon-plus-sign"></i>Add Heading\n';
 		s += '</div>';
 		workspace.$element.append(s);
+		var $add = workspace.$element.children('#add-heading');
+		$add.nodeEdit( {
+		    parent_id: workspace.node_id,
+		    changed: function(node) {
+			new_heading = new outline_heading( {
+			    title: node.title,
+			    text: node.text,
+			    node_id: node.id,
+			    todo_id: node.todo_state,
+			    tags: node.tag_string,
+			    parent_id: workspace.node_id
+			});
+			new_heading.create_div( workspace.$children );
+		    }
+		});
+		workspace.todo_states = data.todo_states;
+		$this.data('nodeOutline', workspace);
 	    });
 	}, // end of init method
-	get_proto: function () {
-	} 
-    }
+    };
     // Method selection magic
     $.fn.nodeOutline = function( method ) {
 	if ( methods[method] ) {
@@ -815,15 +927,17 @@ var get_heading = function (node_id) {
 })(jQuery);
 
 /*************************************************
-* jQuery node edit plugin
+* jQuery nodeEdit plugin
 * 
 * Modal dialog that allows editing of nodes
 * 
 * Accepts the following options:
-* - obj['url'] is the RESTFUL URL for editing
+* - args['url'] is the RESTFUL URL for editing
 *   a node
-* - obj['target'] is the jQuery selector for the
+* - args['target'] is the jQuery selector for the
 *   element to search for .update elements.
+* - args['changed']: callback function to be
+*   executed after successful AJAX modification.
 * Process the following elements:
 * - $(this) is the button that triggers the modal
 * - .update (with obj['target']) will be updated
@@ -837,19 +951,47 @@ var get_heading = function (node_id) {
     var methods = {
 	// Initialization
 	init: function( args ) {
+	    if ( typeof args == 'undefined' ) {
+		args = {};
+	    }
+	    var start_shown = args.show;
 	    var $target = $(args['target']);
 	    var $button = this;
-	    var edit_url = args['url'];
-	    var callback = args['callback'];
+	    var node_id = args.node_id;
+	    var parent_id = args.parent_id;
+	    // Determine what the correct URL is
+	    var edit_url;
+	    if ( args.url ) {
+		edit_url = args['url'];
+	    } else {
+		if ( node_id > 0 ) {
+		    // Existing node
+		    edit_url = '/gtd/nodes/' + node_id + '/edit/';
+		} else if ( parent_id > 0 ) {
+		    // new node with parent
+		    edit_url = '/gtd/nodes/' + parent_id + '/new/';
+		} else {
+		    // New top-level node
+		    edit_url = '/gtd/nodes/new/';
+		}
+	    }
+	    var changed = args['changed'];
+	    var on_modal = args['on_modal'];
 	    var data = {};
+	    data.changed = changed
+	    data.on_modal = args['on_modal'];
 	    data.$target = $target;
 	    $.get(edit_url,
 		  {format: 'modal_form'},
 		  function(response) {
 		      $button.after(response);
-		      var $modal = $button.siblings().first();
+		      var $modal = $button.siblings('.modal');
 		      data.$modal = $modal
-		      $modal.modal( {show: false} );
+		      if ( start_shown ) {
+			  $modal.modal( {show: true} );
+		      } else {
+			  $modal.modal( {show: false} );
+		      }
 		      // Extract values and save to .data()
 		      data.todo_id = $modal.find('#id_todo_state').find('option[selected]').attr('value');
 		      // Even handlers for new form
@@ -877,18 +1019,25 @@ var get_heading = function (node_id) {
 				  $button.data('nodeEdit', data);
 				  // Update DOM
 				  $modal.modal('hide');
-				  $target.find('.update').each(function() {
-				      var field = $(this).attr('data-field');
-				      var new_html = node[field];
-				      $(this).html(new_html);
-				  });
+				  if ( $target ) {
+				      $target.find('.update').each(function() {
+					  var field = $(this).attr('data-field');
+					  var new_html = node[field];
+					  $(this).html(new_html);
+				      });
+				  }
 				  // User supplied callback function
-				  if (typeof callback != 'undefined') {
-				      callback(node);
+				  if (typeof data.changed != 'undefined') {
+				      console.log(node)
+				      data.changed(node);
 				  }
 			      }
 			  });
 		      });
+		      // Call user given callback
+		      if ( data.on_modal ) {
+			  data.on_modal($modal);
+		      }
 		      // Save settings
 		      $button.data('nodeEdit', data);
 		  });

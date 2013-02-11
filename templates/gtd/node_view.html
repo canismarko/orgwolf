@@ -138,13 +138,13 @@ $('document').ready(function() {
 </div><!-- /div id="node-detail"-->
 
 {# List of child nodes as links #}
-<strong>Children:</strong>
 <div id="node-workspace">
   <!-- Used as a place to put twisty drop downs of all Nodes.  -->
   <!-- Populated with javascript -->
 </div>
 
 <div id="outline-workspace" node_id="{{ node_id }}">
+  <strong>Children:</strong>
   {% if show_all %}
   <a href="{{ base_url }}{{ parent_node.pk }}" class="btn">Hide archived</a>
   {% else %}

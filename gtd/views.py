@@ -331,7 +331,6 @@ def edit_node(request, node_id, scope_id):
             return HttpResponse(json.dumps({'status': '404'}))
         if post.get('form') == 'modal':
             # Form posted from the modal javascript dialog
-            print post.get('todo_state').__class__
             if post.get('todo_state') == '0':
                 post.pop('todo_state')
             form = NodeForm(post, instance=node)
@@ -426,8 +425,38 @@ def new_node(request, node_id, scope_id):
     new = "Yes" # Used in template logic
     node = None
     if node_id:
-        node = Node.objects.get(id=node_id)
+        node = Node.objects.get(pk=node_id)
         breadcrumb_list = node.get_hierarchy()
+    if request.is_ajax() and request.GET.get('format') == 'modal_form':
+        # User asked for the modal form used in jQuery plugins
+        form = NodeForm()
+        return render_to_response('gtd/node_edit_modal.html',
+                                  locals(),
+                                  RequestContext(request))
+    if request.is_ajax() and request.POST.get('format') == 'json':
+        # Handle json requests
+        post = request.POST;
+        if post.get('form') == 'modal':
+            # Form posted from the modal javascript dialog
+            if post.get('todo_state') == '0':
+                post.pop('todo_state')
+            form = NodeForm(post)
+            if form.is_valid():
+                # Create and save the object
+                new_node = form.save(commit=False)
+                new_node.owner = request.user
+                new_node.parent = node
+                new_node.save()
+                # Prepare the response
+                node_data = new_node.as_json()
+                data = {
+                    'status': 'success',
+                    'node_id': new_node.pk,
+                    'node_data': node_data,
+                    }
+            else:
+                return HttpResponseBadRequest(form.errors)
+        return HttpResponse(json.dumps(data))
     if request.method == "POST": # Form submission
         form = NodeForm(request.POST, parent=node)
         if form.is_valid():
@@ -439,7 +468,7 @@ def new_node(request, node_id, scope_id):
             else:
                 form.order = 0
             if node:
-                form.parent = Node.objects.get(id=node.id)
+                form.parent = Node.objects.get(pk=node.pk)
             form.save()
             if request.POST.has_key('scope'):
                 for new_scope_id in request.POST['scope']:

@@ -155,6 +155,17 @@ $.mockjax({
     responseTime: ajax_timer,
     responseText: '<div class="modal hide fade" id="node-edit-modal">\n<div class="modal-body"><select id="id_todo_state">' + options + '</select></div>\n</div>'
 });
+for ( var i = 0; i < todo_state_list.length; i++ ) {
+    var state = todo_state_list[i];
+    options += '<option value="' + state.todo_id + '"';
+    options += '>';
+    options += state.display + '</option>';
+}
+$.mockjax({
+    url: '/gtd/nodes/new/',
+    responseTime: ajax_timer,
+    responseText: '<div class="modal hide fade" id="node-edit-modal">\n<div class="modal-body"><select id="id_todo_state">' + options + '</select></div>\n</div>'
+});
 
 
 var module_name = 'outline-appliance-test.js - ';
@@ -202,7 +213,7 @@ test('create new heading object from sparse data', function() {
 
 test('heading as_html method', function() {
     var test_heading = new outline_heading(sparse_dict);
-    var expected_html = '<div class="heading" node_id="1">\n  <div class="ow-hoverable">\n    <i class="clickable icon-chevron-right"></i>\n    <span class="todo-state"></span>\n    <div class="clickable ow-title"></div>\n    <div class="ow-buttons">\n      <i class="icon-plus"></i>\n      <i class="icon-ok"></i>\n    </div>\n  </div>\n  <div class=\"ow-text\"></div>\n  <div class="children">\n    <div class="loading">\n      <em>Loading...</em>\n    </div>\n  </div>\n</div>\n';
+    var expected_html = '<div class="heading" node_id="1">\n  <div class="ow-hoverable">\n    <i class="clickable icon-chevron-right"></i>\n    <span class="todo-state update" data-field="todo_abbr"></span>\n    <div class="clickable ow-title"></div>\n    <div class="ow-buttons">\n      <i class="icon-pencil" title="Edit"></i>\n      <i class="icon-th-list" title="Detail view"></i>\n      <i class="icon-plus" title="New subheading"></i>\n    </div>\n  </div>\n  <div class=\"ow-text\"></div>\n  <div class="children">\n    <div class="loading">\n      <em>Loading...</em>\n    </div>\n  </div>\n</div>\n';
     equal(test_heading.as_html(), expected_html, 'outline_heading.as_html() output');
 });
 
@@ -267,14 +278,14 @@ test('update_dom method', function() {
     // Test heading.title
     equal(
 	test_heading.$title.html(),
-	'<strong>' + test_heading.title + '</strong>',
+	'<strong class="update" data-field="title">' + test_heading.title + '</strong>',
 	'Initial element: ow-title'
     );
     test_heading.title = 'New title';
     test_heading.update_dom();
     equal(
 	test_heading.$title.html(),
-	'<strong>New title</strong>',
+	'<strong class="update" data-field="title">New title</strong>',
 	'Update element: ow-title'
     );
     // Test heading.todo_id
@@ -662,10 +673,8 @@ asyncTest('converts initial workspace', function() {
     // See if the function finds the existing workspace and sets the right number of children with the right attributes and data
     var $workspace = $('#test_workspace');
     $workspace.nodeOutline();
-    // var test_outline = new project_outline({$workspace: $workspace});
-    // test_outline.init();
     setTimeout(function() {
-	equal($('#test_workspace > div.heading').length, 2, 'correct number of .heading divs');
+	equal($('#test_workspace > .children > div.heading').length, 2, 'correct number of .heading divs');
 	start();
     }, (ajax_timer * 1.1 + 5));
 });
@@ -673,12 +682,12 @@ asyncTest('converts initial workspace', function() {
 asyncTest('Populates children on outline init', function() {
     // See if the appliance properly converts the non-javascript
     // table to the outline workspace.
-    expect(5);
+    expect(4);
     var $workspace = $('#test_workspace');
     $workspace.nodeOutline();
     setTimeout(function() {
 	start()
-	$workspace.children('.heading').each(function() {
+	$workspace.children('.children').children('.heading').each(function() {
 	    equal(
 		$(this).data('nodeOutline').populated, 
 		true,
@@ -690,12 +699,21 @@ asyncTest('Populates children on outline init', function() {
 	    	'Each heading has a $workspace data attribute'
 	    );
 	});
-	equal(
-	    $workspace.children('.add-heading').length,
-	    1,
-	    'An .add-heading div was added to the end of the list'
-	);
     }, (ajax_timer * 3.3 + 5));
+});
+
+asyncTest('Creates #add-heading button', function() {
+    var $workspace = $('#test_workspace');
+    $workspace.nodeOutline();
+    setTimeout(function() {
+	start();
+	equal(
+	    $workspace.children('#add-heading').length,
+	    1,
+	    'An #add-heading div was added to the end of the list'
+	);
+	var workspace = $workspace.data('nodeOutline');
+    }, ajax_timer * 1.1 + 5);
 });
 
 asyncTest('Alternate colors', function() {
@@ -703,7 +721,7 @@ asyncTest('Alternate colors', function() {
     var expected_colors = ['blue', 'brown', 'purple', 'red', 'green', 'teal', 'slateblue', 'darkred'];
     $workspace.nodeOutline();
     setTimeout(function() {
-	$workspace.children('.heading').each(function() {
+	$workspace.children('.children').children('.heading').each(function() {
 	    deepEqual(
 		$(this).data('nodeOutline').COLORS, 
 		expected_colors, 
@@ -727,7 +745,7 @@ asyncTest('Set todo states', function() {
     });
     setTimeout(function() {
 	start();
-	$workspace.children('.heading').each(function() {
+	$workspace.children('.children').children('.heading').each(function() {
 	    equal(
 		$(this).data('nodeOutline').$workspace.attr('id'),
 		'test_workspace',
@@ -739,7 +757,7 @@ asyncTest('Set todo states', function() {
 		'NEXT state accessible through heading object'
 	    );
 	});
-	var $todo = $workspace.children('.heading[node_id="1"]').children('.ow-hoverable').children('.todo-state');
+	var $todo = $workspace.children('.children').children('.heading[node_id="1"]').children('.ow-hoverable').children('.todo-state');
 	equal($todo.html(), 'NEXT', 'Todo state element selectable');
 	$todo.click();
     }, (ajax_timer * 1.1 + 5));
@@ -1365,6 +1383,7 @@ asyncTest('Check basic functionality', function() {
 	);
     }, (ajax_timer * 1.1) + 5);
 });
+
 
 asyncTest('nodeEdit(\'update\') method', function() {
     var $button = $('#edit-btn');
