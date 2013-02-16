@@ -5,7 +5,7 @@
   {% if parent_node.todo_state %}
   <dd class="todo update" id="parent-todo" todo_id="{{ parent_node.todo_state.pk }}" data-field="todo_html">{{ parent_node.todo_state.as_html }} - {{ parent_node.todo_state.display_text}}</dd>
   {% else %}
-  <dd class="todo update" todo_id="0" data-field="todo_state">[None]</dd>
+  <dd class="todo update" todo_id="0" data-field="todo_state" id="parent-todo">[None]</dd>
   {% endif %}
   {% endif %}
   {% if parent_node.scheduled %}

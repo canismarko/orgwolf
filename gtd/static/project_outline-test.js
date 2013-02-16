@@ -226,14 +226,14 @@ test('heading create_div method', function() {
     equal($heading.length, 1, '1 heading created');
     equal(test_heading.$element.attr('node_id'), '1', 'node_id set');
     equal(
-	test_heading.$element.children('.ow-text').text(),
+	test_heading.$text.text(),
 	'here\' some text that goes with it',
 	'text element created'
     );	
     equal(
-	test_heading.$element.children('.children').css('display'),
+	test_heading.$details.css('display'),
 	'none',
-	'Initial children div is not displayed'
+	'Initial details div is not displayed'
     );
 });
 
@@ -332,7 +332,7 @@ test('add function buttons', function() {
     heading.create_div($workspace);
     heading.create_add_button();
     equal(
-	heading.$element.children('.children').children('.add-heading').data('parent_id'),
+	heading.$children.children('.add-heading').data('parent_id'),
 	1,
 	'Set add heading button\'s parent_id data attribute'
     );
@@ -366,48 +366,64 @@ test('Heading toggle() method', function() {
     var heading = new outline_heading(full_dict);
     heading.create_div($workspace);
     equal(
-	heading.$children.css('display'),
+	heading.$details.css('display'),
 	'none',
-	'.children starts off hidden'
+	'.details starts off hidden'
     );
     var $icon = heading.$element.children('.ow-hoverable').children('i.clickable');
     ok($icon.hasClass('icon-chevron-right', 'Icon ends up closed'));
     heading.toggle();
     equal(
-	heading.$children.css('display'),
+	heading.$details.css('display'),
 	'block',
-	'.children gets un-hidden on toggle'
+	'.details get un-hidden on toggle'
     );
     ok($icon.hasClass('icon-chevron-down', 'Icon ends up open'));
 });
 
 asyncTest('Toggle clickable region on heading', function() {
+    expect(2);
     var $workspace = $('#test_workspace');
     $workspace.nodeOutline();
     setTimeout(function() {
 	$workspace.find('.heading').each(function() {
-	    // Check if all subheadings start unpopulated
-	    var $subheading = $(this).children('.children').children('.heading');
-	    $subheading.each(function() {
-		equal(
-		    $(this).data('populated'), 
-		    false,
-		    'node ' + $(this).data('node_id') + ' is unpopulated'
-		);
-	    });
-	});
-	$workspace.find('.heading').each(function() {
 	    var $clickable = $(this).children('.ow-hoverable').children('.clickable');
-	    $clickable.data('$parent').data('nodeOutline').has_children = true;
+	    var heading = $clickable.data('$parent').data('nodeOutline');
+	    heading.has_children = true;
 	    $clickable.click()
 	    equal(
-		$(this).children('.children').css('display'),
+		heading.$details.css('display'),
 		'block',
 		'CSS display set properly'
 	    );
 	});
 	start();
     }, (ajax_timer * 1.1 + 5));
+});
+
+test('Content detection', function() {
+    // If a heading has text or children is should be expandable
+    var $workspace = $('#test_workspace');
+    var heading = new outline_heading(sparse_dict);
+    heading.create_div( $workspace );
+    ok(
+	!heading.expandable,
+	'sparse heading doesn\'t have it\'s exandable flag set'
+    );
+    var heading = new outline_heading(full_dict);
+    heading.create_div( $workspace );
+    ok(
+	heading.expandable,
+	'heading with text has it\'s exandable flag set'
+    );
+    ok(
+	heading.$element.hasClass('expandable'),
+	'heading element has class \'expandable\''
+    );
+    ok(
+	!heading.$element.hasClass('has_children'),
+	'heading element does not have class \'has_children\''
+    );
 });
 
 test('Hovering actions', function() {
@@ -608,13 +624,16 @@ test('Popover populating method', function() {
 asyncTest('Todo state changing functionality', function() {
     var $workspace = $('#test_workspace');
     $workspace.nodeOutline({ todo_states: todo_state_list });
-    // var test_outline = new project_outline({$workspace: $workspace});
-    // test_outline.todo_states = todo_state_list;
-    // test_outline.init();
     var $heading1;
     setTimeout(function() {
 	start();
 	$heading1 = $workspace.find('.heading[node_id="1"]');
+	var $popover = $heading1.children('.ow-hoverable').children('.popover');
+	equal(
+	    $popover.length,
+	    1,
+	    'One popover exists before clicking'
+	);
 	equal(
 	    $heading1.length,
 	    1,
@@ -645,7 +664,12 @@ asyncTest('Todo state changing functionality', function() {
     setTimeout(function() {
 	start();
 	var heading = $heading1.data('nodeOutline');
-	var $popover = $heading1.find('.popover-inner');
+	var $popover = $heading1.children('.ow-hoverable').children('.popover');
+	equal(
+	    $popover.length,
+	    1,
+	    'One $popover is created'
+	);
 	equal(
 	    heading.node_id,
 	    1,
@@ -657,7 +681,7 @@ asyncTest('Todo state changing functionality', function() {
 	    'Todo state changed to 2'
 	);
 	equal(
-	    $popover.children('.todo-option[todo_id="2"]').attr('selected'),
+	    $popover.find('.todo-option[todo_id="2"]').attr('selected'),
 	    'selected',
 	    'Todo option 2 is now selected'
 	);
@@ -682,21 +706,26 @@ asyncTest('converts initial workspace', function() {
 asyncTest('Populates children on outline init', function() {
     // See if the appliance properly converts the non-javascript
     // table to the outline workspace.
-    expect(4);
+    expect(6);
     var $workspace = $('#test_workspace');
     $workspace.nodeOutline();
     setTimeout(function() {
 	start()
 	$workspace.children('.children').children('.heading').each(function() {
+	    var heading = $(this).data('nodeOutline');
 	    equal(
-		$(this).data('nodeOutline').populated, 
+		heading.populated,
 		true,
 		'Heading ' + $(this).data('node_id') + ' populated'
 	    );
 	    equal(
-	    	$(this).data('nodeOutline').$workspace.attr('id'),
+	    	heading.$workspace.attr('id'),
 	    	'test_workspace',
 	    	'Each heading has a $workspace data attribute'
+	    );
+	    ok(
+		heading.expandable,
+		'Each heading has the expandable element set'
 	    );
 	});
     }, (ajax_timer * 3.3 + 5));

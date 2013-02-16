@@ -488,7 +488,7 @@ def node_auto_increment(sender, **kwargs):
             auto = True
     if auto:
         # Now actually increment if necessary
-        other_nodes = Node.get_owned(instance.owner).filter(parent=instance.parent).reverse()
+        other_nodes = Node.get_owned(instance.owner, get_archived=True).filter(parent=instance.parent).reverse()
         if other_nodes.count() > 0:
             last_order = other_nodes[0].order
         else:

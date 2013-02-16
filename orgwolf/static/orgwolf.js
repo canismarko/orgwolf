@@ -76,158 +76,172 @@ $(document).ready(function(){
 	    return this.each(function() {
 		// Process options
 		var $todo = $(this);
-		// Remove any links that may be in the todo_state element
-		$todo.find('a').contents().unwrap();
-		var todo_id = $todo.attr('todo_id');
-		var settings = $.extend(
-		    {
-			states: [
-			    {todo_id: 0, display: '[None]'},
-			],
-			todo_id: todo_id,
-			node_id: 0,
-			click: (function() {}),
-			parent_elem: $todo.parent()
-		    }, options);
-		// Helper function gets todo state given a todo_id
-		var get_state = function(todo_id) {
-		    var new_state = undefined;
-		    for (var i=0; i<settings.states.length; i++) {
-			if (settings.states[i].todo_id == todo_id) {
-			    new_state = settings.states[i];
+		var data = $todo.data('todoState');
+		// Initialize if not already done
+		if ( !data ) {
+		    // Remove any links that may be in the todo_state element
+		    $todo.find('a').contents().unwrap();
+		    var todo_id = $todo.attr('todo_id');
+		    var settings = $.extend(
+			{
+			    states: [
+				{todo_id: 0, display: '[None]'},
+			    ],
+			    todo_id: todo_id,
+			    node_id: 0,
+			    click: (function() {}),
+			    parent_elem: $todo.parent()
+			}, options);
+		    // Helper function gets todo state given a todo_id
+		    var get_state = function(todo_id) {
+			var new_state = {
+			    todo_id: -1,
+			    display: '',
+			    full: ''
+			};
+			for (var i=0; i<settings.states.length; i++) {
+			    if (settings.states[i].todo_id == todo_id) {
+				new_state = settings.states[i];
+			    }
+			}
+			return new_state;
+		    };
+		    var curr_state = get_state(todo_id);
+		    var hide_popover = function() {
+			$popover.hide();
+			$todo.unbind('.autohide');
+		    };
+		    // function shows the popover and binds dismissal events
+		    var show_popover = function() {
+			$popover.show();
+			// Hide the popover if something else is clicked
+			$('body').one('click.autohide', function() {
+			    hide_popover();	
+			});
+			$popover.bind('click', function(e) {
+	    		    e.stopPropagation();
+			});
+			$todo.bind('click.autohide', function() {
+			    hide_popover();
+			});
+		    };
+		    // todo_id 0 has some special properties
+		    var bind_autohide = function() {
+			var todo_id = $todo.attr('todo_id');
+			if (todo_id == 0) {
+			    $todo.hide();
+			} else {
+			    $todo.show();
+			    settings.parent_elem.unbind('.autohide');
 			}
 		    }
-		    return new_state;
-		};
-		var hide_popover = function() {
+		    bind_autohide();
+		    // Tooltip
+		    $todo.tooltip({
+			delay: {show:1000, hide: 100},
+			title: 'click to change',
+			placement: 'right'
+		    });
+		    $todo.attr('data-original-title', curr_state.full);
+		    // Create the popover div and set its contents
+		    var new_html = '';
+		    new_html += '<div class="popover right todostate">\n';
+		    new_html += '  <div class="arrow"></div>\n';
+		    new_html += '  <div class="popover-title">Todo State</div>\n';
+		    new_html += '  <div class="popover-inner">\n';
+		    new_html += '  </div>\n';
+		    new_html += '</div>\n';
+		    $todo.after(new_html);
+		    var $popover = $todo.next('.popover');
+		    var $inner = $popover.children('.popover-inner');
+		    // Set some css
 		    $popover.hide();
-		    $todo.unbind('.autohide');
-		};
-		// function shows the popover and binds dismissal events
-		var show_popover = function() {
-		    $popover.show();
-		    // Hide the popover if something else is clicked
-		    $('body').one('click.autohide', function() {
-			hide_popover();	
-		    });
-		    $popover.bind('click', function(e) {
-	    		e.stopPropagation();
-		    });
-		    $todo.bind('click.autohide', function() {
-			$(this).tooltip({
-			    delay: {show:1000, hide: 100},
-			    title: 'click to change',
-			    placement: 'right'
-			});
-			hide_popover();
-		    });
-		};
-		// todo_id 0 has some special properties
-		var bind_autohide = function() {
-		    var todo_id = $todo.attr('todo_id');
-		    if (todo_id == 0) {
-			$todo.hide();
-		    } else {
-			$todo.show();
-			settings.parent_elem.unbind('.autohide');
+		    $popover.css('position', 'absolute');
+		    // Add the todo state options to popover inner
+		    for (var i=0; i<settings.states.length; i++) {
+			var option_html = '';
+			option_html += '<div class="todo-option"';
+			option_html += ' todo_id="';
+			option_html += settings.states[i].todo_id;
+			option_html += '"';
+			if (settings.states[i].todo_id == todo_id) {
+			    option_html += ' selected';
+			}
+			option_html += '>';
+			option_html += settings.states[i].display;
+			option_html += '</div>\n';
+			$inner.append(option_html);
 		    }
+		    // Connect the todo states click functionality
+		    $todo.bind('click', function(e) {
+			e.stopPropagation();
+			$('.popover.todostate').hide(); // Hide all the other popovers
+			$todo = $(this);
+			$todo.tooltip('hide');
+			// ...set the position
+			var new_left = $todo.position().left + $todo.width();
+			$popover.css('left', new_left + 'px');
+			var top = $todo.position().top;
+			var height = $todo.height();
+			var new_middle = top + (height/2);
+			var new_top = new_middle - ($popover.height()/2);
+			$popover.css('top', new_top + 'px');
+			show_popover();
+		    });
+		    // Connect the hover functionality
+		    var $options = $inner.children('.todo-option');
+		    $options.mouseenter(function() {
+			// Add the ow-hover class if it's not the currently selected option
+			if ( ! $(this).attr('selected') ) {
+			    // 		    if ($(this).attr('todo_id') != todo_id) {
+			    $(this).addClass('ow-hover');
+			}
+		    });
+		    $options.mouseleave(function() {
+			$(this).removeClass('ow-hover');
+		    });
+		    // Connect handler to change todo state when option is clicked
+		    $options.bind('click', function() {
+			var new_id = Number($(this).attr('todo_id'));
+			var $popover = $(this).parent().parent();
+			
+			var heading = $popover.parent().parent().data('nodeOutline');
+			var url = '/gtd/nodes/' + settings.node_id + '/edit/';
+			var payload = {
+			    format: 'json',
+			    todo_id: new_id,
+			};
+			// Avoid dismissing if same todo state selected
+			if (new_id != todo_id) {
+			    // If todo state is being changed then...
+			    $.post(url, payload, function(response) {
+				response = $.parseJSON(response);
+				// (callback) update the document todo states after change
+				if (response['status']=='success') {
+				    var old = $todo.attr('todo_id');
+				    $todo.attr('todo_id', response['todo_id']);
+				    todo_id = response['todo_id'];
+				    var new_state = get_state(response['todo_id']);
+				    $todo.html(new_state.display);
+				    $todo.attr('data-original-title', new_state.full);
+				    $options.removeAttr('selected'); // clear selected
+				    var s = '.todo-option[todo_id="';
+				    s += response['todo_id'] + '"]';
+				    $inner.children(s).attr('selected', '');
+				    bind_autohide();
+				    // Run the user submitted callback
+				    settings.click(response);
+				    // Kludge to avoid stale css
+				    $todo.mouseenter();
+				    $todo.mouseleave();
+				}
+			    }); // end of $.post
+			    hide_popover();
+			}
+		    });
+		    // save the options
+		    $todo.data('todoState', settings);
 		}
-		bind_autohide();
-		// Create the popover div and set its contents
-		var new_html = '';
-		new_html += '<div class="popover right todostate">\n';
-		new_html += '  <div class="arrow"></div>\n';
-		new_html += '  <div class="popover-title">Todo State</div>\n';
-		new_html += '  <div class="popover-inner">\n';
-		new_html += '  </div>\n';
-		new_html += '</div>\n';
-		$todo.after(new_html);
-		var $popover = $todo.next('.popover');
-		var $inner = $popover.children('.popover-inner');
-		// Set some css
-		$popover.hide();
-		$popover.css('position', 'absolute');
-		// Add the todo state options to popover inner
-		for (var i=0; i<settings.states.length; i++) {
-		    var option_html = '';
-		    option_html += '<div class="todo-option"';
-		    option_html += ' todo_id="';
-		    option_html += settings.states[i].todo_id;
-		    option_html += '"';
-		    if (settings.states[i].todo_id == todo_id) {
-			option_html += ' selected';
-		    }
-		    option_html += '>';
-		    option_html += settings.states[i].display;
-		    option_html += '</div>\n';
-		    $inner.append(option_html);
-		}
-		// Connect the todo states click functionality
-		$todo.bind('click', function(e) {
-		    e.stopPropagation();
-		    $('.popover.todostate').hide(); // Hide all the other popovers
-		    $todo = $(this);
-		    $todo.tooltip('destroy')
-		    // ...set the position
-		    var new_left = $todo.position().left + $todo.width();
-		    $popover.css('left', new_left + 'px');
-		    var top = $todo.position().top;
-		    var height = $todo.height();
-		    var new_middle = top + (height/2);
-		    var new_top = new_middle - ($popover.height()/2);
-		    $popover.css('top', new_top + 'px');
-		    show_popover();
-		});
-		// Connect the hover functionality
-		var $options = $inner.children('.todo-option');
-		$options.mouseenter(function() {
-		    // Add the ow-hover class if it's not the currently selected option
-		    if ( ! $(this).attr('selected') ) {
-// 		    if ($(this).attr('todo_id') != todo_id) {
-			$(this).addClass('ow-hover');
-		    }
-		});
-		$options.mouseleave(function() {
-		    $(this).removeClass('ow-hover');
-		});
-		// Connect handler to change todo state when option is clicked
-		$options.bind('click', function() {
-		    var new_id = Number($(this).attr('todo_id'));
-		    var $popover = $(this).parent().parent();
-		    var heading = $popover.parent().parent().data('nodeOutline');
-		    var url = '/gtd/nodes/' + settings.node_id + '/edit/';
-		    var payload = {
-			format: 'json',
-			todo_id: new_id,
-		    };
-		    // Avoid dismissing if same todo state selected
-		    if (new_id != todo_id) {
-			// If todo state is being changed then...
-			$.post(url, payload, function(response) {
-			    response = $.parseJSON(response);
-			    // (callback) update the document todo states after change
-			    if (response['status']=='success') {
-				var old = $todo.attr('todo_id');
-				$todo.attr('todo_id', response['todo_id']);
-				todo_id = response['todo_id'];
-				$todo.html(get_state(response['todo_id']).display);
-				$options.removeAttr('selected'); // clear selected
-				var s = '.todo-option[todo_id="';
-				s += response['todo_id'] + '"]';
-				$inner.children(s).attr('selected', '');
-				bind_autohide();
-				// Run the user submitted callback
-				settings.click(response);
-				// Kludge to avoid stale css
-				$todo.mouseenter();
-				$todo.mouseleave();
-			    }
-			});
-			hide_popover();
-		    }
-		});
-		// save the options
-		$todo.data('todoState', settings);
 	    });
 	}, // end of init method
 	update: function( options ) {
@@ -410,10 +424,12 @@ var get_heading = function (node_id) {
 		    this.$parent = $(s);
 		    var parent = this.$parent.data('nodeOutline');
 		    if (typeof parent == 'undefined') {
+			// Parent can't be found
 	    		this.todo_states = { todo_id: 0, display: '[None]' };
 			this.COLORS = ['black']; // Default if no colors set
 		    } else {
 			this.COLORS = this.$parent.data('nodeOutline').COLORS;
+			this.$workspace = parent.$workspace;
 			this.todo_states = parent.todo_states;
 			this.level = (parent.level + 1);
 		    }
@@ -444,12 +460,13 @@ var get_heading = function (node_id) {
 		    new_string += '    </div>\n';
 		    new_string += '  </div>\n';
 		    // Child containers
-		    new_string += '  <div class="ow-text"></div>\n';
-		    new_string += '  <div class="children">\n';
-		    new_string += '    <div class="loading">\n';
-		    new_string += '      <em>Loading...</em>\n';
-		    new_string += '    </div>\n';
-		    new_string += '  </div>\n</div>\n';
+		    new_string += '  <div class="details">\n';
+		    new_string += '    <div class="ow-text"></div>\n';
+		    new_string += '    <div class="children">\n';
+		    new_string += '      <div class="loading">\n';
+		    new_string += '        <em>Loading...</em>\n';
+		    new_string += '      </div>\n';
+		    new_string += '    </div>\n  </div>\n</div>';
 		    return new_string;
 		};
 		this.set_autohide = function ( $hover_target, $hide_target ) {
@@ -473,6 +490,7 @@ var get_heading = function (node_id) {
 		    var $hoverable = $element.children('.ow-hoverable');
 		    if ( typeof parent != 'undefined' ) {
 			var $workspace = parent.$workspace
+			parent.$element.addClass('expandable');
 		    } else {
 			var $workspace = $element.parent();
 		    }
@@ -480,16 +498,16 @@ var get_heading = function (node_id) {
 		    var $todo_state = $hoverable.children('.todo-state');
 		    var $icon = $hoverable.children('i');
 		    var $buttons = $hoverable.children('.ow-buttons');
-		    var $text = $element.children('.ow-text');
 		    var $title = $hoverable.children('.ow-title');
 		    this.$element = $element;
 		    this.$hoverable = $hoverable;
-		    this.$workspace = $workspace
+		    this.$details = this.$element.children('.details');
+		    this.$workspace = $workspace;
 		    this.$clickable = $clickable;
 		    this.$todo_state = $todo_state;
 		    this.$icon = $icon;
+		    this.$text = this.$details.children('.ow-text');
 		    this.$buttons = $buttons;
-		    this.$text = $text;
 		    this.$title = $title;
 		    this.populated = false;
 		    // Set initial dom data
@@ -501,11 +519,6 @@ var get_heading = function (node_id) {
 		    $buttons.children('i').tooltip({
 			delay: {show:1000, hide: 100}
 		    });
-		    $todo_state.tooltip({
-			delay: {show:1000, hide: 100},
-			title: 'click to change',
-			placement: 'right'
-		    });
 		    // Bind Aloha editor
 		    if ( this.$text.text() != '' ) {
 			this.$text.alohaText();
@@ -513,20 +526,19 @@ var get_heading = function (node_id) {
 		    // Set color based on indentation level
 		    var color_i = this.level % this.COLORS.length;
 		    this.color = this.COLORS[color_i-1];
-		    var $children = this.$element.children('.children');
+		    var $children = this.$details.children('.children');
 		    this.$children = $children;
-		    this.$text = this.$element.children('.ow-text');
 		    // Set initial CSS
 		    this.$clickable.css('color', this.color);
-		    this.$children.css('display', 'none');
+		    this.$details.hide();
 		    this.$buttons.css('visibility', 'hidden');
-		    this.$text.css('display', 'none');
 		    this.set_indent(this.$children, 1);
 		    this.set_indent(this.$text, 1);
 		    // Attach event handlers
 		    this.$clickable.click(function() {
 			var saved_heading = $(this).data('$parent').data('nodeOutline');
-			if ( saved_heading.has_children ) {
+			// if ( saved_heading.expandable ) {
+			if ( saved_heading.expandable ) {
 			    saved_heading.toggle();
 			}
 		    });
@@ -549,13 +561,6 @@ var get_heading = function (node_id) {
 				    $hoverable.find('.todo-state').todoState(
 					'update', {todo_id: node.todo_state}
 				    );
-				    // this.$todo_state.todoState({
-				    // 	states: this.todo_states,
-				    // 	node_id: this.node_id,
-				    // 	click: function(ajax_response) {
-				    // 	    heading.todo_id = ajax_response['todo_id'];
-				    // 	}
-    				    // });
 				},
 				on_modal: function($modal) {
 				    // disable the hovering feature while the modal is active
@@ -612,16 +617,11 @@ var get_heading = function (node_id) {
 		    var heading = this;
 		    // node_id
 		    this.$element.attr('node_id', this.node_id);
+		    this.$hoverable = this.$element.children('.ow-hoverable');
+		    this.$todo_state = this.$hoverable.children('.todo-state');
 		    // todo_id
 		    this.$todo_state.data('todo_id', this.todo_id);
 		    this.$todo_state.attr('todo_id', this.todo_id);
-		    if ( this.todo_states[this.todo_id] ) {
-			this.$todo_state.attr(
-			    'title', 
-			    this.todo_states[this.todo_id].full +
-				' (click to change)'
-			);
-		    }
 		    var new_todo = '[]';
 		    if (typeof this.todo_states == 'undefined') {
 			var num_todo_states = 0;
@@ -643,12 +643,23 @@ var get_heading = function (node_id) {
 			}
 		    });
 		    // Text div (including aloha editor)
-		    this.$text.html(this.text);
-		    if (typeof this.$text.aloha == 'function') {
-			this.$text.aloha();
+		    if ( typeof this.$text != 'undefined' ) {
+			this.$text.html(this.text);
+			if (typeof this.$text.aloha == 'function') {
+			    this.$text.aloha();
+			}
+		    }
+		    // Set expandability
+		    if ( this.text || this.has_children ) {
+			this.expandable = true;
+			this.$element.addClass('expandable'); 
+		    } else {
+			this.expandable = false;
 		    }
 		    // Title div
-		    this.$title.html('<strong class="update" data-field="title">' + this.title + '</strong>');
+		    if ( typeof this.$title != 'undefined' ) {
+			this.$title.html('<strong class="update" data-field="title">' + this.title + '</strong>');
+		    }
 		};
 		
 		this.set_indent = function($target, offset) {
@@ -698,23 +709,26 @@ var get_heading = function (node_id) {
 			}
 			var populated = true;
 			parent.$element.data('nodeOutline', parent);
+			parent.update_dom();
 		    });
 		};
 		this.toggle = function( direction ) {
 		    // Show or hide the children div based on present state
 		    var $icon = this.$element.children('.ow-hoverable').children('i.clickable');
+		    console.log(direction);
 		    if ($icon.hasClass('icon-chevron-right' || direction == 'open')) {
 			var new_icon_class = 'icon-chevron-down';
 			$icon.removeClass('icon-chevron-right');
+			this.$details.slideDown();
+			console.log('open');
 		    }
 		    else {
 			var new_icon_class = 'icon-chevron-right';
 			$icon.removeClass('icon-chevron-down');
+			this.$details.slideUp();
 		    }
 		    $icon.addClass(new_icon_class);
 		    var outline = this;
-		    this.$text.slideToggle();
-		    this.$children.slideToggle();
 		    this.$children.children('.heading').each(function() {
 			// Populate the next level of children 
 			// in aniticipation of the user needing them
@@ -1028,7 +1042,6 @@ var get_heading = function (node_id) {
 				  }
 				  // User supplied callback function
 				  if (typeof data.changed != 'undefined') {
-				      console.log(node)
 				      data.changed(node);
 				  }
 			      }

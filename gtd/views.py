@@ -446,6 +446,7 @@ def new_node(request, node_id, scope_id):
                 new_node = form.save(commit=False)
                 new_node.owner = request.user
                 new_node.parent = node
+                print(new_node.order);
                 new_node.save()
                 # Prepare the response
                 node_data = new_node.as_json()
