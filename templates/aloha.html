@@ -1,6 +1,13 @@
 <!-- Requirements for aloha HTML 5 editor -->
 
 <!-- load the Aloha Editor core and some plugins -->
+<!-- <script src="{{ STATIC_URL }}aloha/lib/aloha-full.js" -->
+<!--         data-aloha-plugins="common/ui, -->
+<!--                             common/format, -->
+<!--                             common/list, -->
+<!--                             common/link, -->
+<!-- 			    common/table"> -->
+<!-- </script> -->
 <script src="http://cdn.aloha-editor.org/latest/lib/aloha-full.js"
         data-aloha-plugins="common/ui,
                             common/format,
@@ -9,9 +16,9 @@
 			    common/table">
 </script>
 <!-- load the Aloha Editor CSS styles -->
+<!-- <link href="{{ STATIC_URL }}aloha/css/aloha.css" rel="stylesheet" type="text/css" /> -->
 <link href="http://cdn.aloha-editor.org/latest/css/aloha.css" rel="stylesheet" type="text/css" />
  
-<!--script src="{{ STATIC_URL }}aloha/lib/aloha-full.js" data-aloha-plugins="common/format,common/link"></script-->
 <script>
   // Turn off Aloha sidebar
   Aloha.settings.sidebar = {disabled: true};

@@ -345,10 +345,12 @@ def edit_node(request, node_id, scope_id):
                     'node_data': node_data,
                     }
             else:
-                print form.errors
                 return HttpResponseBadRequest(form.errors)
         else: # if post.get('form') != 'modal':
-            node.text = post.get('text', node.text)
+            new_text = post.get('text', node.text)
+            if new_text == '\n<br>':
+                new_text = ''
+            node.text = new_text
             new_todo_id = post.get('todo_id', None)
             if new_todo_id == '0':
                 node.todo_state = None
@@ -357,6 +359,7 @@ def edit_node(request, node_id, scope_id):
                     node.todo_state = TodoState.objects.get(pk=new_todo_id)
                 except TodoState.DoesNotExist:
                     return HttpResponseBadRequest('Invalid todo_id: %s' % new_todo_id)
+            node.auto_repeat = True
             node.save()
             data = {
                 'status': 'success',
@@ -446,7 +449,6 @@ def new_node(request, node_id, scope_id):
                 new_node = form.save(commit=False)
                 new_node.owner = request.user
                 new_node.parent = node
-                print(new_node.order);
                 new_node.save()
                 # Prepare the response
                 node_data = new_node.as_json()
@@ -456,7 +458,7 @@ def new_node(request, node_id, scope_id):
                     'node_data': node_data,
                     }
             else:
-                return HttpResponseBadRequest(form.errors)
+                return HttpResponseBadRequest(str(form.errors))
         return HttpResponse(json.dumps(data))
     if request.method == "POST": # Form submission
         form = NodeForm(request.POST, parent=node)
@@ -497,16 +499,17 @@ def get_children(request, parent_id):
         parent = get_object_or_404(Node, pk=parent_id)
     elif int(parent_id) == 0:
         parent = None
-    all_nodes_qs = Node.get_owned(request.user)
+    all_nodes_qs = Node.get_owned(request.user, get_archived=True)
     children_qs = all_nodes_qs.filter(parent=parent)
     children = []
     # Assemble the dictionary to return as JSON
     for child in children_qs:
         new_dict = {
             'node_id': child.pk,
-            'title': child.title,
+            'title': child.get_title(),
             'tags': child.tag_string,
             'text': escape_html(child.text),
+            'archived': child.archived,
              }
         if hasattr(child.todo_state, 'pk'):
             new_dict['todo_id'] = child.todo_state.pk

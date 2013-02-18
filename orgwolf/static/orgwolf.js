@@ -262,6 +262,11 @@ $(document).ready(function(){
 			return state.todo_id == options.todo_id;
 		    })[0];
 		    $todo.html(new_todo.display);
+		    if ( data.todo_id > 0 ) {
+			$todo.show();
+		    } else {
+			$todo.hide();
+		    };
 		}
 		$todo.data('todoState', data);
 	    });
@@ -295,26 +300,39 @@ $(document).ready(function(){
 *************************************************/
 (function( $ ){
     $.fn.alohaText = function(options) {
+	// Process options
 	var $text_j = this;
+	if ( typeof options != 'object' ) {
+	    options = {}
+	}
+	options.$element = $text_j;
+	if ( typeof options.$parent == 'undefined' ) {
+	    options.$parent = options.$element.parent();
+	}
+	// Bind the aloha editor
 	Aloha.ready(function() {
-	    // Bind the aloha editor
 	    var $text_a = Aloha.jQuery($text_j);
 	    $text_a.aloha()
 	});
+	// Save options
+	$text_j.data('alohaText', options);
 	return this;
-    }; // Uncomment this if ahola breaks
+    };
     // Bind the AJAX handler for changing the text
-	$('document').ready(function() {
-	    Aloha.ready(function() {
-		console.log('# Todo: Switch Aloha editor to PubSub');
-		Aloha.bind('aloha-editable-deactivated', function(e, arg) {
-		    editable = arg.editable
-		    if (editable.snapshotContent!= editable.obj.html()) {
-			// If they text was changed, submit the ajax request
-			var $parent = editable.obj.parent();
+    $('document').ready(function() {
+	Aloha.ready(function() {
+	    console.log('# Todo: Switch Aloha editor to PubSub');
+	    Aloha.bind('aloha-editable-deactivated', function(e, arg) {
+		editable = arg.editable
+		if (editable.snapshotContent!= editable.obj.html()) {
+		    // If they text was changed, submit the ajax request
+		    var $text = $(editable.obj.context);
+		    var options = $text.data('alohaText');
+		    if ( options ) { // Only if an AlohaText exists
+			var $parent = options.$parent;
 			var url = '/gtd/nodes/' + $parent.attr('node_id') + '/edit/';
-			var new_text = editable.obj.html();
-			if ( new_text = '<br>' ) {
+			var new_text = $text.html();
+			if ( new_text == '<br>' ) {
 			    new_text = '';
 			}
 			var payload = {
@@ -326,9 +344,10 @@ $(document).ready(function(){
 			    console.log('# Todo: write callback function for aloha edit ajax request');
 			});
 		    }
-		});
+		}
 	    });
 	});
+    });
 })(jQuery);
 
 
@@ -411,6 +430,7 @@ var get_heading = function (node_id) {
 		    this.node_id = Number(args['node_id']);
 		}
 		this.tags = args['tags'];
+		this.archived = args['archived'];
 		// Detect the location in the hierarchy
 		if (typeof args['parent_id'] == 'undefined' ) {
 		    // Root level heading
@@ -466,7 +486,7 @@ var get_heading = function (node_id) {
 		    new_string += '      <div class="loading">\n';
 		    new_string += '        <em>Loading...</em>\n';
 		    new_string += '      </div>\n';
-		    new_string += '    </div>\n  </div>\n</div>';
+		    new_string += '    </div>\n  </div>\n</div>\n';
 		    return new_string;
 		};
 		this.set_autohide = function ( $hover_target, $hide_target ) {
@@ -502,6 +522,7 @@ var get_heading = function (node_id) {
 		    this.$element = $element;
 		    this.$hoverable = $hoverable;
 		    this.$details = this.$element.children('.details');
+		    this.$children = this.$details.children('.children');
 		    this.$workspace = $workspace;
 		    this.$clickable = $clickable;
 		    this.$todo_state = $todo_state;
@@ -519,16 +540,15 @@ var get_heading = function (node_id) {
 		    $buttons.children('i').tooltip({
 			delay: {show:1000, hide: 100}
 		    });
-		    // Bind Aloha editor
-		    if ( this.$text.text() != '' ) {
-			this.$text.alohaText();
-		    }
 		    // Set color based on indentation level
 		    var color_i = this.level % this.COLORS.length;
 		    this.color = this.COLORS[color_i-1];
 		    var $children = this.$details.children('.children');
 		    this.$children = $children;
 		    // Set initial CSS
+		    if ( this.archived ) {
+			this.$element.hide();
+		    }
 		    this.$clickable.css('color', this.color);
 		    this.$details.hide();
 		    this.$buttons.css('visibility', 'hidden');
@@ -537,7 +557,6 @@ var get_heading = function (node_id) {
 		    // Attach event handlers
 		    this.$clickable.click(function() {
 			var saved_heading = $(this).data('$parent').data('nodeOutline');
-			// if ( saved_heading.expandable ) {
 			if ( saved_heading.expandable ) {
 			    saved_heading.toggle();
 			}
@@ -558,9 +577,13 @@ var get_heading = function (node_id) {
 				target: $hoverable,
 				node_id: node_id,
 				changed: function(node) {
+				    var heading = $heading.data('nodeOutline');
 				    $hoverable.find('.todo-state').todoState(
 					'update', {todo_id: node.todo_state}
 				    );
+				    heading.text = node.text;
+				    heading.$element.data('nodeOutline', heading);
+				    heading.update_dom();
 				},
 				on_modal: function($modal) {
 				    // disable the hovering feature while the modal is active
@@ -593,7 +616,10 @@ var get_heading = function (node_id) {
 					parent_id: node_id
 				    });
 				    new_heading.create_div( $children );
-				    new_heading.$parent.data('nodeOutline').toggle('open');
+				    var parent = new_heading.$parent.data('nodeOutline')
+				    parent.has_children = true;
+				    parent.update_dom();
+				    parent.toggle('open');
 				},
 				on_modal: function($modal) {
 				    // disable the hovering feature while the modal is active
@@ -612,7 +638,7 @@ var get_heading = function (node_id) {
 		    $element.slideToggle();
 		};
 		// Read the current object properties and update the
-		// DOM element to reflect any changes
+		//   DOM element to reflect any changes
 		this.update_dom = function() {
 		    var heading = this;
 		    // node_id
@@ -640,28 +666,82 @@ var get_heading = function (node_id) {
 			node_id: this.node_id,
 			click: function(ajax_response) {
 			    heading.todo_id = ajax_response['todo_id'];
+			    heading.$buttons.children('.icon-pencil').nodeEdit(
+				'update',
+				{ todo_id: heading.todo_id }
+			    );
+			    heading.set_autohide(heading.$hoverable, 
+						 heading.$buttons
+						);
 			}
 		    });
 		    // Text div (including aloha editor)
 		    if ( typeof this.$text != 'undefined' ) {
 			this.$text.html(this.text);
+			// // Make the heading expandable
+			if ( this.text ) {
+			    // this.expandable = true;
+			    // this.$element.addClass('expandable');
+			    // Bind Aloha editor
+			    if ( this.$text.text() != '' ) {
+				this.$text.alohaText({$parent: this.$element});
+			    }
+			}
+			// } else if ( !this.has_children ) {
+			//     this.expandable = false;
+			//     this.$element.removeClass('expandable');
+			// }
 			if (typeof this.$text.aloha == 'function') {
 			    this.$text.aloha();
 			}
-		    }
-		    // Set expandability
-		    if ( this.text || this.has_children ) {
-			this.expandable = true;
-			this.$element.addClass('expandable'); 
-		    } else {
-			this.expandable = false;
 		    }
 		    // Title div
 		    if ( typeof this.$title != 'undefined' ) {
 			this.$title.html('<strong class="update" data-field="title">' + this.title + '</strong>');
 		    }
-		};
-		
+		    // Archived status
+		    if ( this.archived ) {
+			this.$element.addClass('archived');
+		    } else {
+			this.$element.removeAttr('archived');
+		    }
+		    var $checkbox = this.$element.find('.show-all');
+		    if ( $checkbox.length > 0 ) {
+			this.$showall = $checkbox;
+		    } else {
+			$checkbox = this.$workspace.data('nodeOutline').$showall;
+		    }
+		    // Set expandability
+		    var c
+		    if ( $checkbox.is(':checked') ) {
+			c = this.$children.children('.heading');
+		    } else {
+			c = this.$children.children('.heading:not(.archived)');
+		    }
+		    console.log(c);
+		    if ( c.length > 0 ) {
+		    	this.has_children = true;
+		    } else {
+		    	this.has_children = false;
+		    }
+		    if ( this.text || this.has_children ) {
+			this.expandable = true;
+			this.$element.addClass('expandable'); 
+		    } else {
+			this.expandable = false;
+			this.$element.removeClass('expandable');
+		    }
+		    // var $checkbox = this.$workspace.find('.show-all');
+		    var show_all = $checkbox.is(':checked');
+		    if ( this.archived && ! show_all ) {
+			this.$element.attr('archived');
+			this.$element.hide();
+		    } else {
+			this.$element.removeAttr('archived');
+		    }
+		    // Write settings
+		    this.$element.data('nodeOutline', this);
+		};		
 		this.set_indent = function($target, offset) {
 		    var indent = (this.icon_width + 4) * offset;
 		    $target.css('margin-left', indent + 'px');
@@ -715,12 +795,10 @@ var get_heading = function (node_id) {
 		this.toggle = function( direction ) {
 		    // Show or hide the children div based on present state
 		    var $icon = this.$element.children('.ow-hoverable').children('i.clickable');
-		    console.log(direction);
-		    if ($icon.hasClass('icon-chevron-right' || direction == 'open')) {
+		    if ( $icon.hasClass('icon-chevron-right') || direction == 'open' ) {
 			var new_icon_class = 'icon-chevron-down';
 			$icon.removeClass('icon-chevron-right');
 			this.$details.slideDown();
-			console.log('open');
 		    }
 		    else {
 			var new_icon_class = 'icon-chevron-right';
@@ -766,6 +844,7 @@ var get_heading = function (node_id) {
 		    $container.html(new_string);
 		};
 	    }; // end of outline_heading prototype
+
 	    // Code execution starts here
 	    $this = this;
 	    $this.html('<strong>Children:</strong><br />\n<div class="children"></div>'); // Clear old content
@@ -793,22 +872,58 @@ var get_heading = function (node_id) {
 	    workspace.$element = $this;
 	    workspace.$element.addClass('heading');
 	    workspace.$workspace = this;
+	    workspace.$showall = $this.find('.show-all');
 	    workspace.$element.data('nodeOutline', workspace);
 	    workspace.level = 0;
 	    workspace.COLORS = COLORS;
 	    workspace.color = workspace.COLORS[0];
 	    workspace.todo_states = data.todo_states;
+	    // // Helper function to find archived nodes
+	    // workspace.update_archived = function( $parent ) {
+	    // 	// First check if archived nodes are to be shown
+	    // 	var checked;
+	    // 	if ( typeof this.$checkbox == 'undefined' ) {
+	    // 	    checked = false;
+	    // 	} else if ( this.$checkbox.attr('checked') ) {
+	    // 	    checked = true;
+	    // 	} else {
+	    // 	    checked = false;
+	    // 	}
+	    // 	// The show or hide as necessary
+	    // 	var f;
+	    // 	if ( checked ) {
+	    // 	    f = function ( $e ) { 
+	    // 		$e.attr('archived', '');
+	    // 	    }
+	    // 	} else {
+	    // 	    f = function ( $e ) {
+	    // 		$e.removeAttr('archived');
+	    // 	    }
+	    // 	}
+	    // 	if ( !$parent ) {
+	    // 	    $parent = workspace.$element;
+	    // 	}
+	    // 	$parent.find('.heading.archived').each( function() {
+	    // 	    f( $(this) );
+	    // 	});
+	    // };
 	    // Create all the first two levels of nodes
 	    workspace.populate_children(function() {
 		workspace.$children.children('.heading').each(function() {
 		    var subheading = $(this).data('nodeOutline');
 		    subheading.populate_children();
 		});
+		var h = '';
 		// Button for adding a new child node
-		var s = '<div class="ow-buttons" id="add-heading">\n';
-		s += '<i class="icon-plus-sign"></i>Add Heading\n';
-		s += '</div>';
-		workspace.$element.append(s);
+		h += '<div class="ow-buttons" id="add-heading">\n';
+		h += '  <i class="icon-plus-sign"></i>Add Heading\n';
+		h += '</div>\n';
+		// Checkbox for showing archived nodes
+		h += '<label class="checkbox">\n';
+		h += '  <input class="ow-buttons show-all" type="checkbox">';
+		h += '  </input>Show archived</label>\n';
+		workspace.$element.append(h);
+		workspace.$checkbox = workspace.$element.find('.show-all');
 		var $add = workspace.$element.children('#add-heading');
 		$add.nodeEdit( {
 		    parent_id: workspace.node_id,
@@ -824,6 +939,32 @@ var get_heading = function (node_id) {
 			new_heading.create_div( workspace.$children );
 		    }
 		});
+		// Archived checkbox toggles visibility of archived nodes
+		workspace.$checkbox.bind('change.show-all', function (e) {
+		    if ( $(this).is(':checked') ) {
+			checked = true;
+		    } else {
+			checked = false;
+		    }
+		    workspace.showall = checked;
+		    workspace.$element.find('.heading.archived').each( function() {
+			var $parent = $(this).data('nodeOutline').$parent;
+			parent = $parent.data('nodeOutline');
+			if ( checked ) {
+			    // parent.expandable = true;
+			    // $parent.addClass('expandable');
+			    $(this).slideDown();
+			} else {
+			    // parent.expandable = false;
+			    // $parent.removeClass('expandable');
+			    $(this).slideUp();
+			}
+			parent.update_dom();
+			// Save data object back to elements
+			$parent.data('nodeOutline', parent);
+			workspace.$element.data('nodeOutline', workspace);
+		    });
+                });
 		workspace.todo_states = data.todo_states;
 		$this.data('nodeOutline', workspace);
 	    });
@@ -999,8 +1140,11 @@ var get_heading = function (node_id) {
 		  {format: 'modal_form'},
 		  function(response) {
 		      $button.after(response);
-		      var $modal = $button.siblings('.modal');
+		      var $modal = $button.next('.modal');
 		      data.$modal = $modal
+		      var $text = $modal.find('#id_text');
+		      var $text_a = Aloha.jQuery($text);
+		      $text_a.aloha();
 		      if ( start_shown ) {
 			  $modal.modal( {show: true} );
 		      } else {
@@ -1028,6 +1172,9 @@ var get_heading = function (node_id) {
 				  // Success! Now update the page
 				  node = $.parseJSON(r.node_data);
 				  // Update data
+				  if ( node.todo_state == null ) {
+				      node.todo_state = 0;
+				  }
 				  var data = $button.data('nodeEdit');
 				  data.todo_id = node.todo_state;
 				  $button.data('nodeEdit', data);
@@ -1060,15 +1207,18 @@ var get_heading = function (node_id) {
 	    // Updates the DOM to reflect changes made through other sources
 	    var $this = this;
 	    var data = $this.data('nodeEdit');
-	    var $modal = data.$modal;
-	    if ( typeof args.todo_id != 'undefined' ) {
-		data.todo_id = args.todo_id;
-		var $select = $modal.find('#id_todo_state');
-		$select.find('option').removeAttr('selected');
-		var $new_opt = $select.find('option[value="' + args.todo_id +  '"]');
-		$new_opt.attr('selected', 'selected');
+	    if ( data ) {
+		// Only execute if the plugin is initialized
+		var $modal = data.$modal;
+		if ( typeof args.todo_id != 'undefined' ) {
+		    data.todo_id = args.todo_id;
+		    var $select = $modal.find('#id_todo_state');
+		    $select.find('option').removeAttr('selected');
+		    var $new_opt = $select.find('option[value="' + args.todo_id +  '"]');
+		    $new_opt.attr('selected', 'selected');
+		}
+		$this.data('nodeEdit', data); // Write the settings
 	    }
-	    $this.data('nodeEdit', data); // Write the settings
 	}, // end of update method
 	reset: function ( args ) {
 	    // Resets the values in the modal to the saved versions

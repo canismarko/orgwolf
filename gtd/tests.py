@@ -197,6 +197,46 @@ class EditNode(TestCase):
             node.todo_state,
             'node.todo_state not unset when todo_id: 0 passed to edit node'
             )
+    def test_edit_repeating_by_json(self):
+        """If a repeating node has it's todo state changed by JSON,
+        if requires special handling."""
+        node = Node.objects.get(pk=7)
+        actionable = TodoState.objects.get(abbreviation='NEXT')
+        closed = TodoState.objects.get(abbreviation='DONE')
+        self.assertEqual(
+            actionable,
+            node.todo_state,
+            'Node does not start out actionable'
+            )
+        self.assertTrue(
+            node.repeats,
+            'Node does not start out repeating'
+            )
+        # Execute edit via AJAX
+        url = '/gtd/nodes/' + str(node.pk) + '/edit/'
+        data = {
+            'format': 'json',
+            'todo_id': closed.pk,
+            }
+        response = self.client.post(
+            url, data,
+            HTTP_X_REQUESTED_WITH='XMLHttpRequest',
+            )
+        self.assertEqual(
+            200,
+            response.status_code,
+            'getJSON call did not return HTTP 200'
+            )
+        node = Node.objects.get(pk=node.pk)
+        self.assertEqual(
+            actionable,
+            node.todo_state
+            )
+        jresponse = json.loads(response.content)
+        self.assertEqual(
+            actionable.pk,
+            jresponse['todo_id'],
+            )
 
     def test_text_through_json(self):
         """Check JSON editing (ie using Aloha editor)"""
@@ -220,6 +260,24 @@ class EditNode(TestCase):
         node = Node.objects.get(pk = node.pk)
         self.assertEqual(
             conditional_escape(text),
+            node.text
+            )
+        # Check that it handles a blank text element properly
+        url = '/gtd/nodes/' + str(node.pk) + '/edit/'
+        text = '\n<br>'
+        data = {'format': 'json',
+                'text': text}
+        response = self.client.post(
+            url, data,
+            HTTP_X_REQUESTED_WITH='XMLHttpRequest',
+            )
+        self.assertEqual(
+            200,
+            response.status_code
+            )
+        node = Node.objects.get(pk = node.pk)
+        self.assertEqual(
+            '',
             node.text
             )
     def test_edit_node_through_json(self):
@@ -252,6 +310,27 @@ class EditNode(TestCase):
             None,
             node.todo_state
             )
+    def test_add_node_through_json(self):
+        """Add a new node by submitting the whole form through AJAX"""
+        node = Node()
+        url = '/gtd/nodes/6/new/'
+        data = model_to_dict(node)
+        data['title'] = 'new node'
+        data['form'] = 'modal'
+        data['format'] = 'json'
+        data['repeats'] = ''
+        data['repeating_unit'] = ''
+        data['repeating_number'] = ''
+        data['scheduled'] = ''
+        data['deadline'] = ''
+        data['todo_state'] = 0
+        response = self.client.post(
+            url, data,
+            HTTP_X_REQUESTED_WITH='XMLHttpRequest',
+            )
+        self.assertEqual(
+            200,
+            response.status_code)
 
 class NodeOrder(TestCase):
     """Holds tests for accessing and modifying the order of nodes"""

@@ -109,3 +109,7 @@ div.ow-hoverable, div.clickable, div.ow-buttons
     margin-top: 20px;
     line-height: 120%;
 }
+#id_text
+{
+    height: 2000px;
+}

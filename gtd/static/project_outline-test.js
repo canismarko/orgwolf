@@ -19,6 +19,15 @@ var full_dict = {
     todo: 'DONE',
     tags: ':comp:',
 };
+var archived_dict = {
+    title: 'test_title',
+    text: 'here\' some text that goes with it',
+    node_id: '1',
+    todo_id: '1',
+    todo: 'DONE',
+    tags: ':comp:',
+    archived: true,
+};
 var second_dict = {
     title: 'maybe get some food',
     node_id: '5',
@@ -56,7 +65,7 @@ $.mockjax({
 		todo_id: 2,
 		todo: 'NEXT',
 		tags: ':comp:',
-		text: 'From Korea-Japan',
+		text: '',
 	    }
 	]
     }
@@ -69,7 +78,7 @@ $.mockjax({
 	parent_id: 1,
 	children: [
 	    {
-		node_id: 2,
+		node_id: 3,
 		title: 'Buy a puppy',
 		todo_id: 2,
 		todo: 'NEXT',
@@ -77,12 +86,13 @@ $.mockjax({
 		text: 'I should really buy a puppy because they\'re cute',
 	    },
 	    {
-		node_id: 3,
+		node_id: 4,
 		title: 'Pay my taxes',
 		todo_id: 2,
 		todo: 'NEXT',
 		tags: '',
 		text: '',
+		archived: true,
 	    }
 	]
     }
@@ -95,9 +105,10 @@ $.mockjax({
 	parent_id: 2,
 	children: [
 	    {
-		node_id: 4,
+		node_id: 5,
 		title: 'Take puppy to the vet',
 		todo_id: 2,
+		archived: true,
 		todo: 'NEXT',
 		tags: ':car:',
 		text: 'I should really neuter my puppy because they\'re cute',
@@ -110,7 +121,7 @@ $.mockjax({
     responseTime: ajax_timer,
     responseText: {
 	status: 'success',
-	parent_id: 2,
+	parent_id: 3,
 	children: [
 	    {
 		node_id: 6,
@@ -213,7 +224,7 @@ test('create new heading object from sparse data', function() {
 
 test('heading as_html method', function() {
     var test_heading = new outline_heading(sparse_dict);
-    var expected_html = '<div class="heading" node_id="1">\n  <div class="ow-hoverable">\n    <i class="clickable icon-chevron-right"></i>\n    <span class="todo-state update" data-field="todo_abbr"></span>\n    <div class="clickable ow-title"></div>\n    <div class="ow-buttons">\n      <i class="icon-pencil" title="Edit"></i>\n      <i class="icon-th-list" title="Detail view"></i>\n      <i class="icon-plus" title="New subheading"></i>\n    </div>\n  </div>\n  <div class=\"ow-text\"></div>\n  <div class="children">\n    <div class="loading">\n      <em>Loading...</em>\n    </div>\n  </div>\n</div>\n';
+    var expected_html = '<div class="heading" node_id="1">\n  <div class="ow-hoverable">\n    <i class="clickable icon-chevron-right"></i>\n    <span class="todo-state update" data-field="todo_abbr"></span>\n    <div class="clickable ow-title"></div>\n    <div class="ow-buttons">\n      <i class="icon-pencil" title="Edit"></i>\n      <i class="icon-th-list" title="Detail view"></i>\n      <i class="icon-plus" title="New subheading"></i>\n    </div>\n  </div>\n  <div class="details">\n    <div class=\"ow-text\"></div>\n    <div class="children">\n      <div class="loading">\n        <em>Loading...</em>\n      </div>\n    </div>\n  </div>\n</div>\n';
     equal(test_heading.as_html(), expected_html, 'outline_heading.as_html() output');
 });
 
@@ -234,6 +245,18 @@ test('heading create_div method', function() {
 	test_heading.$details.css('display'),
 	'none',
 	'Initial details div is not displayed'
+    );
+});
+
+test('create_div of archived node', function() {
+    // Make sure the outline_heading objects create_div method works as expected
+    var test_heading = new outline_heading(archived_dict);
+    var $workspace = $('#test_workspace');
+    test_heading.create_div($workspace);
+    var $heading = $('#test_workspace').children('.heading');
+    ok(
+	$heading.hasClass('archived'),
+	'Archived heading has \'archived\' class'
     );
 });
 
@@ -378,7 +401,9 @@ test('Heading toggle() method', function() {
 	'block',
 	'.details get un-hidden on toggle'
     );
-    ok($icon.hasClass('icon-chevron-down', 'Icon ends up open'));
+    ok($icon.hasClass('icon-chevron-down'), 'Icon ends up open');
+    heading.toggle('open');
+    ok($icon.hasClass('icon-chevron-down'), 'Icon ends up open');
 });
 
 asyncTest('Toggle clickable region on heading', function() {
@@ -792,6 +817,51 @@ asyncTest('Set todo states', function() {
     }, (ajax_timer * 1.1 + 5));
 });
 
+asyncTest('Archived nodes', function() {
+    var $workspace = $('#test_workspace');
+    $workspace.nodeOutline({
+	todo_states: todo_state_list
+    });
+    setTimeout(function() {
+	start();
+	var $checkbox = $workspace.find('input.show-all');
+	equal(
+	    $checkbox.length,
+	    1,
+	    'show-all checkbox exists'
+	);
+	var $archived = $workspace.find('.heading.archived');
+	equal(
+	    $archived.length,
+	    2,
+	    'Found two archived headings'
+	);
+	var $archived1 = $workspace.find('.heading.archived[node_id="5"]');
+	var $archived2 = $workspace.find('.heading.archived[node_id="4"]');
+	var archived1 = $archived1.data('nodeOutline');
+	var archived2 = $archived2.data('nodeOutline');
+	ok(
+	    ! archived1.$parent.hasClass('expandable'),
+	    'Parent of only archived nodes is not expandable'
+	);
+	// Check show-all box
+	$checkbox.click();
+	ok(
+	    archived1.$parent.hasClass('expandable'),
+	    'Parent of only archived node becomes expandable on checkbox click'
+	);
+	// Un-check show-all box
+	$checkbox.click();
+	ok(
+	    ! archived1.$parent.hasClass('expandable'),
+	    'Parent of only archived node becomes un-expandable on second checkbox click'
+	);
+	ok(
+	    archived2.$parent.hasClass('expandable'),
+	    'Parent of mixed nodes stays expandable after second checkbox click'
+	);
+    }, (ajax_timer * 5.5 + 5) );
+});
 
 
 
