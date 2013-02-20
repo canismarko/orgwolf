@@ -407,15 +407,15 @@ test('Heading toggle() method', function() {
 });
 
 asyncTest('Toggle clickable region on heading', function() {
-    expect(2);
+    expect(1);
     var $workspace = $('#test_workspace');
     $workspace.nodeOutline();
     setTimeout(function() {
-	$workspace.find('.heading').each(function() {
+	$workspace.find('.heading').first().each(function() {
 	    var $clickable = $(this).children('.ow-hoverable').children('.clickable');
 	    var heading = $clickable.data('$parent').data('nodeOutline');
 	    heading.has_children = true;
-	    $clickable.click()
+	    $clickable.click();
 	    equal(
 		heading.$details.css('display'),
 		'block',
@@ -731,12 +731,12 @@ asyncTest('converts initial workspace', function() {
 asyncTest('Populates children on outline init', function() {
     // See if the appliance properly converts the non-javascript
     // table to the outline workspace.
-    expect(6);
+    expect(3);
     var $workspace = $('#test_workspace');
     $workspace.nodeOutline();
     setTimeout(function() {
 	start()
-	$workspace.children('.children').children('.heading').each(function() {
+	$workspace.children('.children').children('.heading').first().each(function() {
 	    var heading = $(this).data('nodeOutline');
 	    equal(
 		heading.populated,

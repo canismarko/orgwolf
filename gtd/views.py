@@ -337,6 +337,7 @@ def edit_node(request, node_id, scope_id):
             if form.is_valid():
                 form.save()
                 node = Node.objects.get(pk=node.pk)
+                node.title = node.get_title();
                 # Prepare the response
                 node_data = node.as_json()
                 data = {
@@ -365,8 +366,7 @@ def edit_node(request, node_id, scope_id):
                 'status': 'success',
                 'node_id': node.pk,
                 'todo_id': getattr(node.todo_state, 'pk', 0),
-
-
+                'text': node.text,
                 }
         return HttpResponse(json.dumps(data))
     if request.is_ajax() and request.GET.get('format') == 'modal_form':

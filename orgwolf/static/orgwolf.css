@@ -61,6 +61,10 @@ dd.todo
 {
     cursor: pointer;
 }
+#show-all-label
+{
+    margin-left: 4px;
+}
 .ow-hoverable > i
 {
     opacity: 0;

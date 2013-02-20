@@ -342,7 +342,7 @@
     "time_needed": null, 
     "priority": "", 
     "closed": null, 
-    "todo_state": null, 
+    "todo_state": 2, 
     "scope": [], 
     "energy": null, 
     "repeating_number": null, 

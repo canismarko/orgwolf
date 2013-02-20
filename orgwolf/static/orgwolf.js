@@ -341,7 +341,18 @@ $(document).ready(function(){
 			    text: new_text
 			};
 			$.post(url, payload, function(r) {
-			    console.log('# Todo: write callback function for aloha edit ajax request');
+			    // Callback for aloha edit request
+			    r = $.parseJSON(r);
+			    // Update modal dialog with new text
+			    var $modal = $parent.data('nodeOutline').$buttons.find('#edit-modal');
+			    if ( $modal.length > 0 ) {
+				$modal.each( function() {
+				    var $text = $(this).find('#id_text');
+				    var $aloha_text = $text.siblings('#id_text-aloha');
+				    $text.html(r.text);
+				    $aloha_text.html(r.text);
+				});
+			    }
 			});
 		    }
 		}
@@ -511,6 +522,7 @@ var get_heading = function (node_id) {
 		    if ( typeof parent != 'undefined' ) {
 			var $workspace = parent.$workspace
 			parent.$element.addClass('expandable');
+			parent.expandable = true;
 		    } else {
 			var $workspace = $element.parent();
 		    }
@@ -582,6 +594,8 @@ var get_heading = function (node_id) {
 					'update', {todo_id: node.todo_state}
 				    );
 				    heading.text = node.text;
+				    heading.archived = node.archived;
+				    heading.title = node.title;
 				    heading.$element.data('nodeOutline', heading);
 				    heading.update_dom();
 				},
@@ -680,17 +694,11 @@ var get_heading = function (node_id) {
 			this.$text.html(this.text);
 			// // Make the heading expandable
 			if ( this.text ) {
-			    // this.expandable = true;
-			    // this.$element.addClass('expandable');
 			    // Bind Aloha editor
 			    if ( this.$text.text() != '' ) {
 				this.$text.alohaText({$parent: this.$element});
 			    }
 			}
-			// } else if ( !this.has_children ) {
-			//     this.expandable = false;
-			//     this.$element.removeClass('expandable');
-			// }
 			if (typeof this.$text.aloha == 'function') {
 			    this.$text.aloha();
 			}
@@ -703,12 +711,12 @@ var get_heading = function (node_id) {
 		    if ( this.archived ) {
 			this.$element.addClass('archived');
 		    } else {
-			this.$element.removeAttr('archived');
+			this.$element.removeClass('archived');
 		    }
 		    var $checkbox = this.$element.find('.show-all');
 		    if ( $checkbox.length > 0 ) {
 			this.$showall = $checkbox;
-		    } else {
+		    } else if ( this.$workspace.data('nodeOutline') ) {
 			$checkbox = this.$workspace.data('nodeOutline').$showall;
 		    }
 		    // Set expandability
@@ -718,7 +726,6 @@ var get_heading = function (node_id) {
 		    } else {
 			c = this.$children.children('.heading:not(.archived)');
 		    }
-		    console.log(c);
 		    if ( c.length > 0 ) {
 		    	this.has_children = true;
 		    } else {
@@ -731,7 +738,6 @@ var get_heading = function (node_id) {
 			this.expandable = false;
 			this.$element.removeClass('expandable');
 		    }
-		    // var $checkbox = this.$workspace.find('.show-all');
 		    var show_all = $checkbox.is(':checked');
 		    if ( this.archived && ! show_all ) {
 			this.$element.attr('archived');
@@ -878,35 +884,6 @@ var get_heading = function (node_id) {
 	    workspace.COLORS = COLORS;
 	    workspace.color = workspace.COLORS[0];
 	    workspace.todo_states = data.todo_states;
-	    // // Helper function to find archived nodes
-	    // workspace.update_archived = function( $parent ) {
-	    // 	// First check if archived nodes are to be shown
-	    // 	var checked;
-	    // 	if ( typeof this.$checkbox == 'undefined' ) {
-	    // 	    checked = false;
-	    // 	} else if ( this.$checkbox.attr('checked') ) {
-	    // 	    checked = true;
-	    // 	} else {
-	    // 	    checked = false;
-	    // 	}
-	    // 	// The show or hide as necessary
-	    // 	var f;
-	    // 	if ( checked ) {
-	    // 	    f = function ( $e ) { 
-	    // 		$e.attr('archived', '');
-	    // 	    }
-	    // 	} else {
-	    // 	    f = function ( $e ) {
-	    // 		$e.removeAttr('archived');
-	    // 	    }
-	    // 	}
-	    // 	if ( !$parent ) {
-	    // 	    $parent = workspace.$element;
-	    // 	}
-	    // 	$parent.find('.heading.archived').each( function() {
-	    // 	    f( $(this) );
-	    // 	});
-	    // };
 	    // Create all the first two levels of nodes
 	    workspace.populate_children(function() {
 		workspace.$children.children('.heading').each(function() {
@@ -919,12 +896,17 @@ var get_heading = function (node_id) {
 		h += '  <i class="icon-plus-sign"></i>Add Heading\n';
 		h += '</div>\n';
 		// Checkbox for showing archived nodes
-		h += '<label class="checkbox">\n';
+		h += '<label class="checkbox" id="show-all-label">\n';
 		h += '  <input class="ow-buttons show-all" type="checkbox">';
 		h += '  </input>Show archived</label>\n';
 		workspace.$element.append(h);
 		workspace.$checkbox = workspace.$element.find('.show-all');
-		var $add = workspace.$element.children('#add-heading');
+		workspace.$add_heading = workspace.$element.find('#add-heading');
+		// var heading = workspace.$checkbox.siblings('.heading').first().data('nodeOutline');
+		var heading = workspace.$add_heading.siblings('.children').children('.heading').first().data('nodeOutline');
+		var margin = heading.$icon.outerWidth()+4;
+		workspace.$add_heading.css('margin-left', margin);
+		var $add = workspace.$add_heading;
 		$add.nodeEdit( {
 		    parent_id: workspace.node_id,
 		    changed: function(node) {
@@ -941,6 +923,7 @@ var get_heading = function (node_id) {
 		});
 		// Archived checkbox toggles visibility of archived nodes
 		workspace.$checkbox.bind('change.show-all', function (e) {
+		    var checked;
 		    if ( $(this).is(':checked') ) {
 			checked = true;
 		    } else {
@@ -951,12 +934,8 @@ var get_heading = function (node_id) {
 			var $parent = $(this).data('nodeOutline').$parent;
 			parent = $parent.data('nodeOutline');
 			if ( checked ) {
-			    // parent.expandable = true;
-			    // $parent.addClass('expandable');
 			    $(this).slideDown();
 			} else {
-			    // parent.expandable = false;
-			    // $parent.removeClass('expandable');
 			    $(this).slideUp();
 			}
 			parent.update_dom();

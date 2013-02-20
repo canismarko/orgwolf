@@ -129,7 +129,7 @@ class EditNode(TestCase):
     def test_edit_by_json(self):
         # Tests changing the todo state of a node via JSON
         # Login
-        node = Node.objects.get(title='Buy cat food')
+        node = Node.objects.get(title='Hello')
         actionable = TodoState.objects.get(abbreviation='ACTN')
         closed = TodoState.objects.get(abbreviation='DONE')
         self.assertEqual(
@@ -155,7 +155,7 @@ class EditNode(TestCase):
         jresponse = json.loads(response.content)
         # Check response object
         self.assertEqual(
-            5,
+            node.pk,
             jresponse['node_id'],
             'JSON edit does not return correct node_id'
             )
@@ -170,7 +170,7 @@ class EditNode(TestCase):
             'JSON edit does not return new todo_state.pk: ' + str(closed.pk) + '/' + str(jresponse['todo_id'])
             )
         # Make sure the node has been updated
-        node = Node.objects.get(title='Buy cat food')
+        node = Node.objects.get(pk=node.pk)
         self.assertEqual(
             closed,
             node.todo_state,
@@ -191,7 +191,7 @@ class EditNode(TestCase):
             'getJSON call did not return HTTP 200: ' + str(response.status_code)
             )
         # jresponse = json.loads(response.content)
-        node = Node.objects.get(title='Buy cat food')        
+        node = Node.objects.get(pk=node.pk)
         self.assertEqual(
             None,
             node.todo_state,
@@ -260,6 +260,23 @@ class EditNode(TestCase):
         node = Node.objects.get(pk = node.pk)
         self.assertEqual(
             conditional_escape(text),
+            node.text
+            )
+        # Check that it allows <b> and other whitelist elements
+        text = '<b>evilness</b>'
+        data = {'format': 'json',
+                'text': text}
+        response = self.client.post(
+            url, data,
+            HTTP_X_REQUESTED_WITH='XMLHttpRequest',
+            )
+        self.assertEqual(
+            200,
+            response.status_code
+            )
+        node = Node.objects.get(pk = node.pk)
+        self.assertEqual(
+            text,
             node.text
             )
         # Check that it handles a blank text element properly
