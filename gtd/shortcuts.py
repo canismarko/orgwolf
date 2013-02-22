@@ -51,15 +51,25 @@ def order_by_date(qs, field):
         )
                     
 
-def parse_url(raw_url):
-    """Detects context and scope information from the url that was requested.
-    Returns the results as a dictionary.
+def parse_url(raw_url, request=None):
+    """Detects context, scope and parent information from the url that 
+    was requested. Returns the results as a dictionary.
     Note: this function will throw a 404 exception if any unprocessable bits are
     passed so it's important for the calling view to strip any parts that
     are specific to itself."""
     data = {}
+    # Find parent node
+    regex = re.compile('^/parent(\d+)')
+    result = regex.match(raw_url)
+    if result:
+        data['parent'] = get_object_or_404(
+            Node,
+            pk=int(result.groups()[0])
+            )
+        raw_url = regex.sub('', raw_url)
     # Find any todo states
-    todo_abbrevs = get_todo_abbrevs(get_todo_states())
+    todo_states = TodoState.get_visible(getattr(request, 'user', None))
+    todo_abbrevs = get_todo_abbrevs(todo_states)
     todo_states_query = TodoState.objects.none()
     seperator = ''
     RE = '^/('
@@ -98,22 +108,3 @@ def parse_url(raw_url):
             context_id = result.groups()[1]
             data['context'] = get_object_or_404(Context, pk=context_id)
     return data
-
-@transaction.commit_on_success
-def reset_order(parent=None, recursive=False, step=Node.ORDER_STEP):
-    """Processes all nodes of given parent in their natural ordering and
-    sets all the orders to be in appropriate increments and enforcing the
-    uniqueness contraint.
-    Warning: with recursive=True, this function hits the database a lot 
-    and should probably not be used by views or models unless absolutely
-    necessary."""
-    def reset_children(parent):
-        cur_order = 0
-        children = Node.objects.filter(parent=parent)
-        for child in children:
-            cur_order += step
-            child.order = cur_order
-            child.save()
-            if recursive:
-                reset_children(child)
-    reset_children(parent)

@@ -79,6 +79,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 	 {% if todo_state in todo_states_query %}checked="checked" {% endif %}/>
 {{ todo_state.as_html }}</label>
   {% endfor %}
+  {% if parent %}
+  <input type="hidden" name="parent_id" 
+	 value="{{ parent.pk }}">
+  {% endif %}
   <input type="submit" value="Filter" class="btn" />
   {% csrf_token %}
 </form>

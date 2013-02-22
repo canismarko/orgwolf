@@ -40,7 +40,7 @@ from orgwolf.preparation import translate_old_text
 from orgwolf.models import OrgWolfUser as User
 from gtd.forms import NodeForm
 from gtd.models import Node, TodoState, node_repeat, Location, Tool, Context, Scope
-from gtd.shortcuts import parse_url, get_todo_states, get_todo_abbrevs, reset_order, order_by_date
+from gtd.shortcuts import parse_url, get_todo_states, get_todo_abbrevs, order_by_date # , reset_order
 from gtd.templatetags.gtd_extras import overdue, upcoming, escape_html
 
 class EditNode(TestCase):
@@ -190,7 +190,6 @@ class EditNode(TestCase):
             response.status_code,
             'getJSON call did not return HTTP 200: ' + str(response.status_code)
             )
-        # jresponse = json.loads(response.content)
         node = Node.objects.get(pk=node.pk)
         self.assertEqual(
             None,
@@ -356,138 +355,13 @@ class NodeOrder(TestCase):
         self.nodes_qs = Node.get_owned(User.objects.get(pk=1))
         self.user = User.objects.get(pk=1)
         self.client.login(username='test', password='secret')
-    def test_auto_increment(self):
-        """Auto_increment is added as a pre_save hook"""
-        last_order = self.nodes_qs.filter(parent=None).reverse()[0].order
-        # Specifying an order does not auto increment
-        new_node1 = Node()
-        new_node1.title = 'another node'
-        new_node1.owner = User.objects.get(pk=1)
-        new_node1.order = 15
-        new_node1.save()
-        saved_node1 = Node.objects.get(pk=new_node1.pk)
-        self.assertEqual(
-            15,
-            saved_node1.order
-            )
-        # Not specifying an order does auto increment
-        new_node2 = Node()
-        new_node2.title = 'auto_increment node'
-        new_node2.owner = User.objects.get(pk=1)
-        new_node2.save()
-        saved_node2 = Node.objects.get(pk=new_node2.pk)
-        self.assertEqual(
-            last_order + Node.ORDER_STEP,
-            saved_node2.order
-            )
-        # Moving to an empty parent sets a default order
-        saved_node2.parent = saved_node1
-        saved_node2.save()
-        saved_node2 = Node.objects.get(pk=saved_node2.pk)
-        self.assertEqual(
-            Node.ORDER_STEP,
-            saved_node2.order
-            )
-        # Moving to a non-empty parent auto_increments
-        new_node3 = Node()
-        new_node3.title = 'child_node'
-        new_node3.owner = User.objects.get(pk=1)
-        new_node3.order = 50
-        new_node3.save()
-        self.assertNotEqual(
-            Node.objects.filter(parent=saved_node1).reverse()[0].order + 10,
-            new_node3.order
-            )
-        last_order = Node.objects.filter(parent=saved_node1).reverse()[0].order
-        new_node3.parent = saved_node1
-        new_node3.save()
-        self.assertEqual(
-            last_order  + 10,
-            new_node3.order
-            )        
-    def test_rearrange(self):
-        self.assertEqual(
-            'instancemethod',
-            Node._rearrange.__class__.__name__
-            )
-        node1 = Node.objects.get(pk=1)
-        self.assertEqual(
-            10,
-            node1.order,
-            "node order starts out wrong: %d != 10" % node1.order
-            )
-        node2 = Node.objects.get(pk=2)
-        self.assertTrue(
-            node1.order < node2.order,
-            'node1 does not start out ahead of node2'
-            )
-        node1._rearrange(1)
-        self.assertTrue(
-            node2.order < node1.order,
-            'node1 does not get moved behind node2: {0} !< {1}'.format(node2.order, node1.order)
-            )
-        old_order = node1.order
-        node1._rearrange(1)
-        node1._rearrange(-1)
-        self.assertEqual(
-            old_order,
-            node1.order,
-            'node1 does not get moved ahead on _rearrange(-1): {0} != {1}'.format(old_order, node1.order)
-            )
+
     def test_move_up(self):
-        self.assertEqual(
-            'instancemethod',
-            Node.move_up.__class__.__name__
-            )
-        node1 = Node(title='node1',
-                     owner=self.user,
-                     )
-        node1.save()
-        node2 = Node(title='node2',
-                     owner=self.user,
-                     )
-        node2.save()
-        self.assertTrue(
-            node1.order < node2.order
-            )
-        node2.move_up()
-        node1 = Node.objects.get(pk=node1.pk)
-        node2 = Node.objects.get(pk=node2.pk)
-        self.assertTrue(
-            node2.order < node1.order,
-            'Node 2 is not moved ahead of node 1'
-            )
-    def test_move_down(self):
-        self.assertEqual(
-            'instancemethod',
-            Node.move_down.__class__.__name__
-            )
-        node1 = Node(title='node1',
-                     owner=self.user,
-                     )
-        node1.save()
-        node2 = Node(title='node2',
-                     owner=self.user,
-                     )
-        node2.save()
-        self.assertTrue(
-            node1.order < node2.order
-            )
-        node1.move_down()
-        node1 = Node.objects.get(pk=node1.pk)
-        node2 = Node.objects.get(pk=node2.pk)
-        self.assertTrue(
-            node2.order < node1.order,
-            'Node 1 is not moved behind of node 2'
-            )
-    def test_move_first(self):
-        node1 = Node.objects.all()
-    def test_move_up_client(self):
         children = Node.objects.filter(parent__pk=1)
         child1 = children[0]
         child2 = children[1]
         self.assertTrue(
-            child1.order < child2.order
+            child1.lft < child2.lft
             )
         response = self.client.post(
             '/gtd/nodes/{0}/edit/'.format(child2.pk),
@@ -501,16 +375,16 @@ class NodeOrder(TestCase):
         child1 = Node.objects.get(pk=child1.pk)
         child2 = Node.objects.get(pk=child2.pk)
         self.assertTrue(
-            child1.order > child2.order,
+            child1.lft > child2.lft,
             'Nodes were not re-arranged: {0} !> {1}'.format(
-                child1.order, child2.order)
+                child1.lft, child2.lft)
             )
-    def test_move_down_client(self):
+    def test_move_down(self):
         children = Node.objects.filter(parent__pk=1)
         child1 = children[0]
         child2 = children[1]
         self.assertTrue(
-            child1.order < child2.order
+            child1.lft < child2.lft
             )
         response = self.client.post(
             '/gtd/nodes/{0}/edit/'.format(child1.pk),
@@ -524,43 +398,10 @@ class NodeOrder(TestCase):
         child1 = Node.objects.get(pk=child1.pk)
         child2 = Node.objects.get(pk=child2.pk)
         self.assertTrue(
-            child1.order > child2.order,
+            child1.lft > child2.lft,
             'Nodes were not re-arranged: {0} !> {1}'.format(
-                child1.order, child2.order)
+                child1.lft, child2.lft)
             )
-class FixingOrder(TestCase):
-    fixtures = ['test-users.json', 'gtd-env.json', 'bad-order.json']
-    def test_reset_order_shortcut(self):
-        self.assertEqual(
-            'function',
-            reset_order.__class__.__name__
-            )
-        reset_order()
-        nodes_qs = Node.objects.filter(parent=None)
-        self.assertEqual(
-            3,
-            nodes_qs.count()
-            )
-        last_order = 0
-        for node in nodes_qs:
-            self.assertEqual(
-                last_order + 10,
-                node.order
-                )
-            last_order = node.order
-        reset_order(recursive=True)
-        nodes_qs = Node.objects.filter(parent=Node.objects.get(pk=1))
-        self.assertEqual(
-            2,
-            nodes_qs.count()
-            )
-        last_order = 0
-        for node in nodes_qs:
-            self.assertEqual(
-                last_order + 10,
-                node.order
-                )
-            last_order = node.order
 
 class NodeMutators(TestCase):
     fixtures = ['test-users.json', 'gtd-env.json', 'gtd-test.json']
@@ -807,6 +648,35 @@ class ContextFiltering(TestCase):
         self.assertEqual(
             self.client.session['context'],
             None)
+    def test_get_owned(self):
+        user = User.objects.get(pk=1)
+        contexts = Context.get_visible(user)
+        self.assertEqual(
+            list(Context.objects.filter(owner=user)),
+            list(contexts)
+            )
+
+class ProjectSublist(TestCase):
+    fixtures = ['test-users.json', 'gtd-test.json', 'gtd-env.json']
+    def setUp(self):
+        self.assertTrue(
+            self.client.login(username='test', password='secret')
+            )
+    def test_has_url(self):
+        response = self.client.get('/gtd/lists/parent1/')
+        self.assertEqual(
+            200,
+            response.status_code,
+            'Getting a project sublist does not return status code 200. Got {0}'.format(response.status_code)
+            )
+    def test_bad_url(self):
+        # Parent does not exist
+        response = self.client.get('/gtd/lists/parent99/')
+        self.assertEqual(
+            404,
+            response.status_code,
+            'Getting a list for a non-existent project does not return status code 404. Got {0}'.format(response.status_code)
+            )        
 
 class Shortcuts(TestCase):
     fixtures = ['test-users.json', 'gtd-test.json', 'gtd-env.json']
@@ -837,9 +707,13 @@ class Shortcuts(TestCase):
         scheduled_qs = original_qs.exclude(scheduled=None)
         unscheduled_qs = original_qs.filter(scheduled=None)
         self.maxDiff = None
-        self.assertEqual(
-            list(unscheduled_qs),
-            list(result_qs)[-unscheduled_qs.count():]
+        result_list = []
+        for node in result_qs[(result_qs.count() - unscheduled_qs.count()):]:
+            result_list.append(repr(node))
+        self.assertQuerysetEqual(
+            unscheduled_qs,
+            result_list,
+            ordered=False
             )
         self.assertEqual(
             list(scheduled_qs.order_by('scheduled')),
@@ -912,6 +786,16 @@ class UrlParse(TestCase):
             hard,
             parse_url('/hard/scope1/context1/')['todo_states'][0]
             )
+    def test_processes_parents(self):
+        node = Node.objects.get(pk=1)
+        self.assertEqual(
+            node,
+            parse_url('/parent1/')['parent']
+            )
+        self.assertEqual(
+            node,
+            parse_url('/parent1/next/')['parent']
+            )
     def test_bad_urls(self):
         """Tests to make sure that the system properly raises
         404 errors when bad urls are passed"""
@@ -959,10 +843,17 @@ class TodoStateRetrieval(TestCase):
         result_str = TodoState.as_json()
         result = json.loads(result_str)
         self.assertEqual(
-            len(TodoState.get_active())+1,
+            len(TodoState.get_visible())+1,
             len(result),
             'TodoState.as_json() does not find all TodoState objects\n' +
-            'Expected: ' + str(len(TodoState.get_active())+1) + '\nGot: ' + str(len(result))
+            'Expected: ' + str(len(TodoState.get_visible())+1) + '\nGot: ' + str(len(result))
+            )
+    def test_get_visible(self):
+        user = User.objects.get(pk=1)
+        expected = TodoState.objects.filter(Q(owner=user) | Q(owner=None))
+        self.assertEqual(
+            list(expected),
+            list(TodoState.get_visible(user))
             )
 
 class MultiUser(TestCase):
@@ -1020,6 +911,16 @@ class MultiUser(TestCase):
             'test-users node',
             status_code=200,
             msg_prefix='List view',
+            )
+    def test_bad_list_view(self):
+        """User 'test' does not have access to this todo_state"""
+        self.assertTrue(
+            self.client.login(username='test', password='secret')
+            )
+        response = self.client.get('/gtd/lists/bore/')
+        self.assertEqual(
+            404,
+            response.status_code
             )
     def test_node_view(self):
         response = self.client.get('/gtd/nodes/')

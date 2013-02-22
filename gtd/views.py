@@ -46,8 +46,8 @@ def home(request):
 @login_required
 def list_display(request, url_string=""):
     """Determines which list the user has requested and fetches it."""
-    all_todo_states_query = TodoState.objects.all() # TODO: switch to userprofile
-    all_contexts = Context.objects.all() # TODO: switch to userprofile
+    all_todo_states_query = TodoState.get_visible(request.user)
+    all_contexts = Context.get_visible(request.user)
     all_scope_qs = Scope.objects.all()
     all_todo_states_json = TodoState.as_json()
     todo_states_query = TodoState.objects.none()
@@ -63,25 +63,30 @@ def list_display(request, url_string=""):
         new_context_id = 0
         todo_state_Q = Q()
         empty_Q = True
+        parent = None
         # Check for TODO filters
         for post_item in request.POST:
             todo_match = todo_regex.match(post_item)
             if todo_match:
                 todo_state_Q = todo_state_Q | Q(id=todo_match.groups()[0])
                 empty_Q = False
-            if post_item == 'context':
+            elif post_item == 'context':
                 new_context_id = int(request.POST['context'])
                 # Update session variable if user is clearning the context
                 if new_context_id == 0:
                     request.session['context'] = None
             elif post_item == 'scope':
                 new_scope_id = int(request.POST['scope'])
+            elif post_item == 'parent_id':
+                parent = Node.objects.get(pk=request.POST['parent_id'])
         # Now build the new URL and redirect
         new_url = u'/gtd/lists/'
         if empty_Q:
             matched_todo_states = TodoState.objects.none()
         else:
             matched_todo_states = TodoState.objects.filter(todo_state_Q)
+        if parent:
+            new_url += 'parent{0}/'.format(parent.pk)
         for todo_state in matched_todo_states:
             new_url += todo_state.abbreviation.lower() + '/'
         if new_scope_id > 0:
@@ -94,7 +99,7 @@ def list_display(request, url_string=""):
         request.session['context'] = None
     current_context = request.session['context']
     # Retrieve the context objects based on url
-    url_data = parse_url(url_string)
+    url_data = parse_url(url_string, request)
     if url_data.get('context') != current_context:
         # User is changing the context
         request.session['context'] = url_data.get('context')
@@ -117,13 +122,14 @@ def list_display(request, url_string=""):
         try:
             nodes = nodes.filter(scope=scope)
         except Node.ObjectDoesNotExist:
-            pass
+            pass    
+    # And filter by parent node
+    parent = url_data.get('parent')
+    if parent:
+        nodes = nodes & parent.get_descendants(include_self=True)
     # Put nodes with deadlines first
     nodes = order_by_date(nodes, 'deadline')
-    # deadline_nodes = nodes.exclude(deadline=None)
-    # other_nodes = nodes.filter(deadline=None)
-    # nodes = deadline_nodes.order_by('deadline') | other_nodes
-    # nodes = nodes.order_by('-deadline')
+    # And serve response
     if request.is_mobile:
         template = 'gtd/gtd_list_m.html'
     else:
@@ -163,7 +169,6 @@ def agenda_display(request, date=None):
     time_specific_Q = Q(scheduled_time_specific=False)
     # TODO: allow user to set todo states
     hard_Q = Q(todo_state = TodoState.objects.get(abbreviation="HARD"))
-    next_Q = Q(todo_state = TodoState.objects.get(abbreviation="NEXT")) # Deprecated: not used anymore
     dfrd_Q = Q(todo_state = TodoState.objects.get(abbreviation="DFRD"))
     day_specific_nodes = all_nodes_qs.filter((hard_Q | dfrd_Q), date_Q, time_specific_Q)
     day_specific_nodes = day_specific_nodes.order_by('scheduled')
@@ -271,7 +276,7 @@ def display_node(request, show_all=False, node_id=None, scope_id=None):
                 url_kwargs['node_id'] = request.POST['node_id']
             return redirect(reverse('gtd.views.display_node', kwargs=url_kwargs))
     all_nodes_qs = Node.get_owned(request.user, get_archived=show_all)
-    all_todo_states_qs = TodoState.get_active()
+    all_todo_states_qs = TodoState.get_visible()
     child_nodes_qs = all_nodes_qs
     all_scope_qs = Scope.objects.all()
     # If the user asked for a specific node
@@ -378,9 +383,13 @@ def edit_node(request, node_id, scope_id):
     elif request.method == "POST" and request.POST.get('function') == 'reorder':
         # User is trying to move the node up or down
         if 'move_up' in request.POST:
-            node.move_up()
+            node.move_to(node.get_previous_sibling(),
+                         position='left'
+                         )
         elif 'move_down' in request.POST:
-            node.move_down()
+            node.move_to(node.get_next_sibling(),
+                         position='right'
+                         )
         else:
             return HttpResponseBadRequest('Missing request data')
         if node.parent:
@@ -466,10 +475,6 @@ def new_node(request, node_id, scope_id):
             form = form.save(commit=False)
             form.owner = request.user
             siblings = Node.objects.filter(parent__id=node_id)
-            if len(siblings) > 0:
-                form.order = siblings.reverse()[0].order + Node.ORDER_STEP
-            else:
-                form.order = 0
             if node:
                 form.parent = Node.objects.get(pk=node.pk)
             form.save()

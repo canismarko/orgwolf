@@ -112,6 +112,34 @@
   }
 },
 {
+  "pk": 9, 
+  "model": "gtd.todostate", 
+  "fields": {
+    "display_text": "Supersonic", 
+    "actionable": false, 
+    "_color_rgb": 0, 
+    "_color_alpha": 0.0, 
+    "abbreviation": "SPED", 
+    "closed": false, 
+    "owner": 1, 
+    "order": 45
+  }
+},
+{
+  "pk": 10, 
+  "model": "gtd.todostate", 
+  "fields": {
+    "display_text": "Something boring to do", 
+    "actionable": false, 
+    "_color_rgb": 0, 
+    "_color_alpha": 0.0, 
+    "abbreviation": "BORE", 
+    "closed": false, 
+    "owner": 2, 
+    "order": 45
+  }
+},
+{
   "pk": 1, 
   "model": "gtd.tag", 
   "fields": {
@@ -187,7 +215,8 @@
     "name": "Work", 
     "locations_available": [
       1
-    ]
+    ],
+    "owner": 1
   }
 },
 {
@@ -199,7 +228,8 @@
     "name": "Home", 
     "locations_available": [
       2
-    ]
+    ],
+    "owner": 1
   }
 },
 {

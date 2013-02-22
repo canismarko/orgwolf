@@ -96,7 +96,6 @@ $('document').ready(function() {
   <form action="edit/" method="POST">
     <div class="btn-toolbar" id="todo-buttons" node_id="{{ parent_node.pk }}">
       <div class="btn-group">
-	<a href="edit/" class="btn" id="edit-button">Edit</a><span class="alt"> |</span>
       </div>
       <div class="btn-group">
 	<button type="submit" name="new_todo" value="0" class="btn new_todo{% if not parent_node.todo_state %} active{% endif %}">
@@ -112,6 +111,8 @@ $('document').ready(function() {
     <input type="hidden" name="function" value="change_todo_state" />
     {% csrf_token %}
   </form>
+  <a href="edit/" class="btn" id="edit-button">Edit</a>
+  <a href="{% url 'gtd.views.list_display' %}parent{{ parent_node.pk }}/" class="btn">As List</a>
   {% endif %}
 
   {# Parent node item details #}

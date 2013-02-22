@@ -28,6 +28,7 @@ from django.utils.timezone import get_current_timezone
 from django.utils.html import conditional_escape
 from django.utils.safestring import mark_safe
 from datetime import datetime, timedelta
+from mptt.models import MPTTModel, TreeForeignKey
 import re
 import math
 import operator
@@ -64,15 +65,18 @@ class TodoState(models.Model):
     class Meta():
         ordering = ['order']
     @staticmethod
-    def get_active():
+    def get_visible(user=None):
         """Returns a queryset containing all the TodoState objects
         that are currently in play."""
-        return TodoState.objects.all()
+        query = Q(owner=None)
+        if user:
+            query = query | Q(owner=user)
+        return TodoState.objects.filter(query)
     @staticmethod
     def as_json(queryset=None, full=False):
         new_array = [{'todo_id': 0, 'display': '[None]', 'full': ''}]
         if not queryset:
-            queryset=TodoState.get_active()
+            queryset=TodoState.get_visible()
         for state in queryset:
             new_dict = {
                 'todo_id': state.pk,
@@ -86,12 +90,10 @@ class TodoState(models.Model):
     def as_html(self):
         """Converts this todostate to an HTML string that can be put into tempaltes"""
         html = conditional_escape(self.abbreviation)
-        # html = '<span class="todostate">' + html
         if self.color().get_alpha() > 0:
             html = '<span style="color: ' + self.color().rgba_string() + '">' + html + '</span>'
         if not self.closed: # Bold if not a closed TodoState
             html = '<strong>' + html + '</strong>'
-        # html = '<span class="todo_state">' + html + '</span>'
         return mark_safe(html)
 
 @python_2_unicode_compatible
@@ -120,6 +122,7 @@ class Contact(Tag):
 class Context(models.Model):
     """A context is a [Location], with [Tool]s and/or [Contact]s available"""
     name = models.CharField(max_length=100)
+    owner = models.ForeignKey(settings.AUTH_USER_MODEL, blank=True, null=True)
     tools_available = models.ManyToManyField('Tool', related_name='including_contexts_set', blank=True)
     locations_available = models.ManyToManyField('Location', related_name='including_contexts_set', blank=True)
     people_required = models.ManyToManyField('Contact', related_name='including_contexts_set', blank=True)
@@ -164,6 +167,10 @@ class Context(models.Model):
         final_queryset = final_queryset.filter(new_Q)
         # Now return the resulting queryset
         return final_queryset
+    @staticmethod
+    def get_visible(user):
+        """Return all the Context objects visible to this user"""
+        return Context.objects.filter(owner=user)
 
 class Priority(models.Model):
     priority_value = models.IntegerField(default=50)
@@ -179,24 +186,23 @@ class Scope(models.Model):
         return self.display
 
 @python_2_unicode_compatible
-class Node(models.Model):
+# class Node(models.Model):
+class Node(MPTTModel):
     """
     Django model that holds some sort of divisional heading. Similar to 
     orgmode's '*** Heading' syntax. It can have todo states associated 
     with it as well as scheduling and other information."""
-    ORDER_STEP = 10
     SEARCH_FIELDS = ['title']
     auto_repeat = False
     auto_close = True
     owner = models.ForeignKey(settings.AUTH_USER_MODEL, related_name="owned_node_set")
     users = models.ManyToManyField(settings.AUTH_USER_MODEL, blank=True)
-    order = models.IntegerField()
     title = models.TextField(blank=True)
     todo_state = models.ForeignKey('TodoState', blank=True, null=True)
     archived = models.BooleanField(default=False)
     text = models.TextField(blank=True)
     # Determine where this heading is
-    parent = models.ForeignKey('self', blank=True, null=True, related_name='child_heading_set')
+    parent = TreeForeignKey('self', blank=True, null=True, related_name='children')
     related_projects = models.ManyToManyField('Node', related_name='project_set', blank=True)
     assigned = models.ManyToManyField('Contact', related_name='assigned_nodes', blank=True)
     # Scheduling details
@@ -231,10 +237,7 @@ class Node(models.Model):
                                             ('Low', 'LO'))
                                    )
     scope = models.ManyToManyField('Scope', blank=True)
-    class Meta:
-        ordering = ['order']
-        unique_together = (('parent', 'order'),)
-    # Methods retrieve statuses of this object
+    # Info methods
     def is_todo(self):
         if self.todo_state:
             return True
@@ -290,12 +293,8 @@ class Node(models.Model):
             title = '({0})'.format(title)
         return title
     def get_level(self):
-        level = 1
-        node = self
-        while node.parent:
-            level += 1
-            node = node.parent
-        return level
+        """Gets the node's level in the tree (1-indexed)."""
+        return self.level + 1 
     @staticmethod
     def get_all_projects():
         return Node.objects.filter(parent=None)
@@ -361,45 +360,6 @@ class Node(models.Model):
             tag_Q = tag_Q | Q(tag_string = tag_string)
         tags_qs = tags_qs.filter(tag_Q)
         return tags_qs
-    # Re-arrangement methods, effectively these are setters for Node.order
-    @transaction.commit_on_success
-    def _rearrange(self, steps):
-        """Changes the order of the node, slides it in between the other nodes.
-        Positive values for `step` move the node farther down the list and
-        negative values move it farther up the list. Zero does nothing."""
-        nodes_qs = Node.get_owned(self.owner)
-        if steps > 0:
-            sign = 1
-            remainder_qs = nodes_qs.filter(parent=self.parent, 
-                                           order__gt=self.order)
-        elif steps < 0:
-            sign = -1
-            remainder_qs = nodes_qs.filter(parent=self.parent,
-                                           order__lt=self.order).reverse()
-        else: # No change
-            remainder_qs = Node.objects.none()
-        if not remainder_qs.exists():
-            return
-        steps = abs(steps)
-        other_node = remainder_qs[steps-1]
-        # Go through scenarios in order of simplicity
-        # This allows us to minimize database hits for large moves
-        if steps == 1:
-            # Swap the two nodes next to each other
-            other_order = other_node.order
-            other_node.order = self.order
-            self.order = -1
-            self.save()
-            other_node.save()
-            self.order = other_order
-            self.save()
-        else:
-            assert False, 'Re-arranging by more than 1 step not yet implemented'
-            # Todo: rearrange by steps greater than 1
-    def move_up(self):
-        self._rearrange(-1)
-    def move_down(self):
-        self._rearrange(1)
         
     # Methods return miscellaneous information
     @staticmethod
@@ -463,37 +423,6 @@ def clean_text(sender, **kwargs):
             # only escape the text if it changed
             parser = HTMLEscaper()
             instance.text = parser.clean(instance.text)
-
-@receiver(signals.pre_save, sender=Node)
-def node_auto_increment(sender, **kwargs):
-    """If the user does not specify an order for a new node, this receiver
-    will find the current highest order and add it to the end"""
-    instance = kwargs['instance']
-    auto = False
-    exists = False
-    if instance.id:
-        # Check if the node does actually exist
-        # This is mostly to avoid problems with installing data from fixtures
-        try:
-            old_node = Node.objects.get(pk=instance.id)
-        except Node.DoesNotExist:
-            old_node = None
-        else:
-            exists = True
-    if not exists and instance.order == None:
-        # If it's a new node with no order, then auto_increment the order field
-        auto = True
-    elif exists:
-        if (old_node.parent != instance.parent) and (old_node.order == instance.order):
-            auto = True
-    if auto:
-        # Now actually increment if necessary
-        other_nodes = Node.get_owned(instance.owner, get_archived=True).filter(parent=instance.parent).reverse()
-        if other_nodes.count() > 0:
-            last_order = other_nodes[0].order
-        else:
-            last_order = 0
-        instance.order = last_order + Node.ORDER_STEP
 
 @receiver(signals.pre_save, sender=Node)
 def node_repeat(sender, **kwargs):
