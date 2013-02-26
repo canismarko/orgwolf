@@ -113,7 +113,9 @@ $('document').ready(function() {
   </form>
   <a href="edit/" class="btn" id="edit-button">Edit</a>
   <a href="{% url 'gtd.views.list_display' %}parent{{ parent_node.pk }}/" class="btn">As List</a>
-  {% endif %}
+  {% else %}
+  <a href="{% url 'gtd.views.list_display' %}" class="btn">As List</a>
+  {% endif %}{# if parent_node #}
 
   {# Parent node item details #}
   <dl>

@@ -34,7 +34,7 @@ import datetime
 import json
 
 from gtd.models import TodoState, Node, Context, Scope
-from gtd.shortcuts import parse_url, get_todo_states, get_todo_abbrevs, order_by_date
+from gtd.shortcuts import parse_url, generate_url, get_todo_states, get_todo_abbrevs, order_by_date
 from gtd.templatetags.gtd_extras import escape_html
 from wolfmail.models import MailItem, Label
 from gtd.forms import NodeForm
@@ -100,10 +100,18 @@ def list_display(request, url_string=""):
     current_context = request.session['context']
     # Retrieve the context objects based on url
     url_data = parse_url(url_string, request)
-    if url_data.get('context') != current_context:
-        # User is changing the context
-        request.session['context'] = url_data.get('context')
-        current_context = url_data.get('context')
+    if url_data.get('context'):
+        if url_data.get('context') != current_context:
+            # User is changing the context
+            request.session['context'] = url_data.get('context')
+            current_context = url_data.get('context')
+    elif current_context:
+        # Redirect to the url using the save context
+        new_url = reverse('gtd.views.list_display') + generate_url(
+            parent=url_data.get('parent'),
+            context=current_context
+            )[1:] # Don't need leading '/'
+        return redirect(new_url)
     # Filter by todo state (use of Q() objects means we only hit database once
     final_Q = Q()
     todo_states_query = url_data.get('todo_states', [])

@@ -170,7 +170,7 @@ class Context(models.Model):
     @staticmethod
     def get_visible(user):
         """Return all the Context objects visible to this user"""
-        return Context.objects.filter(owner=user)
+        return Context.objects.filter(Q(owner=user)|Q(owner=None))
 
 class Priority(models.Model):
     priority_value = models.IntegerField(default=50)
@@ -286,12 +286,12 @@ class Node(MPTTModel):
         return qs
     def get_title(self):
         if self.title.strip(' ').strip('\t'):
-            title = self.title
+            title = conditional_escape(self.title)
         else: # Nothing but whitespace
             title = '[Blank]'
         if self.archived:
-            title = '({0})'.format(title)
-        return title
+            title = '<div class="archived-text">{0}</div>'.format(title)
+        return mark_safe(title)
     def get_level(self):
         """Gets the node's level in the tree (1-indexed)."""
         return self.level + 1 

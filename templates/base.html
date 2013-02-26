@@ -76,9 +76,14 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 	      Today's Agenda
 	    </a>
 	  </li>
-	  <li><a href="{% url 'gtd.views.list_display' '/next' %}">Next Actions</a></li>
+	  <li>
+	    {% comment %}
+	    <!-- {% if url_data.context %}<a href="{% url 'gtd.views.list_display' '/next' %}context{{ url_data.context.pk }}/ -->
+{% endcomment %}
+	    {% if request.session.context %}<a href="{% url 'gtd.views.list_display' '/next' %}context{{ request.session.context.pk }}/">Actions ({{ request.session.context.name }})</a>
+	    {% else %}<a href="{% url 'gtd.views.list_display' '/next' %}">Next Actions</a>{% endif %}
+	  </li>
 	  <li><a href="{% url 'wolfmail.views.display_label' %}">Inbox</a></li>
-	  <li><a href="{% url 'gtd.views.list_display' %}">Lists</a></li>
 	  <li><a href="{% url 'gtd.views.display_node' %}">Projects</a></li>
 
 	  {% block inbox_widget %}

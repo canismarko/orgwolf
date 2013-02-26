@@ -103,7 +103,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
     </td>
     <td>
       <a href="{% url 'gtd.views.display_node' node_id=node.id %}" title="{{ node.get_hierarchy_as_string }}">
-	{{ node.title }}
+	{{ node.get_title }}
       </a>
       {% if node.deadline %}Due {{ node.deadline|upcoming }}{% endif %}
       </td>

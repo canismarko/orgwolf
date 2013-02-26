@@ -18,6 +18,7 @@
 #######################################################################
 
 from django.db import transaction
+from django.db.models.query import QuerySet
 from django.shortcuts import get_object_or_404
 from django.http import Http404
 import re
@@ -108,3 +109,29 @@ def parse_url(raw_url, request=None):
             context_id = result.groups()[1]
             data['context'] = get_object_or_404(Context, pk=context_id)
     return data
+
+def generate_url(**kwargs):
+    """Takes selection criteria and generates a url.
+    todo: either a TodoState object or a QuerySet of
+      TodoState objects."""
+    new_url = '/'
+    # Parent
+    parent = kwargs.get('parent', None)
+    if parent:
+        new_url += 'parent{0}/'.format(parent.pk)
+    # Handle todostates
+    todo = kwargs.get('todo', None)
+    if isinstance(todo, TodoState):
+        new_url += '{0}/'.format(todo.abbreviation.lower())
+    elif isinstance(todo, QuerySet):
+        for state in todo:
+            new_url += '{0}/'.format(state.abbreviation.lower())
+    # Scope
+    scope = kwargs.get('scope', None)
+    if scope:
+        new_url += 'scope{0}/'.format(scope.pk)
+    # Context
+    context = kwargs.get('context', None)
+    if context:
+        new_url += 'context{0}/'.format(context.pk)
+    return new_url

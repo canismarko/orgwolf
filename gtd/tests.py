@@ -40,7 +40,7 @@ from orgwolf.preparation import translate_old_text
 from orgwolf.models import OrgWolfUser as User
 from gtd.forms import NodeForm
 from gtd.models import Node, TodoState, node_repeat, Location, Tool, Context, Scope
-from gtd.shortcuts import parse_url, get_todo_states, get_todo_abbrevs, order_by_date # , reset_order
+from gtd.shortcuts import parse_url, generate_url, get_todo_states, get_todo_abbrevs, order_by_date # , reset_order
 from gtd.templatetags.gtd_extras import overdue, upcoming, escape_html
 
 class EditNode(TestCase):
@@ -437,13 +437,23 @@ class NodeMutators(TestCase):
             node.get_title()
             )
         node.archived = True
+        expected = '<div class="archive">{0}</div>'.format(node.title)
         self.assertEqual(
-            '({0})'.format(node.title),
+            expected,
+            node.get_title()
+            )
+        self.assertEqual(
+            conditional_escape(node.title).__class__,
+            node.get_title().__class__
+            )
+        node.title = '<a>'
+        self.assertEqual(
+            '<div class="archive">&lt;a&gt;</div>',
             node.get_title()
             )
         node.title = '\t'
         self.assertEqual(
-            '([Blank])',
+            '<div class="archive">[Blank]</div>',
             node.get_title()
             )
 
@@ -638,8 +648,18 @@ class ContextFiltering(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(
             self.client.session['context'],
-            Context.objects.get(name = 'Work')
+            Context.objects.get(pk=1)
             )
+        # Test that base url redirects to the saved context
+        response = self.client.get('/gtd/lists/')
+        self.assertRedirects(response, '/gtd/lists/context1/')
+        response = self.client.get('/gtd/lists/', follow=True)
+        self.assertContains(response, 
+                            'Actions (Work)', 
+                            )
+        self.assertContains(response, 
+                            '/gtd/lists/next/context1/', 
+                            )
         # Test clearing the context by using the POST filter
         response = self.client.post('/gtd/lists/context1/', {'context': '0',
                                                              'scope': '0',
@@ -826,6 +846,80 @@ class OverdueFilter(TestCase):
         tomorrow = tomorrow + dt.timedelta(1)
         self.assertEqual(overdue(tomorrow, future=True), 'in 2 days')
 
+class UrlGenerate(TestCase):
+    """Tests for the gtd url_generator that returns a URL string based
+    on scope/context/etc."""
+    fixtures = ['test-users.json', 'gtd-test.json', 'gtd-env.json']
+    def test_meta(self):
+        """Test if it exists and returns a string"""
+        self.assertEqual(
+            'function',
+            generate_url.__class__.__name__
+            )
+        self.assertTrue(
+            isinstance(generate_url(), str),
+            'generate_url() did not return string. Got {0}'.format(
+                generate_url().__class__
+                )
+            )
+    def test_individual_entries(self):
+        """Test passing each parameter type one at a time"""
+        state1 = TodoState.objects.get(pk=1)
+        self.assertEqual(
+            '/{0}/'.format(state1.abbreviation.lower()),
+            generate_url(todo=state1)
+            )
+        states = TodoState.objects.filter(pk__lte = 2)
+        expected_url = '/'
+        for state in states:
+            expected_url += '{0}/'.format(state.abbreviation.lower())
+        self.assertEqual(
+            expected_url,
+            generate_url(todo=states)
+            )
+        # Scope
+        scope = Scope.objects.get(pk=1)
+        self.assertEqual(
+            '/scope{0}/'.format(scope.pk),
+            generate_url(scope=scope)
+            )
+        # Context
+        context = Context.objects.get(pk=1)
+        self.assertEqual(
+            '/context{0}/'.format(context.pk),
+            generate_url(context=context)
+            )
+        # Parent
+        parent = Node.objects.get(pk=2)
+        self.assertEqual(
+            '/parent{0}/'.format(parent.pk),
+            generate_url(parent=parent)
+            )
+    def test_multiple_entries(self):
+        """Test various combinations of parameters to generate_url"""
+        states = TodoState.objects.filter(pk__lte = 2)
+        todo_url = ''
+        for state in states:
+            todo_url += '{0}/'.format(state.abbreviation.lower())
+        scope = Scope.objects.get(pk=1)
+        context = Context.objects.get(pk=1)
+        parent = Node.objects.get(pk=2)
+        expected_url = '/parent{0}/{todo}scope{1}/context{2}/'.format(
+            parent.pk,
+            scope.pk,
+            context.pk,
+            todo=todo_url
+            )
+        self.assertEqual(
+            expected_url,
+            generate_url(
+                scope=scope,
+                context=context,
+                todo=states,
+                parent=parent
+                )
+            )
+
 class TodoStateRetrieval(TestCase):
     """Tests the methods of TodoState that retrieves the list of "in play" todo states"""
     fixtures = ['test-users.json', 'gtd-test.json', 'gtd-env.json']
@@ -947,6 +1041,19 @@ class MultiUser(TestCase):
             Node.objects.get(pk=children[0]['node_id']).title,
             'another ryan node'
             )
+    def test_get_children_sarchived(self):
+        """Check if the title of an archived child is correctly
+        rendered in a json request"""
+        node = Node.objects.get(pk=13)
+        response = self.client.get(
+            '/gtd/nodes/{0}/children/'.format(node.parent.pk)
+            )
+        response_dict = json.loads(response.content)        
+        self.assertTrue(
+            False,
+            'start tests for getting node titles in italics'
+            )
+
     def test_get_unauthorized_node(self):
         """Trying to access another person's node by URL
         should redirect the user to the login screen"""
