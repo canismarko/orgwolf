@@ -29,6 +29,7 @@ from django.test import TestCase
 from django.test.client import Client, RequestFactory
 from django.forms.models import model_to_dict
 from django.db.models import Q
+from django.core.urlresolvers import reverse
 from django.utils.html import conditional_escape
 from django.contrib.auth.models import AnonymousUser
 from django.http import Http404
@@ -40,7 +41,7 @@ from orgwolf.preparation import translate_old_text
 from orgwolf.models import OrgWolfUser as User
 from gtd.forms import NodeForm
 from gtd.models import Node, TodoState, node_repeat, Location, Tool, Context, Scope
-from gtd.shortcuts import parse_url, generate_url, get_todo_states, get_todo_abbrevs, order_by_date # , reset_order
+from gtd.shortcuts import parse_url, generate_url, get_todo_states, get_todo_abbrevs, order_nodes
 from gtd.templatetags.gtd_extras import overdue, upcoming, escape_html
 
 class EditNode(TestCase):
@@ -127,8 +128,7 @@ class EditNode(TestCase):
         self.assertEqual(todo_state, node.todo_state)
 
     def test_edit_by_json(self):
-        # Tests changing the todo state of a node via JSON
-        # Login
+        """Tests changing the todo state of a node via JSON."""
         node = Node.objects.get(title='Hello')
         actionable = TodoState.objects.get(abbreviation='ACTN')
         closed = TodoState.objects.get(abbreviation='DONE')
@@ -196,6 +196,35 @@ class EditNode(TestCase):
             node.todo_state,
             'node.todo_state not unset when todo_id: 0 passed to edit node'
             )
+
+    def test_edit_autorepeat_by_json(self):
+        """Tests changing a repeating node by JSON with auto_repeat off"""
+        node = Node.objects.get(pk=6)
+        old_state = node.todo_state
+        new_state = TodoState.objects.get(pk=3)
+        self.assertTrue(
+            old_state.actionable,
+            'Initial todoState is actionable'
+            )
+        self.assertTrue(
+            new_state.closed
+            )
+        url = reverse('gtd.views.edit_node', kwargs={'node_id': node.pk})
+        payload = {
+            'format': 'json',
+            'auto_repeat': 'false',
+            'todo_id': new_state.pk,
+            }
+        self.client.post(
+            url, payload, 
+            HTTP_X_REQUESTED_WITH='XMLHttpRequest',
+            )
+        node = Node.objects.get(pk=node.pk)
+        self.assertEqual(
+            new_state,
+            node.todo_state
+            )
+
     def test_edit_repeating_by_json(self):
         """If a repeating node has it's todo state changed by JSON,
         if requires special handling."""
@@ -437,7 +466,7 @@ class NodeMutators(TestCase):
             node.get_title()
             )
         node.archived = True
-        expected = '<div class="archive">{0}</div>'.format(node.title)
+        expected = '<div class="archived-text">{0}</div>'.format(node.title)
         self.assertEqual(
             expected,
             node.get_title()
@@ -448,12 +477,12 @@ class NodeMutators(TestCase):
             )
         node.title = '<a>'
         self.assertEqual(
-            '<div class="archive">&lt;a&gt;</div>',
+            '<div class="archived-text">&lt;a&gt;</div>',
             node.get_title()
             )
         node.title = '\t'
         self.assertEqual(
-            '<div class="archive">[Blank]</div>',
+            '<div class="archived-text">[Blank]</div>',
             node.get_title()
             )
 
@@ -629,8 +658,9 @@ class ContextFiltering(TestCase):
         all_nodes_qs = Node.objects.filter(Q(tag_string=':work:')|Q(tag_string=':home:'))
         work = Context.objects.get(name='Work')
         home = Context.objects.get(name='Home')
+        work_nodes = Node.objects.filter(Q(pk=7)|Q(pk=18))
         self.assertEqual(
-            list(Node.objects.filter(title='Work Node')),
+            list(work_nodes),
             list(work.apply(all_nodes_qs))
             )
         self.assertEqual(
@@ -705,15 +735,15 @@ class Shortcuts(TestCase):
             list(TodoState.objects.all()),
             list(get_todo_states()),
             )
-    def test_order_by_date(self):
+    def test_order_nodes(self):
         """Tests the gtd.shortcuts.order_by_date function."""
         # First make sure the method actual does something
         self.assertEqual(
             'function',
-            order_by_date.__class__.__name__
+            order_nodes.__class__.__name__
             )
         original_qs = Node.objects.all()
-        result_qs = order_by_date(original_qs, 'scheduled')
+        result_qs = order_nodes(original_qs, field='scheduled')
         self.assertEqual(
             'QuerySet',
             result_qs.__class__.__name__
@@ -739,7 +769,25 @@ class Shortcuts(TestCase):
             list(scheduled_qs.order_by('scheduled')),
             list(result_qs)[:scheduled_qs.count()]
             )
+    def test_order_nodes_context(self):
+        nodes = Node.objects.filter(tree_id=8)
+        context_node = Node.objects.get(pk=18)
+        deadline_node = Node.objects.get(pk=19)
+        context = Context.objects.get(pk=1)
+        ordered_nodes = order_nodes(nodes,
+                                    context=context,
+                                    field='deadline',
+                                    )
+        self.assertEqual(
+            context_node,
+            ordered_nodes[0]
+            )
+        self.assertEqual(
+            deadline_node,
+            ordered_nodes[1]
+            )
     def test_node_as_json(self):
+        """Translate Node details into a JSON string"""
         node = Node.objects.get(pk=1)
         self.assertEqual(
             'instancemethod',
@@ -1040,18 +1088,6 @@ class MultiUser(TestCase):
         self.assertEqual(
             Node.objects.get(pk=children[0]['node_id']).title,
             'another ryan node'
-            )
-    def test_get_children_sarchived(self):
-        """Check if the title of an archived child is correctly
-        rendered in a json request"""
-        node = Node.objects.get(pk=13)
-        response = self.client.get(
-            '/gtd/nodes/{0}/children/'.format(node.parent.pk)
-            )
-        response_dict = json.loads(response.content)        
-        self.assertTrue(
-            False,
-            'start tests for getting node titles in italics'
             )
 
     def test_get_unauthorized_node(self):

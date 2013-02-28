@@ -902,9 +902,12 @@ var get_heading = function (node_id) {
 		workspace.$element.append(h);
 		workspace.$checkbox = workspace.$element.find('.show-all');
 		workspace.$add_heading = workspace.$element.find('#add-heading');
-		// var heading = workspace.$checkbox.siblings('.heading').first().data('nodeOutline');
 		var heading = workspace.$add_heading.siblings('.children').children('.heading').first().data('nodeOutline');
-		var margin = heading.$icon.outerWidth()+4;
+		if (heading) {
+		    var margin = heading.$icon.outerWidth()+4;
+		} else {
+		    var margin = 0;
+		}
 		workspace.$add_heading.css('margin-left', margin);
 		var $add = workspace.$add_heading;
 		$add.nodeEdit( {
@@ -932,7 +935,7 @@ var get_heading = function (node_id) {
 		    workspace.showall = checked;
 		    workspace.$element.find('.heading.archived').each( function() {
 			var $parent = $(this).data('nodeOutline').$parent;
-			parent = $parent.data('nodeOutline');
+			var parent = $parent.data('nodeOutline');
 			if ( checked ) {
 			    $(this).slideDown();
 			} else {
@@ -1141,37 +1144,40 @@ var get_heading = function (node_id) {
 		      });
 		      var $form = $modal.find('form');
 		      $form.submit(function(e) {
-			  // Handle submission of the form
-			  e.preventDefault();
-			  var payload = $form.serialize();
-			  payload += '&format=json';
-			  $.post(edit_url, payload, function(r) {
-			      r = $.parseJSON(r)
-			      if (r.status == 'success') {
-				  // Success! Now update the page
-				  node = $.parseJSON(r.node_data);
-				  // Update data
-				  if ( node.todo_state == null ) {
-				      node.todo_state = 0;
-				  }
-				  var data = $button.data('nodeEdit');
-				  data.todo_id = node.todo_state;
-				  $button.data('nodeEdit', data);
-				  // Update DOM
-				  $modal.modal('hide');
-				  if ( $target ) {
-				      $target.find('.update').each(function() {
-					  var field = $(this).attr('data-field');
-					  var new_html = node[field];
-					  $(this).html(new_html);
-				      });
-				  }
-				  // User supplied callback function
-				  if (typeof data.changed != 'undefined') {
-				      data.changed(node);
-				  }
-			      }
-			  });
+		      	  // Handle submission of the form
+		      	  console.log('inner');
+		      	  e.preventDefault();
+		      	  var payload = $form.serialize();
+		      	  payload += '&format=json&auto_repeat=false';
+		      	  $.post(edit_url, payload, function(r) {
+		      	      r = $.parseJSON(r)
+		      	      if (r.status == 'success') {
+		      		  // Success! Now update the page
+		      		  node = $.parseJSON(r.node_data);
+		      		  // Update data
+		      		  if ( node.todo_state == null ) {
+		      		      node.todo_state = 0;
+		      		  }
+		      		  var data = $button.data('nodeEdit');
+		      		  data.todo_id = node.todo_state;
+		      		  $button.data('nodeEdit', data);
+		      		  // Update DOM
+		      		  $modal.modal('hide');
+		      		  if ( $target ) {
+		      		      $target.find('.update').each(function() {
+		      			  var field = $(this).attr('data-field');
+		      			  var new_html = node[field];
+		      			  $(this).html(new_html);
+		      		      });
+		      		  }
+		      		  // User supplied callback function
+		      		  if (typeof data.changed != 'undefined') {
+		      		      data.changed(node);
+		      		  }
+		      	      } else { // JSON response was not successful
+		      		  console.log(r);
+		      	      }
+		      	  });
 		      });
 		      // Call user given callback
 		      if ( data.on_modal ) {

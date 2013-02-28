@@ -40,17 +40,35 @@ def get_todo_abbrevs(todo_state_list=None):
         abbreviation_list.append(todo_state.abbreviation)
     return abbreviation_list
 
-def order_by_date(qs, field):
+def order_nodes(qs, **kwargs):
     """Accepts a queryset (nominally of Node objects) and
-    sorts them by date. Similar to queryset.order_by('data')
-    except more fine-grained."""
+    sorts them by context and/or date. Similar to 
+    queryset.order_by() except more fine-grained.
+    Accepts these argument and applies them in order:
+    - context
+    - field (datetime)
+    """
+    select = {}
+    order_by = []
+    # Sort by a supplied context
+    context = kwargs.get('context')
+    if context:
+        locations = context.locations_available.all()
+        for loc in locations:
+            name = 'loc{0}'.format(loc.pk)
+            select[name] = 'tag_string LIKE \':%%{0}%%:\''.format(loc.tag_string)
+            order_by.append('-{0}'.format(name))
+    # Sort by a supplied date field
+    field = kwargs.get('field')
+    if field:
+        select['date_is_null'] = '{0} IS NULL'.format(field)
+        order_by.append('date_is_null')
+        order_by.append(field)
+    # Actually apply the sorting criteria
     return qs.extra(
-        select={
-            'date_is_null': '{0} IS NULL'.format(field),
-            },
-        order_by=['date_is_null', field]
+        select=select,
+        order_by=order_by
         )
-                    
 
 def parse_url(raw_url, request=None):
     """Detects context, scope and parent information from the url that 

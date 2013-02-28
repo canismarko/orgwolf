@@ -34,7 +34,7 @@ import datetime
 import json
 
 from gtd.models import TodoState, Node, Context, Scope
-from gtd.shortcuts import parse_url, generate_url, get_todo_states, get_todo_abbrevs, order_by_date
+from gtd.shortcuts import parse_url, generate_url, get_todo_states, get_todo_abbrevs, order_nodes
 from gtd.templatetags.gtd_extras import escape_html
 from wolfmail.models import MailItem, Label
 from gtd.forms import NodeForm
@@ -136,7 +136,7 @@ def list_display(request, url_string=""):
     if parent:
         nodes = nodes & parent.get_descendants(include_self=True)
     # Put nodes with deadlines first
-    nodes = order_by_date(nodes, 'deadline')
+    nodes = order_nodes(nodes, field='deadline', context=current_context)
     # And serve response
     if request.is_mobile:
         template = 'gtd/gtd_list_m.html'
@@ -144,7 +144,7 @@ def list_display(request, url_string=""):
         template = 'gtd/gtd_list.html'
     return render_to_response(template,
                               locals(),
-                              RequestContext(request))        
+                              RequestContext(request))
 
 @login_required
 def agenda_display(request, date=None):
@@ -348,6 +348,8 @@ def edit_node(request, node_id, scope_id):
                 post.pop('todo_state')
             form = NodeForm(post, instance=node)
             if form.is_valid():
+                if post.get('auto_repeat') == 'false':
+                    form.auto_repeat = False
                 form.save()
                 node = Node.objects.get(pk=node.pk)
                 node.title = node.get_title();
@@ -359,6 +361,7 @@ def edit_node(request, node_id, scope_id):
                     'node_data': node_data,
                     }
             else:
+                print form.errors
                 return HttpResponseBadRequest(form.errors)
         else: # if post.get('form') != 'modal':
             new_text = post.get('text', node.text)
@@ -373,7 +376,10 @@ def edit_node(request, node_id, scope_id):
                     node.todo_state = TodoState.objects.get(pk=new_todo_id)
                 except TodoState.DoesNotExist:
                     return HttpResponseBadRequest('Invalid todo_id: %s' % new_todo_id)
-            node.auto_repeat = True
+            if post.get('auto_repeat') == 'false':
+                node.auto_repeat = False
+            else:
+                node.auto_repeat = True
             node.save()
             data = {
                 'status': 'success',

@@ -710,7 +710,7 @@ asyncTest('Todo state changing functionality', function() {
 	    'selected',
 	    'Todo option 2 is now selected'
 	);
-    }, (ajax_timer * 4.4 + 5));
+    }, (ajax_timer * 7.7 + 5));
 });
 
 
@@ -741,7 +741,7 @@ asyncTest('Populates children on outline init', function() {
 	    equal(
 		heading.populated,
 		true,
-		'Heading ' + $(this).data('node_id') + ' populated'
+		'Heading ' + heading.node_id + ' populated'
 	    );
 	    equal(
 	    	heading.$workspace.attr('id'),
@@ -753,7 +753,7 @@ asyncTest('Populates children on outline init', function() {
 		'Each heading has the expandable element set'
 	    );
 	});
-    }, (ajax_timer * 3.3 + 5));
+    }, (ajax_timer * 5.5 + 5));
 });
 
 asyncTest('Creates #add-heading button', function() {
