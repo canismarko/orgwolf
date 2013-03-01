@@ -61,13 +61,26 @@
     </dl>
   </div>
   <!-- JS Todo buttons plugin -->
-  <form id="todo-buttons" node_id="7"><div>
+  <form id="todo-buttons" node_id="7">
     <button type="submit" value="0" class="active">None</button>
     <button type="submit" value="1">Next</button>
+  </form>
+  <!-- validate_node() -->
+  <form id="good-form">
+    <input type="text" data-validate="required" value="hello"></input>
+  </form>
+  <form id="bad-form">
+    <input type="text" id="required" data-validate="required"></input>
+    <input type="text" id="date-field" data-validate="date" value="crap"></input>
+    <input type="text" id="no-date" data-validate="date" value=""></input>
+    <input type="text" id="bad-int" data-validate="int" value="d"></input>
+    <input type="text" id="bad-time-field" data-validate="time" value="27:89"></input>
+    <div><div><input type="text" id="required-date"></input></div></div>
+    <input type="checkbox" id="bad-requires" data-requires="#bad-time-field, #required-date" checked="checked"></input>
   </form>
 </div><!-- /div id="qunit-fixture" -->
 <script src="{{ STATIC_URL }}qunit-1.10.0.js"></script>
 <!-- Add QUnit imports here -->
-<script src="{{ STATIC_URL }}project_outline-test.js"></script>
+<script src="{{ STATIC_URL }}gtd-tests.js"></script>
 <!-- End QUnit tests -->
 {% endblock %}

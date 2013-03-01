@@ -26,6 +26,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
   Aloha.ready(function() {
       Aloha.jQuery('#id_text').aloha();
   })
+  // Attach node form validation
+  $('document').ready(function() {
+      $('#node-form').submit(function() {
+	  return validate_node($(this));
+      });
+  });
 </script>
 {% endblock %}
 
@@ -45,7 +51,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
   {{ node.title }}
   {% endif %}
 </h3>
-<form action="" method="POST" class="form-horizontal">
+<form id='node-form' action="" method="POST" class="form-horizontal">
 {% csrf_token %}
 <input type="submit" value="Save" class="btn btn-primary"/>
 {% if new == "Yes" %}

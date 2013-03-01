@@ -61,6 +61,16 @@ dd.todo
     font-style: italic;
     opacity: 0.8;
 }
+/* Node editing */
+.invalid
+{
+    background-color: #F2DEDE !important;
+}
+.error, .errorlist
+{
+    color: red;
+    font-size: 14px;
+}
 /* Javascript outline appliance */
 .ow-buttons, .add-heading, .todo-state, .todo-option
 {

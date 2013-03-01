@@ -1,3 +1,84 @@
+// Function validates a form based on data-validate attribute
+var validate_node = function($form) {
+    var NOTBLANK_RE = /\S/;
+    var NOTINT_RE = /\D/;
+    var success = true;
+    // Helper function to remove all the last error entries
+    var reset_form = function( $form ) {
+	$form.find('.error').remove();
+	$form.find('.invalid').removeClass('invalid');
+    };
+    // Code execution starts here
+    $form.each(function() {
+	var $this_form = $(this);
+	reset_form( $this_form );
+	$(this).find('[data-validate]').each(function() {
+	    var method = $(this).attr('data-validate')
+	    if ( method == 'required' ) {
+		if ( ! NOTBLANK_RE.test($(this).attr('value'))) {
+		    success = false;
+		    $(this).addClass('invalid');
+		    $(this).after('<span class="error"><br />This field is required</span>');
+		}
+	    } else if (method == 'date') {
+		var s = $(this).attr('value')
+		if ( NOTBLANK_RE.test(s) ) { // Ignore empty dates
+		    var bits = s.split('-');
+		    var d = new Date(bits[0], bits[1]-1, bits[2]);
+		    if ( d.getFullYear() != bits[0] ||
+			 d.getMonth() + 1 != bits[1] ||
+			 d.getDate() != bits[2] ) {
+			// Date does not match
+			$(this).addClass('invalid');
+			$(this).after('<span class="error"><br />Please enter a valid date in the form YYYY-MM-DD</span>');
+			success = false;
+		    }
+		}
+	    } else if (method == 'time') {
+		var s = $(this).attr('value')
+		if ( NOTBLANK_RE.test(s) ) { // Ignore empty times
+		    var bits = s.split('-');
+		    var t = new Date(0, 0, 0, bits[0], bits[1]);
+		    if ( t.getHours() != bits[0] ||
+			 d.getMinutes() != bits[1] 
+		       ) {
+			// Time does not match
+			$(this).addClass('invalid');
+			$(this).after('<span class="error"><br />Please enter a valid 24-hour time in the form HH:MM</span>');
+			success = false;
+		    }
+		}
+	    } else if (method == 'int') {
+		var s = $(this).attr('value')
+		if ( NOTBLANK_RE.test(s) && NOTINT_RE.test(s) ) { //Ignore empty fields
+		    success = false;
+		    $(this).addClass('invalid');
+		    $(this).after('<span class="error"><br />Please enter an integer</span>');
+		}
+	    }
+	});
+	$(this).find('[data-requires]').each( function() {
+	    // Check for elements requiring cross-reference validation
+	    var $this = $(this);
+	    if ( $this.attr('checked') ) {
+		var reqs = $(this).attr('data-requires').split(',');
+		for ( var i=0; i<reqs.length; i++ ) {
+		    var $elem = $this_form.find(reqs[i]);
+		    var s = $elem.attr('value');
+		    if ( ! NOTBLANK_RE.test(s) ) {
+			success = false;
+			$elem.addClass('invalid');
+			$elem.parent().append('<span class="error"><br />Field required by ' +
+		    				       $this.attr('id') + '</span>');
+		    }
+		}
+	    }
+	});
+    })
+    return success;
+};
+
+
 $(document).ready(function(){
     // Set up timepicker functionality
     $("input.datepicker").each(function(ct) {
@@ -1144,6 +1225,10 @@ var get_heading = function (node_id) {
 		      });
 		      var $form = $modal.find('form');
 		      $form.submit(function(e) {
+			  // Validate form
+			  if ( !validate_node($(this))) {
+			      return false;
+			  }
 		      	  // Handle submission of the form
 		      	  console.log('inner');
 		      	  e.preventDefault();

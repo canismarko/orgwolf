@@ -179,7 +179,7 @@ $.mockjax({
 });
 
 
-var module_name = 'outline-appliance-test.js - ';
+var module_name = 'OutlineHeading jQuery plugin - ';
 module(module_name + 'Heading');
 
 test('outline object', function() {
@@ -1610,3 +1610,97 @@ asyncTest('callback', function() {
 	);
     }, ajax_timer * 1.1 + 5);
 })
+
+
+module('Node Form Validation');
+test('Meta', function() {
+    // Check basic meta information about the validate_node function
+    var $good_form = $fixture.find('#good-form');
+    equal(
+	typeof validate_node,
+	'function',
+	'validate_node is a function'
+    );
+    ok(
+	validate_node($good_form),
+	'Form with no validation returns true'
+    );
+});
+test('Required field', function() {
+    var $bad_form = $fixture.find('#bad-form');
+    ok(
+	!validate_node($bad_form),
+	'Invalid form returns false'
+    );
+    ok(
+	$bad_form.find('#required').hasClass('invalid'),
+	'validate_node catches required fields'
+    );
+});
+test('Date field', function() {
+    var $bad_form = $fixture.find('#bad-form');
+    validate_node($bad_form);
+    ok(
+	$bad_form.find('#date-field').hasClass('invalid'),
+	'validate_node catches bad date'
+    );
+    ok(
+	!$bad_form.find('#no-date').hasClass('invalid'),
+	'validate_node ignores blank date fields'
+    );
+    equal(
+	$bad_form.find('#date-field').next('span.error').length,
+	1,
+	'An error span is placed after the bad date'
+    );
+	
+});
+test('Time field', function() {
+    var $bad_form = $fixture.find('#bad-form');
+    validate_node($bad_form);
+    var $bad_time = $bad_form.find('#bad-time-field');
+    equal(
+	$bad_time.length,
+	1,
+	'$bad_time element found in fixture'
+    );
+    ok(
+	$bad_time.hasClass('invalid'),
+	'Bad time has invalid class after validation'
+    );
+    equal(
+	$bad_time.next('span.error').length,
+	1,
+	'An error span is placed after the bad time'
+    );
+});
+test('Requires other fields', function() {
+    var $bad_form = $fixture.find('#bad-form');
+    validate_node($bad_form);
+    var $bad_chk = $bad_form.find('#bad-requires');
+    var $req_date = $bad_form.find('#required-date');
+    equal(
+	$bad_chk.length,
+	1,
+	'$bad_chk element found in fixture'
+    );
+    ok(
+	$req_date.hasClass('invalid'),
+	'Blank requires field is marked invalid'
+    );
+    equal(
+	$req_date.parent().parent().find('span.error').length,
+	1,
+	'An error span is placed after the ommitted field'
+    );
+});
+test('Integer field', function() {
+    var $bad_form = $fixture.find('#bad-form');
+    validate_node($bad_form);
+    var $bad_int = $bad_form.find('#bad-int');
+    ok(
+	$bad_int.hasClass('invalid'),
+	'Non-numbers marked as invalid'
+    );
+});
+    

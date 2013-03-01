@@ -27,7 +27,8 @@ import datetime as dt
 class NodeForm(forms.ModelForm):
     required_css_class = 'required'
     title = forms.CharField(
-        widget=widgets.TextInput(attrs={'autofocus': 'autofocus'}),
+        widget=widgets.TextInput(attrs={'autofocus': 'autofocus',
+                                        'data-validate': 'required'}),
         )
     scheduled = forms.DateTimeField(
         widget=widgets.HiddenInput,
@@ -35,16 +36,20 @@ class NodeForm(forms.ModelForm):
         )
     scheduled_date = forms.DateField(
         required=False,
-        widget=widgets.TextInput(attrs={'class': 'datepicker'}),
+        widget=widgets.TextInput(attrs={'class': 'datepicker',
+                                        'data-validate': 'date'}),
         )
     scheduled_time = forms.TimeField(
         required=False, 
         localize=True,
-        widget=widgets.TextInput(attrs={'class': 'timepicker'}),
+        widget=widgets.TextInput(attrs={'class': 'timepicker',
+                                        'data-validate': 'time'}),
         )
     scheduled_time_specific = forms.BooleanField(
         required=False,
-        widget=widgets.CheckboxInput(attrs={'toggles': 'scheduled_time'}),
+        widget=widgets.CheckboxInput(attrs={'toggles': 'scheduled_time',
+                                            'data-requires': '#id_scheduled_date, #id_scheduled_time',
+                                            })
         )
     deadline = forms.DateTimeField(
         widget=widgets.HiddenInput,
@@ -61,8 +66,18 @@ class NodeForm(forms.ModelForm):
         )
     deadline_time_specific = forms.BooleanField(
         required=False,
-        widget=widgets.CheckboxInput(attrs={'toggles': 'deadline_time'}),
+        widget=widgets.CheckboxInput(attrs={'toggles': 'deadline_time',
+                                            'data-requires': '#id_deadline_date, #id_deadline_time',
+                                            })
         )
+    repeats = forms.BooleanField(
+        required=False,
+        widget=widgets.CheckboxInput(attrs={'data-requires': '#id_repeating_number, #id_repeating_unit'}),
+        )
+    repeating_number = forms.IntegerField(
+        required=False,
+        widget=widgets.TextInput(attrs={'data-validate': 'int'}),
+        );
     related_projects = forms.ModelMultipleChoiceField(
         queryset=Node.get_all_projects().order_by('title'), 
         required=False,
