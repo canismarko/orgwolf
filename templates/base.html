@@ -63,48 +63,49 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
     {% block nav %}
     <div class="navbar">
       <div class="navbar-inner">
+	<a class="brand" id="logo" href="/">
+	  {% if debug %}
+	  <img src="{{ STATIC_URL }}orgwolf-logo-debug.png" />
+	  {% else %}
+	  <img src="{{ STATIC_URL }}orgwolf-logo.png" />
+	  {% endif %}
+	</a>
 	<ul class="nav">
-	  <li>
-	    {% if debug %}
-	    <a href="/" title="Back to landing page" class="brand"><img src="{{ STATIC_URL }}orgwolf-logo-debug.png" alt="OrgWolf Logo" /></a>
-	    {% else %}
-	    <a href="/" title="Back to landing page" class="brand"><img src="{{ STATIC_URL }}orgwolf-logo.jpg" alt="OrgWolf Logo" /></a>
-	    {% endif %}
-	  </li>
-	  <li>
+	  <li{% if 'agenda' in request.get_full_path %} class="active"{% endif %}>
 	    <a href="{% url 'gtd.views.agenda_display' %}">
 	      Today's Agenda
 	    </a>
 	  </li>
-	  <li>
-	    {% comment %}
-	    <!-- {% if url_data.context %}<a href="{% url 'gtd.views.list_display' '/next' %}context{{ url_data.context.pk }}/ -->
-{% endcomment %}
+	  <li{% if 'list' in request.get_full_path %} class="active"{% endif %}>
 	    {% if request.session.context %}<a href="{% url 'gtd.views.list_display' '/next' %}context{{ request.session.context.pk }}/">Actions ({{ request.session.context.name }})</a>
 	    {% else %}<a href="{% url 'gtd.views.list_display' '/next' %}">Next Actions</a>{% endif %}
 	  </li>
 	  <li><a href="{% url 'wolfmail.views.display_label' %}">Inbox</a></li>
-	  <li><a href="{% url 'gtd.views.display_node' %}">Projects</a></li>
-
-	  {% block inbox_widget %}
-	  <li>
-	    <form class="navbar-form" method="POST" action="/gtd/toinbox/?next={{request.get_full_path}}" id="new_inbox_form">
-	      <div class="input-append">
-		<input type="text" name="new_inbox_item" id="new_inbox_item" class="input-small" placeholder="To inbox..." />
-		<input type="submit" value="Save" class="btn" />
-	      </div>
-	      {% csrf_token %}
-	    </form>
+	  <li{% if 'node' in request.get_full_path %} class="active"{% endif %}>
+	    <a href="{% url 'gtd.views.display_node' %}">Projects</a>
 	  </li>
-	  {% endblock %}
+	</ul>
+	
+	{% block inbox_widget %}
+	<form class="navbar-form pull-left" method="POST" action="/gtd/toinbox/?next={{request.get_full_path}}" id="new_inbox_form">
+	  <div class="input-append">
+	    <input type="text" name="new_inbox_item" id="new_inbox_item" class="input-small" placeholder="To inbox..." />
+	    <input type="submit" value="Save" class="btn" />
+	  </div>
+	  {% csrf_token %}
+	</form>
+	{% endblock %}
+
+	<ul class="nav pull-right">
 	  <li class="pull-right"><a href="https://github.com/m3wolf/OrgWolf/issues/new">Feedback</a></li>
 	  {#<li><a href="/feedback/?next={{request.get_full_path}}">Feedback</a></li>#}
 	  <li><a href="/admin/">Admin</a></li>
 	  <li>
-	    {% if user.is_authenticated %}<a class="pull-right" href="/accounts/logout/?next=/">Logout ({{ request.user}})
-	    {% else %}<a href="/accounts/login/?next={{request.get_full_path}}">Login
-	      {% endif %}</a></li>
-      </ul>
+	    {% if user.is_authenticated %}<a class="pull-right" href="/accounts/logout/?next=/">Logout ({{ request.user}})</a>
+	    {% else %}<a href="/accounts/login/?next={{request.get_full_path}}">Login</a>
+	    {% endif %}
+	  </li>
+	</ul>
       </div>
     </div>
     {% endblock %}

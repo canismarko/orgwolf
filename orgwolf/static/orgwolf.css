@@ -1,3 +1,18 @@
+/* Navar */
+#logo.brand
+{
+    padding-bottom: 8px;
+    padding-top: 8px;
+}
+#new_inbox_form .input-append
+{
+    margin-top: 5px;
+}
+#new_inbox_item + .btn
+{
+    height: 30px;
+}
+/* Node form */
 .required label:before
 {
     content: "*"
@@ -34,6 +49,15 @@ span.alt
 {
     visibility: hidden;
 }
+.invalid
+{
+    background-color: #F2DEDE !important;
+}
+.error, .errorlist
+{
+    color: red;
+    font-size: 14px;
+}
 /* Node_view */
 .odd-heading
 {
@@ -60,16 +84,6 @@ dd.todo
 {
     font-style: italic;
     opacity: 0.8;
-}
-/* Node editing */
-.invalid
-{
-    background-color: #F2DEDE !important;
-}
-.error, .errorlist
-{
-    color: red;
-    font-size: 14px;
 }
 /* Javascript outline appliance */
 .ow-buttons, .add-heading, .todo-state, .todo-option
