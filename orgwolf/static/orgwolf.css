@@ -85,6 +85,12 @@ dd.todo
     font-style: italic;
     opacity: 0.8;
 }
+/* For moving node */
+.tree
+{
+    margin: 0px;
+    padding: 0px;
+}
 /* Javascript outline appliance */
 .ow-buttons, .add-heading, .todo-state, .todo-option
 {

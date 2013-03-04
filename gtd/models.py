@@ -290,7 +290,7 @@ class Node(MPTTModel):
         else: # Nothing but whitespace
             title = '[Blank]'
         if self.archived:
-            title = '<div class="archived-text">{0}</div>'.format(title)
+            title = '<span class="archived-text">{0}</span>'.format(title)
         return mark_safe(title)
     def get_level(self):
         """Gets the node's level in the tree (1-indexed)."""
@@ -308,25 +308,16 @@ class Node(MPTTModel):
             else:
                 return child
         return find_immediate_parent(self)
-    def get_hierarchy(self):
-        hierarchy_list = []
-        current_parent = self
-        hierarchy_list.append({'display': current_parent.get_title(),
-                               'id': current_parent.id,
-                               'pk': current_parent.pk})
-        while(current_parent.parent != None):
-            current_parent = current_parent.parent
-            hierarchy_list.append({'display': current_parent.get_title(),
-                                   'id': current_parent.id,
-                                   'pk': current_parent.pk})
-        hierarchy_list.reverse()
-        return hierarchy_list
     def get_hierarchy_as_string(self):
-        delimiter = ' > '
-        node_list = self.get_hierarchy()
+        """Return a string showing the trail of ancestors
+        leading up to this node"""
+        delimiter = '>'
+        node_list = self.get_ancestors(include_self=True)
         string = ''
         for node in node_list:
-            string += delimiter + node['display']
+            string += '{0} {1}'.format(delimiter,
+                                       node.get_title() )
+            delimiter = ' >'
         return string
     def as_html(self):
         string = ''

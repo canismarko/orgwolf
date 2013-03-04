@@ -287,7 +287,7 @@ $(document).ready(function(){
 			var $popover = $(this).parent().parent();
 			
 			var heading = $popover.parent().parent().data('nodeOutline');
-			var url = '/gtd/nodes/' + settings.node_id + '/edit/';
+			var url = '/gtd/node/' + settings.node_id + '/edit/';
 			var payload = {
 			    format: 'json',
 			    todo_id: new_id,
@@ -411,7 +411,7 @@ $(document).ready(function(){
 		    var options = $text.data('alohaText');
 		    if ( options ) { // Only if an AlohaText exists
 			var $parent = options.$parent;
-			var url = '/gtd/nodes/' + $parent.attr('node_id') + '/edit/';
+			var url = '/gtd/node/' + $parent.attr('node_id') + '/edit/';
 			var new_text = $text.html();
 			if ( new_text == '<br>' ) {
 			    new_text = '';
@@ -656,7 +656,8 @@ var get_heading = function (node_id) {
 		    });
 		    this.set_autohide( this.$hoverable, $buttons );
 		    this.$buttons.find('.icon-th-list').click( function() {
-			window.location = '/gtd/nodes/' + node_id + '/';
+			console.log('clikced');
+			window.location = '/gtd/node/' + node_id + '/';
 		    });
 		    this.$buttons.find('.icon-pencil').click( function() {
 			// Modal dialog for editing this heading
@@ -852,7 +853,7 @@ var get_heading = function (node_id) {
 		};
 		this.populate_children = function(extra_callback) {
 		    // Gets children via AJAX request and creates their div elements
-		    var url = '/gtd/nodes/' + this.node_id + '/children/';
+		    var url = '/gtd/node/' + this.node_id + '/children/';
 		    var $children = this.$children;
 		    var parent = this;
 		    $.getJSON(url, function(response) {
@@ -934,7 +935,13 @@ var get_heading = function (node_id) {
 
 	    // Code execution starts here
 	    $this = this;
-	    $this.html('<strong>Children:</strong><br />\n<div class="children"></div>'); // Clear old content
+	    node_id = $this.attr('node_id')
+	    if ( node_id == '0' ) {
+		var header = 'Projects:';
+	    } else {
+		var header = 'Children:';
+	    }
+	    $this.html('<strong>' + header + '</strong><br />\n<div class="children"></div>'); // Clear old content
 	    if ( !args ) {
 		args = {};
 	    }
@@ -968,6 +975,7 @@ var get_heading = function (node_id) {
 	    // Create all the first two levels of nodes
 	    workspace.populate_children(function() {
 		workspace.$children.children('.heading').each(function() {
+		    console.log($(this));
 		    var subheading = $(this).data('nodeOutline');
 		    subheading.populate_children();
 		});
@@ -1184,13 +1192,13 @@ var get_heading = function (node_id) {
 	    } else {
 		if ( node_id > 0 ) {
 		    // Existing node
-		    edit_url = '/gtd/nodes/' + node_id + '/edit/';
+		    edit_url = '/gtd/node/' + node_id + '/edit/';
 		} else if ( parent_id > 0 ) {
 		    // new node with parent
-		    edit_url = '/gtd/nodes/' + parent_id + '/new/';
+		    edit_url = '/gtd/node/' + parent_id + '/new/';
 		} else {
 		    // New top-level node
-		    edit_url = '/gtd/nodes/new/';
+		    edit_url = '/gtd/node/new/';
 		}
 	    }
 	    var changed = args['changed'];
@@ -1351,7 +1359,7 @@ var get_heading = function (node_id) {
 		var $this = $(this);
 		var data = {};
 		data.node_id = $this.attr('node_id');
-		data.url = '/gtd/nodes/' + data.node_id + '/edit/';
+		data.url = '/gtd/node/' + data.node_id + '/edit/';
 		data.sel = 'button';
 		var $buttons = $this.find(data.sel)
 		// Bind to each buttons click event

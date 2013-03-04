@@ -45,7 +45,7 @@ var todo_state_list = [
 var ajax_timer = 20; // how long fake ajax request takes (in milliseconds)
 // Setup fake AJAX responses
 $.mockjax({
-    url: '/gtd/nodes/0/children/',
+    url: '/gtd/node/0/children/',
     responseTime: ajax_timer,
     responseText: {
 	status: 'success',
@@ -71,7 +71,7 @@ $.mockjax({
     }
 });
 $.mockjax({
-    url: '/gtd/nodes/1/children/',
+    url: '/gtd/node/1/children/',
     responseTime: ajax_timer,
     responseText: {
 	status: 'success',
@@ -98,7 +98,7 @@ $.mockjax({
     }
 });
 $.mockjax({
-    url: '/gtd/nodes/2/children/',
+    url: '/gtd/node/2/children/',
     responseTime: ajax_timer,
     responseText: {
 	status: 'success',
@@ -117,7 +117,7 @@ $.mockjax({
     }
 });
 $.mockjax({
-    url: '/gtd/nodes/3/children/',
+    url: '/gtd/node/3/children/',
     responseTime: ajax_timer,
     responseText: {
 	status: 'success',
@@ -135,18 +135,18 @@ $.mockjax({
     }
 });
 $.mockjax({
-    url: '/gtd/nodes/1/edit/',
+    url: '/gtd/node/1/edit/',
     responseTime: ajax_timer,
     responseText: '{"status": "success", "node_id": 1, "todo_id": 2}'
 });
 $.mockjax({
-    url: '/gtd/nodes/5/edit/',
+    url: '/gtd/node/5/edit/',
     responseTime: ajax_timer,
     responseText: '{"status": "success", "node_id": 5, "todo_id": 0}'
 });
 // For testing todo buttons plugin
 $.mockjax({
-    url: '/gtd/nodes/7/edit/',
+    url: '/gtd/node/7/edit/',
     responseTime: ajax_timer,
     responseText: '{"status": "success", "todo_id": 1}'
 });
@@ -860,7 +860,7 @@ asyncTest('Archived nodes', function() {
 	    archived2.$parent.hasClass('expandable'),
 	    'Parent of mixed nodes stays expandable after second checkbox click'
 	);
-    }, (ajax_timer * 5.5 + 5) );
+    }, (ajax_timer * 6.6 + 5) );
 });
 
 

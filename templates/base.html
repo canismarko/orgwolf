@@ -107,8 +107,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 	  </li>
 	</ul>
       </div>
-    </div>
-    {% endblock %}
+    </div><!-- </div class="navbar"> -->
+
+    {# Search box #}
+    {% include "gtd/search_box.html" %}
+
+    {% endblock %}{# end of nav #}
 
     {% block content %}
     <br />This feature is not yet impletemented. Check back later.<br />
