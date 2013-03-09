@@ -12,6 +12,11 @@
 {
     height: 30px;
 }
+/* Registration */
+a.btn-auth
+{
+    margin-top: 5px;
+}
 /* Node form */
 .required label:before
 {

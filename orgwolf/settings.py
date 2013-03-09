@@ -161,11 +161,56 @@ INSTALLED_APPS = (
     'wolfmail',
     'south',
     'mptt',
+    'social_auth',
     # Uncomment the next line to enable the admin:
     'django.contrib.admin',
     # Uncomment the next line to enable admin documentation:
     'django.contrib.admindocs',
 )
+
+# Django-social-auth configuration
+SOCIAL_AUTH_BACKENDS = [
+    {'title': 'Facebook',
+     'class': 'btn-facebook',
+     'view': 'facebook',
+     'backend': 'social_auth.backends.facebook.FacebookBackend',
+     'icon': 'facebook'},
+    {'title': 'GitHub',
+     'class': 'btn-github',
+     'view': 'github',
+     'backend': 'social_auth.backends.contrib.github.GithubBackend',
+     'icon': 'github'},
+    {'title': 'Google',
+     'class': 'btn-google',
+     'view': 'google-oauth2',
+     'backend': 'social_auth.backends.google.GoogleOAuth2Backend',
+     'icon': 'google-plus'},
+    {'title': 'Twitter',
+     'class': 'btn-twitter',
+     'view': 'twitter',
+     'backend': 'social_auth.backends.twitter.TwitterBackend',
+     'icon': 'twitter'},
+    ]
+SOCIAL_AUTH_USER_MODEL = "orgwolf.OrgWolfUser"
+AUTHENTICATION_BACKENDS = [
+    'django.contrib.auth.backends.ModelBackend',
+]
+for service in SOCIAL_AUTH_BACKENDS:
+    AUTHENTICATION_BACKENDS.append(service['backend'])
+LOGIN_URL = '/accounts/login/'
+LOGIN_REDIRECT_URL = '/accounts/profile/'
+LOGIN_ERROR_URL = '/accounts/login-error/'
+SOCIAL_AUTH_DEFAULT_USERNAME = 'orguser'
+# Per-application configuration
+FACEBOOK_APP_ID = "336968653082120"
+FACEBOOK_API_SECRET = "b2c356dc4bd9924712e16394298069ca"
+FACEBOOK_EXTENDED_PERMISSIONS = ['email']
+GITHUB_APP_ID = 'a5492082d01e4ddc36c3'
+GITHUB_API_SECRET = 'ab1226ddfa61e09495f62970eca1223332ecb606'
+GOOGLE_OAUTH2_CLIENT_ID = '955970863814.apps.googleusercontent.com'
+GOOGLE_OAUTH2_CLIENT_SECRET = 'LXZ4lWKCDbQIuGkbFmFzXLHn'
+TWITTER_CONSUMER_KEY = 'mdCrIYcrHUqohrOvCKPz3Q'
+TWITTER_CONSUMER_SECRET = 'SLir3qh8IFzuFe6VI58kHpBnzAnAohpWzqjhdmXKqQ'
 
 # A sample logging configuration. The only tangible logging
 # performed by this configuration is to send an email to

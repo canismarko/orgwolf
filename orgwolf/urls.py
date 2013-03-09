@@ -32,6 +32,7 @@ urlpatterns = patterns('',
                        url(r'^messaging/', include('wolfmail.urls')),
                        url(r'^wolfmail/', include('wolfmail.urls')),
                        # Authentication stuff
+                       url(r'', include('social_auth.urls')),
                        url(r'^accounts/login/', login),
                        url(r'^accounts/logout/', logout),
                        url(r'^accounts/register/', 'orgwolf.views.new_user'),
