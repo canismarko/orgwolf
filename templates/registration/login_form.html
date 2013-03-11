@@ -1,4 +1,15 @@
+{% extends 'base.html' %}
 {% load accounts %}
+
+{% block nav %}
+<!-- Navbar disabled on login pages -->
+{% endblock %}
+
+{% block search %}
+<!-- Search box disabled on login pages --> 
+{% endblock %}
+
+{% block content %}
 <table id="login">
   <form action="{% url 'django.contrib.auth.views.login' %}" method="post">
     {{ form.as_table }}
@@ -6,17 +17,17 @@
     <tr>
       <td>&nbsp;</td>
       <td>
-	<input type="submit" value="Login" class="btn"/>
-	<a href="{{ next_page }}" class="cancel">Cancel</a>
+	<button type="submit" class="btn btn-primary">Login</button>
+	<a href="{{ next_page }}" class="cancel btn">Cancel</a>
 	<input type="hidden" name="next" value="{{ next }}" />
       </td>
     </tr>
-  <tr>
-    <td>&nbsp;
-    </td>
-    <td>
-    {% login_buttons 'Login using <b>{0}</b>' %}
-    </td>
-  </tr>
+    <tr>
+      <td>&nbsp;</td>
+      <td>
+	{% login_buttons 'Login using <b>{0}</b>' %}
+      </td>
+    </tr>
   </form>    
 </table>
+{% endblock %}

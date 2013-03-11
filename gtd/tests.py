@@ -965,6 +965,17 @@ class Shortcuts(TestCase):
             response_dict['todo_html'],
             )
 
+class NodePermissions(TestCase):
+    def setUp(self):
+        self.client.login(username='ryan', password='secret')
+        self.user = User.objects.get(username='ryan')
+    def test_owned(self):
+        node = Node.objects.filter(owner=self.user)[0]
+        self.assertEqual(
+            'owned',
+            Node.get_user_status(self.user)
+            )
+
 class UrlParse(TestCase):
     """Tests for the gtd url_parser that extracts context and scope information
     from the URL string and returns it as a useful dictionary."""

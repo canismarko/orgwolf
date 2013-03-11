@@ -22,11 +22,13 @@ from django.shortcuts import render_to_response, redirect
 from django.template import RequestContext
 from django.contrib.auth import authenticate, login
 from django.contrib.auth.forms import AuthenticationForm
+from django.contrib.auth.hashers import is_password_usable
 from django.contrib.auth.decorators import login_required
 from datetime import datetime
 
+from orgwolf import settings
 from orgwolf.models import OrgWolfUser as User
-from orgwolf.forms import FeedbackForm, RegistrationForm
+from orgwolf.forms import FeedbackForm, RegistrationForm, ProfileForm, PasswordForm
 from wolfmail.models import MailItem, Label
 
 def home(request):
@@ -104,6 +106,63 @@ def feedback(request):
     return render_to_response('feedback.html',
                               locals(),
                               RequestContext(request))
+
+@login_required
+def profile(request):
+    """Shows the user a settings page"""
+    post = request.POST
+    if request.method == "POST" and post.get('form') == 'profile': 
+        # User is modifying profile data
+        profile_form = ProfileForm(post, instance=request.user)
+        if profile_form.is_valid():
+            profile_form.save()
+    else: # Normal GET request
+        # Prepare the relevant forms
+        profile_form = ProfileForm(instance=request.user)
+    # Sort the social_auth accounts into active and inactive lists
+    backends = list(settings.SOCIAL_AUTH_BACKENDS)
+    accounts = request.user.social_auth.all()
+    active_backends = []
+    be_list = []
+    for backend in backends:
+        be_list.append( backend['backend'] )
+    for account in accounts:
+        be_str = '{0}.{1}'.format(
+            account.get_backend().AUTH_BACKEND.__module__,
+            account.get_backend().AUTH_BACKEND.__name__
+            )
+        if be_str in be_list: # User is authenticated on this backend
+            new_be = backends.pop(
+                be_list.index(be_str)
+                )
+            new_be['pk'] = account.pk
+            active_backends.append(new_be)
+            be_list.pop(
+                be_list.index(be_str)
+                )
+    # See if the user has a password saved
+    if is_password_usable(request.user.password):
+        password_set = True
+    else:
+        password_set = False
+    return render_to_response('registration/profile.html',
+                              locals(),
+                              RequestContext(request))
+
+def change_password(request):
+    """Provides the change password form or changes password based on
+    submitted form."""
+    if request.method == 'POST':
+        form = PasswordForm(request.POST)
+        if form.is_valid():
+            request.user.set_password(form.cleaned_data['password'])
+            request.user.save()
+        return redirect(reverse('orgwolf.views.profile'))
+    else:
+        form = PasswordForm()
+        return render_to_response('registration/password.html',
+                                  locals(),
+                                  RequestContext(request))
 
 def jstest(request):
     """Executes the javascript test runner (QUnit).

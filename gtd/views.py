@@ -336,6 +336,11 @@ def edit_node(request, node_id, scope_id):
     new = "No"
     node = Node.objects.get(pk=node_id)
     breadcrumb_list = node.get_ancestors(include_self=True)
+    # Make sure user is authorized to edit this node
+    if node.owner != request.user:
+        new_url = reverse('django.contrib.auth.views.login')
+        new_url += '?next=' + base_url + node_id + '/'
+        return redirect(new_url)
     if request.is_ajax() and request.POST.get('format') == 'json':
         # Handle JSON requests
         post = request.POST
@@ -512,7 +517,7 @@ def new_node(request, node_id, scope_id):
         breadcrumb_list = node.get_ancestors(include_self=True)
     if request.is_ajax() and request.GET.get('format') == 'modal_form':
         # User asked for the modal form used in jQuery plugins
-        form = NodeForm()
+        form = NodeForm(parent=node)
         return render_to_response('gtd/node_edit_modal.html',
                                   locals(),
                                   RequestContext(request))

@@ -36,16 +36,17 @@ class Buttons(template.Node):
     def __init__(self, btns):
         self.btns = btns
     def render(self, context):
-        html = ''
+        html = '<ul class="social-auth">\n'
         request = context['request']
         if request.is_mobile:
-            string = '<a href="{1}" data-icon="{3}" data-role="button" data-theme="a" rel="external">{2}</a>'
+            string = '<li>\n\t<a href="{1}" data-icon="{3}" data-role="button" data-theme="a" rel="external">{2}</a>\n<li>/n'
         else:
-            string = '<a class="{0}" href="{1}">{2}</a>\n'
+            string = '<li>\n\t<a class="{0}" href="{1}">{2}</a>\n</li>\n'
         for btn in self.btns:
             html += string.format(btn['class'],
                                   btn['url'],
                                   btn['display'],
                                   btn['icon'],
                                   )
+        html += '</ul>\n'
         return html

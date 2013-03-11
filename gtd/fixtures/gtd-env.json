@@ -241,5 +241,15 @@
     "name": "joe_corp", 
     "display": "joe_corp"
   }
+},
+{
+  "pk": 2, 
+  "model": "gtd.scope", 
+  "fields": {
+    "owner": null, 
+    "public": false, 
+    "name": "Kalsec", 
+    "display": "Kalsec"
+  }
 }
 ]
