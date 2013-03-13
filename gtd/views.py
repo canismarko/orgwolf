@@ -118,7 +118,7 @@ def list_display(request, url_string=""):
     todo_states_query = url_data.get('todo_states', [])
     for todo_state in todo_states_query:
         final_Q = final_Q | Q(todo_state=todo_state)
-    nodes = Node.get_owned(request.user)
+    nodes = Node.objects.owned(request.user)
     nodes = nodes.filter(final_Q)
     # Now apply the context
     try:
@@ -160,7 +160,7 @@ def agenda_display(request, date=None):
             new_url = "/gtd/agenda/" + request.POST['date']
             return redirect(new_url)
     deadline_period = 7 # In days # TODO: pull deadline period from user
-    all_nodes_qs = Node.get_owned(request.user)
+    all_nodes_qs = Node.objects.owned(request.user)
     final_Q = Q()
     if date:
         try:
@@ -284,7 +284,7 @@ def display_node(request, show_all=False, node_id=None, scope_id=None):
             if request.POST['node_id']:
                 url_kwargs['node_id'] = request.POST['node_id']
             return redirect(reverse('gtd.views.display_node', kwargs=url_kwargs))
-    all_nodes_qs = Node.get_owned(request.user, get_archived=show_all)
+    all_nodes_qs = Node.objects.mine(request.user, get_archived=show_all)
     all_todo_states_qs = TodoState.get_visible()
     child_nodes_qs = all_nodes_qs
     all_scope_qs = Scope.objects.all()
@@ -305,7 +305,7 @@ def display_node(request, show_all=False, node_id=None, scope_id=None):
     base_url = reverse('gtd.views.display_node', kwargs=url_kwargs)
     # Make sure user is authorized to see this node
     if node_id:
-        if parent_node.owner != request.user:
+        if not (parent_node.access_level(request.user) in ['write', 'read']):
             new_url = reverse('django.contrib.auth.views.login')
             new_url += '?next=' + base_url + node_id + '/'
             return redirect(new_url)
@@ -337,7 +337,7 @@ def edit_node(request, node_id, scope_id):
     node = Node.objects.get(pk=node_id)
     breadcrumb_list = node.get_ancestors(include_self=True)
     # Make sure user is authorized to edit this node
-    if node.owner != request.user:
+    if node.access_level(request.user) != 'write':
         new_url = reverse('django.contrib.auth.views.login')
         new_url += '?next=' + base_url + node_id + '/'
         return redirect(new_url)
@@ -345,7 +345,7 @@ def edit_node(request, node_id, scope_id):
         # Handle JSON requests
         post = request.POST
         try:
-            node = Node.get_owned(request.user,
+            node = Node.objects.owned(request.user,
                                   get_archived=True).get(pk=node_id)
         except Node.DoesNotExist:
             # If the node is not accessible return a 404
@@ -580,7 +580,7 @@ def get_children(request, parent_id):
         parent = get_object_or_404(Node, pk=parent_id)
     elif int(parent_id) == 0:
         parent = None
-    all_nodes_qs = Node.get_owned(request.user, get_archived=True)
+    all_nodes_qs = Node.objects.owned(request.user, get_archived=True)
     children_qs = all_nodes_qs.filter(parent=parent)
     children = []
     # Assemble the dictionary to return as JSON

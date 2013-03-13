@@ -40,7 +40,7 @@ import json
 from orgwolf.preparation import translate_old_text
 from orgwolf.models import OrgWolfUser as User
 from gtd.forms import NodeForm
-from gtd.models import Node, TodoState, node_repeat, Location, Tool, Context, Scope
+from gtd.models import Node, TodoState, node_repeat, Location, Tool, Context, Scope, Contact
 from gtd.shortcuts import parse_url, generate_url, get_todo_states, get_todo_abbrevs, order_nodes
 from gtd.templatetags.gtd_extras import overdue, upcoming, escape_html
 
@@ -383,7 +383,7 @@ class NodeOrder(TestCase):
     """Holds tests for accessing and modifying the order of nodes"""
     fixtures = ['test-users.json', 'gtd-env.json', 'gtd-test.json']
     def setUp(self):
-        self.nodes_qs = Node.get_owned(User.objects.get(pk=1))
+        self.nodes_qs = Node.objects.owned(User.objects.get(pk=1))
         self.user = User.objects.get(pk=1)
         self.client.login(username='test', password='secret')
 
@@ -522,7 +522,7 @@ class NodeOrder(TestCase):
 class MoveNodePage(TestCase):
     fixtures = ['test-users.json', 'gtd-env.json', 'gtd-test.json']
     def setUp(self):
-        self.nodes_qs = Node.get_owned(User.objects.get(pk=1))
+        self.nodes_qs = Node.objects.owned(User.objects.get(pk=1))
         self.user = User.objects.get(pk=1)
         self.client.login(username='test', password='secret')
     def test_get_page(self):
@@ -583,12 +583,6 @@ class NodeMutators(TestCase):
         self.assertEqual(
             f(Node.objects.get(pk=4)),
             3
-            )
-    def test_get_active(self):
-        f = Node.get_active
-        self.assertEqual(
-            list(Node.objects.filter(archived=False)),
-            list(Node.get_active())
             )
     def test_get_title(self):
         node = Node.objects.get(pk=1)
@@ -966,14 +960,17 @@ class Shortcuts(TestCase):
             )
 
 class NodePermissions(TestCase):
+    fixtures = ['test-users.json', 'gtd-test.json', 'gtd-env.json']
     def setUp(self):
-        self.client.login(username='ryan', password='secret')
-        self.user = User.objects.get(username='ryan')
+        self.assertTrue(
+            self.client.login(username='test', password='secret')
+            )
+        self.user = User.objects.get(username='test')
     def test_owned(self):
         node = Node.objects.filter(owner=self.user)[0]
         self.assertEqual(
-            'owned',
-            Node.get_user_status(self.user)
+            'write',
+            node.access_level(self.user)
             )
 
 class UrlParse(TestCase):
@@ -1174,18 +1171,18 @@ class MultiUser(TestCase):
         self.client.login(username='ryan', password='secret')
     def test_get_nodes(self):
         self.assertEqual(
-            'function',
-            Node.get_owned.__class__.__name__
+            'instancemethod',
+            Node.objects.owned.__class__.__name__
             )
         url = reverse('gtd.views.display_node')
         request = self.factory.get(url)
         request.user = self.user2
         self.assertEqual(
             'QuerySet',
-            Node.get_owned(request.user).__class__.__name__)
+            Node.objects.owned(request.user).__class__.__name__)
         self.assertEqual(
             list(Node.objects.filter(owner = self.user2)),
-            list(Node.get_owned(request.user))
+            list(Node.objects.owned(request.user, get_archived=True))
             )
         request.user = AnonymousUser()
         self.assertFalse(
@@ -1193,8 +1190,59 @@ class MultiUser(TestCase):
             )
         self.assertEqual(
             list(Node.objects.none()),
-            list(Node.get_owned(request.user))
+            list(Node.objects.owned(request.user))
             )
+    def test_auto_contact(self):
+        """Determine if adding a user automatically creates a contact"""
+        user = User()
+        user.save()
+        self.assertEqual(
+            user.contact_set.count(),
+            1,
+            'Creating a new user does not create a new Contact'
+            )
+    def test_get_mine(self):
+        """Test the Node.get_mine() method. It returns a queryset of all
+        Node objects that require the current users attention.
+        """
+        self.assertEqual(
+            'instancemethod',
+            Node.objects.mine.__class__.__name__
+            )
+        results = Node.objects.mine(self.user2)
+        self.assertEqual(
+            'QuerySet',
+            results.__class__.__name__
+            )
+        self.assertTrue(
+            len(results) > 0,
+            )
+        for node in results:
+            self.assertTrue(
+                node.owner == self.user2 or node.assigned.user == self.user2,
+                'Node {0} not related to {1}'.format(
+                    node, self.user2)
+                )
+            self.assertFalse(
+                node.archived,
+                'Node {0} is archived'.format(node)
+                )
+    def test_assigned_in_responses(self):
+        """Make sure that Nodes to which the user is assigned show up in the
+        right places."""
+        ryan = self.user2.contact_set.all()[0]
+        assigned = ryan.assigned_node_set.all()[0]
+        if assigned.parent:
+            kwargs={'node_id': assigned.parent.pk}
+        else:
+            kwargs={}
+        new_url = reverse('gtd.views.display_node', kwargs=kwargs)
+        response = self.client.get(new_url)
+        self.assertContains(
+            response,
+            assigned.title,
+            )
+
     def test_agenda_view(self):
         url = reverse('gtd.views.agenda_display')
         response = self.client.get(url)
