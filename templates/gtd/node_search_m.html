@@ -1,0 +1,27 @@
+{% extends 'mobile.html' %}
+{% load gtd_extras %}
+{% block content %}
+{% include 'gtd/search_box.html' %}
+
+{% if query %}
+{% if nodes_found.count > 0 %}
+<ul data-role="listview">
+  {% for node in nodes_found %}
+  <li>
+    <a href="{% url 'gtd.views.display_node' node_id=node.pk %}" title="{{ node.get_hierarchy_as_string }}">
+      <h3>{{ node.title }}</h3>
+      <p>
+	{{ node.todo_state.as_html }}
+      </p>
+      <p>{% for step in node.get_hierarchy %} &gt; {{ step.display }} {% endfor %}</p>
+    </a>
+  </li>
+  {% endfor %}
+</ul>
+{% else %}
+Sorry, your search did not match any results.
+{% endif %}
+{% endif %}
+
+{% endblock %}
+

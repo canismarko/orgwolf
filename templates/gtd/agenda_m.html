@@ -40,7 +40,7 @@
 
 
   {% if deadline_nodes %}
-  <li data-role="list-divider">Upcoming Deadlines<span class="ui-li-count">{{ day_specific_nodes|length }}</span></li>
+  <li data-role="list-divider">Upcoming Deadlines<span class="ui-li-count">{{ deadline_nodes|length }}</span></li>
   {% for node in deadline_nodes %}
   <li>
     <a href="{% url 'gtd.views.display_node' node_id=node.id %}" 

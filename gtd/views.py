@@ -551,6 +551,10 @@ def node_search(request):
     else:
         query = ''
     base_url = reverse('gtd.views.display_node')
-    return render_to_response('gtd/node_search.html',
+    if request.is_mobile:
+        template = 'gtd/node_search_m.html'
+    else:
+        template = 'gtd/node_search.html'
+    return render_to_response(template,
                               locals(),
                               RequestContext(request))

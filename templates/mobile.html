@@ -18,6 +18,10 @@
 	text-decoration: none;
 	color: white !important;
     }
+    .bulletless
+    {
+	list-style-type: none;
+    }
     </style>
     {% endblock %}
   </head>
@@ -32,6 +36,7 @@
 	  <ul data-role="listview">
 	    <li><a href="https://github.com/m3wolf/orgwolf/issues/new/">Feedback</a></li>
 	    <li><a href="/admin/">Admin</a></li>
+	    <li><a href="{% url 'gtd.views.node_search' %}">Search</a></li>
 	    <li><a href="/accounts/logout/">Logout ({{ request.user }})</a></li>
 	  </ul>
 	</div>
