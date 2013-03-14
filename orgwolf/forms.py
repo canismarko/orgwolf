@@ -28,17 +28,7 @@ class FeedbackForm(forms.ModelForm):
         model = MailItem
         fields = ('subject', 'message_text')
 
-# class RegistrationForm(forms.Form):
-#     username = forms.CharField(
-#         label="Username or e-mail")
-#     password_1 = forms.CharField(
-#         widget=forms.PasswordInput(), 
-#         label="New Password")
-#     password_2 = forms.CharField(
-#         widget=forms.PasswordInput(), 
-#         label="Password Again")
-
-class RegistrationForm(forms.ModelForm):
+class PasswordForm(forms.ModelForm):
     password = forms.CharField(
         widget=forms.PasswordInput(), 
         label="New Password")
@@ -47,10 +37,25 @@ class RegistrationForm(forms.ModelForm):
         label="Password Again")
     class Meta:
         model = User
-        fields = ('username', 'password')
+        fields = ('password',)
     def clean(self):
         # Make sure both password fields are the same
         data = self.cleaned_data
         if data.get('password') != data.get('password_2'):
             raise forms.ValidationError('Passwords do not match')
         return self.cleaned_data
+
+class RegistrationForm(PasswordForm):
+    class Meta:
+        model = User
+        fields = ('username', 'password')
+
+class ProfileForm(forms.ModelForm):
+    class Meta:
+        model = User
+        fields = (
+            'first_name',
+            'last_name',
+            'email',
+            'preferred_timezone',
+            )

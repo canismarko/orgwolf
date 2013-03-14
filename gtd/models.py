@@ -29,13 +29,14 @@ from django.utils.html import conditional_escape
 from django.utils.safestring import mark_safe
 from datetime import datetime, timedelta
 from mptt.models import MPTTModel, TreeForeignKey
+from mptt.managers import TreeManager
 import re
 import math
 import operator
 import json
 
 from orgwolf import settings
-from orgwolf.models import Color, HTMLEscaper
+from orgwolf.models import Color, HTMLEscaper, OrgWolfUser as User
 
 @python_2_unicode_compatible
 class TodoState(models.Model):
@@ -117,6 +118,22 @@ class Contact(Tag):
     l_name = models.CharField(max_length = 50)
     user = models.ForeignKey(settings.AUTH_USER_MODEL, blank=True, null=True)
     # message_contact = models.ForeignKey('messaging.contact', blank=True, null=True) # TODO: uncomment this once messaging is implemented
+    def __str__(self):
+        if self.f_name or self.l_name:
+            return '{0} {1}'.format(self.f_name, self.l_name)
+        else:
+            return self.user.__str__()
+
+# Saving a new user creates a new contact
+@receiver(signals.post_save, sender=User)
+def contact_post_save(sender, **kwargs):
+    instance = kwargs['instance']
+    if not Contact.objects.filter(user=instance).exists():
+        contact = Contact()
+        contact.f_name = instance.first_name
+        contact.l_name = instance.last_name
+        contact.user = instance
+        contact.save()
 
 @python_2_unicode_compatible
 class Context(models.Model):
@@ -185,8 +202,31 @@ class Scope(models.Model):
     def __str__(self):
         return self.display
 
+class NodeManager(TreeManager):
+    def mine(self, user, get_archived=False):
+        """Get all the objects that have user as the owner or assigned."""
+        if get_archived:
+            qs = Node.objects.all()
+        else:
+            qs = Node.objects.filter(archived=False)
+        owned = Q(owner=user)
+        assigned = Q(assigned=user)
+        qs = qs.filter(owned | assigned)
+        return qs
+    def owned(self, user, get_archived=False):
+        """Get all the objects owned by the user with some optional 
+        filters applied"""
+        if get_archived:
+            qs = Node.objects.all()
+        else:
+            qs = Node.objects.filter(archived=False)
+        if user.is_authenticated():
+            qs = qs.filter(owner=user)
+        else:
+            qs = Node.objects.none()
+        return qs
+
 @python_2_unicode_compatible
-# class Node(models.Model):
 class Node(MPTTModel):
     """
     Django model that holds some sort of divisional heading. Similar to 
@@ -195,8 +235,10 @@ class Node(MPTTModel):
     SEARCH_FIELDS = ['title']
     auto_repeat = False
     auto_close = True
+    objects = NodeManager()
     owner = models.ForeignKey(settings.AUTH_USER_MODEL, related_name="owned_node_set")
     users = models.ManyToManyField(settings.AUTH_USER_MODEL, blank=True)
+    assigned = models.ForeignKey('Contact', blank=True, null=True, related_name="assigned_node_set")
     title = models.TextField(blank=True)
     todo_state = models.ForeignKey('TodoState', blank=True, null=True)
     archived = models.BooleanField(default=False)
@@ -204,7 +246,6 @@ class Node(MPTTModel):
     # Determine where this heading is
     parent = TreeForeignKey('self', blank=True, null=True, related_name='children')
     related_projects = models.ManyToManyField('Node', related_name='project_set', blank=True)
-    assigned = models.ManyToManyField('Contact', related_name='assigned_nodes', blank=True)
     # Scheduling details
     scheduled = models.DateTimeField(blank=True, null=True)
     scheduled_time_specific = models.BooleanField()
@@ -267,30 +308,23 @@ class Node(MPTTModel):
             return 'in %d day%s' % (abs(difference), pluralized)
         else:
             return ''
-    @staticmethod
-    def get_active():
-        """Get all the nodes that aren't archived"""
-        nodes_qs = Node.objects.filter(archived=False)
-        return nodes_qs
-    @staticmethod
-    def get_owned(user, get_archived=False):
-        """Get all the nodes owned by the user listed in the request"""
-        if get_archived:
-            qs = Node.objects.all()
-        else:
-            qs = Node.get_active()
-        if user.is_authenticated():
-            qs = qs.filter(owner=user)
-        else:
-            qs = Node.objects.none()
-        return qs
+    def access_level(self, user):
+        """Determines what level of access the give user has:
+        - None
+        - 'write'
+        - 'read'
+        """
+        access = None
+        if self.owner == user:
+            access = 'write'
+        return access
     def get_title(self):
         if self.title.strip(' ').strip('\t'):
             title = conditional_escape(self.title)
         else: # Nothing but whitespace
             title = '[Blank]'
         if self.archived:
-            title = '<div class="archived-text">{0}</div>'.format(title)
+            title = '<span class="archived-text">{0}</span>'.format(title)
         return mark_safe(title)
     def get_level(self):
         """Gets the node's level in the tree (1-indexed)."""
@@ -308,25 +342,16 @@ class Node(MPTTModel):
             else:
                 return child
         return find_immediate_parent(self)
-    def get_hierarchy(self):
-        hierarchy_list = []
-        current_parent = self
-        hierarchy_list.append({'display': current_parent.get_title(),
-                               'id': current_parent.id,
-                               'pk': current_parent.pk})
-        while(current_parent.parent != None):
-            current_parent = current_parent.parent
-            hierarchy_list.append({'display': current_parent.get_title(),
-                                   'id': current_parent.id,
-                                   'pk': current_parent.pk})
-        hierarchy_list.reverse()
-        return hierarchy_list
     def get_hierarchy_as_string(self):
-        delimiter = ' > '
-        node_list = self.get_hierarchy()
+        """Return a string showing the trail of ancestors
+        leading up to this node"""
+        delimiter = '>'
+        node_list = self.get_ancestors(include_self=True)
         string = ''
         for node in node_list:
-            string += delimiter + node['display']
+            string += '{0} {1}'.format(delimiter,
+                                       node.get_title() )
+            delimiter = ' >'
         return string
     def as_html(self):
         string = ''

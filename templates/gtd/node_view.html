@@ -81,14 +81,12 @@ $('document').ready(function() {
 {% endblock %}
 
 {% block content %}
-{# Search box #}
-{% include "gtd/search_box.html" %}
 
 <div id="node-detail">
 {# Breadcrumb trail #}
     <a href="{{ base_url }}">Project List</a>
 {% for node in breadcrumb_list %}&gt;
-    <a href="{{ base_url }}{{node.pk}}/"{% if node.pk = parent_node.pk %} class="update" data-field="title"{% endif %}>{{node.display}}</a>
+    <a href="{{ base_url }}{{node.pk}}/"{% if node.pk = parent_node.pk %} class="update" data-field="title"{% endif %}>{{ node.get_title }}</a>
 {% endfor %}
 
     <h3 class="update" data-field="title">{{ parent_node.get_title }}</h3>
@@ -111,32 +109,37 @@ $('document').ready(function() {
     <input type="hidden" name="function" value="change_todo_state" />
     {% csrf_token %}
   </form>
-  <a href="edit/" class="btn" id="edit-button">Edit</a>
-  <a href="{% url 'gtd.views.list_display' %}parent{{ parent_node.pk }}/" class="btn">As List</a>
+  <a href="edit/" class="btn" id="edit-button"><i class="icon-pencil"></i> Edit</a>
+  <a href="move/" class="btn" id="move-button"><i class="icon-move"></i> Move</a>
+  <a href="{% url 'gtd.views.list_display' %}parent{{ parent_node.pk }}/" class="btn">
+    <i class="icon-th-list"></i> As List
+  </a>
   {% else %}
   <a href="{% url 'gtd.views.list_display' %}" class="btn">As List</a>
   {% endif %}{# if parent_node #}
 
   {# Parent node item details #}
-  <dl>
-    {% include 'gtd/node_detail.html' %}
-    <span node_id="{{ node_id }}">
+  <span node_id="{{ node_id }}">
+    {% if parent_node %}
+    <dl>
+      {% include 'gtd/node_detail.html' %}
       <dt>Text:</dt>
       <dd>
 	<div id="parent-text" class="update" data-field="text">
 	  {{ parent_node.text|escape_html }}
 	</div>
       </dd>
-  </dl>
-  <form action="" method="POST" class="form-inline">
-    <a href="new/" class="btn"><i class="icon-plus"></i>&nbsp;New Node</a>
-    <div class="input-append">
-      {% include "gtd/scope_filter.html" %}
-      <input type="hidden" name="node_id" value="{{ parent_node.id }}" />
-      <button type="submit" name="function" value="filter" class="btn">Filter</button>
-    </div>
-    {% csrf_token %}
-  </form>
+    </dl>
+    {% endif %}
+    <form action="" method="POST" class="form-inline">
+      <a href="new/" class="btn"><i class="icon-plus"></i>&nbsp;New Node</a>
+      <div class="input-append">
+	{% include "gtd/scope_filter.html" %}
+	<input type="hidden" name="node_id" value="{{ parent_node.id }}" />
+	<button type="submit" name="function" value="filter" class="btn">Filter</button>
+      </div>
+      {% csrf_token %}
+    </form>
   </span>
 </div><!-- /div id="node-detail"-->
 
@@ -146,8 +149,15 @@ $('document').ready(function() {
   <!-- Populated with javascript -->
 </div>
 
+{% if child_nodes_qs %}
 <div id="outline-workspace" node_id="{{ node_id }}">
-  <strong>Children:</strong>
+  <strong>
+    {% if parent_node %}
+    Children:
+    {% else %}
+    Projects:
+    {% endif %}
+  </strong>
   {% if show_all %}
   <a href="{{ base_url }}{{ parent_node.pk }}" class="btn">Hide archived</a>
   {% else %}
@@ -180,5 +190,6 @@ $('document').ready(function() {
     </tr>
     {% endfor %}
   </table>
-</div>
+</div><!-- /div id="outline-workspace" -->
+{% endif %}
 {% endblock %}

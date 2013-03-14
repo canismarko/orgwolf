@@ -92,22 +92,38 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
   <tr>
     <th>State</th>
     <th>Description</th>
+    <th>Project</th>
     <th>Tags</th>
   </tr>
   {% for node in nodes %}
   <tr class="list-node" node_id="{{ node.pk }}">
+    <!-- Column for node todo state -->
     <td class="todo-col">
       <div class="todo-state" todo_id="{{ node.todo_state.pk }}">
-	<a href="{% url 'gtd.views.display_node' node_id=node.id %}" title="{{ node.get_hierarchy_as_string }}">{{ node.todo_state.as_html }}</a>
+	<a href="{% url 'gtd.views.display_node' node_id=node.id %}" title="{{ node.get_hierarchy_as_string }}">
+	  {{ node.todo_state.as_html }}
+	</a>
       </div>
     </td>
+    <!-- Column for node description -->
     <td>
       <a href="{% url 'gtd.views.display_node' node_id=node.id %}" title="{{ node.get_hierarchy_as_string }}">
 	{{ node.get_title }}
       </a>
       {% if node.deadline %}Due {{ node.deadline|upcoming }}{% endif %}
-      </td>
-    <td><a href="{% url 'gtd.views.display_node' node_id=node.id %}" title="{{ node.get_hierarchy_as_string }}">{{ node.tag_string }}</a></td>
+    </td>
+    <!-- Column for root level project -->
+    <td>
+      <a href="{% url 'gtd.views.display_node' node_id=node.id %}" title="{{ node.get_hierarchy_as_string }}">
+	{{ node.get_root.get_title }}
+      </a>
+    </td>
+    <!-- Column for Node.tag_string -->
+    <td>
+      <a href="{% url 'gtd.views.display_node' node_id=node.id %}" title="{{ node.get_hierarchy_as_string }}">
+	{{ node.tag_string }}
+      </a>
+    </td>
   </tr>
   {% endfor %}
 </table>

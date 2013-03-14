@@ -1,0 +1,63 @@
+{% extends 'base.html' %}
+
+{% block search %}
+{% endblock %}
+
+{% block content %}
+<h2>Account</h2>
+
+<h3>Profile</h3>
+<form action="" method="post">
+  <table>
+    <tr>
+      <th>
+	<label>Username:</label>
+      </th>
+      <td>{{ request.user.username }}</td>
+    </tr>
+    
+    {{ profile_form.as_table }}
+    <tr>
+      <td>
+	&nbsp;
+      </td>
+      <td>
+	<input type="submit" value="Save" class="btn btn-primary" />
+      </td>
+    </tr>
+  </table>
+  <input type="hidden" name="form" value="profile" />
+  {% csrf_token %}
+</form>
+
+<h3>Password</h3>
+{% if password_set %}
+Password is saved.<br />
+<a href="{% url 'orgwolf.views.change_password' %}">Change password</a>
+{% else %}
+Password login is disabled.<br />
+<a href="{% url 'orgwolf.views.change_password' %}">Set password</a>
+{% endif %}
+
+<h3>Active Accounts</h3>
+<ul>
+  {% for backend in active_backends %}
+  <li>
+    {% if active_backends|length == 1 and not password_set %}
+    <!-- Disconnection not allowed -->
+    <div class="btn-auth {{ backend.class }}">{{ backend.title }}</div>
+    {% else %}
+    <a class="btn-auth {{ backend.class }}" href="{% url 'socialauth_disconnect_individual' backend.view backend.pk %}">Disconnect from {{ backend.title }}</a>
+    {% endif %}
+  </li>
+  {% endfor %}
+</ul>
+<h3>Add Accounts</h3>
+<ul>
+  {% for backend in backends %}
+  <li>
+    <a class="btn-auth {{ backend.class }}" href="{% url 'socialauth_begin' backend.view %}">Connect with {{ backend.title }}</a>
+  </li>
+  {% endfor %}
+</ul>
+{% endblock %}

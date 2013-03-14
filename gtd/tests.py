@@ -40,7 +40,7 @@ import json
 from orgwolf.preparation import translate_old_text
 from orgwolf.models import OrgWolfUser as User
 from gtd.forms import NodeForm
-from gtd.models import Node, TodoState, node_repeat, Location, Tool, Context, Scope
+from gtd.models import Node, TodoState, node_repeat, Location, Tool, Context, Scope, Contact
 from gtd.shortcuts import parse_url, generate_url, get_todo_states, get_todo_abbrevs, order_nodes
 from gtd.templatetags.gtd_extras import overdue, upcoming, escape_html
 
@@ -64,17 +64,19 @@ class EditNode(TestCase):
                      'deadline': '',
                      'todo_state': closed_todo.id}
         if node: # existing node
-            url = '/gtd/nodes/' + str(node.id) + '/edit/'
-            regex = re.compile('http://testserver/gtd/nodes/' + str(node.id))
+            url = reverse('gtd.views.edit_node', kwargs={'node_id': node.pk})
             post_data['title'] = node.title
         else: # new node
-            url = '/gtd/nodes/5/new/'
-            regex = re.compile('http://testserver/gtd/nodes/5/')
+            url = reverse('gtd.views.new_node', kwargs={'node_id': 5})
+            redir_url = reverse('gtd.views.display_node', kwargs={'node_id': 5})
             post_data['title'] = 'new node 1'
         response = client.post(url, post_data, follow=True)
         self.assertEqual(200, response.status_code)
-        redirect = re.match('http://testserver/gtd/nodes/(\d+)/',
-                            response.redirect_chain[0][0])
+        redir_url = reverse('gtd.views.display_node')
+        redirect = re.match(
+            'http://testserver{base_url}(\d+)/'.format(base_url=redir_url),
+            response.redirect_chain[0][0]
+            )
         self.assertTrue(redirect.group()) # Did the redirect match
         self.assertEqual(302, response.redirect_chain[0][1])
         return redirect.groups()[0]
@@ -138,7 +140,7 @@ class EditNode(TestCase):
             'Node does not start out actionable'
             )
         # Execute edit via AJAX
-        url = '/gtd/nodes/' + str(node.pk) + '/edit/'
+        url = reverse('gtd.views.edit_node', kwargs={'node_id': node.pk})
         data = {
             'format': 'json',
             'todo_id': closed.pk,
@@ -241,7 +243,7 @@ class EditNode(TestCase):
             'Node does not start out repeating'
             )
         # Execute edit via AJAX
-        url = '/gtd/nodes/' + str(node.pk) + '/edit/'
+        url = reverse('gtd.views.edit_node', kwargs={'node_id': node.pk})
         data = {
             'format': 'json',
             'todo_id': closed.pk,
@@ -273,7 +275,7 @@ class EditNode(TestCase):
             '',
             node.text
             )
-        url = '/gtd/nodes/' + str(node.pk) + '/edit/'
+        url = reverse('gtd.views.edit_node', kwargs={'node_id': node.pk})
         text = '<strong>evilness</strong>'
         data = {'format': 'json',
                 'text': text}
@@ -308,7 +310,7 @@ class EditNode(TestCase):
             node.text
             )
         # Check that it handles a blank text element properly
-        url = '/gtd/nodes/' + str(node.pk) + '/edit/'
+        url = reverse('gtd.views.edit_node', kwargs={'node_id': node.pk})
         text = '\n<br>'
         data = {'format': 'json',
                 'text': text}
@@ -334,7 +336,7 @@ class EditNode(TestCase):
             1,
             node.todo_state.pk
             )
-        url = '/gtd/nodes/{0}/edit/'.format(node.pk)
+        url = reverse('gtd.views.edit_node', kwargs={'node_id': node.pk})
         data = model_to_dict(node)
         data['form'] = 'modal'
         data['format'] = 'json'
@@ -358,7 +360,7 @@ class EditNode(TestCase):
     def test_add_node_through_json(self):
         """Add a new node by submitting the whole form through AJAX"""
         node = Node()
-        url = '/gtd/nodes/6/new/'
+        url = reverse('gtd.views.new_node', kwargs={'node_id': 6})
         data = model_to_dict(node)
         data['title'] = 'new node'
         data['form'] = 'modal'
@@ -381,7 +383,7 @@ class NodeOrder(TestCase):
     """Holds tests for accessing and modifying the order of nodes"""
     fixtures = ['test-users.json', 'gtd-env.json', 'gtd-test.json']
     def setUp(self):
-        self.nodes_qs = Node.get_owned(User.objects.get(pk=1))
+        self.nodes_qs = Node.objects.owned(User.objects.get(pk=1))
         self.user = User.objects.get(pk=1)
         self.client.login(username='test', password='secret')
 
@@ -392,8 +394,9 @@ class NodeOrder(TestCase):
         self.assertTrue(
             child1.lft < child2.lft
             )
+        url = reverse('gtd.views.edit_node', kwargs={'node_id': child2.pk})
         response = self.client.post(
-            '/gtd/nodes/{0}/edit/'.format(child2.pk),
+            url,
             {'function': 'reorder',
              'move_up': 'Move Up'}
             )
@@ -415,8 +418,9 @@ class NodeOrder(TestCase):
         self.assertTrue(
             child1.lft < child2.lft
             )
+        url = reverse('gtd.views.edit_node', kwargs={'node_id': child1.pk})
         response = self.client.post(
-            '/gtd/nodes/{0}/edit/'.format(child1.pk),
+            url,
             {'function': 'reorder',
              'move_down': 'Move Down'}
             )
@@ -430,6 +434,133 @@ class NodeOrder(TestCase):
             child1.lft > child2.lft,
             'Nodes were not re-arranged: {0} !> {1}'.format(
                 child1.lft, child2.lft)
+            )
+
+    def test_valid_move(self):
+        """Test if the Node can change parents"""
+        node = Node.objects.get(pk=1)
+        old_parent = node.parent
+        new_parent = Node.objects.get(pk=6)
+        url = reverse('gtd.views.move_node', kwargs={'node_id': node.pk})
+        response = self.client.post(
+            url,
+            {'function': 'move',
+             'target_id': new_parent.pk}
+            )
+        self.assertEqual(
+            302,
+            response.status_code
+            )
+        node = Node.objects.get(pk=node.pk)
+        self.assertEqual(
+            new_parent,
+            node.parent,
+            )
+    def test_root_move(self):
+        """Test if the moved Node can be given None as a parent"""
+        node = Node.objects.get(pk=1)
+        old_parent = node.parent
+        new_parent = None
+        url = reverse('gtd.views.move_node', kwargs={'node_id': node.pk})
+        response = self.client.post(
+            url,
+            {'function': 'move',
+             'target_id': 'None'}
+            )
+        self.assertEqual(
+            302,
+            response.status_code
+            )
+        node = Node.objects.get(pk=node.pk)
+        self.assertEqual(
+            new_parent,
+            node.parent,
+            )
+    def test_invalid_move(self):
+        """Make sure that the operation fails if the user tries to make a
+        Node a child of one of its descendents."""
+        node = Node.objects.get(pk=1)
+        old_parent = node.parent
+        new_parent = Node.objects.get(pk=2)
+        url = reverse('gtd.views.move_node', kwargs={'node_id': node.pk})
+        response = self.client.post(
+            url,
+            {'function': 'move',
+             'target_id': new_parent.pk}
+            )
+        self.assertEqual(
+            400,
+            response.status_code
+            )
+        node = Node.objects.get(pk=node.pk)
+        self.assertEqual(
+            old_parent,
+            node.parent,
+            )
+    def test_move_invalid_parent(self):
+        """Test what happens if the user tries to move a Node 
+        to a parent that doesn't exist"""
+        node = Node.objects.get(pk=1)
+        old_parent = node.parent
+        url = reverse('gtd.views.move_node', kwargs={'node_id': node.pk})
+        response = self.client.post(
+            url,
+            {'function': 'move',
+             'target_id': '99',
+             }
+            )
+        self.assertEqual(
+            400,
+            response.status_code
+            )
+        node = Node.objects.get(pk=node.pk)
+        self.assertEqual(
+            old_parent,
+            node.parent,
+            )
+
+class MoveNodePage(TestCase):
+    fixtures = ['test-users.json', 'gtd-env.json', 'gtd-test.json']
+    def setUp(self):
+        self.nodes_qs = Node.objects.owned(User.objects.get(pk=1))
+        self.user = User.objects.get(pk=1)
+        self.client.login(username='test', password='secret')
+    def test_get_page(self):
+        """Make sure the page is accessible"""
+        node = Node.objects.get(pk=2)
+        url = reverse('gtd.views.move_node', kwargs={'node_id': node.pk})
+        response = self.client.get(url)
+        self.assertEqual(
+            200,
+            response.status_code
+            )
+        self.assertContains(
+            response,
+            'Please select a new parent for node {0}: {1}'.format(node.pk,
+                                                                node.get_title()),
+            )
+        tree = node.get_root().get_descendants(include_self=True)
+        
+        for child in tree:
+            if child.is_descendant_of(node):
+                self.assertNotContains(
+                    response,
+                    child.get_title()
+                    )
+            else:
+                self.assertContains(
+                    response,
+                    child.get_title()
+                    )
+        others = Node.objects.filter(level=0).exclude(tree_id=node.tree_id)
+        for root in others:
+            self.assertContains(
+                response,
+                root.get_title()
+                )
+        self.assertContains(
+            response,
+            'Create new project'
             )
 
 class NodeMutators(TestCase):
@@ -453,12 +584,6 @@ class NodeMutators(TestCase):
             f(Node.objects.get(pk=4)),
             3
             )
-    def test_get_active(self):
-        f = Node.get_active
-        self.assertEqual(
-            list(Node.objects.filter(archived=False)),
-            list(Node.get_active())
-            )
     def test_get_title(self):
         node = Node.objects.get(pk=1)
         self.assertEqual(
@@ -466,7 +591,8 @@ class NodeMutators(TestCase):
             node.get_title()
             )
         node.archived = True
-        expected = '<div class="archived-text">{0}</div>'.format(node.title)
+        elem = '<span class="archived-text">{0}</span>'
+        expected = elem.format(node.title)
         self.assertEqual(
             expected,
             node.get_title()
@@ -477,13 +603,21 @@ class NodeMutators(TestCase):
             )
         node.title = '<a>'
         self.assertEqual(
-            '<div class="archived-text">&lt;a&gt;</div>',
+            elem.format('&lt;a&gt;'),
             node.get_title()
             )
         node.title = '\t'
         self.assertEqual(
-            '<div class="archived-text">[Blank]</div>',
+            elem.format('[Blank]'),
             node.get_title()
+            )
+    def test_get_hierarchy(self):
+        node = Node.objects.get(pk=2)
+        parent = node.parent
+        self.assertEqual(
+            '> {0} > {1}'.format(parent.get_title(),
+                                 node.get_title() ),
+            node.get_hierarchy_as_string()
             )
 
 class NodeArchive(TestCase):
@@ -612,13 +746,16 @@ class FormValidation(TestCase):
         data = {
             'title': 'woah'
             }
-        response = self.client.post('/gtd/nodes/new/', data)
-        self.assertRedirects(response, '/gtd/nodes/')
+        url = reverse('gtd.views.new_node')
+        response = self.client.post(url, data)
+        redir_url = reverse('gtd.views.display_node')
+        self.assertRedirects(response, redir_url)
         data = {
             'title': 'woah',
             'repeating_number': -1,
             }
-        response = self.client.post('/gtd/nodes/1/edit/', data)
+        url = reverse('gtd.views.edit_node', kwargs={'node_id': 1})
+        response = self.client.post(url, data)
         self.assertEqual(
             200,
             response.status_code
@@ -627,7 +764,7 @@ class FormValidation(TestCase):
             'title': 'woah',
             'repeating_number': '0',
             }
-        response = self.client.post('/gtd/nodes/1/edit/', data)
+        response = self.client.post(url, data)
         self.assertEqual(
             200,
             response.status_code
@@ -652,7 +789,9 @@ class ContextFiltering(TestCase):
             )
     def test_context0(self):
         """Confirm that trying to set context0 returns a 404"""
-        response = self.client.get('/gtd/lists/context0/')
+        url = reverse('gtd.views.list_display', 
+                      kwargs={'url_string': '/context0'} )
+        response = self.client.get(url)
         self.assertEqual(response.status_code, 404)
     def test_home_tag(self):
         all_nodes_qs = Node.objects.filter(Q(tag_string=':work:')|Q(tag_string=':home:'))
@@ -669,32 +808,38 @@ class ContextFiltering(TestCase):
             )
     def test_context_session_variables(self):
         """Test if the active GTD context is saved and stored properly in session variables"""
-        response = self.client.get('/gtd/lists/');
+        url = reverse('gtd.views.list_display')
+        response = self.client.get(url);
         self.assertEqual(response.status_code, 200)
         self.assertEqual(
             self.client.session['context'],
             None)
-        response = self.client.get('/gtd/lists/context1/');
+        url = reverse('gtd.views.list_display',
+                      kwargs={'url_string': '/context1'} )
+        response = self.client.get(url);
         self.assertEqual(response.status_code, 200)
         self.assertEqual(
             self.client.session['context'],
             Context.objects.get(pk=1)
             )
         # Test that base url redirects to the saved context
-        response = self.client.get('/gtd/lists/')
-        self.assertRedirects(response, '/gtd/lists/context1/')
-        response = self.client.get('/gtd/lists/', follow=True)
+        base_url = reverse('gtd.views.list_display')
+        response = self.client.get(base_url)
+        redir_url = reverse('gtd.views.list_display',
+                            kwargs={'url_string': '/context1'} )
+        self.assertRedirects(response, redir_url)
+        response = self.client.get(base_url, follow=True)
         self.assertContains(response, 
                             'Actions (Work)', 
                             )
-        self.assertContains(response, 
-                            '/gtd/lists/next/context1/', 
-                            )
+        link_url = reverse('gtd.views.list_display',
+                           kwargs={'url_string': '/next/context1'} )
+        self.assertContains(response, link_url)
         # Test clearing the context by using the POST filter
-        response = self.client.post('/gtd/lists/context1/', {'context': '0',
-                                                             'scope': '0',
-                                                             })
-        self.assertRedirects(response, '/gtd/lists/')
+        response = self.client.post(redir_url, {'context': '0',
+                                                'scope': '0',
+                                                })
+        self.assertRedirects(response, base_url)
         self.assertEqual(
             self.client.session['context'],
             None)
@@ -713,7 +858,9 @@ class ProjectSublist(TestCase):
             self.client.login(username='test', password='secret')
             )
     def test_has_url(self):
-        response = self.client.get('/gtd/lists/parent1/')
+        url = reverse('gtd.views.list_display',
+                      kwargs={'url_string': '/parent1'} )
+        response = self.client.get(url)
         self.assertEqual(
             200,
             response.status_code,
@@ -721,7 +868,9 @@ class ProjectSublist(TestCase):
             )
     def test_bad_url(self):
         # Parent does not exist
-        response = self.client.get('/gtd/lists/parent99/')
+        url = reverse('gtd.views.list_display',
+                      kwargs={'url_string': '/parent99'})
+        response = self.client.get(url)
         self.assertEqual(
             404,
             response.status_code,
@@ -808,6 +957,20 @@ class Shortcuts(TestCase):
                 node.todo_state.as_html(),
                 node.todo_state.display_text),
             response_dict['todo_html'],
+            )
+
+class NodePermissions(TestCase):
+    fixtures = ['test-users.json', 'gtd-test.json', 'gtd-env.json']
+    def setUp(self):
+        self.assertTrue(
+            self.client.login(username='test', password='secret')
+            )
+        self.user = User.objects.get(username='test')
+    def test_owned(self):
+        node = Node.objects.filter(owner=self.user)[0]
+        self.assertEqual(
+            'write',
+            node.access_level(self.user)
             )
 
 class UrlParse(TestCase):
@@ -1008,17 +1171,18 @@ class MultiUser(TestCase):
         self.client.login(username='ryan', password='secret')
     def test_get_nodes(self):
         self.assertEqual(
-            'function',
-            Node.get_owned.__class__.__name__
+            'instancemethod',
+            Node.objects.owned.__class__.__name__
             )
-        request = self.factory.get('/gtd/nodes')
+        url = reverse('gtd.views.display_node')
+        request = self.factory.get(url)
         request.user = self.user2
         self.assertEqual(
             'QuerySet',
-            Node.get_owned(request.user).__class__.__name__)
+            Node.objects.owned(request.user).__class__.__name__)
         self.assertEqual(
             list(Node.objects.filter(owner = self.user2)),
-            list(Node.get_owned(request.user))
+            list(Node.objects.owned(request.user, get_archived=True))
             )
         request.user = AnonymousUser()
         self.assertFalse(
@@ -1026,10 +1190,62 @@ class MultiUser(TestCase):
             )
         self.assertEqual(
             list(Node.objects.none()),
-            list(Node.get_owned(request.user))
+            list(Node.objects.owned(request.user))
             )
+    def test_auto_contact(self):
+        """Determine if adding a user automatically creates a contact"""
+        user = User()
+        user.save()
+        self.assertEqual(
+            user.contact_set.count(),
+            1,
+            'Creating a new user does not create a new Contact'
+            )
+    def test_get_mine(self):
+        """Test the Node.get_mine() method. It returns a queryset of all
+        Node objects that require the current users attention.
+        """
+        self.assertEqual(
+            'instancemethod',
+            Node.objects.mine.__class__.__name__
+            )
+        results = Node.objects.mine(self.user2)
+        self.assertEqual(
+            'QuerySet',
+            results.__class__.__name__
+            )
+        self.assertTrue(
+            len(results) > 0,
+            )
+        for node in results:
+            self.assertTrue(
+                node.owner == self.user2 or node.assigned.user == self.user2,
+                'Node {0} not related to {1}'.format(
+                    node, self.user2)
+                )
+            self.assertFalse(
+                node.archived,
+                'Node {0} is archived'.format(node)
+                )
+    def test_assigned_in_responses(self):
+        """Make sure that Nodes to which the user is assigned show up in the
+        right places."""
+        ryan = self.user2.contact_set.all()[0]
+        assigned = ryan.assigned_node_set.all()[0]
+        if assigned.parent:
+            kwargs={'node_id': assigned.parent.pk}
+        else:
+            kwargs={}
+        new_url = reverse('gtd.views.display_node', kwargs=kwargs)
+        response = self.client.get(new_url)
+        self.assertContains(
+            response,
+            assigned.title,
+            )
+
     def test_agenda_view(self):
-        response = self.client.get('/gtd/agenda/')
+        url = reverse('gtd.views.agenda_display')
+        response = self.client.get(url)
         self.assertContains(
             response,
             'Ryan node',
@@ -1042,7 +1258,8 @@ class MultiUser(TestCase):
             msg_prefix='Agenda view',
             )
     def test_list_view(self):
-        response = self.client.get('/gtd/lists/')
+        url = reverse('gtd.views.list_display')
+        response = self.client.get(url)
         self.assertContains(
             response,
             'Ryan node',
@@ -1059,13 +1276,15 @@ class MultiUser(TestCase):
         self.assertTrue(
             self.client.login(username='test', password='secret')
             )
-        response = self.client.get('/gtd/lists/bore/')
+        bad_url = reverse('gtd.views.list_display') + 'bore/'
+        response = self.client.get(bad_url)
         self.assertEqual(
             404,
             response.status_code
             )
     def test_node_view(self):
-        response = self.client.get('/gtd/nodes/')
+        url = reverse('gtd.views.display_node')
+        response = self.client.get(url)
         self.assertContains(
             response,
             'Ryan node',
@@ -1078,7 +1297,8 @@ class MultiUser(TestCase):
             msg_prefix='node view',
             )
     def test_get_children_json(self):
-        response = self.client.get('/gtd/nodes/8/children/')
+        url = reverse('gtd.views.get_children', kwargs={'parent_id': 8})
+        response = self.client.get(url)
         response_dict = json.loads(response.content)
         children = response_dict['children']
         self.assertEqual(
@@ -1093,13 +1313,14 @@ class MultiUser(TestCase):
     def test_get_unauthorized_node(self):
         """Trying to access another person's node by URL
         should redirect the user to the login screen"""
-        response = self.client.get('/gtd/nodes/9/')
+        url = reverse('gtd.views.display_node', kwargs={'node_id': 9})
+        response = self.client.get(url)
         self.assertEqual(
             302,
             response.status_code,
             )
         self.assertEqual(
-            'http://testserver/accounts/login/?next=/gtd/nodes/9/',
+            'http://testserver/accounts/login/?next=/gtd/node/9/',
             response['Location']
             )
 

@@ -1,0 +1,26 @@
+{% extends 'base.html' %}
+{% block content %}
+<p>Please select a new parent for node {{ node.pk }}: {{ node.get_title }}</p>
+{% for child in list %}
+<form class="tree" action="" method="POST">
+  {{ child.indent }}
+  {% if child.is_active %}
+  <button class="btn btn-link tree" type="submit">
+    {{ child.instance.get_title }}
+  </button>
+  <input type="hidden" name="function" value="move" />
+  <input type="hidden" name="target_id" value="{{ child.instance.pk }}" />
+  {% csrf_token %}
+{% else %} {{ child.instance.get_title }}
+{% endif %}
+</form>
+{% endfor %}
+<form class="tree" action="" method="POST">
+  <button class="btn btn-link tree" type="submit">
+    Create new project...
+  </button>
+  <input type="hidden" name="function" value="move" />
+  <input type="hidden" name="target_id" value="None" />
+  {% csrf_token %}
+</form>
+{% endblock %}

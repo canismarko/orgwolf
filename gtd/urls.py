@@ -26,17 +26,17 @@ admin.autodiscover()
 urlpatterns = patterns('gtd.views',
                        url(r'^$', 'home'),
 
-                       url(r'^lists(/[\w/]+)?/$', 'list_display'),
+                       url(r'^lists(?P<url_string>/[\w/]+)?/$', 'list_display'),
 
                        url(r'^agenda(?:/(?P<date>\d{4}-\d{1,2}-\d{1,2}))?/$', 'agenda_display'),
 
                        url(r'^toinbox/$', 'capture_to_inbox'),
 
-                       url(r'^nodes/(?P<show_all>all/)?(?:scope(?P<scope_id>\d+)/)?$', 'display_node'),
-                       url(r'^nodes/(?P<show_all>all/)?(?:scope(?P<scope_id>\d+)/)?(?P<node_id>\d+)/$', 'display_node'),
-                       url(r'^nodes/(?:scope(?P<scope_id>\d+)/)?(?P<node_id>\d+)/edit/', 'edit_node'),
-                       url(r'^nodes/(?:scope(?P<scope_id>\d+)/)?(?:(?P<node_id>\d+)/)?new/', 'new_node'),
-                       url(r'^nodes/(\d+)/children/$', 'get_children'),
-                       url(r'^nodes/search/', 'node_search'),
+                       url(r'^node/(?P<show_all>all/)?(?:scope(?P<scope_id>\d+)/)?$', 'display_node'),
+                       url(r'^node/(?P<show_all>all/)?(?:scope(?P<scope_id>\d+)/)?(?P<node_id>\d+)/$', 'display_node'),
+                       url(r'^node/(?:scope(?P<scope_id>\d+)/)?(?P<node_id>\d+)/edit/', 'edit_node'),
+                       url(r'^node/(?:scope(?P<scope_id>\d+)/)?(?P<node_id>\d+)/move/', 'move_node'),
+                       url(r'^node/(?:scope(?P<scope_id>\d+)/)?(?:(?P<node_id>\d+)/)?new/', 'new_node'),
+                       url(r'^node/(?P<parent_id>\d+)/children/$', 'get_children'),
+                       url(r'^node/search/', 'node_search'),
 )
-

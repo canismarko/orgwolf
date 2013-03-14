@@ -19,7 +19,7 @@ def nav_link(parser, token):
         tag_name, display, view = args
     except ValueError:
         raise template.TemplateSyntaxError(
-            "{0} tag requires at least two to three arguments".format(token.contents.split()[0])
+            "'{0}' tag requires at least two to three arguments".format(token.contents.split()[0])
             )
     # Get the url from the view name
     try:

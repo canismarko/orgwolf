@@ -5,7 +5,8 @@ def debug_variables(request):
     return {
         'debug': settings.DEBUG, 
         'enable_css': settings.ENABLE_CSS, 
-        'enable_js': settings.ENABLE_JS
+        'enable_js': settings.ENABLE_JS,
+        'local_net': settings.LOCAL_NET
         }
 
 def scope_context(request):

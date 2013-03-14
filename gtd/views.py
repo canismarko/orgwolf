@@ -33,6 +33,7 @@ import re
 import datetime
 import json
 
+from mptt.exceptions import InvalidMove
 from gtd.models import TodoState, Node, Context, Scope
 from gtd.shortcuts import parse_url, generate_url, get_todo_states, get_todo_abbrevs, order_nodes
 from gtd.templatetags.gtd_extras import escape_html
@@ -88,7 +89,7 @@ def list_display(request, url_string=""):
         if parent:
             new_url += 'parent{0}/'.format(parent.pk)
         for todo_state in matched_todo_states:
-            new_url += todo_state.abbreviation.lower() + '/'
+           new_url += todo_state.abbreviation.lower() + '/'
         if new_scope_id > 0:
             new_url += 'scope' + str(new_scope_id) + '/'
         if new_context_id > 0:
@@ -117,7 +118,7 @@ def list_display(request, url_string=""):
     todo_states_query = url_data.get('todo_states', [])
     for todo_state in todo_states_query:
         final_Q = final_Q | Q(todo_state=todo_state)
-    nodes = Node.get_owned(request.user)
+    nodes = Node.objects.owned(request.user)
     nodes = nodes.filter(final_Q)
     # Now apply the context
     try:
@@ -159,7 +160,7 @@ def agenda_display(request, date=None):
             new_url = "/gtd/agenda/" + request.POST['date']
             return redirect(new_url)
     deadline_period = 7 # In days # TODO: pull deadline period from user
-    all_nodes_qs = Node.get_owned(request.user)
+    all_nodes_qs = Node.objects.owned(request.user)
     final_Q = Q()
     if date:
         try:
@@ -283,7 +284,7 @@ def display_node(request, show_all=False, node_id=None, scope_id=None):
             if request.POST['node_id']:
                 url_kwargs['node_id'] = request.POST['node_id']
             return redirect(reverse('gtd.views.display_node', kwargs=url_kwargs))
-    all_nodes_qs = Node.get_owned(request.user, get_archived=show_all)
+    all_nodes_qs = Node.objects.mine(request.user, get_archived=show_all)
     all_todo_states_qs = TodoState.get_visible()
     child_nodes_qs = all_nodes_qs
     all_scope_qs = Scope.objects.all()
@@ -292,7 +293,7 @@ def display_node(request, show_all=False, node_id=None, scope_id=None):
         child_nodes_qs = child_nodes_qs.filter(parent__id=node_id)
         parent_node = Node.objects.get(id=node_id)
         parent_tags = parent_node.get_tags()
-        breadcrumb_list = parent_node.get_hierarchy()
+        breadcrumb_list = parent_node.get_ancestors(include_self=True)
     else:
         child_nodes_qs = child_nodes_qs.filter(parent=None)
     url_kwargs = {}
@@ -304,7 +305,7 @@ def display_node(request, show_all=False, node_id=None, scope_id=None):
     base_url = reverse('gtd.views.display_node', kwargs=url_kwargs)
     # Make sure user is authorized to see this node
     if node_id:
-        if parent_node.owner != request.user:
+        if not (parent_node.access_level(request.user) in ['write', 'read']):
             new_url = reverse('django.contrib.auth.views.login')
             new_url += '?next=' + base_url + node_id + '/'
             return redirect(new_url)
@@ -326,18 +327,25 @@ def display_node(request, show_all=False, node_id=None, scope_id=None):
 @login_required
 def edit_node(request, node_id, scope_id):
     """Display a form to allow the user to edit a node"""
+    if request.method == 'POST':
+        post = request.POST
     url_kwargs = {}
     if scope_id:
         url_kwargs['scope_id'] = scope_id
     base_url = reverse('gtd.views.display_node', kwargs=url_kwargs)
     new = "No"
     node = Node.objects.get(pk=node_id)
-    breadcrumb_list = node.get_hierarchy()
+    breadcrumb_list = node.get_ancestors(include_self=True)
+    # Make sure user is authorized to edit this node
+    if node.access_level(request.user) != 'write':
+        new_url = reverse('django.contrib.auth.views.login')
+        new_url += '?next=' + base_url + node_id + '/'
+        return redirect(new_url)
     if request.is_ajax() and request.POST.get('format') == 'json':
         # Handle JSON requests
         post = request.POST
         try:
-            node = Node.get_owned(request.user,
+            node = Node.objects.owned(request.user,
                                   get_archived=True).get(pk=node_id)
         except Node.DoesNotExist:
             # If the node is not accessible return a 404
@@ -442,6 +450,60 @@ def edit_node(request, node_id, scope_id):
                               RequestContext(request))
 
 @login_required
+def move_node(request, node_id, scope_id):
+    """Allows a user to change the location of a Node within it's tree or
+    switch trees altogether."""
+    post = request.POST
+    url_kwargs = {}
+    if scope_id:
+        url_kwargs['scope_id'] = scope_id
+    node = Node.objects.get(pk=node_id)
+    if request.method == 'POST' and request.POST.get('function') == 'move':
+        # User is trying to change the parent of the Node instance
+        target_id = post.get('target_id')
+        if target_id == 'None' or target_id == None:
+            target = None
+        else:
+            try:
+                target = Node.objects.get(pk=post.get('target_id'))
+            except Node.DoesNotExist:
+                return HttpResponseBadRequest('Please post a valid value for \'target_id\'. Received \'{0}\''.format(post.get('target_id') ) )
+        node.parent = target
+        try:
+            node.save()
+        except InvalidMove:
+            return HttpResponseBadRequest('A node may not be made a child of any of its descendents')
+        url_kwargs['node_id'] = node.pk
+        redir_url = reverse('gtd.views.display_node', kwargs=url_kwargs)
+        return redirect(redir_url)
+    # No action, so prompt the user for the new parent
+    list = [] # Hold the final output
+    # Prepare the current tree
+    tree = node.get_root().get_descendants(include_self=True)
+    for child in tree:
+        if not child.is_descendant_of(node):
+            indent = ''
+            for i in range(0, child.level):
+                indent += '---'
+            if child == node:
+                is_active = False
+            else:
+                is_active = True
+            list.append({'instance': child,
+                         'indent': indent,
+                         'is_active': is_active,
+                         })
+    # Prepare the other root nodes
+    others = Node.objects.filter(level=0).exclude(tree_id=node.tree_id)
+    for other in others:
+        list.append({'instance': other,
+                     'is_active': True})
+    template = 'gtd/node_move.html'
+    return render_to_response(template,
+                              locals(),
+                              RequestContext(request))
+
+@login_required
 def new_node(request, node_id, scope_id):
     """Display a form to allow the user to create a new node"""
     url_kwargs = {}
@@ -452,10 +514,10 @@ def new_node(request, node_id, scope_id):
     node = None
     if node_id:
         node = Node.objects.get(pk=node_id)
-        breadcrumb_list = node.get_hierarchy()
+        breadcrumb_list = node.get_ancestors(include_self=True)
     if request.is_ajax() and request.GET.get('format') == 'modal_form':
         # User asked for the modal form used in jQuery plugins
-        form = NodeForm()
+        form = NodeForm(parent=node)
         return render_to_response('gtd/node_edit_modal.html',
                                   locals(),
                                   RequestContext(request))
@@ -518,7 +580,7 @@ def get_children(request, parent_id):
         parent = get_object_or_404(Node, pk=parent_id)
     elif int(parent_id) == 0:
         parent = None
-    all_nodes_qs = Node.get_owned(request.user, get_archived=True)
+    all_nodes_qs = Node.objects.owned(request.user, get_archived=True)
     children_qs = all_nodes_qs.filter(parent=parent)
     children = []
     # Assemble the dictionary to return as JSON

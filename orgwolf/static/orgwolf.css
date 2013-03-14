@@ -12,6 +12,16 @@
 {
     height: 30px;
 }
+/* Registration */
+a.btn-auth
+{
+    margin-top: 5px;
+}
+ul.social-auth
+{
+    margin-left: 0px;
+    list-style-type: none;
+}
 /* Node form */
 .required label:before
 {
@@ -84,6 +94,12 @@ dd.todo
 {
     font-style: italic;
     opacity: 0.8;
+}
+/* For moving node */
+.tree
+{
+    margin: 0px;
+    padding: 0px;
 }
 /* Javascript outline appliance */
 .ow-buttons, .add-heading, .todo-state, .todo-option

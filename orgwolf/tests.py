@@ -120,7 +120,7 @@ class NewUser(TestCase):
             response.status_code
             )
         self.assertEqual(
-            'http://testserver/gtd/nodes/',
+            'http://testserver/gtd/node/',
             response.redirect_chain[-1][0]
             )
     def test_bad_registration(self):
