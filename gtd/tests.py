@@ -42,7 +42,7 @@ from orgwolf.models import OrgWolfUser as User
 from gtd.forms import NodeForm
 from gtd.models import Node, TodoState, node_repeat, Location, Tool, Context, Scope, Contact
 from gtd.shortcuts import parse_url, generate_url, get_todo_states, get_todo_abbrevs, order_nodes
-from gtd.templatetags.gtd_extras import overdue, upcoming, escape_html
+from gtd.templatetags.gtd_extras import overdue, upcoming, escape_html, add_scope
 
 class EditNode(TestCase):
     fixtures = ['test-users.json', 'gtd-test.json', 'gtd-env.json']
@@ -1039,6 +1039,22 @@ class UrlParse(TestCase):
                 Http404,
                 parse_url,
                 url)
+
+class ScopeFilter(TestCase):
+    fixtures = ['gtd-env.json']
+    def setUp(self):
+        self.s = '/gtd/lists/{scope}/'
+    def test_basic_scope(self):
+        scope = Scope.objects.get(pk=1)
+        self.assertEqual(
+            '/gtd/lists/scope1/',
+            add_scope(self.s, scope)
+            )
+    def test_no_scope(self):
+        self.assertEqual(
+            '/gtd/lists/',
+            add_scope(self.s)
+            )
 
 class OverdueFilter(TestCase):
     """Tests the `overdue` template filter that makes deadlines into

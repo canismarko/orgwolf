@@ -1,10 +1,20 @@
+{% load gtd_extras %}<!-- scope_tabs.html -->
+<div class="hide">
+  <!-- For non-CSS browsers -->
+  <hr />
+  <h2>Change Scope</h2>
+</div>
 <ul class="nav nav-tabs">
-  <li>
-    <a>All</a>
+  <li{% if not url_data.scope %} class="active"{% endif %}>
+    <a href="{{ scope_url|add_scope }}">
+      All
+    </a>
   </li>
   {% for scope in scopes %}
-  <li>
-    <a>{{ scope.display }}</a>
+  <li{% if url_data.scope.pk == scope.pk %} class="active"{% endif %}>
+    <a href="{{ scope_url|add_scope:scope }}">
+      {{ scope.display }}
+    </a>
   </li>
   {% endfor %}
 </ul>

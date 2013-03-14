@@ -40,7 +40,7 @@ Password login is disabled.<br />
 {% endif %}
 
 <h3>Active Accounts</h3>
-<ul>
+<ul class="social-auth">
   {% for backend in active_backends %}
   <li>
     {% if active_backends|length == 1 and not password_set %}
@@ -53,7 +53,7 @@ Password login is disabled.<br />
   {% endfor %}
 </ul>
 <h3>Add Accounts</h3>
-<ul>
+<ul class="social-auth">
   {% for backend in backends %}
   <li>
     <a class="btn-auth {{ backend.class }}" href="{% url 'socialauth_begin' backend.view %}">Connect with {{ backend.title }}</a>

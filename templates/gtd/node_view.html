@@ -115,7 +115,7 @@ $('document').ready(function() {
     <i class="icon-th-list"></i> As List
   </a>
   {% else %}
-  <a href="{% url 'gtd.views.list_display' %}" class="btn">As List</a>
+  <a href="{% url 'gtd.views.list_display' %}" class="btn"><i class="icon-th-list"></i> As List</a>
   {% endif %}{# if parent_node #}
 
   {# Parent node item details #}
@@ -130,18 +130,15 @@ $('document').ready(function() {
 	</div>
       </dd>
     </dl>
-    {% endif %}
-    <form action="" method="POST" class="form-inline">
-      <a href="new/" class="btn"><i class="icon-plus"></i>&nbsp;New Node</a>
-      <div class="input-append">
-	{% include "gtd/scope_filter.html" %}
-	<input type="hidden" name="node_id" value="{{ parent_node.id }}" />
-	<button type="submit" name="function" value="filter" class="btn">Filter</button>
-      </div>
-      {% csrf_token %}
-    </form>
-  </span>
+    <a href="new/" class="btn"><i class="icon-plus"></i>&nbsp;New Node</a>
+    {% else %}
+    <a href="new/" class="btn"><i class="icon-plus"></i>&nbsp;New Project</a>
+    {% endif %}{# if parent_node #}
+    </span>
 </div><!-- /div id="node-detail"-->
+<br />
+
+{% include 'gtd/scope_tabs.html' %}
 
 {# List of child nodes as links #}
 <div id="node-workspace">

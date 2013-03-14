@@ -6,7 +6,7 @@ def debug_variables(request):
         'debug': settings.DEBUG, 
         'enable_css': settings.ENABLE_CSS, 
         'enable_js': settings.ENABLE_JS,
-        'local_net': settings.LOCAL_NET
+        'local_net': getattr(settings, 'LOCAL_NET', False)
         }
 
 def scope_context(request):

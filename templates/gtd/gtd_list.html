@@ -53,10 +53,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 {# Scope tabs #}
 {% include "gtd/scope_tabs.html" %}
-
 {# Filters #}
 <form action="" method="POST" class="form-inline">
-  {% include "gtd/scope_filter.html" %}
+  <input type="hidden" name="scope" value="{% if scope %}{{ scope.pk }}{% else %}0{% endif %}" />
   Context:
   <select name="context">
     <option value="0"
@@ -69,7 +68,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
       {{context.name}}
     </option>
     {% endfor %}
-  </select><br />
+  </select>
   {% for todo_state in all_todo_states_query %}
   <label for="todo{{ todo_state.id }}" class="checkbox inline">
   <input type="checkbox" 

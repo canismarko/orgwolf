@@ -567,7 +567,7 @@ var get_heading = function (node_id) {
 		    // Quick-action buttons
 		    new_string += '    <div class="ow-buttons">\n';
 		    new_string += '      <i class="icon-pencil" title="Edit"></i>\n';		    
-		    new_string += '      <i class="icon-th-list" title="Detail view"></i>\n';
+		    new_string += '      <i class="icon-arrow-right" title="Detail view"></i>\n';
 		    new_string += '      <i class="icon-plus" title="New subheading"></i>\n';
 		    new_string += '    </div>\n';
 		    new_string += '  </div>\n';

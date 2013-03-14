@@ -224,7 +224,7 @@ test('create new heading object from sparse data', function() {
 
 test('heading as_html method', function() {
     var test_heading = new outline_heading(sparse_dict);
-    var expected_html = '<div class="heading" node_id="1">\n  <div class="ow-hoverable">\n    <i class="clickable icon-chevron-right"></i>\n    <span class="todo-state update" data-field="todo_abbr"></span>\n    <div class="clickable ow-title"></div>\n    <div class="ow-buttons">\n      <i class="icon-pencil" title="Edit"></i>\n      <i class="icon-th-list" title="Detail view"></i>\n      <i class="icon-plus" title="New subheading"></i>\n    </div>\n  </div>\n  <div class="details">\n    <div class=\"ow-text\"></div>\n    <div class="children">\n      <div class="loading">\n        <em>Loading...</em>\n      </div>\n    </div>\n  </div>\n</div>\n';
+    var expected_html = '<div class="heading" node_id="1">\n  <div class="ow-hoverable">\n    <i class="clickable icon-chevron-right"></i>\n    <span class="todo-state update" data-field="todo_abbr"></span>\n    <div class="clickable ow-title"></div>\n    <div class="ow-buttons">\n      <i class="icon-pencil" title="Edit"></i>\n      <i class="icon-arrow-right" title="Detail view"></i>\n      <i class="icon-plus" title="New subheading"></i>\n    </div>\n  </div>\n  <div class="details">\n    <div class=\"ow-text\"></div>\n    <div class="children">\n      <div class="loading">\n        <em>Loading...</em>\n      </div>\n    </div>\n  </div>\n</div>\n';
     equal(test_heading.as_html(), expected_html, 'outline_heading.as_html() output');
 });
 

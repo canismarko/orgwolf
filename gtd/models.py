@@ -388,10 +388,10 @@ class Node(MPTTModel):
         
     # Methods return miscellaneous information
     @staticmethod
-    def search(query):
+    def search(query, user):
         """Look in columns specified by self.SEARCH_FIELDS for the given query.
         Return a queryset with the results."""
-        qs = Node.objects.all()
+        qs = Node.objects.mine(user)
         # Apply keyword searches.
         def construct_search(field_name):
             if field_name.startswith('^'):

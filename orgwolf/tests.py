@@ -158,3 +158,35 @@ class NewUser(TestCase):
             response,
             'Passwords do not match'
             )
+
+class UserMutators(TestCase):
+    def test_get_display(self):
+        user = User()
+        username = 'mark'
+        f_name = 'Mark'
+        l_name = 'Wolf'
+        user.username = username
+        # No name details
+        self.assertEqual(
+            username,
+            user.get_display()
+            )
+        # First and last name
+        user.first_name = f_name
+        user.last_name = l_name
+        self.assertEqual(
+            '{0} {1}'.format(f_name, l_name),
+            user.get_display()
+            )
+        # Names are spaces
+        user.first_name = ' '
+        user.last_name = ' '
+        self.assertEqual(
+            username,
+            user.get_display()
+            )
+        user.first_name = '\t\n'
+        self.assertEqual(
+            username,
+            user.get_display()
+            )

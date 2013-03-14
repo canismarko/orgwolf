@@ -28,6 +28,18 @@ class OrgWolfUser(AbstractUser):
     """Holds profile information for users."""
     preferred_timezone = models.CharField(max_length=25, blank=True)
     home = models.CharField(max_length=100)
+    def get_display(self):
+        # if self.first_name or self.last_name:
+        #     return self.get_full_name()
+        # else:
+        #     return self.username
+        full_name = self.get_full_name()
+        if full_name:
+            display = full_name
+        else:
+            display = self.username
+        return display
+        
 
 class Color:
     """

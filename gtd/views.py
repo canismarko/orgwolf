@@ -54,6 +54,8 @@ def list_display(request, url_string=""):
     todo_states_query = TodoState.objects.none()
     todo_abbrevs = get_todo_abbrevs(get_todo_states())
     todo_abbrevs_lc = []
+    base_url = reverse('gtd.views.list_display')
+    scope_url = base_url # for urls of scope tabs
     if url_string == None:
         url_string = ""
     for todo_abbrev in todo_abbrevs:
@@ -81,7 +83,7 @@ def list_display(request, url_string=""):
             elif post_item == 'parent_id':
                 parent = Node.objects.get(pk=request.POST['parent_id'])
         # Now build the new URL and redirect
-        new_url = u'/gtd/lists/'
+        new_url = base_url
         if empty_Q:
             matched_todo_states = TodoState.objects.none()
         else:
@@ -108,7 +110,7 @@ def list_display(request, url_string=""):
             current_context = url_data.get('context')
     elif current_context:
         # Redirect to the url using the save context
-        new_url = reverse('gtd.views.list_display') + generate_url(
+        new_url = base_url + generate_url(
             parent=url_data.get('parent'),
             context=current_context
             )[1:] # Don't need leading '/'
@@ -117,10 +119,14 @@ def list_display(request, url_string=""):
     final_Q = Q()
     todo_states_query = url_data.get('todo_states', [])
     for todo_state in todo_states_query:
+        scope_url += '{0}/'.format(todo_state.abbreviation)
         final_Q = final_Q | Q(todo_state=todo_state)
+    scope_url += '{scope}/'
     nodes = Node.objects.owned(request.user)
     nodes = nodes.filter(final_Q)
     # Now apply the context
+    if current_context:
+        scope_url += 'context{0}/'.format(current_context.pk)
     try:
         nodes = current_context.apply(nodes)
     except AttributeError:
@@ -131,7 +137,7 @@ def list_display(request, url_string=""):
         try:
             nodes = nodes.filter(scope=scope)
         except Node.ObjectDoesNotExist:
-            pass    
+            pass
     # And filter by parent node
     parent = url_data.get('parent')
     if parent:
@@ -288,8 +294,13 @@ def display_node(request, show_all=False, node_id=None, scope_id=None):
     all_todo_states_qs = TodoState.get_visible()
     child_nodes_qs = all_nodes_qs
     all_scope_qs = Scope.objects.all()
+    app_url = reverse('gtd.views.display_node')
+    scope_url = app_url + '{scope}/'
+    scope = Scope.objects.get(pk=1)
+    url_data = {}
     # If the user asked for a specific node
     if node_id:
+        scope_url += '{0}/'.format(node_id)
         child_nodes_qs = child_nodes_qs.filter(parent__id=node_id)
         parent_node = Node.objects.get(id=node_id)
         parent_tags = parent_node.get_tags()
@@ -300,6 +311,7 @@ def display_node(request, show_all=False, node_id=None, scope_id=None):
     # Filter by scope
     if scope_id:
         scope = get_object_or_404(Scope, pk=scope_id)
+        url_data['scope'] = scope
         child_nodes_qs = child_nodes_qs.filter(scope=scope)
         url_kwargs['scope_id'] = scope_id
     base_url = reverse('gtd.views.display_node', kwargs=url_kwargs)
@@ -609,7 +621,7 @@ def node_search(request):
     """Simple search module."""
     if request.GET.has_key('q'):
         query = request.GET['q']
-        nodes_found = Node.search(query)
+        nodes_found = Node.search(query, request.user)
     else:
         query = ''
     base_url = reverse('gtd.views.display_node')

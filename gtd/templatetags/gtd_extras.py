@@ -2,6 +2,7 @@ from django import template
 from django.utils.html import conditional_escape
 from django.utils.safestring import mark_safe
 import datetime as dt
+import re
 from markdown import markdown
 
 from orgwolf.models import HTMLEscaper
@@ -78,6 +79,18 @@ def nodes_as_hierarchy_table(qs, base_url, autoescape=None):
         html += '</td>\n</tr>\n'
     html += '</table>'
     return mark_safe(html)
+
+@register.filter()
+def add_scope(string, scope=None):
+    """Returns a string formatted with the scope.pk
+    added in to the formatting blocks. String should resemble
+    '/example/{scope}/' where {pk} is replaced by
+    the primary key of scope."""
+    if scope:
+        scope_s = 'scope{0}'.format(scope.pk)
+        return string.format(scope=scope_s)
+    else:
+        return re.sub('{scope}/?', '', string)
 
 @register.filter(expects_localtime=True)
 def overdue(item_dt, agenda_dt=None, future=False):
