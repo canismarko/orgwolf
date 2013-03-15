@@ -50,7 +50,7 @@ def list_display(request, url_string=""):
     all_todo_states_query = TodoState.get_visible(request.user)
     all_contexts = Context.get_visible(request.user)
     all_scope_qs = Scope.objects.all()
-    all_todo_states_json = TodoState.as_json()
+    all_todo_states_json = TodoState.as_json(user=reqest.user)
     todo_states_query = TodoState.objects.none()
     todo_abbrevs = get_todo_abbrevs(get_todo_states())
     todo_abbrevs_lc = []
@@ -234,7 +234,7 @@ def agenda_display(request, date=None):
         new_dict['repeats'] = node.repeats
         new_dict['hierarchy'] = node.get_hierarchy_as_string()
         deadline_nodes.append(new_dict)
-    all_todo_states_json = TodoState.as_json()
+    all_todo_states_json = TodoState.as_json(user=request.user)
     if request.GET.get('format') == 'json':
         # Render just the table rows for AJAX functionality
         json_data = {'status': 'success'}
@@ -291,7 +291,7 @@ def display_node(request, show_all=False, node_id=None, scope_id=None):
                 url_kwargs['node_id'] = request.POST['node_id']
             return redirect(reverse('gtd.views.display_node', kwargs=url_kwargs))
     all_nodes_qs = Node.objects.mine(request.user, get_archived=show_all)
-    all_todo_states_qs = TodoState.get_visible()
+    all_todo_states_qs = TodoState.get_visible(user=request.user)
     child_nodes_qs = all_nodes_qs
     all_scope_qs = Scope.objects.all()
     app_url = reverse('gtd.views.display_node')
@@ -323,10 +323,12 @@ def display_node(request, show_all=False, node_id=None, scope_id=None):
             return redirect(new_url)
     if node_id == None:
         node_id = 0
-    all_todo_states_json = TodoState.as_json(all_todo_states_qs)
+    all_todo_states_json = TodoState.as_json(all_todo_states_qs,
+                                             user=request.user)
     all_todo_states_json_full = TodoState.as_json(
         queryset=all_todo_states_qs,
         full=True,
+        user=request.user
         )
     if request.is_mobile:
         template = 'gtd/node_view_m.html'

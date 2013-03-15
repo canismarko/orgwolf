@@ -80,7 +80,7 @@ MEDIA_URL = ''
 # Don't put anything in this directory yourself; store your static files
 # in apps' "static/" subdirectories and in STATICFILES_DIRS.
 # Example: "/home/media/media.lawrence.com/static/"
-STATIC_ROOT = '/home/mark/src/orgwolf/static/'
+STATIC_ROOT = '' # Recommend setting this in local_settings.py
 
 # URL prefix for static files.
 # Example: "http://media.lawrence.com/static/"
@@ -226,6 +226,12 @@ LOGGING = {
         }
     },
     'handlers': {
+        'file': {
+            'class': 'logging.handlers.RotatingFileHandler',
+            'filename': '/srv/logs/orgwolf.log',
+            'maxBytes': 1024,
+            'backupCount': 3
+            },
         'mail_admins': {
             'level': 'ERROR',
             'filters': ['require_debug_false'],
@@ -234,7 +240,7 @@ LOGGING = {
     },
     'loggers': {
         'django.request': {
-            'handlers': ['mail_admins'],
+            'handlers': ['mail_admins', 'file'],
             'level': 'ERROR',
             'propagate': True,
         },

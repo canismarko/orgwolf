@@ -655,7 +655,7 @@ var get_heading = function (node_id) {
 			}
 		    });
 		    this.set_autohide( this.$hoverable, $buttons );
-		    this.$buttons.find('.icon-th-list').click( function() {
+		    this.$buttons.find('.icon-arrow-right').click( function() {
 			console.log('clikced');
 			window.location = '/gtd/node/' + node_id + '/';
 		    });

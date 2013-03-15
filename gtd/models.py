@@ -74,10 +74,10 @@ class TodoState(models.Model):
             query = query | Q(owner=user)
         return TodoState.objects.filter(query)
     @staticmethod
-    def as_json(queryset=None, full=False):
+    def as_json(queryset=None, full=False, user=None):
         new_array = [{'todo_id': 0, 'display': '[None]', 'full': ''}]
         if not queryset:
-            queryset=TodoState.get_visible()
+            queryset=TodoState.get_visible(user=user)
         for state in queryset:
             new_dict = {
                 'todo_id': state.pk,
