@@ -8,9 +8,6 @@ from django.db import models
 class Migration(SchemaMigration):
 
     def forwards(self, orm):
-        # Removing unique constraint on 'Node', fields ['order', 'parent']
-        db.delete_unique(u'gtd_node', ['order', 'parent_id'])
-
         # Deleting field 'Node.order'
         db.delete_column(u'gtd_node', 'order')
 

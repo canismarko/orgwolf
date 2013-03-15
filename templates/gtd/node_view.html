@@ -85,7 +85,7 @@ $('document').ready(function() {
 <div id="node-detail">
 {# Breadcrumb trail #}
     <a href="{{ base_url }}">Project List</a>
-{% for node in breadcrumb_list %}&gt;
+    {% for node in breadcrumb_list %}&gt;
     <a href="{{ base_url }}{{node.pk}}/"{% if node.pk = parent_node.pk %} class="update" data-field="title"{% endif %}>{{ node.get_title }}</a>
 {% endfor %}
 

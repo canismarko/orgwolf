@@ -284,7 +284,7 @@ class Migration(SchemaMigration):
             'tools_available': ('django.db.models.fields.related.ManyToManyField', [], {'symmetrical': 'False', 'related_name': "u'including_locations_set'", 'blank': 'True', 'to': u"orm['gtd.Tool']"})
         },
         u'gtd.node': {
-            'Meta': {'ordering': "[u'order']", 'unique_together': "((u'parent', u'order'),)", 'object_name': 'Node'},
+            'Meta': {'ordering': "[u'order']", 'object_name': 'Node'},
             'archived': ('django.db.models.fields.BooleanField', [], {'default': 'False'}),
             'assigned': ('django.db.models.fields.related.ManyToManyField', [], {'symmetrical': 'False', 'related_name': "u'assigned_nodes'", 'blank': 'True', 'to': u"orm['gtd.Contact']"}),
             'closed': ('django.db.models.fields.DateTimeField', [], {'null': 'True', 'blank': 'True'}),
