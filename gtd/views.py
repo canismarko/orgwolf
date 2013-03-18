@@ -50,7 +50,7 @@ def list_display(request, url_string=""):
     all_todo_states_query = TodoState.get_visible(request.user)
     all_contexts = Context.get_visible(request.user)
     all_scope_qs = Scope.objects.all()
-    all_todo_states_json = TodoState.as_json(user=reqest.user)
+    all_todo_states_json = TodoState.as_json(user=request.user)
     todo_states_query = TodoState.objects.none()
     todo_abbrevs = get_todo_abbrevs(get_todo_states())
     todo_abbrevs_lc = []
@@ -588,33 +588,41 @@ def new_node(request, node_id, scope_id):
                               RequestContext(request))
 
 @login_required
-def get_children(request, parent_id):
-    """Looks up the child nodes of the given parent"""
-    if int(parent_id) > 0:
-        parent = get_object_or_404(Node, pk=parent_id)
-    elif int(parent_id) == 0:
+def get_descendants(request, ancestor_pk):
+    """Looks up the descendants of the given parent. Optionally
+    filtered by offset (eg offset of 1 is children (default), 2 is
+    grandchildren, etc."""
+    offset = request.GET.get('offset', 1)
+    if int(ancestor_pk) > 0:
+        parent = get_object_or_404(Node, pk=ancestor_pk)
+        all_descendants = parent.get_descendants()
+        level = parent.level + int(offset)
+    elif int(ancestor_pk) == 0:
         parent = None
-    all_nodes_qs = Node.objects.owned(request.user, get_archived=True)
-    children_qs = all_nodes_qs.filter(parent=parent)
-    children = []
+        all_descendants = Node.objects.all()
+        level = int(offset)-1
+    nodes_qs = all_descendants.filter(level=level)
+    nodes_qs = nodes_qs & Node.objects.mine(request.user, get_archived=True)
+    nodes = []
     # Assemble the dictionary to return as JSON
-    for child in children_qs:
+    for node in nodes_qs:
         new_dict = {
-            'node_id': child.pk,
-            'title': child.get_title(),
-            'tags': child.tag_string,
-            'text': escape_html(child.text),
-            'archived': child.archived,
+            'pk': node.pk,
+            'parent_id': getattr(node.parent, 'pk', 0),
+            'title': node.get_title(),
+            'tags': node.tag_string,
+            'text': escape_html(node.text),
+            'archived': node.archived,
              }
-        if hasattr(child.todo_state, 'pk'):
-            new_dict['todo_id'] = child.todo_state.pk
-            new_dict['todo'] = child.todo_state.as_html()
-        children.append(new_dict)
+        if hasattr(node.todo_state, 'pk'):
+            new_dict['todo_id'] = node.todo_state.pk
+            new_dict['todo'] = node.todo_state.as_html()
+        nodes.append(new_dict)
     # Meta data
     data = {
         'status': 'success',
-        'parent_id': parent_id,
-        'children': children,
+        'parent_id': ancestor_pk,
+        'nodes': nodes,
         }
     return HttpResponse(json.dumps(data))
 

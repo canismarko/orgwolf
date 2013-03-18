@@ -37,6 +37,6 @@ urlpatterns = patterns('gtd.views',
                        url(r'^node/(?:scope(?P<scope_id>\d+)/)?(?P<node_id>\d+)/edit/', 'edit_node'),
                        url(r'^node/(?:scope(?P<scope_id>\d+)/)?(?P<node_id>\d+)/move/', 'move_node'),
                        url(r'^node/(?:scope(?P<scope_id>\d+)/)?(?:(?P<node_id>\d+)/)?new/', 'new_node'),
-                       url(r'^node/(?P<parent_id>\d+)/children/$', 'get_children'),
+                       url(r'^node/(?P<ancestor_pk>\d+)/descendants/$', 'get_descendants'),
                        url(r'^node/search/', 'node_search'),
 )

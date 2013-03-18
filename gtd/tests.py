@@ -1312,18 +1312,45 @@ class MultiUser(TestCase):
             status_code=200,
             msg_prefix='node view',
             )
-    def test_get_children_json(self):
-        url = reverse('gtd.views.get_children', kwargs={'parent_id': 8})
-        response = self.client.get(url)
+    def test_get_descendants_json(self):
+        ancestor = Node.objects.get(pk=8)
+        url = reverse('gtd.views.get_descendants', kwargs={'ancestor_pk': ancestor.pk})
+        payload = {'offset': 2}
+        response = self.client.get(url, payload)
+        self.assertEqual(
+            200,
+            response.status_code
+            )
         response_dict = json.loads(response.content)
-        children = response_dict['children']
+        nodes = response_dict['nodes']
         self.assertEqual(
             1,
-            len(children),
+            len(nodes),
             )
         self.assertEqual(
-            Node.objects.get(pk=children[0]['node_id']).title,
-            'another ryan node'
+            Node.objects.get(pk=nodes[0]['pk']).title,
+            'ryan\'s movies'
+            )
+
+    def test_get_root_descendants_json(self):
+        self.maxDiff = None
+        url = reverse('gtd.views.get_descendants', kwargs={'ancestor_pk': '0'})
+        payload = {'offset': 2}
+        response = self.client.get(url, payload)
+        self.assertEqual(
+            200,
+            response.status_code
+            )
+        response_dict = json.loads(response.content)
+        nodes = response_dict['nodes']
+        expected = []
+        for node in nodes:
+            expected.append(repr(Node.objects.get(pk=node['pk'])))
+        queryset = Node.objects.mine(self.user2, get_archived=True).filter(level=1)
+        self.assertQuerysetEqual(
+            queryset,
+            expected,
+            ordered=False,
             )
 
     def test_get_unauthorized_node(self):

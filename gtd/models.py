@@ -81,6 +81,7 @@ class TodoState(models.Model):
         for state in queryset:
             new_dict = {
                 'todo_id': state.pk,
+                'pk': state.pk,
                 'full': state.display_text,
                 'display': state.as_html(),
                 }

@@ -12,11 +12,10 @@ var sparse_dict = {
     node_id: '1',
 };
 var full_dict = {
-    title: 'test_title',
-    text: 'here\' some text that goes with it',
+    title: 'test title',
+    text: 'here\'s some text that goes with it',
     node_id: '1',
     todo_id: '1',
-    todo: 'DONE',
     tags: ':comp:',
 };
 var archived_dict = {
@@ -24,7 +23,6 @@ var archived_dict = {
     text: 'here\' some text that goes with it',
     node_id: '1',
     todo_id: '1',
-    todo: 'DONE',
     tags: ':comp:',
     archived: true,
 };
@@ -32,18 +30,65 @@ var second_dict = {
     title: 'maybe get some food',
     node_id: '5',
     todo_id: '2',
-    todo: 'NEXT',
 };
 var todo_state_list = [
-    {todo_id: 0,
-     display: '[None]'},
-    {todo_id: 1,
-     display: 'NEXT'},
-    {todo_id: 2,
-     display: 'DONE'},
+    {pk: 0,
+     abbreviation: '[None]'},
+    {pk: 1,
+     abbreviation: 'NEXT',
+     display_text: 'Next Action'},
+    {pk: 2,
+     abbreviation: 'DONE',
+     display_text: 'Completed'},
 ];
-var ajax_timer = 20; // how long fake ajax request takes (in milliseconds)
+var ajax_timer = 100; // how long fake ajax request takes (in milliseconds)
 // Setup fake AJAX responses
+$.mockjax({
+    url: '/gtd/node/0/descendants/',
+    responseTime: ajax_timer,
+    responseText: {
+	status: 'success',
+	parent_id: 0,
+	nodes: [
+	    {
+		pk: 5,
+		parent_id: 1,
+		todo_id: 1,
+	    },
+	    {
+		pk: 6,
+		parent_id: 1
+	    },
+	    {
+		pk: 7,
+		parent_id: 2
+	    }
+	]
+    }
+});
+$.mockjax({
+    url: '/gtd/node/1/descendants/',
+    responseTime: ajax_timer,
+    responseText: {
+	status: 'success',
+	parent_id: 1,
+	nodes: [
+	    {
+		pk: 8,
+		parent_id: 5
+	    },
+	    {
+		pk: 9,
+		parent_id: 5
+	    },
+	    {
+		pk: 10,
+		parent_id: 7
+	    }
+	]
+    }
+});
+// mockjax request for /gtd/node/pk/children/ are deprecated
 $.mockjax({
     url: '/gtd/node/0/children/',
     responseTime: ajax_timer,
@@ -55,7 +100,6 @@ $.mockjax({
 		node_id: 1,
 		title: 'Tasks',
 		todo_id: 1,
-		todo: 'DONE',
 		tags: '',
 		text: 'Mostly when I can...',
 	    },
@@ -63,7 +107,6 @@ $.mockjax({
 		node_id: 2,
 		title: 'Expense reports',
 		todo_id: 2,
-		todo: 'NEXT',
 		tags: ':comp:',
 		text: '',
 	    }
@@ -80,7 +123,6 @@ $.mockjax({
 	    {
 		node_id: 3,
 		title: 'Buy a puppy',
-		todo_id: 2,
 		todo: 'NEXT',
 		tags: ':car:',
 		text: 'I should really buy a puppy because they\'re cute',
@@ -88,7 +130,6 @@ $.mockjax({
 	    {
 		node_id: 4,
 		title: 'Pay my taxes',
-		todo_id: 2,
 		todo: 'NEXT',
 		tags: '',
 		text: '',
@@ -107,7 +148,6 @@ $.mockjax({
 	    {
 		node_id: 5,
 		title: 'Take puppy to the vet',
-		todo_id: 2,
 		archived: true,
 		todo: 'NEXT',
 		tags: ':car:',
@@ -126,7 +166,6 @@ $.mockjax({
 	    {
 		node_id: 6,
 		title: 'tax forms from Kalsec',
-		todo_id: 3,
 		todo: 'WAIT',
 		tags: '',
 		text: '',
@@ -196,10 +235,10 @@ test('heading object', function() {
 });
 test('create new heading object from full data', function() {
     var test_heading = new outline_heading(full_dict);
-    equal(test_heading.title, 'test_title', 'Title is set');
-    strictEqual(test_heading.todo_id, 1, 'Todo ID is set');
-    equal(test_heading.text, 'here\' some text that goes with it', 'Text set');
-    equal(test_heading.todo, 'DONE', 'Todo state is set');
+    equal(test_heading.title, full_dict.title, 'Title is set');
+    console.log(test_heading);
+    strictEqual(test_heading.todo_id, full_dict.todo_id, 'Todo ID is set');
+    equal(test_heading.text, full_dict.text, 'Text set');
     equal(test_heading.tags, ':comp:', 'Tag string is set');
 });
 
@@ -218,7 +257,6 @@ test('create new heading object from sparse data', function() {
     var test_heading = new outline_heading(sparse_dict);
     equal(test_heading.title, 'test_title', 'Title is set');
     equal(test_heading.todo_id, 0, 'Todo ID is set');
-    equal(test_heading.todo, '[None]', 'Todo state is set');
     equal(test_heading.tags, null, 'Tag string is set');
 });
 
@@ -231,14 +269,14 @@ test('heading as_html method', function() {
 test('heading create_div method', function() {
     // Make sure the outline_heading objects create_div method works as expected
     var test_heading = new outline_heading(full_dict);
-    var $workspace = $('#test_workspace');
+    var $workspace = $('#dummy');
     test_heading.create_div($workspace);
-    var $heading = $('#test_workspace').children('.heading');
+    var $heading = $workspace.children('.heading');
     equal($heading.length, 1, '1 heading created');
     equal(test_heading.$element.attr('node_id'), '1', 'node_id set');
     equal(
 	test_heading.$text.text(),
-	'here\' some text that goes with it',
+	full_dict.text,
 	'text element created'
     );	
     equal(
@@ -713,47 +751,306 @@ asyncTest('Todo state changing functionality', function() {
     }, (ajax_timer * 7.7 + 5));
 });
 
-
+test('test heading.get_todo_state()', function() {
+    var $workspace = $('#test_workspace');
+    $workspace.nodeOutline({
+	todo_states: todo_state_list
+    });
+    var heading = new outline_heading(full_dict);
+    var outline = $workspace.data('nodeOutline');
+    heading.outline = outline;
+    equal(
+	typeof heading.get_todo_state,
+	'function',
+	'heading object has get_todo_state method'
+    );
+    var state = heading.get_todo_state();
+    equal(
+	state.pk,
+	full_dict.todo_id,
+	'retrieved todo state has primary key set'
+    );
+    equal(
+	state,
+	todo_state_list[1],
+	'retrieved todo state has abbreviation set'
+    );
+});
 
 
 module(module_name + 'Outline setup');
 
-asyncTest('converts initial workspace', function() {
+test('creates initial heading objects', function() {
     // See if the function finds the existing workspace and sets the right number of children with the right attributes and data
     var $workspace = $('#test_workspace');
     $workspace.nodeOutline();
-    setTimeout(function() {
-	equal($('#test_workspace > .children > div.heading').length, 2, 'correct number of .heading divs');
-	start();
-    }, (ajax_timer * 1.1 + 5));
+    var outline = $workspace.data('nodeOutline');
+    var set_heading = outline.get_heading(full_dict.node_id);
+    equal(
+	set_heading.node_id,
+	full_dict.node_id,
+	'Retrieved heading has correct primary key'
+    );
+    equal(
+	set_heading.title,
+	full_dict.title,
+	'Retrieved heading has correct title'
+    );
+    equal(
+	set_heading.get_todo_state().pk,
+	full_dict.todo_id,
+	'Retrieved heading has correct todo state'
+    );
+    equal(
+	set_heading.text,
+	full_dict.text,
+	'Retrieve heading has correct text'
+    );
+    deepEqual(
+	set_heading.workspace,
+	outline,
+	'heading has outline attribute set'
+    );
+});
+
+test('converts initial workspace', function() {
+    var $workspace = $('#test_workspace');
+    var total = $workspace.find('tr.ow-heading').length;
+    $workspace.nodeOutline();
+    equal(
+	$workspace.find('.children > div.heading').length,
+	total,
+	'Same number of headings as initial table rows'
+    );
+    equal(
+	$workspace.find('.children > div.heading[node_id="1"]').length,
+	1,
+	'Node 1 has heading'
+    );
+    equal(
+	$workspace.find('.children > div.heading[node_id="2"]').length,
+	1,
+	'Node 2 has heading'
+    );
+});
+
+test('set expandability and has-children classes', function() {
+    var $workspace = $('#test_workspace');
+    $workspace.nodeOutline();
+    var $heading1 = $workspace.find('.heading[node_id="1"]');
+    var $heading2 = $workspace.find('.heading[node_id="2"]');
+    var $heading3 = $workspace.find('.heading[node_id="4"]');
+    ok(
+	$heading1.hasClass('expandable'),
+	'heading 1 has \'expandable\' class'
+    );
+    ok(
+	$heading2.hasClass('expandable'),
+	'heading 2 has \'expandable\' class'
+    );
+    ok(
+	! $heading3.hasClass('expandable'),
+	'heading 3 does not have \'expandable\' class'
+    );
+});
+
+test('heading colors', function() {
+    var $workspace = $('#test_workspace');
+    $workspace.nodeOutline();
+    var outline = $workspace.data('nodeOutline');
+    var heading = outline.get_heading(1);
+    console.log(heading);
+    equal(
+	heading.color,
+	outline.COLORS[0],
+	'heading 1 has color attribute set'
+    );
+});
+
+test('get_heading method', function() {
+    var $workspace = $('#test_workspace');
+    $workspace.nodeOutline();
+    outline = $workspace.data('nodeOutline');
+    added_heading = outline.get_heading(1);
+    equal(
+	added_heading.node_id,
+	1,
+	'Returned heading has correct primary key'
+    );
+});
+
+test('Headings manager get method', function() {
+    var $workspace = $('#test_workspace');
+    $workspace.nodeOutline({'simulate': true});
+    var workspace = $workspace.data('nodeOutline');
+    var heading = workspace.headings.get({node_id: 2});
+    equal(
+	typeof heading,
+	'object',
+	'get() method returns an object'
+    );
+    equal(
+	heading.node_id,
+	2,
+	'get() returns heading with correct primary key'
+    );
+    equal(
+	workspace.headings.get({pk: 99}),
+	undefined,
+	'get() returns undefined for non-existent nodes'
+    );
+    heading = workspace.headings.get({text: 'other text'});
+});
+
+test('Headings manager filter method', function() {
+    var $workspace = $('#test_workspace');
+    $workspace.nodeOutline({'simulate': true});
+    var workspace = $workspace.data('nodeOutline');
+    var archived_node = {pk: 987,
+			 title: 'americorp',
+			 archived: true};
+    var fake_archived = {pk: 998,
+			 title: 'fake',
+			 archived: 1};
+    workspace.headings.push(archived_node);
+    workspace.headings.push(fake_archived);
+    var response = workspace.headings.filter({archived: true});
+    equal(
+	response[0],
+	archived_node,
+	'Filtering returns the one node'
+    );
+    equal(
+	response.get({pk: 998}),
+	undefined,
+	'Filtering operates by strict comparison'
+    );
+});
+
+test('Headings manager order_by method', function() {
+    var $workspace = $('#test_workspace');
+    $workspace.nodeOutline({'simulate': true});
+    var workspace = $workspace.data('nodeOutline');
+    response = workspace.headings.order_by('-pk');
+    ok(
+	response.length > 1,
+	'there are 2 or more headings to test ordering'
+    );
+    for ( var i=0; i<(response.length-1); i++ ) {
+	var heading = response[i];
+	var pk = Number(heading.pk);
+	var neighbor =response[i+1];
+	var next_pk = Number(neighbor.pk);
+	ok(
+	    pk > next_pk,
+	    'heading ' + pk + ' in correct ordering'
+	);
+    }
 });
 
 asyncTest('Populates children on outline init', function() {
     // See if the appliance properly converts the non-javascript
     // table to the outline workspace.
-    expect(3);
     var $workspace = $('#test_workspace');
     $workspace.nodeOutline();
+    var workspace = $workspace.data('nodeOutline');
     setTimeout(function() {
-	start()
-	$workspace.children('.children').children('.heading').first().each(function() {
-	    var heading = $(this).data('nodeOutline');
-	    equal(
-		heading.populated,
-		true,
-		'Heading ' + heading.node_id + ' populated'
-	    );
-	    equal(
-	    	heading.$workspace.attr('id'),
-	    	'test_workspace',
-	    	'Each heading has a $workspace data attribute'
-	    );
-	    ok(
-		heading.expandable,
-		'Each heading has the expandable element set'
-	    );
-	});
-    }, (ajax_timer * 5.5 + 5));
+	start();
+	equal(
+	    $workspace.find('.heading[node_id="5"]').length,
+	    1,
+	    'found heading 5'
+	);
+	equal(
+	    $workspace.find('.heading[node_id="6"]').length,
+	    1,
+	    'found heading 6'
+	);
+	equal(
+	    $workspace.find('.heading[node_id="7"]').length,
+	    1,
+	    'found heading 7'
+	);
+	equal(
+	    workspace.headings.get({pk: 5}).todo_id,
+	    1,
+	    'JSON callback sets todo_id'
+	);
+	var $heading1 = $workspace.find('.heading[node_id="1"]');
+	var $children = $heading1.children('.details').children('.children');
+	equal(
+	    $children.children('.loading').length,
+	    0,
+	    'Loading... marker removed from heading1'
+	);
+    }, (ajax_timer * 1.1 + 5));
+});
+
+test('ordering of inserted node', function() {
+    var $workspace = $('#test_workspace');
+    $workspace.nodeOutline({simulate: true});
+    var workspace = $workspace.data('nodeOutline');
+    var heading = workspace.headings.get({pk: 4});
+    var previous = workspace.headings.get({pk: 1});
+    equal(
+	heading.get_previous_sibling(),
+	previous,
+	'Can retrieve previous sibling'
+    );
+    console.log(workspace.$element.html());
+    equal(
+	previous.$element.next('.heading').attr('node_id'),
+	heading.pk,
+	'heading is placed immediately after its previous sibling'
+    );
+})
+
+test('heading.redraw() method', function() {
+    var $workspace = $('#test_workspace');
+    $workspace.nodeOutline({simulate: true});
+    var workspace = $workspace.data('nodeOutline');
+    var heading = workspace.headings.get({pk: 1});
+    heading.$element.remove();
+    heading.$element = $(heading.$element.selector);
+    workspace.redraw();
+    console.log(heading.$element);
+    equal(
+	heading.$element.length,
+	1,
+	'remove heading1 $element regenerated on redraw()'
+    );
+    heading.$element.length
+    heading.$element.attr('data-test-value', '878');
+    workspace.redraw();
+    heading.$element = $(heading.$element.selector);
+    equal(
+	heading.$element.attr('data-test-value'),
+	'878',
+	'Redraw doesn\' change existing elements'
+    );
+});
+
+asyncTest('Clicking a heading populates it\'s children', function() {
+    var $workspace = $('#test_workspace');
+    $workspace.nodeOutline();
+    var workspace = $workspace.data('nodeOutline');
+    console.log(ajax_timer);
+    setTimeout(function() {
+	workspace.get_heading(1).toggle();
+    }, ajax_timer * 1.1 + 5);
+    setTimeout(function() {
+	var $heading8 = $workspace.find('.heading[node_id="8"]');
+	equal(
+	    $heading8.length,
+	    1,
+	    'Heading 8 element found'
+	);
+	ok(
+	    workspace.get_heading(1).populated,
+	    'heading 5 has populated attribute set'
+	);
+	start();
+    }, ajax_timer * 3.3 + 5);
 });
 
 asyncTest('Creates #add-heading button', function() {
@@ -776,11 +1073,6 @@ asyncTest('Alternate colors', function() {
     $workspace.nodeOutline();
     setTimeout(function() {
 	$workspace.children('.children').children('.heading').each(function() {
-	    deepEqual(
-		$(this).data('nodeOutline').COLORS, 
-		expected_colors, 
-		'outline_heading object has COLORS set'
-	    );
 	    equal(
 		$(this).children('.ow-hoverable').children('.clickable').css('color'), 
 		'rgb(0, 0, 255)', 
@@ -791,30 +1083,36 @@ asyncTest('Alternate colors', function() {
     }, (ajax_timer * 1.1 + 5));
 });
 
-asyncTest('Set todo states', function() {
-    expect(5);
+test('Set todo states', function() {
+    // Make sure the system processes todo state properly
     var $workspace = $('#test_workspace');
     $workspace.nodeOutline({
-	todo_states: todo_state_list
+	todo_states: todo_state_list,
+	simulate: true
     });
-    setTimeout(function() {
-	start();
-	$workspace.children('.children').children('.heading').each(function() {
-	    equal(
-		$(this).data('nodeOutline').$workspace.attr('id'),
-		'test_workspace',
-		'Child ' + $(this).data('node_id') + ' has data(\'$workspace\')'
-	    );
-	    equal(
-		$(this).data('nodeOutline').todo_states[1].display,
-		'NEXT',
-		'NEXT state accessible through heading object'
-	    );
-	});
-	var $todo = $workspace.children('.children').children('.heading[node_id="1"]').children('.ow-hoverable').children('.todo-state');
-	equal($todo.html(), 'NEXT', 'Todo state element selectable');
-	$todo.click();
-    }, (ajax_timer * 1.1 + 5));
+    var workspace = $workspace.data('nodeOutline');
+    equal(
+	workspace.todo_states,
+	todo_state_list,
+	'workspace had todo_states attribute set'
+    );
+    var heading = workspace.headings.get({pk: 2});
+    equal(
+	heading.todo_id,
+	1,
+	'heading object has todo_id set'
+    );
+    equal(
+	heading.get_todo_state(),
+	todo_state_list[1],
+	'heading.get_todo_state returns correct todo_state object'
+    );
+    console.log(heading);
+    equal(
+	heading.$todo_state.html(),
+	heading.get_todo_state().abbreviation,
+	'$todo div has abbreviation as its html'
+    );
 });
 
 asyncTest('Archived nodes', function() {

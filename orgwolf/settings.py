@@ -217,6 +217,15 @@ TWITTER_CONSUMER_SECRET = 'SLir3qh8IFzuFe6VI58kHpBnzAnAohpWzqjhdmXKqQ'
 # the site admins on every HTTP 500 error when DEBUG=False.
 # See http://docs.djangoproject.com/en/dev/topics/logging for
 # more details on how to customize your logging configuration.
+
+LOGFILE = '/dev/null'
+
+try:
+    from local_settings import *
+except ImportError:
+    pass
+
+# Loggin, uses values taken from ../local_settings.py
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,
@@ -228,7 +237,7 @@ LOGGING = {
     'handlers': {
         'file': {
             'class': 'logging.handlers.RotatingFileHandler',
-            'filename': '/srv/logs/orgwolf.log',
+            'filename': LOGFILE,
             'maxBytes': 1024,
             'backupCount': 3
             },
@@ -246,8 +255,3 @@ LOGGING = {
         },
     }
 }
-
-try:
-    from local_settings import *
-except ImportError:
-    pass

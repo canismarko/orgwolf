@@ -147,7 +147,7 @@ $('document').ready(function() {
 </div>
 
 {% if child_nodes_qs %}
-<div id="outline-workspace" node_id="{{ node_id }}">
+<div id="outline-workspace" data-node_id="{{ node_id }}">
   <strong>
     {% if parent_node %}
     Children:
@@ -168,7 +168,7 @@ $('document').ready(function() {
       <th>Actions</th>
     </tr>
     {% for node in child_nodes_qs %}
-    <tr class="ow-heading" node_id="{{ node.id }}">
+    <tr class="ow-heading" data-node_id="{{ node.id }}" data-title="{{ node.title|escape }}" data-text="{{ node.text|escape }}" data-is_leaf_node="{{ node.is_leaf_node }}" data-todo_id="{{ node.todo_state.pk }}">
       <td class="ow-todo">{{ node.todo_state.as_html }}</td>
       <td class="ow-title">
 	<a href="{{ base_url }}{{ node.id }}">{{ node.get_title }}</a>
