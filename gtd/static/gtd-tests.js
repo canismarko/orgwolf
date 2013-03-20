@@ -43,31 +43,31 @@ var todo_state_list = [
 ];
 var ajax_timer = 100; // how long fake ajax request takes (in milliseconds)
 // Setup fake AJAX responses
-$.mockjax({
-    url: '/gtd/node/0/descendants/',
-    responseTime: ajax_timer,
-    responseText: {
-	status: 'success',
-	parent_id: 0,
-	nodes: [
-	    {
-		pk: 5,
-		parent_id: 1,
-		todo_id: 1,
-	    },
-	    {
-		pk: 6,
-		archived: true,
-		parent_id: 1
-	    },
-	    {
-		pk: 7,
-		archived: true,
-		parent_id: 4
-	    }
-	]
-    }
-});
+// $.mockjax({
+//     url: '/gtd/node/0/descendants/',
+//     responseTime: ajax_timer,
+//     responseText: {
+// 	status: 'success',
+// 	parent_id: 0,
+// 	nodes: [
+// 	    {
+// 		pk: 5,
+// 		parent_id: 1,
+// 		todo_id: 1,
+// 	    },
+// 	    {
+// 		pk: 6,
+// 		archived: true,
+// 		parent_id: 1
+// 	    },
+// 	    {
+// 		pk: 7,
+// 		archived: true,
+// 		parent_id: 4
+// 	    }
+// 	]
+//     }
+// });
 $.mockjax({
     url: '/gtd/node/1/descendants/',
     responseTime: ajax_timer,
@@ -77,15 +77,48 @@ $.mockjax({
 	nodes: [
 	    {
 		pk: 8,
-		parent_id: 5
+		parent_id: 1
 	    },
 	    {
 		pk: 9,
-		parent_id: 5
+		parent_id: 1
 	    },
 	    {
 		pk: 10,
-		parent_id: 7
+		parent_id: 1
+	    }
+	]
+    }
+});
+$.mockjax({
+    url: '/gtd/node/2/descendants/',
+    responseTime: ajax_timer,
+    responseText: {
+	status: 'success',
+	parent_id: 2,
+	nodes: []
+    }
+});
+$.mockjax({
+    url: '/gtd/node/3/descendants/',
+    responseTime: ajax_timer,
+    responseText: {
+	status: 'success',
+	parent_id: 3,
+	nodes: []
+    }
+});
+$.mockjax({
+    url: '/gtd/node/4/descendants/',
+    responseTime: ajax_timer,
+    responseText: {
+	status: 'success',
+	parent_id: 4,
+	nodes: [
+	    {
+		pk: 11,
+		parent_id: 4,
+		archived: true
 	    }
 	]
     }
@@ -842,58 +875,164 @@ test('converts initial workspace', function() {
     );
 });
 
-test('set expandability and has-children data', function() {
+asyncTest('set expandability and has-children data', function() {
+    // Check that the system handles expandable nodes properly
+    // Target behavior is summarized in file project-overview.org
     var $workspace = $('#test_workspace');
     $workspace.nodeOutline({simulate: true});
     var workspace = $workspace.data('nodeOutline');
+    var heading1 = workspace.headings.get({pk: 1});
+    var heading2 = workspace.headings.get({pk: 2});
     var heading3 = workspace.headings.get({pk: 3});
     var heading4 = workspace.headings.get({pk: 4});
-    var outline_heading = $workspace.nodeOutline({'get_proto': true});
-    var heading5 = new outline_heading(full_dict);
-    heading5.pk = 5;
-    heading5.parent_id = 3;
-    heading5.archived = true;
-    workspace.headings.push(heading5);
-    var heading6 = new outline_heading(full_dict);
-    heading6.pk = 6;
-    heading6.parent_id = 4;
-    workspace.headings.push(heading6);
-    console.log(heading4.get_children().filter({archived: false}));
-    console.log(workspace.headings.get({pk: 6}));
-    deepEqual(
-	heading3.get_children(),
-	workspace.headings.filter({pk: 5}),
-	'heading.get_children() returns children'
+    ok(
+	heading1.$element.hasClass('expandable'),
+	'Text and children causes expandable (prepopulated)'
     );
     ok(
-	heading4.has_children,
-	'Heading 1 has_children is set'
-    );
-    
-    ok(
-	workspace.headings.get({pk: 1}).is_expandable(),
-	'heading 1 is expandable (has text and children)'
+	! heading1.$element.hasClass('lazy-expandable'),
+	'Text and children suppresses lazy-expandable (prepopulated)'
     );
     ok(
-	! workspace.headings.get({pk: 3}).is_expandable(),
-	'heading 3 is not expandable'
+	heading2.$element.hasClass('expandable'),
+	'Text causes expandable (prepopulated)'
     );
     ok(
-	heading3.$element.hasClass('preexpandable'),
-	'Heading 3 (with non-loaded children) has \'preexpandable\' class set'
+	! heading3.$element.hasClass('expandable'),
+	'No text/children suppresses expandable (prepopulated)'
+    );
+    ok(
+	! heading3.$element.hasClass('lazy-expandable'),
+	'No text/children suppresses lazy-expandable (prepopulated)'
+    );
+    ok(
+	heading4.$element.hasClass('lazy-expandable'),
+	'Children causes lazy-expandable (prepopulated)'
+    );
+    ok(
+	! heading4.$element.hasClass('expandable'),
+	'Children suppresses expandable (prepopulated)'
+    );
+    // is_expandable() method
+    ok(
+	heading2.is_expandable(),
+	'Heading 2 is_expandable() true before populating'
+    );
+    ok(
+	! heading3.is_expandable(),
+	'Heading 3 is_expandable() false before populating'
+    );
+    ok(
+	heading4.is_expandable(),
+	'Heading 4 is_expandable() true before populating'
+    );
+    // Check heading four when show_all is set
+    workspace.show_all = true;
+    workspace.redraw();
+    ok(
+	heading4.$element.hasClass('expandable'),
+	'Children causes lazy-expandable (prepopulated)'
+    )
+    workspace.show_all = false;
+    workspace.redraw();
+    heading4.text = 'test';
+    heading4.redraw();
+    ok(
+	! heading4.$element.hasClass('lazy-expandable'),
+	'Adding text removes lazy-expandable (prepopulated)'
     )
     ok(
-	workspace.headings.get({pk: 2}).is_expandable(),
-	'heading 2 is expandable (has text)'
-    );
-    ok(
-	workspace.headings.get({pk: 4}).is_expandable(),
-	'heading 4 is expandable (has children)'
-    );
-    ok(
-	workspace.headings.get({pk: 1}).$element.hasClass('expandable'),
-	'Heading 1 has expandable class set'
-    );
+	heading4.$element.hasClass('expandable'),
+	'Adding text causes expandable (prepopulated)'
+    )
+    // Remove the text in order to hit all scenarios
+    heading4.text = '';
+    heading1.text = '';
+    heading1.toggle();
+    heading2.toggle();
+    heading3.toggle();
+    heading4.toggle();
+    setTimeout(function() {
+	ok(
+	    heading1.populated,
+	    'Heading 1 populated'
+	);
+	ok(
+	    heading4.populated,
+	    'Heading 4 populated'
+	);
+	ok(
+	    heading4.$element.hasClass('arch-expandable'),
+	    'Heading with only archived children causes arch-expandable (post)'
+	);
+	ok(
+	    heading1.$element.hasClass('expandable'),
+	    'Heading with un-archived children causes expandable (post)'
+	);
+	ok(
+	    heading1.is_expandable(),
+	    'Heading 1 is_expandable() true after populating'
+	);
+	ok(
+	    heading2.is_expandable(),
+	    'Heading 2 is_expandable() true after populating'
+	);
+	ok(
+	    ! heading3.is_expandable(),
+	    'Heading 3 is_expandable() false after populating'
+	);
+	ok(
+	    ! heading4.is_expandable(),
+	    'Heading with only archived children is not expandable'
+	);
+	start();
+    }, ajax_timer );
+    // var heading3 = workspace.headings.get({pk: 3});
+    // var heading4 = workspace.headings.get({pk: 4});
+    // var outline_heading = $workspace.nodeOutline({'get_proto': true});
+    // var heading5 = new outline_heading(full_dict);
+    // heading5.pk = 5;
+    // heading5.parent_id = 3;
+    // heading5.archived = true;
+    // workspace.headings.push(heading5);
+    // var heading6 = new outline_heading(full_dict);
+    // heading6.pk = 6;
+    // heading6.parent_id = 4;
+    // workspace.headings.push(heading6);
+    // deepEqual(
+    // 	heading3.get_children(),
+    // 	workspace.headings.filter({pk: 5}),
+    // 	'heading.get_children() returns children'
+    // );
+    // ok(
+    // 	heading4.has_children,
+    // 	'Heading 1 has_children is set'
+    // );
+    
+    // ok(
+    // 	workspace.headings.get({pk: 1}).is_expandable(),
+    // 	'heading 1 is expandable (has text and children)'
+    // );
+    // ok(
+    // 	! workspace.headings.get({pk: 3}).is_expandable(),
+    // 	'heading 3 is not expandable'
+    // );
+    // ok(
+    // 	heading3.$element.hasClass('preexpandable'),
+    // 	'Heading 3 (with non-loaded children) has \'preexpandable\' class set'
+    // )
+    // ok(
+    // 	workspace.headings.get({pk: 2}).is_expandable(),
+    // 	'heading 2 is expandable (has text)'
+    // );
+    // ok(
+    // 	workspace.headings.get({pk: 4}).is_expandable(),
+    // 	'heading 4 is expandable (has children)'
+    // );
+    // ok(
+    // 	workspace.headings.get({pk: 1}).$element.hasClass('expandable'),
+    // 	'Heading 1 has expandable class set'
+    // );
 });
 
 test('heading colors', function() {
@@ -1007,44 +1146,44 @@ test('Headings are properly drawn on init', function() {
     );
 });
 
-asyncTest('Populates children on outline init', function() {
-    // See if the appliance properly converts the non-javascript
-    // table to the outline workspace and gets first round of
-    // grand-children.
-    var $workspace = $('#test_workspace');
-    $workspace.nodeOutline();
-    var workspace = $workspace.data('nodeOutline');
-    setTimeout(function() {
-	start();
-	equal(
-	    $workspace.find('.heading[node_id="5"]').length,
-	    1,
-	    'found heading 5'
-	);
-	equal(
-	    $workspace.find('.heading[node_id="6"]').length,
-	    1,
-	    'found heading 6'
-	);
-	equal(
-	    $workspace.find('.heading[node_id="7"]').length,
-	    1,
-	    'found heading 7'
-	);
-	equal(
-	    workspace.headings.get({pk: 5}).todo_id,
-	    1,
-	    'JSON callback sets todo_id'
-	);
-	var $heading1 = $workspace.find('.heading[node_id="1"]');
-	var $children = $heading1.children('.details').children('.children');
-	equal(
-	    $children.children('.loading').length,
-	    0,
-	    'Loading... marker removed from heading1'
-	);
-    }, (ajax_timer * 1.1 + 5));
-});
+// asyncTest('Populates children on outline init', function() {
+//     // See if the appliance properly converts the non-javascript
+//     // table to the outline workspace and gets first round of
+//     // grand-children.
+//     var $workspace = $('#test_workspace');
+//     $workspace.nodeOutline();
+//     var workspace = $workspace.data('nodeOutline');
+//     setTimeout(function() {
+// 	start();
+// 	equal(
+// 	    $workspace.find('.heading[node_id="5"]').length,
+// 	    1,
+// 	    'found heading 5'
+// 	);
+// 	equal(
+// 	    $workspace.find('.heading[node_id="6"]').length,
+// 	    1,
+// 	    'found heading 6'
+// 	);
+// 	equal(
+// 	    $workspace.find('.heading[node_id="7"]').length,
+// 	    1,
+// 	    'found heading 7'
+// 	);
+// 	equal(
+// 	    workspace.headings.get({pk: 5}).todo_id,
+// 	    1,
+// 	    'JSON callback sets todo_id'
+// 	);
+// 	var $heading1 = $workspace.find('.heading[node_id="1"]');
+// 	var $children = $heading1.children('.details').children('.children');
+// 	equal(
+// 	    $children.children('.loading').length,
+// 	    0,
+// 	    'Loading... marker removed from heading1'
+// 	);
+//     }, (ajax_timer * 1.1 + 5));
+// });
 
 test('ordering of inserted node', function() {
     var $workspace = $('#test_workspace');
@@ -1109,9 +1248,8 @@ asyncTest('Clicking a heading populates it\'s children', function() {
     var $workspace = $('#test_workspace');
     $workspace.nodeOutline();
     var workspace = $workspace.data('nodeOutline');
-    setTimeout(function() {
-	workspace.get_heading(1).toggle();
-    }, ajax_timer * 1.1 + 5);
+    var heading1 = workspace.headings.get({pk: 1});
+    heading1.toggle();
     setTimeout(function() {
 	var $heading8 = $workspace.find('.heading[node_id="8"]');
 	equal(
@@ -1120,8 +1258,13 @@ asyncTest('Clicking a heading populates it\'s children', function() {
 	    'Heading 8 element found'
 	);
 	ok(
-	    workspace.get_heading(1).populated,
-	    'heading 5 has populated attribute set'
+	    heading1.populated,
+	    'heading 1 has populated attribute set'
+	);
+	equal(
+	    heading1.$children.children('.loading').length,
+	    0,
+	    'Loading... indicator removed after populating'
 	);
 	start();
     }, ajax_timer * 3.3 + 5);
@@ -1187,64 +1330,6 @@ test('Set todo states', function() {
 	'$todo div has abbreviation as its html'
     );
 });
-
-asyncTest('Archived nodes', function() {
-    var $workspace = $('#test_workspace');
-    $workspace.nodeOutline({
-	todo_states: todo_state_list
-    });
-    var workspace = $workspace.data('nodeOutline');
-    console.log(workspace.show_all);
-    setTimeout(function() {
-	var $checkbox = $workspace.find('input.show-all');
-	equal(
-	    $checkbox.length,
-	    1,
-	    'show-all checkbox exists'
-	);
-	var $archived = $workspace.find('.heading.archived');
-	equal(
-	    $archived.length,
-	    2,
-	    'Found two archived headings'
-	);
-	var archived1 = workspace.headings.get({pk: 6});
-	var archived2 = workspace.headings.get({pk: 7});
-	var parent1 = workspace.headings.get({pk: archived1.parent_id });
-	var parent2 = workspace.headings.get({pk: archived2.parent_id });
-	ok(
-	    ! parent2.$element.hasClass('expandable'),
-	    'Parent of only archived nodes is not expandable'
-	);
-	// Check show-all box
-	notEqual(
-	    archived2.$element.css('display'),
-	    'block',
-	    'Archived heading is hidden after checkbox click'
-	);
-	console.log('XXX');
-	$checkbox.click();
-	console.log('XXX');
-	ok(
-	    parent2.$element.hasClass('expandable'),
-	    'Parent of only archived node becomes expandable on checkbox click'
-	);
-	equal(
-	    archived2.$element.css('display'),
-	    'block',
-	    'Archived heading is displayed after checkbox click'
-	);
-	// Un-check show-all box
-	$checkbox.click();
-	ok(
-	    ! parent2.$element.hasClass('expandable'),
-	    'Parent of only archived node becomes un-expandable on second checkbox click'
-	);
-	start();
-    }, (ajax_timer * 6.6 + 5) );
-});
-
-
 
 module_name = 'todoState jQuery plugin - ';
 module(module_name + 'init method');

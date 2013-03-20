@@ -702,9 +702,7 @@ var get_heading = function (node_id) {
 			// Attach event handlers
 			var heading = this;
 			this.$clickable.click(function() {
-			    if ( heading.is_expandable() ) {
 				heading.toggle();
-			    }
 			});
 			this.set_autohide( this.$hoverable, this.$buttons );
 			this.$buttons.find('.icon-arrow-right').click( function() {
@@ -800,19 +798,43 @@ var get_heading = function (node_id) {
 		this.is_expandable = function() {
 		    // Return true if the heading has information that
 		    // can be seen by expanding a twisty.
-		    if (this.workspace.show_all) {
-			var children = this.get_children();
-		    } else {
-			var children = this.get_children().filter({archived: false});
-		    }
-		    if ( children == [] ) { 
-			children=false;
-		    }
-		    if ( children.length || this.text ) {
+		    if ( this.level == 0 ) {
+			// The main workspace is always expandable
 			return true;
-		    } else {
-			return false;
 		    }
+		    if  ( this.text ) {
+			// Anything with text is always expandable
+			return true;
+		    } else if ( this.workspace.show_all ) {
+			// Any children are visible
+			if ( this.has_children ) {
+			    return true;
+			} else {
+			    return false;
+			}
+		    } else {
+			// Only non-archived children are visible
+			if ( this.get_children().filter({archived: false}).length ) {
+			    return true
+			} else if ( this.populated == false && this.has_children ) {
+			    return true;
+			} else {
+			    return false;
+			}
+		    }
+		    // if (this.workspace.show_all) {
+		    // 	var children = this.get_children();
+		    // } else {
+		    // 	var children = this.get_children().filter({archived: false});
+		    // }
+		    // if ( children == [] ) { 
+		    // 	children=false;
+		    // }
+		    // if ( children.length || this.text ) {
+		    // 	return true;
+		    // } else {
+		    // 	return false;
+		    // }
 		};
 		// Read the current object properties and update the
 		//   DOM element to reflect any changes
@@ -821,20 +843,45 @@ var get_heading = function (node_id) {
 		    //   then call redraw on all children
 		    this.create_div()
 		    // Set CSS classes
-		    if ( this.archived && (!this.workspace.show_all) ) {
+		    if (this.text) {
+			// Always show if there's text
+			this.$element.addClass('expandable');
+			this.$element.removeClass('lazy-expandable');
+			this.$element.removeClass('arch-expandable');
+		    } else if (this.workspace.show_all && this.has_children) {
+		    	// If show_all box is checked then any heading
+		    	//   with children is expandable
+		    	this.$element.addClass('expandable');
+		    	this.$element.removeClass('lazy-expandable');
+		    	this.$element.removeClass('arch-expandable');
+		    } else if ( this.populated && this.has_children ) {
+			if ( this.get_children().filter({archived: false}).length > 0 ) {
+		    	    this.$element.addClass('expandable');
+		    	    this.$element.removeClass('lazy-expandable');
+		    	    this.$element.removeClass('arch-expandable');
+			} else {
+		    	    this.$element.addClass('arch-expandable');
+			    this.$element.removeClass('expandable');
+		    	    this.$element.removeClass('lazy-expandable');
+			}
+		    } else if ( this.has_children ) {
+			this.$element.addClass('lazy-expandable');
+			this.$element.removeClass('expandable');
+			this.$element.removeClass('arch-expandable');
+		    } else {
+			this.$element.removeClass('lazy-expandable');
+			this.$element.removeClass('expandable');
+			this.$element.removeClass('arch-expandable');
+		    }
+		    if ( ! this.is_expandable() ) {
+			this.close();
+		    };
+		    if ( this.workspace.show_all ) {
+			this.$element.removeClass('archived');
+		    } else if ( this.archived ) {
 			this.$element.addClass('archived');
 		    } else {
 			this.$element.removeClass('archived');
-		    }
-		    if ( this.has_children ) {
-			this.$element.addClass('preexpandable');
-		    }
-		    if ( this.is_expandable() ) {
-			this.$element.addClass('expandable');
-			this.$element.removeClass('preexpandable');
-		    } else {
-			//this.toggle('close');
-			this.$element.removeClass('expandable');
 		    }
 		    // Set content
 		    if ( this.$todo_state) {
@@ -858,6 +905,10 @@ var get_heading = function (node_id) {
 		    }
 		    if ( this.$title ) {
 			this.$title.html(this.title);
+		    }
+		    if ( this.populated ) {
+			// Get rid of loading... indicator if expired
+			this.$children.children('.loading').remove();
 		    }
 		    // Set autohide
 		    if( this.$hoverable ) {
@@ -903,11 +954,11 @@ var get_heading = function (node_id) {
 		    $container.html(html);
 		};
 		this.populate_children = function(extra_callback) {
-		    // Gets grandchildren via AJAX request and creates their div elements in each child
+		    // Gets children via AJAX request and creates their div elements
 		    if ( ! this.populated ) {
 			var url = '/gtd/node/' + this.node_id + '/descendants/';
 			var parent = this;
-			var payload = {offset: 2};
+			var payload = {offset: 1};
 			$.getJSON(url, payload, function(response) {
 			    // (callback) Process AJAX to get an array of children objects
 			    if ( response['status'] == 'success' ) {
@@ -926,24 +977,33 @@ var get_heading = function (node_id) {
 			});
 		    }
 		}; // end this.populate_children()
-		this.toggle = function( direction ) {
-		    // Show or hide the children div based on present state
-		    var $icon = this.$element.children('.ow-hoverable').children('i.clickable');
-		    if ( $icon.hasClass('icon-chevron-right') || direction == 'open' ) {
+		this.open = function() {
+		    // Opens a toggleable heading
+		    // var $icon = this.$element.children('.ow-hoverable').children('i.clickable');
+		    if ( this.is_expandable() ) {
 			var new_icon_class = 'icon-chevron-down';
-			$icon.removeClass('icon-chevron-right');
+			this.$icon.removeClass('icon-chevron-right');
+			this.$icon.addClass('icon-chevron-down');
 			this.$details.slideDown();
 		    }
-		    else {
-			var new_icon_class = 'icon-chevron-right';
-			$icon.removeClass('icon-chevron-down');
-			this.$details.slideUp();
-		    }
-		    $icon.addClass(new_icon_class);
-		    var outline = this;
-		    if ( ! this.populated ) {
+		    if ( (!this.populated) && this.has_children ) {
 			this.populate_children();
 		    }
+		};
+		this.close = function() {
+		    // Closes a toggleable heading
+		    this.$icon.removeClass('icon-chevron-down');
+		    this.$icon.addClass('icon-chevron-right');
+		    this.$details.slideUp();		    
+		};
+		this.toggle = function( direction ) {
+		    // Show or hide the children div based on present state
+			if ( this.$icon.hasClass('icon-chevron-right') || direction == 'open' ) {
+			    this.open();
+			}
+			else {
+			    this.close();
+			}
 		};
 		this.populate_todo_states = function($container) {
 		    var new_string = '';
@@ -1164,10 +1224,10 @@ var get_heading = function (node_id) {
 			workspace.redraw()
 		    }
 		});
-		// Now populate the children AJAX-ically
-		if ( ! args.simulate ) {
-		    workspace.populate_children();
-		}
+		// // Now populate the children AJAX-ically
+		// if ( ! args.simulate ) {
+		//     workspace.populate_children();
+		// }
 	    }); // end of this.each()
 	}, // end of init method
     };

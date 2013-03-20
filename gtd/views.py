@@ -613,6 +613,7 @@ def get_descendants(request, ancestor_pk):
             'tags': node.tag_string,
             'text': escape_html(node.text),
             'archived': node.archived,
+            'is_leaf_node': node.is_leaf_node(),
              }
         if hasattr(node.todo_state, 'pk'):
             new_dict['todo_id'] = node.todo_state.pk

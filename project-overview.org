@@ -320,6 +320,18 @@ Second import concept: get the hacker base (software development?)
 ** Agenda views
 * Django Templates
 ** Gate One SSH in browser?
+* Javascript outline
+** Archived and children status
+   |                        |                         | default      |         | show_all     |         |
+   |                        | if heading has...       | calls open() | opacity | calls open() | opacity |
+   |------------------------+-------------------------+--------------+---------+--------------+---------|
+   | this.populated = true  | text                    | Yes          | 100     | Yes          | 100     |
+   |                        | has_children            | No           | 30      | Yes          | 100     |
+   |                        | has_unarchived_children | Yes          | 100     | Yes          | 100     |
+   |                        | none                    | No           | 0       | No           | 0       |
+   | this.populated = false | text                    | Yes          | 100     | Yes          | 100     |
+   |                        | has_children            | Yes          | 60      | Yes          | 100     |
+   |                        | none                    | No           | 0       | No           | 0       |
 * Combined Lab projects
   - Markdown
   - Merge projects (and related contents)
