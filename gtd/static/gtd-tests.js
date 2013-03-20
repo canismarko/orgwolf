@@ -33,13 +33,13 @@ var second_dict = {
 };
 var todo_state_list = [
     {pk: 0,
-     abbreviation: '[None]'},
+     display: '[None]'},
     {pk: 1,
-     abbreviation: 'NEXT',
-     display_text: 'Next Action'},
+     display: 'NEXT',
+     full: 'Next Action'},
     {pk: 2,
-     abbreviation: 'DONE',
-     display_text: 'Completed'},
+     display: 'DONE',
+     full: 'Completed'},
 ];
 var ajax_timer = 100; // how long fake ajax request takes (in milliseconds)
 // Setup fake AJAX responses
@@ -57,11 +57,13 @@ $.mockjax({
 	    },
 	    {
 		pk: 6,
+		archived: true,
 		parent_id: 1
 	    },
 	    {
 		pk: 7,
-		parent_id: 2
+		archived: true,
+		parent_id: 4
 	    }
 	]
     }
@@ -218,567 +220,567 @@ $.mockjax({
 });
 
 
-var module_name = 'OutlineHeading jQuery plugin - ';
-module(module_name + 'Heading');
+// var module_name = 'OutlineHeading jQuery plugin - ';
+// module(module_name + 'Heading');
 
-test('outline object', function() {
-    // Check if outline functionality exists
-    equal(
-	typeof $.fn.nodeOutline,
-	'function',
-	'project_outline function exists')
-});
-var outline_heading = $.fn.nodeOutline({ get_proto: true });
-test('heading object', function() {
-    // Check that the heading object exists
-    equal(typeof outline_heading, 'function', 'heading function exists')
-});
-test('create new heading object from full data', function() {
-    var test_heading = new outline_heading(full_dict);
-    equal(test_heading.title, full_dict.title, 'Title is set');
-    console.log(test_heading);
-    strictEqual(test_heading.todo_id, full_dict.todo_id, 'Todo ID is set');
-    equal(test_heading.text, full_dict.text, 'Text set');
-    equal(test_heading.tags, ':comp:', 'Tag string is set');
-});
+// test('outline object', function() {
+//     // Check if outline functionality exists
+//     equal(
+// 	typeof $.fn.nodeOutline,
+// 	'function',
+// 	'project_outline function exists')
+// });
+// var outline_heading = $.fn.nodeOutline({ get_proto: true });
+// test('heading object', function() {
+//     // Check that the heading object exists
+//     equal(typeof outline_heading, 'function', 'heading function exists')
+// });
+// test('create new heading object from full data', function() {
+//     var test_heading = new outline_heading(full_dict);
+//     equal(test_heading.title, full_dict.title, 'Title is set');
+//     console.log(test_heading);
+//     strictEqual(test_heading.todo_id, full_dict.todo_id, 'Todo ID is set');
+//     equal(test_heading.text, full_dict.text, 'Text set');
+//     equal(test_heading.tags, ':comp:', 'Tag string is set');
+// });
 
-test('save heading object in DOM element data()', function() {
-    var $workspace = $('#test_workspace');
-    var heading = new outline_heading(full_dict);
-    heading.create_div($workspace);
-    var saved_heading = heading.$element.data('nodeOutline');
-    equal(
-	saved_heading.node_id,
-	1,
-	'Saved object node_id'
-    );
-});
-test('create new heading object from sparse data', function() {
-    var test_heading = new outline_heading(sparse_dict);
-    equal(test_heading.title, 'test_title', 'Title is set');
-    equal(test_heading.todo_id, 0, 'Todo ID is set');
-    equal(test_heading.tags, null, 'Tag string is set');
-});
+// test('save heading object in DOM element data()', function() {
+//     var $workspace = $('#test_workspace');
+//     var heading = new outline_heading(full_dict);
+//     heading.create_div($workspace);
+//     var saved_heading = heading.$element.data('nodeOutline');
+//     equal(
+// 	saved_heading.node_id,
+// 	1,
+// 	'Saved object node_id'
+//     );
+// });
+// test('create new heading object from sparse data', function() {
+//     var test_heading = new outline_heading(sparse_dict);
+//     equal(test_heading.title, 'test_title', 'Title is set');
+//     equal(test_heading.todo_id, 0, 'Todo ID is set');
+//     equal(test_heading.tags, null, 'Tag string is set');
+// });
 
-test('heading as_html method', function() {
-    var test_heading = new outline_heading(sparse_dict);
-    var expected_html = '<div class="heading" node_id="1">\n  <div class="ow-hoverable">\n    <i class="clickable icon-chevron-right"></i>\n    <span class="todo-state update" data-field="todo_abbr"></span>\n    <div class="clickable ow-title"></div>\n    <div class="ow-buttons">\n      <i class="icon-pencil" title="Edit"></i>\n      <i class="icon-arrow-right" title="Detail view"></i>\n      <i class="icon-plus" title="New subheading"></i>\n    </div>\n  </div>\n  <div class="details">\n    <div class=\"ow-text\"></div>\n    <div class="children">\n      <div class="loading">\n        <em>Loading...</em>\n      </div>\n    </div>\n  </div>\n</div>\n';
-    equal(test_heading.as_html(), expected_html, 'outline_heading.as_html() output');
-});
+// test('heading as_html method', function() {
+//     var test_heading = new outline_heading(sparse_dict);
+//     var expected_html = '<div class="heading" node_id="1">\n  <div class="ow-hoverable">\n    <i class="clickable icon-chevron-right"></i>\n    <span class="todo-state update" data-field="todo_abbr"></span>\n    <div class="clickable ow-title"></div>\n    <div class="ow-buttons">\n      <i class="icon-pencil" title="Edit"></i>\n      <i class="icon-arrow-right" title="Detail view"></i>\n      <i class="icon-plus" title="New subheading"></i>\n    </div>\n  </div>\n  <div class="details">\n    <div class=\"ow-text\"></div>\n    <div class="children">\n      <div class="loading">\n        <em>Loading...</em>\n      </div>\n    </div>\n  </div>\n</div>\n';
+//     equal(test_heading.as_html(), expected_html, 'outline_heading.as_html() output');
+// });
 
-test('heading create_div method', function() {
-    // Make sure the outline_heading objects create_div method works as expected
-    var test_heading = new outline_heading(full_dict);
-    var $workspace = $('#dummy');
-    test_heading.create_div($workspace);
-    var $heading = $workspace.children('.heading');
-    equal($heading.length, 1, '1 heading created');
-    equal(test_heading.$element.attr('node_id'), '1', 'node_id set');
-    equal(
-	test_heading.$text.text(),
-	full_dict.text,
-	'text element created'
-    );	
-    equal(
-	test_heading.$details.css('display'),
-	'none',
-	'Initial details div is not displayed'
-    );
-});
+// test('heading create_div method', function() {
+//     // Make sure the outline_heading objects create_div method works as expected
+//     var test_heading = new outline_heading(full_dict);
+//     var $workspace = $('#dummy');
+//     test_heading.create_div($workspace);
+//     var $heading = $workspace.children('.heading');
+//     equal($heading.length, 1, '1 heading created');
+//     equal(test_heading.$element.attr('node_id'), '1', 'node_id set');
+//     equal(
+// 	test_heading.$text.text(),
+// 	full_dict.text,
+// 	'text element created'
+//     );	
+//     equal(
+// 	test_heading.$details.css('display'),
+// 	'none',
+// 	'Initial details div is not displayed'
+//     );
+// });
 
-test('create_div of archived node', function() {
-    // Make sure the outline_heading objects create_div method works as expected
-    var test_heading = new outline_heading(archived_dict);
-    var $workspace = $('#test_workspace');
-    test_heading.create_div($workspace);
-    var $heading = $('#test_workspace').children('.heading');
-    ok(
-	$heading.hasClass('archived'),
-	'Archived heading has \'archived\' class'
-    );
-});
+// test('create_div of archived node', function() {
+//     // Make sure the outline_heading objects create_div method works as expected
+//     var test_heading = new outline_heading(archived_dict);
+//     var $workspace = $('#test_workspace');
+//     test_heading.create_div($workspace);
+//     var $heading = $('#test_workspace').children('.heading');
+//     ok(
+// 	$heading.hasClass('archived'),
+// 	'Archived heading has \'archived\' class'
+//     );
+// });
 
-test('update_dom method', function() {
-    var test_heading = new outline_heading(full_dict);
-    test_heading.todo = "NEXT";
-    test_heading.todo_states = todo_state_list;
-    equal(
-	typeof test_heading.update_dom,
-	'function',
-	'update_dom() method exists'
-    );
-    var $workspace = $('#test_workspace');
-    test_heading.create_div($workspace);
-    var $heading = test_heading.$element;
-    // Test heading.node_id
-    equal(
-	$heading.attr('node_id'),
-	1,
-	'Initial attribute: node_id set'
-    );
-    test_heading.node_id = 2;
-    test_heading.update_dom();
-    equal(
-	$heading.attr('node_id'),
-	2,
-	'Updated attribute: node_id'
-    );
-    // Test heading.text
-    equal(
-	test_heading.$text.html(),
-	test_heading.text,
-	'Initial element: ow-text'
-    );
-    test_heading.text = 'Some other text here';
-    test_heading.update_dom();
-    equal(
-	test_heading.$text.html(),
-	'Some other text here',
-	'Update element: ow-text'
-    );
-    // Test heading.title
-    equal(
-	test_heading.$title.html(),
-	'<strong class="update" data-field="title">' + test_heading.title + '</strong>',
-	'Initial element: ow-title'
-    );
-    test_heading.title = 'New title';
-    test_heading.update_dom();
-    equal(
-	test_heading.$title.html(),
-	'<strong class="update" data-field="title">New title</strong>',
-	'Update element: ow-title'
-    );
-    // Test heading.todo_id
-    equal(
-	test_heading.$todo_state.html(),
-	'NEXT',
-	'Initial element: $todo_state'
-    );
-    test_heading.todo_id = 2;
-    test_heading.update_dom();
-    equal(
-	test_heading.$todo_state.html(),
-	'DONE',
-	'Update element: $todo_state'
-    );
-    equal(
-	test_heading.$todo_state.data('todo_id'),
-	2,
-	'Update data ($todo_id): todo_id'
-    );
-    strictEqual(
-	$heading.data('nodeOutline'),
-	test_heading,
-	'Updated data: object'
-    );
-});
+// test('update_dom method', function() {
+//     var test_heading = new outline_heading(full_dict);
+//     test_heading.todo = "NEXT";
+//     test_heading.todo_states = todo_state_list;
+//     equal(
+// 	typeof test_heading.update_dom,
+// 	'function',
+// 	'update_dom() method exists'
+//     );
+//     var $workspace = $('#test_workspace');
+//     test_heading.create_div($workspace);
+//     var $heading = test_heading.$element;
+//     // Test heading.node_id
+//     equal(
+// 	$heading.attr('node_id'),
+// 	1,
+// 	'Initial attribute: node_id set'
+//     );
+//     test_heading.node_id = 2;
+//     test_heading.update_dom();
+//     equal(
+// 	$heading.attr('node_id'),
+// 	2,
+// 	'Updated attribute: node_id'
+//     );
+//     // Test heading.text
+//     equal(
+// 	test_heading.$text.html(),
+// 	test_heading.text,
+// 	'Initial element: ow-text'
+//     );
+//     test_heading.text = 'Some other text here';
+//     test_heading.update_dom();
+//     equal(
+// 	test_heading.$text.html(),
+// 	'Some other text here',
+// 	'Update element: ow-text'
+//     );
+//     // Test heading.title
+//     equal(
+// 	test_heading.$title.html(),
+// 	'<strong class="update" data-field="title">' + test_heading.title + '</strong>',
+// 	'Initial element: ow-title'
+//     );
+//     test_heading.title = 'New title';
+//     test_heading.update_dom();
+//     equal(
+// 	test_heading.$title.html(),
+// 	'<strong class="update" data-field="title">New title</strong>',
+// 	'Update element: ow-title'
+//     );
+//     // Test heading.todo_id
+//     equal(
+// 	test_heading.$todo_state.html(),
+// 	'NEXT',
+// 	'Initial element: $todo_state'
+//     );
+//     test_heading.todo_id = 2;
+//     test_heading.update_dom();
+//     equal(
+// 	test_heading.$todo_state.html(),
+// 	'DONE',
+// 	'Update element: $todo_state'
+//     );
+//     equal(
+// 	test_heading.$todo_state.data('todo_id'),
+// 	2,
+// 	'Update data ($todo_id): todo_id'
+//     );
+//     strictEqual(
+// 	$heading.data('nodeOutline'),
+// 	test_heading,
+// 	'Updated data: object'
+//     );
+// });
 
-test('outline indentations', function() {
-    var $workspace = $('#test_workspace');
-    var first = new outline_heading(full_dict);
-    equal(first.level, 1, 'Detect parent level');
-    first.create_div($workspace);
-    second_dict['parent_id'] = '1';
-    var second_heading = new outline_heading(second_dict);
-    equal(second_heading.level, 2, 'Detect second level');
-    var $first = get_heading(1);
-    second_heading.create_div($first.children('.children'));
-    var $second = get_heading(5);
-});
+// test('outline indentations', function() {
+//     var $workspace = $('#test_workspace');
+//     var first = new outline_heading(full_dict);
+//     equal(first.level, 1, 'Detect parent level');
+//     first.create_div($workspace);
+//     second_dict['parent_id'] = '1';
+//     var second_heading = new outline_heading(second_dict);
+//     equal(second_heading.level, 2, 'Detect second level');
+//     var $first = get_heading(1);
+//     second_heading.create_div($first.children('.children'));
+//     var $second = get_heading(5);
+// });
 
-test('add function buttons', function() {
-    var $workspace = $('#test_workspace');
-    var heading = new outline_heading(full_dict);
-    heading.create_div($workspace);
-    heading.create_add_button();
-    equal(
-	heading.$children.children('.add-heading').data('parent_id'),
-	1,
-	'Set add heading button\'s parent_id data attribute'
-    );
-    equal(
-	heading.$buttons.length,
-	1,
-	'Creates a buttons div'
-    );
-    equal(
-	heading.$buttons.css('visibility'),
-	'hidden',
-	'Function buttons start off hidden'
-    );
-    heading.$buttons.mouseenter(),
-    equal(
-	heading.$buttons.css('visibility'),
-	'visible',
-	'MouseEnter makes the buttons visible'
-    );
-    heading.$buttons.mouseleave(),
-    equal(
-	heading.$buttons.css('visibility'),
-	'hidden',
-	'MouseLeave makes the buttons hidden again'
-    );
-    var $buttons = heading.$element.children('div.ow-buttons').children('i');
-});
+// test('add function buttons', function() {
+//     var $workspace = $('#test_workspace');
+//     var heading = new outline_heading(full_dict);
+//     heading.create_div($workspace);
+//     heading.create_add_button();
+//     equal(
+// 	heading.$children.children('.add-heading').data('parent_id'),
+// 	1,
+// 	'Set add heading button\'s parent_id data attribute'
+//     );
+//     equal(
+// 	heading.$buttons.length,
+// 	1,
+// 	'Creates a buttons div'
+//     );
+//     equal(
+// 	heading.$buttons.css('visibility'),
+// 	'hidden',
+// 	'Function buttons start off hidden'
+//     );
+//     heading.$buttons.mouseenter(),
+//     equal(
+// 	heading.$buttons.css('visibility'),
+// 	'visible',
+// 	'MouseEnter makes the buttons visible'
+//     );
+//     heading.$buttons.mouseleave(),
+//     equal(
+// 	heading.$buttons.css('visibility'),
+// 	'hidden',
+// 	'MouseLeave makes the buttons hidden again'
+//     );
+//     var $buttons = heading.$element.children('div.ow-buttons').children('i');
+// });
 
-test('Heading toggle() method', function() {
-    var $workspace = $('#test_workspace');
-    var heading = new outline_heading(full_dict);
-    heading.create_div($workspace);
-    equal(
-	heading.$details.css('display'),
-	'none',
-	'.details starts off hidden'
-    );
-    var $icon = heading.$element.children('.ow-hoverable').children('i.clickable');
-    ok($icon.hasClass('icon-chevron-right', 'Icon ends up closed'));
-    heading.toggle();
-    equal(
-	heading.$details.css('display'),
-	'block',
-	'.details get un-hidden on toggle'
-    );
-    ok($icon.hasClass('icon-chevron-down'), 'Icon ends up open');
-    heading.toggle('open');
-    ok($icon.hasClass('icon-chevron-down'), 'Icon ends up open');
-});
+// test('Heading toggle() method', function() {
+//     var $workspace = $('#test_workspace');
+//     var heading = new outline_heading(full_dict);
+//     heading.create_div($workspace);
+//     equal(
+// 	heading.$details.css('display'),
+// 	'none',
+// 	'.details starts off hidden'
+//     );
+//     var $icon = heading.$element.children('.ow-hoverable').children('i.clickable');
+//     ok($icon.hasClass('icon-chevron-right', 'Icon ends up closed'));
+//     heading.toggle();
+//     equal(
+// 	heading.$details.css('display'),
+// 	'block',
+// 	'.details get un-hidden on toggle'
+//     );
+//     ok($icon.hasClass('icon-chevron-down'), 'Icon ends up open');
+//     heading.toggle('open');
+//     ok($icon.hasClass('icon-chevron-down'), 'Icon ends up open');
+// });
 
-asyncTest('Toggle clickable region on heading', function() {
-    expect(1);
-    var $workspace = $('#test_workspace');
-    $workspace.nodeOutline();
-    setTimeout(function() {
-	$workspace.find('.heading').first().each(function() {
-	    var $clickable = $(this).children('.ow-hoverable').children('.clickable');
-	    var heading = $clickable.data('$parent').data('nodeOutline');
-	    heading.has_children = true;
-	    $clickable.click();
-	    equal(
-		heading.$details.css('display'),
-		'block',
-		'CSS display set properly'
-	    );
-	});
-	start();
-    }, (ajax_timer * 1.1 + 5));
-});
+// asyncTest('Toggle clickable region on heading', function() {
+//     expect(1);
+//     var $workspace = $('#test_workspace');
+//     $workspace.nodeOutline();
+//     setTimeout(function() {
+// 	$workspace.find('.heading').first().each(function() {
+// 	    var $clickable = $(this).children('.ow-hoverable').children('.clickable');
+// 	    var heading = $clickable.data('$parent').data('nodeOutline');
+// 	    heading.has_children = true;
+// 	    $clickable.click();
+// 	    equal(
+// 		heading.$details.css('display'),
+// 		'block',
+// 		'CSS display set properly'
+// 	    );
+// 	});
+// 	start();
+//     }, (ajax_timer * 1.1 + 5));
+// });
 
-test('Content detection', function() {
-    // If a heading has text or children is should be expandable
-    var $workspace = $('#test_workspace');
-    var heading = new outline_heading(sparse_dict);
-    heading.create_div( $workspace );
-    ok(
-	!heading.expandable,
-	'sparse heading doesn\'t have it\'s exandable flag set'
-    );
-    var heading = new outline_heading(full_dict);
-    heading.create_div( $workspace );
-    ok(
-	heading.expandable,
-	'heading with text has it\'s exandable flag set'
-    );
-    ok(
-	heading.$element.hasClass('expandable'),
-	'heading element has class \'expandable\''
-    );
-    ok(
-	!heading.$element.hasClass('has_children'),
-	'heading element does not have class \'has_children\''
-    );
-});
+// test('Content detection', function() {
+//     // If a heading has text or children is should be expandable
+//     var $workspace = $('#test_workspace');
+//     var heading = new outline_heading(sparse_dict);
+//     heading.create_div( $workspace );
+//     ok(
+// 	!heading.expandable,
+// 	'sparse heading doesn\'t have it\'s exandable flag set'
+//     );
+//     var heading = new outline_heading(full_dict);
+//     heading.create_div( $workspace );
+//     ok(
+// 	heading.expandable,
+// 	'heading with text has it\'s exandable flag set'
+//     );
+//     ok(
+// 	heading.$element.hasClass('expandable'),
+// 	'heading element has class \'expandable\''
+//     );
+//     ok(
+// 	!heading.$element.hasClass('has_children'),
+// 	'heading element does not have class \'has_children\''
+//     );
+// });
 
-test('Hovering actions', function() {
-    // When an .ow-hoverable action is hovered over, the relevant buttons show
-    var $workspace = $('#test_workspace');
-    var heading = new outline_heading(sparse_dict);
-    heading.todo_states = [
-	{todo_id: 1,
-	 todo: 'NEXT'},
-	{todo_id: 2,
-	 todo: 'DONE'},
-    ]
-    heading.create_div($workspace);
-    var $hoverable = heading.$element.children('.ow-hoverable')
-    var heading2 = new outline_heading(second_dict);
-    heading2.todo_states = heading.todo_states;
-    heading2.create_div($workspace);
-    var $hoverable2 = heading2.$element.children('.ow-hoverable');
-    // Tests before hover over
-    equal(
-	$hoverable.children('.ow-buttons').length,
-	1,
-	'Buttons div exists'
-    );
-    equal(
-	$hoverable.children('.ow-buttons').css('visibility'),
-	'hidden',
-	'Buttons div starts out hidden'
-    );
-    equal(
-	$hoverable.children('.todo-state').length,
-	1,
-	'Todo state div exists'
-    );
-    equal(
-	$hoverable.children('.todo-state').text(),
-	'[]',
-	'Todo state div has \'[]\' as text'
-    );
-    // Tests after hover over
-    $hoverable.mouseenter();
-    equal(
-	$hoverable.children('.ow-buttons').css('visibility'),
-	'visible',
-	'Buttons div is visible after mouse enter'
-    );
-    // Tests after hover out
-    $hoverable.mouseleave();
-    equal(
-	$hoverable.children('.ow-buttons').css('visibility'),
-	'hidden',
-	'Buttons div is visible after mouse enter'
-    );
-    equal(
-	$hoverable.children('.todo-state').css('display'),
-	'none',
-	'Empty Todo state is hidden after mouse leave'
-    );
-    $hoverable2.mouseleave();
-    equal(
-	$hoverable2.children('.todo-state').css('display'),
-	'inline',
-	'Real todo state is still visible after mouse leave'
-    );
-});
+// test('Hovering actions', function() {
+//     // When an .ow-hoverable action is hovered over, the relevant buttons show
+//     var $workspace = $('#test_workspace');
+//     var heading = new outline_heading(sparse_dict);
+//     heading.todo_states = [
+// 	{todo_id: 1,
+// 	 todo: 'NEXT'},
+// 	{todo_id: 2,
+// 	 todo: 'DONE'},
+//     ]
+//     heading.create_div($workspace);
+//     var $hoverable = heading.$element.children('.ow-hoverable')
+//     var heading2 = new outline_heading(second_dict);
+//     heading2.todo_states = heading.todo_states;
+//     heading2.create_div($workspace);
+//     var $hoverable2 = heading2.$element.children('.ow-hoverable');
+//     // Tests before hover over
+//     equal(
+// 	$hoverable.children('.ow-buttons').length,
+// 	1,
+// 	'Buttons div exists'
+//     );
+//     equal(
+// 	$hoverable.children('.ow-buttons').css('visibility'),
+// 	'hidden',
+// 	'Buttons div starts out hidden'
+//     );
+//     equal(
+// 	$hoverable.children('.todo-state').length,
+// 	1,
+// 	'Todo state div exists'
+//     );
+//     equal(
+// 	$hoverable.children('.todo-state').text(),
+// 	'[]',
+// 	'Todo state div has \'[]\' as text'
+//     );
+//     // Tests after hover over
+//     $hoverable.mouseenter();
+//     equal(
+// 	$hoverable.children('.ow-buttons').css('visibility'),
+// 	'visible',
+// 	'Buttons div is visible after mouse enter'
+//     );
+//     // Tests after hover out
+//     $hoverable.mouseleave();
+//     equal(
+// 	$hoverable.children('.ow-buttons').css('visibility'),
+// 	'hidden',
+// 	'Buttons div is visible after mouse enter'
+//     );
+//     equal(
+// 	$hoverable.children('.todo-state').css('display'),
+// 	'none',
+// 	'Empty Todo state is hidden after mouse leave'
+//     );
+//     $hoverable2.mouseleave();
+//     equal(
+// 	$hoverable2.children('.todo-state').css('display'),
+// 	'inline',
+// 	'Real todo state is still visible after mouse leave'
+//     );
+// });
 
-test('Clickable TodoState elements', function() {
-    // When '.todostate' spans are clicked, they become a selection popover.
-    var $workspace = $('#test_workspace');
-    var heading = new outline_heading(second_dict);
-    heading.todo_states = todo_state_list
-    heading.create_div($workspace);
-    var $todo = heading.$element.find('.todo-state');
-    var $popover = heading.$element.find('.popover');
-    equal(
-	$popover.css('position'), 
-	'absolute',
-	'Todo state element uses absolute positioning'
-    );
-    equal(
-	heading.$element.find('.todo-state').length,
-	1,
-	'One .todo-state element found'
-    );
-    equal(
-	$popover.length,
-	1,
-	'Popover div exists'
-    );
-    equal(
-	$popover.css('display'),
-	'none',
-	'Popover starts off hidden'
-    );
-    equal(
-	$popover.find('.todo-option').length,
-	todo_state_list.length,
-	'Correct number of todo state options in popover'
-    );
-    // Now click the todo state and check properties
-    $todo.click();
-    equal(
-	$popover.css('display'),
-	'block',
-	'Popover is displayed on todo state click'
-    );
-});
+// test('Clickable TodoState elements', function() {
+//     // When '.todostate' spans are clicked, they become a selection popover.
+//     var $workspace = $('#test_workspace');
+//     var heading = new outline_heading(second_dict);
+//     heading.todo_states = todo_state_list
+//     heading.create_div($workspace);
+//     var $todo = heading.$element.find('.todo-state');
+//     var $popover = heading.$element.find('.popover');
+//     equal(
+// 	$popover.css('position'), 
+// 	'absolute',
+// 	'Todo state element uses absolute positioning'
+//     );
+//     equal(
+// 	heading.$element.find('.todo-state').length,
+// 	1,
+// 	'One .todo-state element found'
+//     );
+//     equal(
+// 	$popover.length,
+// 	1,
+// 	'Popover div exists'
+//     );
+//     equal(
+// 	$popover.css('display'),
+// 	'none',
+// 	'Popover starts off hidden'
+//     );
+//     equal(
+// 	$popover.find('.todo-option').length,
+// 	todo_state_list.length,
+// 	'Correct number of todo state options in popover'
+//     );
+//     // Now click the todo state and check properties
+//     $todo.click();
+//     equal(
+// 	$popover.css('display'),
+// 	'block',
+// 	'Popover is displayed on todo state click'
+//     );
+// });
 
-test('Todo state popover', function() {
-    // When '.todostate' spans are clicked, they become a combo select box.
-    var $workspace = $('#test_workspace');
-    var heading = new outline_heading(second_dict);
-    heading.todo_states = [
-	{todo_id: 1,
-	 display: 'TODO'},
-	{todo_id: 2,
-	 display: 'NEXT'},
-    ]
-    heading.create_div($workspace);
-    var $todo = heading.$element.find('.todo-state');
-    var $popover = heading.$element.find('.popover');
-    equal(
-	$popover.find('.todo-option').length,
-	2,
-	'Created correct number of todo options'
-    );
-    equal(
-	$popover.find('.todo-option').attr('todo_id'),
-	'1',
-	'todo_id attribute set'
-    );
-    equal(
-	$popover.find('.todo-option[todo_id="1"]').html(),
-	'TODO',
-	'Other todo state has a white background'
-    );
-    // Hover-over
-    var $option1 = $popover.find('.todo-option[todo_id="1"]')
-    heading.$todo_state.click(); // To create the popover
-    $option1.mouseenter();
-    ok($option1.hasClass('ow-hover'),
-       'Hovered element has class ow-hover');
-    $option1.mouseleave();
-    ok(!$option1.hasClass('ow-hover'),
-       'Un-hovered element doesn\'t have class ow-hover');
-    // Selected option does not have background set
-    var $option2 = $popover.find('.todo-option[selected]');
-    equal(
-	$option2.length,
-	1,
-	'1 Selected todo-option found'
-    );
-    $option2.mouseenter();
-    ok(!$option1.hasClass('ow-hover'),
-	'Selected element doesn\'t get ow-hover class on hover');
-});
+// test('Todo state popover', function() {
+//     // When '.todostate' spans are clicked, they become a combo select box.
+//     var $workspace = $('#test_workspace');
+//     var heading = new outline_heading(second_dict);
+//     heading.todo_states = [
+// 	{todo_id: 1,
+// 	 display: 'TODO'},
+// 	{todo_id: 2,
+// 	 display: 'NEXT'},
+//     ]
+//     heading.create_div($workspace);
+//     var $todo = heading.$element.find('.todo-state');
+//     var $popover = heading.$element.find('.popover');
+//     equal(
+// 	$popover.find('.todo-option').length,
+// 	2,
+// 	'Created correct number of todo options'
+//     );
+//     equal(
+// 	$popover.find('.todo-option').attr('todo_id'),
+// 	'1',
+// 	'todo_id attribute set'
+//     );
+//     equal(
+// 	$popover.find('.todo-option[todo_id="1"]').html(),
+// 	'TODO',
+// 	'Other todo state has a white background'
+//     );
+//     // Hover-over
+//     var $option1 = $popover.find('.todo-option[todo_id="1"]')
+//     heading.$todo_state.click(); // To create the popover
+//     $option1.mouseenter();
+//     ok($option1.hasClass('ow-hover'),
+//        'Hovered element has class ow-hover');
+//     $option1.mouseleave();
+//     ok(!$option1.hasClass('ow-hover'),
+//        'Un-hovered element doesn\'t have class ow-hover');
+//     // Selected option does not have background set
+//     var $option2 = $popover.find('.todo-option[selected]');
+//     equal(
+// 	$option2.length,
+// 	1,
+// 	'1 Selected todo-option found'
+//     );
+//     $option2.mouseenter();
+//     ok(!$option1.hasClass('ow-hover'),
+// 	'Selected element doesn\'t get ow-hover class on hover');
+// });
 
-test('Popover populating method', function() {
-    // When '.todostate' spans are clicked, they become a combo select box.
-    var $workspace = $('#test_workspace');
-    var heading = new outline_heading(second_dict);
-    heading.todo_states = todo_state_list;
-    equal(
-	typeof heading.populate_todo_states,
-	'function',
-	'populate_todo_states method exists'
-    );
-    heading.create_div($workspace);
-    var $todo = heading.$element.find('.todo-state');
-    var $popover = heading.$element.find('.popover');
-    var $inner = $popover.children('.popover-inner')
-    $inner.html('');
-    equal(
-	$inner.html(),
-	'',
-	'Popover inner html cleared'
-    );
-    heading.populate_todo_states($popover.find('.popover-inner'));
-    equal(
-	$popover.children('.popover-inner').children('.todo-option').length,
-	todo_state_list.length,
-	'Correct number of todo states created'
-    );
-    var $option1 = $inner.children('.todo-option[todo_id="1"]');
-    var $option2 = $inner.children('.todo-option[todo_id="2"]');
-    equal(
-	$option1.attr('selected'),
-	undefined,
-	'Non-selected todo option does not have "selected" attribute set'
-    );
-    equal(
-	$option2.attr('selected'),
-	'selected',
-	'Selected todo option has "selected" attribute set'
-    );
-});
+// test('Popover populating method', function() {
+//     // When '.todostate' spans are clicked, they become a combo select box.
+//     var $workspace = $('#test_workspace');
+//     var heading = new outline_heading(second_dict);
+//     heading.todo_states = todo_state_list;
+//     equal(
+// 	typeof heading.populate_todo_states,
+// 	'function',
+// 	'populate_todo_states method exists'
+//     );
+//     heading.create_div($workspace);
+//     var $todo = heading.$element.find('.todo-state');
+//     var $popover = heading.$element.find('.popover');
+//     var $inner = $popover.children('.popover-inner')
+//     $inner.html('');
+//     equal(
+// 	$inner.html(),
+// 	'',
+// 	'Popover inner html cleared'
+//     );
+//     heading.populate_todo_states($popover.find('.popover-inner'));
+//     equal(
+// 	$popover.children('.popover-inner').children('.todo-option').length,
+// 	todo_state_list.length,
+// 	'Correct number of todo states created'
+//     );
+//     var $option1 = $inner.children('.todo-option[todo_id="1"]');
+//     var $option2 = $inner.children('.todo-option[todo_id="2"]');
+//     equal(
+// 	$option1.attr('selected'),
+// 	undefined,
+// 	'Non-selected todo option does not have "selected" attribute set'
+//     );
+//     equal(
+// 	$option2.attr('selected'),
+// 	'selected',
+// 	'Selected todo option has "selected" attribute set'
+//     );
+// });
 
-asyncTest('Todo state changing functionality', function() {
-    var $workspace = $('#test_workspace');
-    $workspace.nodeOutline({ todo_states: todo_state_list });
-    var $heading1;
-    setTimeout(function() {
-	start();
-	$heading1 = $workspace.find('.heading[node_id="1"]');
-	var $popover = $heading1.children('.ow-hoverable').children('.popover');
-	equal(
-	    $popover.length,
-	    1,
-	    'One popover exists before clicking'
-	);
-	equal(
-	    $heading1.length,
-	    1,
-	    'Node 1 heading exists'
-	);
-	equal(
-	    $heading1.find('.todo-option[selected]').html(),
-	    'NEXT',
-	    'Correct heading selected to start'
-	);
-	// Clicking on the selected node does nothing
-	$heading1.children('.ow-hoverable').children('.todo-state').click();
-	equal(
-	    $heading1.find('.popover').css('display'),
-	    'block',
-	    'Popover visible after mouseenter before clicking'
-	);
-	$heading1.find('.todo-option[selected]').click();
-	equal(
-	    $heading1.find('.popover').css('display'),
-	    'block',
-	    'Clicking Selected option does not dismiss popover'
-	);
-	// Now change it to the other todo state
-	$heading1.find('.todo-option[todo_id="2"]').click();
-	stop();
-    }, (ajax_timer * 1.1 + 5));
-    setTimeout(function() {
-	start();
-	var heading = $heading1.data('nodeOutline');
-	var $popover = $heading1.children('.ow-hoverable').children('.popover');
-	equal(
-	    $popover.length,
-	    1,
-	    'One $popover is created'
-	);
-	equal(
-	    heading.node_id,
-	    1,
-	    'Heading object successfully found after todo option click'
-	);
-	equal(
-	    heading.todo_id,
-	    2,
-	    'Todo state changed to 2'
-	);
-	equal(
-	    $popover.find('.todo-option[todo_id="2"]').attr('selected'),
-	    'selected',
-	    'Todo option 2 is now selected'
-	);
-    }, (ajax_timer * 7.7 + 5));
-});
+// asyncTest('Todo state changing functionality', function() {
+//     var $workspace = $('#test_workspace');
+//     $workspace.nodeOutline({ todo_states: todo_state_list });
+//     var $heading1;
+//     setTimeout(function() {
+// 	start();
+// 	$heading1 = $workspace.find('.heading[node_id="1"]');
+// 	var $popover = $heading1.children('.ow-hoverable').children('.popover');
+// 	equal(
+// 	    $popover.length,
+// 	    1,
+// 	    'One popover exists before clicking'
+// 	);
+// 	equal(
+// 	    $heading1.length,
+// 	    1,
+// 	    'Node 1 heading exists'
+// 	);
+// 	equal(
+// 	    $heading1.find('.todo-option[selected]').html(),
+// 	    'NEXT',
+// 	    'Correct heading selected to start'
+// 	);
+// 	// Clicking on the selected node does nothing
+// 	$heading1.children('.ow-hoverable').children('.todo-state').click();
+// 	equal(
+// 	    $heading1.find('.popover').css('display'),
+// 	    'block',
+// 	    'Popover visible after mouseenter before clicking'
+// 	);
+// 	$heading1.find('.todo-option[selected]').click();
+// 	equal(
+// 	    $heading1.find('.popover').css('display'),
+// 	    'block',
+// 	    'Clicking Selected option does not dismiss popover'
+// 	);
+// 	// Now change it to the other todo state
+// 	$heading1.find('.todo-option[todo_id="2"]').click();
+// 	stop();
+//     }, (ajax_timer * 1.1 + 5));
+//     setTimeout(function() {
+// 	start();
+// 	var heading = $heading1.data('nodeOutline');
+// 	var $popover = $heading1.children('.ow-hoverable').children('.popover');
+// 	equal(
+// 	    $popover.length,
+// 	    1,
+// 	    'One $popover is created'
+// 	);
+// 	equal(
+// 	    heading.node_id,
+// 	    1,
+// 	    'Heading object successfully found after todo option click'
+// 	);
+// 	equal(
+// 	    heading.todo_id,
+// 	    2,
+// 	    'Todo state changed to 2'
+// 	);
+// 	equal(
+// 	    $popover.find('.todo-option[todo_id="2"]').attr('selected'),
+// 	    'selected',
+// 	    'Todo option 2 is now selected'
+// 	);
+//     }, (ajax_timer * 7.7 + 5));
+// });
 
-test('test heading.get_todo_state()', function() {
-    var $workspace = $('#test_workspace');
-    $workspace.nodeOutline({
-	todo_states: todo_state_list
-    });
-    var heading = new outline_heading(full_dict);
-    var outline = $workspace.data('nodeOutline');
-    heading.outline = outline;
-    equal(
-	typeof heading.get_todo_state,
-	'function',
-	'heading object has get_todo_state method'
-    );
-    var state = heading.get_todo_state();
-    equal(
-	state.pk,
-	full_dict.todo_id,
-	'retrieved todo state has primary key set'
-    );
-    equal(
-	state,
-	todo_state_list[1],
-	'retrieved todo state has abbreviation set'
-    );
-});
+// test('test heading.get_todo_state()', function() {
+//     var $workspace = $('#test_workspace');
+//     $workspace.nodeOutline({
+// 	todo_states: todo_state_list
+//     });
+//     var heading = new outline_heading(full_dict);
+//     var outline = $workspace.data('nodeOutline');
+//     heading.outline = outline;
+//     equal(
+// 	typeof heading.get_todo_state,
+// 	'function',
+// 	'heading object has get_todo_state method'
+//     );
+//     var state = heading.get_todo_state();
+//     equal(
+// 	state.pk,
+// 	full_dict.todo_id,
+// 	'retrieved todo state has primary key set'
+//     );
+//     equal(
+// 	state,
+// 	todo_state_list[1],
+// 	'retrieved todo state has abbreviation set'
+//     );
+// });
 
 
-module(module_name + 'Outline setup');
+module('nodeOutline jQuery plugin');
 
 test('creates initial heading objects', function() {
     // See if the function finds the existing workspace and sets the right number of children with the right attributes and data
@@ -816,41 +818,81 @@ test('creates initial heading objects', function() {
 test('converts initial workspace', function() {
     var $workspace = $('#test_workspace');
     var total = $workspace.find('tr.ow-heading').length;
-    $workspace.nodeOutline();
+    $workspace.nodeOutline({'simulate': true});
+    var workspace = $workspace.data('nodeOutline');
     equal(
 	$workspace.find('.children > div.heading').length,
 	total,
 	'Same number of headings as initial table rows'
     );
+    var $heading1 = $workspace.find('.children > div.heading[node_id="1"]');
     equal(
-	$workspace.find('.children > div.heading[node_id="1"]').length,
+	$heading1.length,
 	1,
-	'Node 1 has heading'
+	'Heading 1 has element'
+    );
+    ok(
+	$heading1.is(':visible'),
+	'Heading 1 is visible'
     );
     equal(
 	$workspace.find('.children > div.heading[node_id="2"]').length,
 	1,
-	'Node 2 has heading'
+	'Heading 2 has element'
     );
 });
 
-test('set expandability and has-children classes', function() {
+test('set expandability and has-children data', function() {
     var $workspace = $('#test_workspace');
-    $workspace.nodeOutline();
-    var $heading1 = $workspace.find('.heading[node_id="1"]');
-    var $heading2 = $workspace.find('.heading[node_id="2"]');
-    var $heading3 = $workspace.find('.heading[node_id="4"]');
-    ok(
-	$heading1.hasClass('expandable'),
-	'heading 1 has \'expandable\' class'
+    $workspace.nodeOutline({simulate: true});
+    var workspace = $workspace.data('nodeOutline');
+    var heading3 = workspace.headings.get({pk: 3});
+    var heading4 = workspace.headings.get({pk: 4});
+    var outline_heading = $workspace.nodeOutline({'get_proto': true});
+    var heading5 = new outline_heading(full_dict);
+    heading5.pk = 5;
+    heading5.parent_id = 3;
+    heading5.archived = true;
+    workspace.headings.push(heading5);
+    var heading6 = new outline_heading(full_dict);
+    heading6.pk = 6;
+    heading6.parent_id = 4;
+    workspace.headings.push(heading6);
+    console.log(heading4.get_children().filter({archived: false}));
+    console.log(workspace.headings.get({pk: 6}));
+    deepEqual(
+	heading3.get_children(),
+	workspace.headings.filter({pk: 5}),
+	'heading.get_children() returns children'
     );
     ok(
-	$heading2.hasClass('expandable'),
-	'heading 2 has \'expandable\' class'
+	heading4.has_children,
+	'Heading 1 has_children is set'
+    );
+    
+    ok(
+	workspace.headings.get({pk: 1}).is_expandable(),
+	'heading 1 is expandable (has text and children)'
     );
     ok(
-	! $heading3.hasClass('expandable'),
-	'heading 3 does not have \'expandable\' class'
+	! workspace.headings.get({pk: 3}).is_expandable(),
+	'heading 3 is not expandable'
+    );
+    ok(
+	heading3.$element.hasClass('preexpandable'),
+	'Heading 3 (with non-loaded children) has \'preexpandable\' class set'
+    )
+    ok(
+	workspace.headings.get({pk: 2}).is_expandable(),
+	'heading 2 is expandable (has text)'
+    );
+    ok(
+	workspace.headings.get({pk: 4}).is_expandable(),
+	'heading 4 is expandable (has children)'
+    );
+    ok(
+	workspace.headings.get({pk: 1}).$element.hasClass('expandable'),
+	'Heading 1 has expandable class set'
     );
 });
 
@@ -859,7 +901,6 @@ test('heading colors', function() {
     $workspace.nodeOutline();
     var outline = $workspace.data('nodeOutline');
     var heading = outline.get_heading(1);
-    console.log(heading);
     equal(
 	heading.color,
 	outline.COLORS[0],
@@ -948,9 +989,28 @@ test('Headings manager order_by method', function() {
     }
 });
 
+test('Headings are properly drawn on init', function() {
+    var $workspace = $('#test_workspace');
+    $workspace.nodeOutline({simulate: true,
+			   todo_states: todo_state_list});
+    var workspace = $workspace.data('nodeOutline');
+    var heading = workspace.headings.get({pk: 1});
+    equal(
+	heading.$todo_state.html(),
+	heading.get_todo_state().display,
+	'Element has $todo_state drawn'
+    );
+    equal(
+	heading.$title.html(),
+	heading.title,
+	'Element has $title set'
+    );
+});
+
 asyncTest('Populates children on outline init', function() {
     // See if the appliance properly converts the non-javascript
-    // table to the outline workspace.
+    // table to the outline workspace and gets first round of
+    // grand-children.
     var $workspace = $('#test_workspace');
     $workspace.nodeOutline();
     var workspace = $workspace.data('nodeOutline');
@@ -997,7 +1057,6 @@ test('ordering of inserted node', function() {
 	previous,
 	'Can retrieve previous sibling'
     );
-    console.log(workspace.$element.html());
     equal(
 	previous.$element.next('.heading').attr('node_id'),
 	heading.pk,
@@ -1007,26 +1066,42 @@ test('ordering of inserted node', function() {
 
 test('heading.redraw() method', function() {
     var $workspace = $('#test_workspace');
-    $workspace.nodeOutline({simulate: true});
+    $workspace.nodeOutline({simulate: true,
+			   todo_states: todo_state_list});
     var workspace = $workspace.data('nodeOutline');
     var heading = workspace.headings.get({pk: 1});
+    var s = '.heading[node_id="' + heading.pk + '"]';
     heading.$element.remove();
-    heading.$element = $(heading.$element.selector);
-    workspace.redraw();
-    console.log(heading.$element);
     equal(
-	heading.$element.length,
+	$(s).length,
+	0,
+	'heading is removed'
+    );
+    workspace.redraw();
+    equal(
+	$(s).length,
 	1,
-	'remove heading1 $element regenerated on redraw()'
+	'removed heading1 $element regenerated on redraw()'
     );
     heading.$element.length
     heading.$element.attr('data-test-value', '878');
     workspace.redraw();
-    heading.$element = $(heading.$element.selector);
     equal(
-	heading.$element.attr('data-test-value'),
+	$(s).attr('data-test-value'),
 	'878',
-	'Redraw doesn\' change existing elements'
+	'Redraw doesn\'t change existing elements'
+    );
+    heading.todo_id = 2;
+    notEqual(
+	heading.$todo_state.html(),
+	heading.get_todo_state().abbreviation,
+	'Heading is not correct prior to being redrawn'
+    );
+    heading.redraw()
+    equal(
+	heading.$todo_state.html(),
+	heading.get_todo_state().display,
+	'Heading is correct after being redrawn'
     );
 });
 
@@ -1034,7 +1109,6 @@ asyncTest('Clicking a heading populates it\'s children', function() {
     var $workspace = $('#test_workspace');
     $workspace.nodeOutline();
     var workspace = $workspace.data('nodeOutline');
-    console.log(ajax_timer);
     setTimeout(function() {
 	workspace.get_heading(1).toggle();
     }, ajax_timer * 1.1 + 5);
@@ -1107,10 +1181,9 @@ test('Set todo states', function() {
 	todo_state_list[1],
 	'heading.get_todo_state returns correct todo_state object'
     );
-    console.log(heading);
     equal(
 	heading.$todo_state.html(),
-	heading.get_todo_state().abbreviation,
+	heading.get_todo_state().display,
 	'$todo div has abbreviation as its html'
     );
 });
@@ -1120,8 +1193,9 @@ asyncTest('Archived nodes', function() {
     $workspace.nodeOutline({
 	todo_states: todo_state_list
     });
+    var workspace = $workspace.data('nodeOutline');
+    console.log(workspace.show_all);
     setTimeout(function() {
-	start();
 	var $checkbox = $workspace.find('input.show-all');
 	equal(
 	    $checkbox.length,
@@ -1134,30 +1208,39 @@ asyncTest('Archived nodes', function() {
 	    2,
 	    'Found two archived headings'
 	);
-	var $archived1 = $workspace.find('.heading.archived[node_id="5"]');
-	var $archived2 = $workspace.find('.heading.archived[node_id="4"]');
-	var archived1 = $archived1.data('nodeOutline');
-	var archived2 = $archived2.data('nodeOutline');
+	var archived1 = workspace.headings.get({pk: 6});
+	var archived2 = workspace.headings.get({pk: 7});
+	var parent1 = workspace.headings.get({pk: archived1.parent_id });
+	var parent2 = workspace.headings.get({pk: archived2.parent_id });
 	ok(
-	    ! archived1.$parent.hasClass('expandable'),
+	    ! parent2.$element.hasClass('expandable'),
 	    'Parent of only archived nodes is not expandable'
 	);
 	// Check show-all box
+	notEqual(
+	    archived2.$element.css('display'),
+	    'block',
+	    'Archived heading is hidden after checkbox click'
+	);
+	console.log('XXX');
 	$checkbox.click();
+	console.log('XXX');
 	ok(
-	    archived1.$parent.hasClass('expandable'),
+	    parent2.$element.hasClass('expandable'),
 	    'Parent of only archived node becomes expandable on checkbox click'
+	);
+	equal(
+	    archived2.$element.css('display'),
+	    'block',
+	    'Archived heading is displayed after checkbox click'
 	);
 	// Un-check show-all box
 	$checkbox.click();
 	ok(
-	    ! archived1.$parent.hasClass('expandable'),
+	    ! parent2.$element.hasClass('expandable'),
 	    'Parent of only archived node becomes un-expandable on second checkbox click'
 	);
-	ok(
-	    archived2.$parent.hasClass('expandable'),
-	    'Parent of mixed nodes stays expandable after second checkbox click'
-	);
+	start();
     }, (ajax_timer * 6.6 + 5) );
 });
 

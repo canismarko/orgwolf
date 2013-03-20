@@ -168,7 +168,7 @@ $('document').ready(function() {
       <th>Actions</th>
     </tr>
     {% for node in child_nodes_qs %}
-    <tr class="ow-heading" data-node_id="{{ node.id }}" data-title="{{ node.title|escape }}" data-text="{{ node.text|escape }}" data-is_leaf_node="{{ node.is_leaf_node }}" data-todo_id="{{ node.todo_state.pk }}">
+    <tr class="ow-heading" data-node_id="{{ node.id }}" data-title="{{ node.title|escape }}" data-text="{{ node.text|escape }}" data-is_leaf_node="{{ node.is_leaf_node }}" data-todo_id="{{ node.todo_state.pk }}" data-previous_sibling="{{ node.get_previous_sibling.pk }}">
       <td class="ow-todo">{{ node.todo_state.as_html }}</td>
       <td class="ow-title">
 	<a href="{{ base_url }}{{ node.id }}">{{ node.get_title }}</a>

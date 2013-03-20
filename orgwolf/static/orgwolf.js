@@ -505,7 +505,7 @@ var get_heading = function (node_id) {
 		}
 		this.ICON = 'icon-chevron-right';
 		this.title = args['title'];
-		this.has_children = false;
+		this.populated = false;
 		this._previous_sibling = args['previous_sibling_id'];
 		if (typeof args['workspace'] != 'undefined') {
 		    this.workspace = args['workspace'];
@@ -529,27 +529,31 @@ var get_heading = function (node_id) {
 		    this.pk = this.node_id;
 		}
 		this.tags = args['tags'];
-		this.archived = args['archived'];
-		// Detect the location in the hierarchy
-		if (typeof args['parent_id'] == 'undefined' ) {
-		    // Root level heading
+		if ( typeof args['archived'] != 'undefined' ) {
+		    this.archived = args['archived'];
+		} else {
+		    this.archived = false;
+		}
+		if (typeof args['level'] == 'undefined' ) {
 		    this.level = 1;
-	    	    this.todo_states = { todo_id: 0, display: '[None]' }
+		} else {
+		    this.level = args['level'];
 		}
-		else { // Find the parent and get its info
-		    this.parent_id = Number(args['parent_id']);
-		    var s = '.heading[node_id="' + this.parent_id + '"]';
-		    this.$parent = $(s);
-		    var parent = this.$parent.data('nodeOutline');
-		    if (typeof parent == 'undefined') {
-			// Parent can't be found
-	    		this.todo_states = { todo_id: 0, display: '[None]' };
-		    } else {
-			this.$workspace = parent.$workspace;
-			this.todo_states = parent.todo_states;
-			this.level = (parent.level + 1);
-		    }
-		}
+		// // Detect the location in the hierarchy
+		// if (typeof args['parent_id'] == 'undefined' ) {
+		//     // Root level heading
+		//     this.level = 1;
+	    	//     this.todo_states = { todo_id: 0, display: '[None]' }
+		// }
+		// else { // Find the parent and get its info
+		//     this.parent_id = Number(args['parent_id']);
+		//     var parent = this.workspace.headings.get({pk: this.parent_id});
+		//     if (typeof parent != 'undefined') {
+		// 	this.level = (parent.level + 1);
+		//     }
+		// }
+		this.parent_id = args['parent_id'];
+		this.has_children = args['has_children'];
 		// Determine the width of icon that is being used
 		var $body = $('body');
 		$body.append('<i id="7783452" class="' + this.ICON + '"></i>');
@@ -572,6 +576,25 @@ var get_heading = function (node_id) {
 			return found_state;
 		    } else {
 			return {pk: this.todo_id};
+		    }
+		};
+		this.set_selectors = function() {
+		    if ( this.level > 0 ) {
+			// Determine how to find each piece of the heading
+			var new_selector = '.heading';
+			new_selector += '[node_id="' + this.pk + '"]';
+			// Set selectors
+			this.$element = this.workspace.$children.find(new_selector);
+			this.$hoverable = this.$element.children('.ow-hoverable');
+			this.$details = this.$element.children('.details');
+			this.$children = this.$details.children('.children');
+			// this.$workspace = this.$workspace;
+			this.$clickable = this.$hoverable.children('.clickable');
+			this.$todo_state = this.$hoverable.children('.todo-state');
+			this.$icon = this.$hoverable.children('i');
+			this.$text = this.$details.children('.ow-text');
+			this.$buttons = this.$hoverable.children('.ow-buttons');
+			this.$title = this.$hoverable.children('.ow-title');
 		    }
 		};
 		this.as_html = function() {
@@ -614,278 +637,250 @@ var get_heading = function (node_id) {
 		};
 		this.create_div = function( $target ) {
 		    // Create a new "<div></div>" element representing this heading
-		    var node_id = this.node_id;
-		    if ($target) {
-			var write = function(content) {
-			    $target.append(content);
-			};
-		    } else { // Try and find the container if none was specified
-			var previous = this.get_previous_sibling();
-			console.log('START HERE: write auto-reorder method then test ordering of inserted node');
-			if ( previous ) {
-			    var write = function(content) {
-				previous.$element.after(content);
-			    };
-			}
-			else if ( this.workspace.get_heading(this.parent_id) ) {
-			    var write = function(content) {
-				this.workspace.get_heading(this.parent_id).$children.append(content);
-			    };
-			} else {
-			    return 0;
-			}
-		    }
-		    write(this.as_html());
-		    var new_selector = '.heading';
-		    new_selector += '[node_id="' + this.node_id + '"]';
-		    // Set selectors
-		    var $element = $(new_selector);
-		    $element.hide();
-		    var $hoverable = $element.children('.ow-hoverable');
-		    if ( typeof parent != 'undefined' ) {
-			var $workspace = parent.$workspace
-			parent.$element.addClass('expandable');
-			parent.expandable = true;
+		    //  provided one does not already exist
+		    // First determine if creating the div is necessary
+		    if ( typeof this.$element == 'undefined' ) {
+			var do_create = true;
 		    } else {
-			var $workspace = $element.parent();
-		    }
-		    var $clickable = $hoverable.children('.clickable');
-		    var $todo_state = $hoverable.children('.todo-state');
-		    var $icon = $hoverable.children('i');
-		    var $buttons = $hoverable.children('.ow-buttons');
-		    var $title = $hoverable.children('.ow-title');
-		    this.$element = $element;
-		    this.$hoverable = $hoverable;
-		    this.$details = this.$element.children('.details');
-		    this.$children = this.$details.children('.children');
-		    this.$workspace = $workspace;
-		    this.$clickable = $clickable;
-		    this.$todo_state = $todo_state;
-		    this.$icon = $icon;
-		    this.$text = this.$details.children('.ow-text');
-		    this.$buttons = $buttons;
-		    this.$title = $title;
-		    this.populated = false;
-		    // Set initial dom data
-		    this.update_dom();
-		    // Set jquery data
-		    // this.$element.data('nodeOutline', this);
-		    this.$clickable.data('$parent', this.$element);
-		    // Apply tooltips
-		    $buttons.children('i').tooltip({
-			delay: {show:1000, hide: 100}
-		    });
-		    // Set color based on indentation level
-		    var COLORS = this.workspace.COLORS;
-		    var color_i = this.level % COLORS.length;
-		    this.color = COLORS[color_i-1];
-		    var $children = this.$details.children('.children');
-		    this.$children = $children;
-		    // Set initial CSS
-		    if ( this.archived ) {
-			this.$element.hide();
-		    }
-		    this.$clickable.css('color', this.color);
-		    this.$details.hide();
-		    this.$buttons.css('visibility', 'hidden');
-		    this.set_indent(this.$children, 1);
-		    this.set_indent(this.$text, 1);
-		    // Attach event handlers
-		    this.$clickable.click(function() {
-			var saved_heading = $(this).data('$parent').data('nodeOutline');
-			if ( saved_heading.expandable ) {
-			    saved_heading.toggle();
-			}
-		    });
-		    this.set_autohide( this.$hoverable, $buttons );
-		    this.$buttons.find('.icon-arrow-right').click( function() {
-			window.location = '/gtd/node/' + node_id + '/';
-		    });
-		    this.$buttons.find('.icon-pencil').click( function() {
-			// Modal dialog for editing this heading
-			var $this = $(this);
-			var $hoverable = $this.parent().parent();
-			var $heading = $hoverable.parent();
-			$hoverable.unbind('.autohide');
-			if ( ! $this.data('nodeEdit') ) {
-			    $this.nodeEdit( {
-				show: true,
-				target: $hoverable,
-				node_id: node_id,
-				changed: function(node) {
-				    var heading = $heading.data('nodeOutline');
-				    $hoverable.find('.todo-state').todoState(
-					'update', {todo_id: node.todo_state}
-				    );
-				    heading.text = node.text;
-				    heading.archived = node.archived;
-				    heading.title = node.title;
-				    heading.$element.data('nodeOutline', heading);
-				    heading.update_dom();
-				},
-				on_modal: function($modal) {
-				    // disable the hovering feature while the modal is active
-
-				    $modal.on('show', function() {
-					$this.parent().parent().unbind('.autohide');
-				    });
-				    $modal.on('hidden', function() {
-					new outline_heading().set_autohide( $modal.parent().parent(), $modal.parent());
-				    });
-				}
+			this.set_selectors()
+			if ( this.$element.length < 1 ) {
+			    var do_create = true;
+			} else if ( this.$element.length > 1 ) {
+			    // Extras were created, erase and start over
+			    this.$element.each( function() {
+				$(this).remove()
 			    });
+			    var do_create = true;
+			} else {
+			    var do_create = false;
 			}
-		    });
-		    this.$buttons.find('.icon-plus').click( function() {
-			// Modal dialog for new children of this heading
-			var $this = $(this);
-			$this.parent().parent().unbind('.autohide');
-			if ( ! $this.data('nodeEdit') ) {
-			    $this.nodeEdit( {
-				show: true,
-				parent_id: node_id,
-				changed: function(node) {
-				    new_heading = new outline_heading( {
-					title: node.title,
-					text: node.text,
-					node_id: node.id,
-					todo_id: node.todo_state,
-					tags: node.tag_string,
-					parent_id: node_id
-				    });
-				    new_heading.create_div( $children );
-				    var parent = new_heading.$parent.data('nodeOutline')
-				    parent.has_children = true;
-				    parent.update_dom();
-				    parent.toggle('open');
-				},
-				on_modal: function($modal) {
-				    // disable the hovering feature while the modal is active
+		    }
+		    // Then do the creating if necessary
+		    if (do_create && (this.level > 0)) {
+			var node_id = this.node_id;
+			if ($target) {
+			    var write = function(content) {
+				$target.append(content);
+			    };
+			} else { // Try and find the container if none was specified
+			    var previous = this.get_previous_sibling();
+			    var me = this.node_id;
+			    var write;
+			    if ( previous ) {
+				previous.create_div(); // make sure the sibling exists;
+				write = function(content) {
+				    previous.$element.after(content);
+				};
+			    } else if ( this.workspace.get_heading(this.parent_id) ) {
+				var workspace = this.workspace;
+				var parent_id = this.parent_id;
+				var $target = workspace.get_heading(parent_id).$children;
+				write = function(content) {
+				    $target.prepend(content);
+				};
+			    } else {
+				return 1;
+			    }
+			}
+			write(this.as_html());
+			this.set_selectors();
+			// Apply tooltips
+			this.$buttons.children('i').tooltip({
+			    delay: {show:1000, hide: 100}
+			});
+			// Set color based on indentation level
+			var COLORS = this.workspace.COLORS;
+			var color_i = this.level % COLORS.length;
+			this.color = COLORS[color_i-1];
+			var $children = this.$details.children('.children');
+			this.$children = $children;
+			this.$clickable.css('color', this.color);
+			this.$details.hide();
+			this.$buttons.css('visibility', 'hidden');
+			this.set_indent(this.$children, 1);
+			this.set_indent(this.$text, 1);
+			// Attach event handlers
+			var heading = this;
+			this.$clickable.click(function() {
+			    if ( heading.is_expandable() ) {
+				heading.toggle();
+			    }
+			});
+			this.set_autohide( this.$hoverable, this.$buttons );
+			this.$buttons.find('.icon-arrow-right').click( function() {
+			    window.location = '/gtd/node/' + node_id + '/';
+			});
+			var heading = this;
+			this.$buttons.find('.icon-pencil').click( function() {
+			    // Modal dialog for editing this heading
+			    var $this = $(this);
+			    var $hoverable = $this.parent().parent();
+			    var $heading = $hoverable.parent();
+			    $hoverable.unbind('.autohide');
+			    if ( ! $this.data('nodeEdit') ) {
+				$this.nodeEdit( {
+				    show: true,
+				    target: $hoverable,
+				    node_id: node_id,
+				    changed: function(node) {
+					$hoverable.find('.todo-state').todoState(
+					    'update', {todo_id: node.todo_state}
+					);
+					heading.text = node.text;
+					heading.archived = node.archived;
+					heading.title = node.title;
+					heading.$element.data('nodeOutline', heading);
+					heading.redraw();
+				    },
+				    on_modal: function($modal) {
+					// disable the hovering feature while the modal is active
 
-				    $modal.on('show', function() {
-					$this.parent().parent().unbind('.autohide');
-				    });
-				    $modal.on('hidden', function() {
-					new outline_heading().set_autohide( $modal.parent().parent(), $modal.parent());
-				    });
-				}
-			    });
-			}
-		    });
-		    var todo_states = this.todo_states;
-		    $element.slideToggle();
-		    return 1;
+					$modal.on('show', function() {
+					    $this.parent().parent().unbind('.autohide');
+					});
+					$modal.on('hidden', function() {
+					    new outline_heading().set_autohide( $modal.parent().parent(), $modal.parent());
+					});
+				    }
+				});
+			    }
+			});
+			this.$buttons.find('.icon-plus').click( function() {
+			    // Modal dialog for new children of this heading
+			    var $this = $(this);
+			    $this.parent().parent().unbind('.autohide');
+			    if ( ! $this.data('nodeEdit') ) {
+				$this.nodeEdit( {
+				    show: true,
+				    parent_id: node_id,
+				    changed: function(node) {
+					var new_heading = new outline_heading( {
+					    title: node.title,
+					    text: node.text,
+					    node_id: node.id,
+					    workspace: heading.workspace,
+					    todo_id: node.todo_state,
+					    tags: node.tag_string,
+					    parent_id: node_id
+					});
+					heading.workspace.headings.push(new_heading);
+					var parent = new_heading.get_parent();
+					parent.has_children = true;
+					parent.redraw();
+					parent.toggle('open');
+				    },
+				    on_modal: function($modal) {
+					// disable the hovering feature while the modal is active
+
+					$modal.on('show', function() {
+					    $this.parent().parent().unbind('.autohide');
+					});
+					$modal.on('hidden', function() {
+					    new outline_heading().set_autohide( $modal.parent().parent(), $modal.parent());
+					});
+				    }
+				});
+			    }
+			});
+			var todo_states = this.todo_states;
+			return 1;
+		    }
 		}; // end of outline_heading.create_div()
 		this.get_previous_sibling = function() {
-		    return this.workspace.get_heading(
-			this._previous_sibling
+		    return this.workspace.headings.get(
+			{pk: Number(this._previous_sibling)}
 		    );
+		};
+		this.get_parent = function() {
+		    return this.workspace.headings.get({pk: this.parent_id});
+		}
+		this.get_children = function() {
+		    return this.workspace.headings.filter({parent_id: this.pk});
+		}
+		this.is_expandable = function() {
+		    // Return true if the heading has information that
+		    // can be seen by expanding a twisty.
+		    if (this.workspace.show_all) {
+			var children = this.get_children();
+		    } else {
+			var children = this.get_children().filter({archived: false});
+		    }
+		    if ( children == [] ) { 
+			children=false;
+		    }
+		    if ( children.length || this.text ) {
+			return true;
+		    } else {
+			return false;
+		    }
 		};
 		// Read the current object properties and update the
 		//   DOM element to reflect any changes
 		this.redraw = function() {
 		    // Test the various parts and update them as necessary
 		    //   then call redraw on all children
-		    this.$element = this.workspace.$element.find(this.$element.selector);
-		    this.create_div();
-		}
-		this.update_dom = function() {
-		    // Deprecated, use this.redraw() instead
-		    console.log('deprecated, use this.redraw() instead');
-		    var heading = this;
-		    // node_id
-		    this.$element.attr('node_id', this.node_id);
-		    this.$hoverable = this.$element.children('.ow-hoverable');
-		    this.$todo_state = this.$hoverable.children('.todo-state');
-		    // todo_id
-		    this.$todo_state.data('todo_id', this.todo_id);
-		    this.$todo_state.attr('todo_id', this.todo_id);
-		    var new_todo = '[]';
-		    if (typeof this.todo_states == 'undefined') {
-			var num_todo_states = 0;
-		    }
-		    else {
-			var num_todo_states = this.todo_states.length;
-		    }
-		    // for (var i=0; i<num_todo_states; i++) {
-		    // 	if (this.todo_states[i].todo_id == this.todo_id) {
-		    // 	    new_todo = this.todo_states[i].display;
-		    // 	}
-		    // }
-		    this.$todo_state.html(this.get_todo_state().display);
-		    this.$todo_state.todoState({
-			states: this.todo_states,
-			node_id: this.node_id,
-			click: function(ajax_response) {
-			    heading.todo_id = ajax_response['todo_id'];
-			    heading.$buttons.children('.icon-pencil').nodeEdit(
-				'update',
-				{ todo_id: heading.todo_id }
-			    );
-			    heading.set_autohide(heading.$hoverable, 
-						 heading.$buttons
-						);
-			}
-		    });
-		    // Text div (including aloha editor)
-		    if ( typeof this.$text != 'undefined' ) {
-			this.$text.html(this.text);
-			// // Make the heading expandable
-			if ( this.text ) {
-			    // Bind Aloha editor
-			    if ( this.$text.text() != '' ) {
-				this.$text.alohaText({$parent: this.$element});
-			    }
-			}
-			if (typeof this.$text.aloha == 'function') {
-			    this.$text.aloha();
-			}
-		    }
-		    // Title div
-		    if ( typeof this.$title != 'undefined' ) {
-			this.$title.html('<strong class="update" data-field="title">' + this.title + '</strong>');
-		    }
-		    // Archived status
-		    if ( this.archived ) {
+		    this.create_div()
+		    // Set CSS classes
+		    if ( this.archived && (!this.workspace.show_all) ) {
 			this.$element.addClass('archived');
 		    } else {
 			this.$element.removeClass('archived');
 		    }
-		    var $checkbox = this.$element.find('.show-all');
-		    if ( $checkbox.length > 0 ) {
-			this.$showall = $checkbox;
-		    } else if ( this.$workspace.data('nodeOutline') ) {
-			$checkbox = this.$workspace.data('nodeOutline').$showall;
+		    if ( this.has_children ) {
+			this.$element.addClass('preexpandable');
 		    }
-		    // Set expandability
-		    var c
-		    if ( $checkbox.is(':checked') ) {
-			c = this.$children.children('.heading');
+		    if ( this.is_expandable() ) {
+			this.$element.addClass('expandable');
+			this.$element.removeClass('preexpandable');
 		    } else {
-			c = this.$children.children('.heading:not(.archived)');
-		    }
-		    if ( c.length > 0 ) {
-		    	this.has_children = true;
-		    } else {
-		    	this.has_children = false;
-		    }
-		    if ( this.text || this.has_children ) {
-			this.expandable = true;
-			this.$element.addClass('expandable'); 
-		    } else {
-			this.expandable = false;
+			//this.toggle('close');
 			this.$element.removeClass('expandable');
 		    }
-		    var show_all = $checkbox.is(':checked');
-		    if ( this.archived && ! show_all ) {
-			this.$element.attr('archived');
-			this.$element.hide();
-		    } else {
-			this.$element.removeAttr('archived');
+		    // Set content
+		    if ( this.$todo_state) {
+			this.$todo_state.html(this.get_todo_state().display);
+			// Attach the todoState plugin
+			var heading = this;
+			this.$todo_state.todoState({
+			    states: this.workspace.todo_states,
+			    node_id: this.node_id,
+			    click: function(ajax_response) {
+				heading.todo_id = ajax_response['todo_id'];
+				heading.$buttons.children('.icon-pencil').nodeEdit(
+				    'update',
+				    { todo_id: heading.todo_id }
+				);
+				heading.set_autohide(heading.$hoverable,
+						     heading.$buttons
+						    );
+			    }
+			}); // end of todoState plugin
 		    }
-		    // Write settings
-		    this.$element.data('nodeOutline', this);
-		};		
+		    if ( this.$title ) {
+			this.$title.html(this.title);
+		    }
+		    // Set autohide
+		    if( this.$hoverable ) {
+			this.set_autohide(
+			    this.$hoverable,
+			    this.$buttons
+			);
+		    }
+		    // Remove Loading... indicator
+		    var parent = this.get_parent();
+		    if ( parent ) {
+			if ( parent.populated ) {
+			    this.$children.children('.loading').remove();
+			}
+		    }
+		    // Redraw children
+		    var children = this.workspace.headings.filter(
+			{parent_id: this.pk}
+		    );
+		    for ( var i=0; i < children.length; i++ ) {
+			children[i].redraw();
+		    }
+		}
 		this.set_indent = function($target, offset) {
 		    var indent = (this.icon_width + 4) * offset;
 		    $target.css('margin-left', indent + 'px');
@@ -923,12 +918,10 @@ var get_heading = function (node_id) {
 				    node.workspace = parent.workspace;
 				    var heading = new outline_heading(node);
 				    parent.workspace.headings.push(heading);
-				    if ( heading.create_div() ) {
-					// If successfully created
-					heading.$element.siblings('.loading').remove();
-				    }
 				}
 				parent.populated = true;
+				parent.redraw();
+				
 			    }
 			});
 		    }
@@ -1065,9 +1058,9 @@ var get_heading = function (node_id) {
 		});
 		workspace.$element = $this;
 		workspace.$element.addClass('heading');
-		workspace.$workspace = this;
+		// workspace.$workspace = this;
 		workspace.workspace = workspace;
-		workspace.$showall = $this.find('.show-all');
+		workspace.show_all = false;
 		workspace.$element.data('nodeOutline', workspace);
 		workspace.level = 0;
 		workspace.COLORS = COLORS;
@@ -1087,73 +1080,7 @@ var get_heading = function (node_id) {
 			}
 		    }
 		};
-		// // Create all the first two levels of nodes
-		// workspace.populate_children(function() {
-		// 	workspace.$children.children('.heading').each(function() {
-		// 	    console.log($(this));
-		// 	    var subheading = $(this).data('nodeOutline');
-		// 	    subheading.populate_children();
-		// 	});
-		// 	var h = '';
-		// 	// Button for adding a new child node
-		// 	h += '<div class="ow-buttons" id="add-heading">\n';
-		// 	h += '  <i class="icon-plus-sign"></i>Add Heading\n';
-		// 	h += '</div>\n';
-		// 	// Checkbox for showing archived nodes
-		// 	h += '<label class="checkbox" id="show-all-label">\n';
-		// 	h += '  <input class="ow-buttons show-all" type="checkbox">';
-		// 	h += '  </input>Show archived</label>\n';
-		// 	workspace.$element.append(h);
-		// 	workspace.$checkbox = workspace.$element.find('.show-all');
-		// 	workspace.$add_heading = workspace.$element.find('#add-heading');
-		// 	var heading = workspace.$add_heading.siblings('.children').children('.heading').first().data('nodeOutline');
-		// 	if (heading) {
-		// 	    var margin = heading.$icon.outerWidth()+4;
-		// 	} else {
-		// 	    var margin = 0;
-		// 	}
-		// 	workspace.$add_heading.css('margin-left', margin);
-		// 	var $add = workspace.$add_heading;
-		// 	$add.nodeEdit( {
-		// 	    parent_id: workspace.node_id,
-		// 	    changed: function(node) {
-		// 		new_heading = new outline_heading( {
-		// 		    title: node.title,
-		// 		    text: node.text,
-		// 		    node_id: node.id,
-		// 		    todo_id: node.todo_state,
-		// 		    tags: node.tag_string,
-		// 		    parent_id: workspace.node_id
-		// 		});
-		// 		new_heading.create_div( workspace.$children );
-		// 	    }
-		// 	});
-		// 	// Archived checkbox toggles visibility of archived nodes
-		// 	workspace.$checkbox.bind('change.show-all', function (e) {
-		// 	    var checked;
-		// 	    if ( $(this).is(':checked') ) {
-		// 		checked = true;
-		// 	    } else {
-		// 		checked = false;
-		// 	    }
-		// 	    workspace.showall = checked;
-		// 	    workspace.$element.find('.heading.archived').each( function() {
-		// 		var $parent = $(this).data('nodeOutline').$parent;
-		// 		var parent = $parent.data('nodeOutline');
-		// 		if ( checked ) {
-		// 		    $(this).slideDown();
-		// 		} else {
-		// 		    $(this).slideUp();
-		// 		}
-		// 		parent.update_dom();
-		// 		// Save data object back to elements
-		// 		$parent.data('nodeOutline', parent);
-		// 		workspace.$element.data('nodeOutline', workspace);
-		// 	    });
-		//     });
-		// 	workspace.todo_states = data.todo_states;
-		// 	$this.data('nodeOutline', workspace);
-		// });
+		workspace.headings.push(workspace);
 		// Sort through the elements in the old container and 
 		// populate the headings array.
 		$this.find('.ow-heading').each(function() {
@@ -1162,32 +1089,44 @@ var get_heading = function (node_id) {
 		    var todo_id = $row.attr('data-todo_id');
 		    var title = $row.attr('data-title');
 		    var text = $row.attr('data-text');
+		    var parent_id = workspace.pk;
 		    var tags = $row.attr('data-tag_string');
 		    var sibling_id = $row.attr('data-previous_sibling');
+		    if ( $row.attr('data-is_leaf_node') == 'False' ) {
+		    	var has_children = true;
+		    } else {
+		    	var has_children = false;
+		    }
+		    if (sibling_id == '') {
+			sibling_id = undefined;
+		    } else {
+			sibling_id = Number(sibling_id);
+		    }
 		    var dict = {
 			node_id: pk,
 			title: title,
 			text: text,
 			todo_id: todo_id,
-			tags: tags,				
-			previous_sibling_id: sibling_id
+			parent_id: parent_id,
+			tags: tags,
+			level: 1,
+			previous_sibling_id: sibling_id,
+			has_children: has_children,
+			workspace: workspace
 			   }
+		    // Marker
 		    var heading = new outline_heading(dict);
-		    if ( $row.attr('data-is_leaf_node') == 'False' ) {
-			heading.has_children = true;
-		    } else {
-			heading.has_children = false;
-		    }
-		    heading.workspace = workspace;
 		    workspace.headings.push(heading);
 		});
 		// Clear old content and replace
 		$this.html('<strong>' + header + '</strong><br />\n<div class="children"></div>');
 		workspace.$children = $this.children('.children');
-		for ( var i=0; i<workspace.headings.length; i++){
-		    var heading = workspace.headings[i];
-		    heading.create_div();
-		}
+		var root_headings = workspace.headings.filter({level: 1});
+		// for ( var i=0; i<root_headings.length; i++){
+		//     var heading = root_headings[i];
+		//     heading.create_div();
+		// }
+		workspace.redraw();
 		// Add some utility buttons at the end
 		var h = '';
 		h += '<div class="ow-buttons" id="add-heading">\n';
@@ -1198,6 +1137,33 @@ var get_heading = function (node_id) {
 		h += '  <input class="ow-buttons show-all" type="checkbox">';
 		h += '  </input>Show archived</label>\n';
 		workspace.$element.append(h);
+		// Archived checkbox toggles visibility of archived nodes
+		workspace.$showall = $this.find('.show-all');
+		workspace.$showall.bind('change.show-all', function (e) {
+		    if ( workspace.show_all ) {
+			workspace.show_all = false;
+		    } else {
+			workspace.show_all = true;
+		    }
+		    workspace.redraw();
+		});
+		workspace.$add = $this.find('#add-heading');
+		workspace.$add.nodeEdit( {
+		    parent_id: workspace.node_id,
+		    changed: function(node) {
+			new_heading = new outline_heading( {
+			    title: node.title,
+			    text: node.text,
+			    node_id: node.id,
+			    todo_id: node.todo_state,
+			    tags: node.tag_string,
+			    workspace: workspace,
+			    parent_id: workspace.node_id
+			});
+			workspace.headings.push(new_heading);
+			workspace.redraw()
+		    }
+		});
 		// Now populate the children AJAX-ically
 		if ( ! args.simulate ) {
 		    workspace.populate_children();
