@@ -175,8 +175,10 @@ def agenda_display(request, date=None):
             raise Http404
     else:
         agenda_date = datetime.date.today()
-    agenda_dt = datetime.datetime(year=agenda_date.year, month=agenda_date.month, day=agenda_date.day, hour=23, minute=59, second=59, tzinfo=get_current_timezone())
+    agenda_dt = datetime.datetime(year=agenda_date.year, month=agenda_date.month, day=agenda_date.day, hour=12, minute=0, second=0, tzinfo=get_current_timezone())
     one_day = datetime.timedelta(days=1)
+    print agenda_date
+    print agenda_dt
     tomorrow = agenda_date + one_day
     yesterday = agenda_date - one_day
     # Determine query filters for "Today" section

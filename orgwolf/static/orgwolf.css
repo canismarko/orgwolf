@@ -128,7 +128,7 @@ dd.todo
 {
     cursor: default;
 }
-.expandable,.lazy-expandable > .ow-hoverable
+.expandable > .ow-hoverable,.lazy-expandable > .ow-hoverable
 {
     cursor: pointer;
 }

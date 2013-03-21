@@ -15,12 +15,14 @@ var validate_node = function($form) {
 	$(this).find('[data-validate]').each(function() {
 	    var method = $(this).attr('data-validate')
 	    if ( method == 'required' ) {
+		// Required fields
 		if ( ! NOTBLANK_RE.test($(this).attr('value'))) {
 		    success = false;
 		    $(this).addClass('invalid');
 		    $(this).after('<span class="error"><br />This field is required</span>');
 		}
 	    } else if (method == 'date') {
+		// Dates
 		var s = $(this).attr('value')
 		if ( NOTBLANK_RE.test(s) ) { // Ignore empty dates
 		    var bits = s.split('-');
@@ -37,10 +39,10 @@ var validate_node = function($form) {
 	    } else if (method == 'time') {
 		var s = $(this).attr('value')
 		if ( NOTBLANK_RE.test(s) ) { // Ignore empty times
-		    var bits = s.split('-');
+		    var bits = s.split(':');
 		    var t = new Date(0, 0, 0, bits[0], bits[1]);
 		    if ( t.getHours() != bits[0] ||
-			 d.getMinutes() != bits[1] 
+			 t.getMinutes() != bits[1] 
 		       ) {
 			// Time does not match
 			$(this).addClass('invalid');
@@ -539,21 +541,12 @@ var get_heading = function (node_id) {
 		} else {
 		    this.level = args['level'];
 		}
-		// // Detect the location in the hierarchy
-		// if (typeof args['parent_id'] == 'undefined' ) {
-		//     // Root level heading
-		//     this.level = 1;
-	    	//     this.todo_states = { todo_id: 0, display: '[None]' }
-		// }
-		// else { // Find the parent and get its info
-		//     this.parent_id = Number(args['parent_id']);
-		//     var parent = this.workspace.headings.get({pk: this.parent_id});
-		//     if (typeof parent != 'undefined') {
-		// 	this.level = (parent.level + 1);
-		//     }
-		// }
+		// Detect the location in the hierarchy
 		this.parent_id = args['parent_id'];
 		this.has_children = args['has_children'];
+		if ( typeof args['is_leaf_node'] != 'undefined' ) {
+                    this.has_children = ! args['is_leaf_node'];
+		}
 		// Determine the width of icon that is being used
 		var $body = $('body');
 		$body.append('<i id="7783452" class="' + this.ICON + '"></i>');
@@ -906,6 +899,11 @@ var get_heading = function (node_id) {
 		    if ( this.$title ) {
 			this.$title.html(this.title);
 		    }
+		    if ( this.$text && this.text ) {
+			// If text exists, display it
+			this.$text.html(this.text);
+			this.$text.alohaText({$parent: this.$element});
+		    }
 		    if ( this.populated ) {
 			// Get rid of loading... indicator if expired
 			this.$children.children('.loading').remove();
@@ -916,13 +914,6 @@ var get_heading = function (node_id) {
 			    this.$hoverable,
 			    this.$buttons
 			);
-		    }
-		    // Remove Loading... indicator
-		    var parent = this.get_parent();
-		    if ( parent ) {
-			if ( parent.populated ) {
-			    this.$children.children('.loading').remove();
-			}
 		    }
 		    // Redraw children
 		    var children = this.workspace.headings.filter(
@@ -953,12 +944,22 @@ var get_heading = function (node_id) {
 		    html += 'Error! Please refresh your browser\n';
 		    $container.html(html);
 		};
-		this.populate_children = function(extra_callback) {
+		this.populate_children = function(options) {
 		    // Gets children via AJAX request and creates their div elements
-		    if ( ! this.populated ) {
-			var url = '/gtd/node/' + this.node_id + '/descendants/';
-			var parent = this;
-			var payload = {offset: 1};
+		    if ( typeof options == 'undefined' ) {
+			options = {};
+		    }
+		    if ( typeof options.offset == 'undefined' ) {
+			options.offset = 1;
+		    }
+		    if ( options.offset == 2 ) {
+			console.log(this)
+		    };
+		    var url = '/gtd/node/' + this.node_id + '/descendants/';
+		    var parent = this;
+		    var get_nodes = function(options) {
+			// Get immediate children
+			var payload = {offset: options.offset};
 			$.getJSON(url, payload, function(response) {
 			    // (callback) Process AJAX to get an array of children objects
 			    if ( response['status'] == 'success' ) {
@@ -969,12 +970,18 @@ var get_heading = function (node_id) {
 				    node.workspace = parent.workspace;
 				    var heading = new outline_heading(node);
 				    parent.workspace.headings.push(heading);
+				    heading.get_parent().populated = true;
 				}
-				parent.populated = true;
-				parent.redraw();
-				
+				parent.redraw();			
 			    }
 			});
+		    };
+		    if ( ! this.populated ) {
+			get_nodes({offset: 1});
+		    }
+		    if ( ! this.populated_level_2 ) {
+			get_nodes({offset: 2});
+			this.populated_level_2 = true;
 		    }
 		}; // end this.populate_children()
 		this.open = function() {
@@ -986,7 +993,7 @@ var get_heading = function (node_id) {
 			this.$icon.addClass('icon-chevron-down');
 			this.$details.slideDown();
 		    }
-		    if ( (!this.populated) && this.has_children ) {
+		    if ( this.has_children ) {
 			this.populate_children();
 		    }
 		};
@@ -1224,10 +1231,6 @@ var get_heading = function (node_id) {
 			workspace.redraw()
 		    }
 		});
-		// // Now populate the children AJAX-ically
-		// if ( ! args.simulate ) {
-		//     workspace.populate_children();
-		// }
 	    }); // end of this.each()
 	}, // end of init method
     };

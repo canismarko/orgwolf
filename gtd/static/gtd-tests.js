@@ -77,7 +77,8 @@ $.mockjax({
 	nodes: [
 	    {
 		pk: 8,
-		parent_id: 1
+		parent_id: 1,
+		is_leaf_node: false,
 	    },
 	    {
 		pk: 9,
@@ -1265,6 +1266,26 @@ asyncTest('Clicking a heading populates it\'s children', function() {
 	    heading1.$children.children('.loading').length,
 	    0,
 	    'Loading... indicator removed after populating'
+	);
+	start();
+    }, ajax_timer * 3.3 + 5);
+});
+
+asyncTest('Clicking a heading populates it\'s grandchildren', function() {
+    var $workspace = $('#test_workspace');
+    $workspace.nodeOutline();
+    var workspace = $workspace.data('nodeOutline');
+    var heading1 = workspace.headings.get({pk: 1});
+    heading1.toggle();
+    setTimeout(function() {
+	var heading8 = workspace.headings.get({pk: 8});
+	ok(
+	    heading8.get_children().length > 0,
+	    'heading 8 has at least one child'
+	);
+	ok(
+	    heading8.populated,
+	    'Heading 8 is populated after its parent is toggled'
 	);
 	start();
     }, ajax_timer * 3.3 + 5);
