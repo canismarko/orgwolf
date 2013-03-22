@@ -43,31 +43,6 @@ var todo_state_list = [
 ];
 var ajax_timer = 100; // how long fake ajax request takes (in milliseconds)
 // Setup fake AJAX responses
-// $.mockjax({
-//     url: '/gtd/node/0/descendants/',
-//     responseTime: ajax_timer,
-//     responseText: {
-// 	status: 'success',
-// 	parent_id: 0,
-// 	nodes: [
-// 	    {
-// 		pk: 5,
-// 		parent_id: 1,
-// 		todo_id: 1,
-// 	    },
-// 	    {
-// 		pk: 6,
-// 		archived: true,
-// 		parent_id: 1
-// 	    },
-// 	    {
-// 		pk: 7,
-// 		archived: true,
-// 		parent_id: 4
-// 	    }
-// 	]
-//     }
-// });
 $.mockjax({
     url: '/gtd/node/1/descendants/',
     responseTime: ajax_timer,
@@ -78,7 +53,7 @@ $.mockjax({
 	    {
 		pk: 8,
 		parent_id: 1,
-		is_leaf_node: false,
+		has_children: false,
 	    },
 	    {
 		pk: 9,
@@ -1245,6 +1220,21 @@ test('heading.redraw() method', function() {
     );
 });
 
+test('workspace.headings.add() method', function() {
+    var $workspace = $('#test_workspace');
+    $workspace.nodeOutline({simulate: true});
+    var workspace = $workspace.data('nodeOutline');
+    var heading = workspace.headings.get({pk: 1});
+    var heading_new = workspace.headings.get({pk:1});
+    heading_new.pk = 1;
+    workspace.headings.add(heading_new);
+    equal(
+	workspace.headings.filter({pk: 1}).length,
+	1,
+	'Adding a duplicate heading.pk removes the other heading'
+    );
+});
+
 asyncTest('Clicking a heading populates it\'s children', function() {
     var $workspace = $('#test_workspace');
     $workspace.nodeOutline();
@@ -1253,9 +1243,8 @@ asyncTest('Clicking a heading populates it\'s children', function() {
     heading1.toggle();
     setTimeout(function() {
 	var $heading8 = $workspace.find('.heading[node_id="8"]');
-	equal(
-	    $heading8.length,
-	    1,
+	ok(
+	    $heading8.length>0,
 	    'Heading 8 element found'
 	);
 	ok(
@@ -1268,27 +1257,7 @@ asyncTest('Clicking a heading populates it\'s children', function() {
 	    'Loading... indicator removed after populating'
 	);
 	start();
-    }, ajax_timer * 3.3 + 5);
-});
-
-asyncTest('Clicking a heading populates it\'s grandchildren', function() {
-    var $workspace = $('#test_workspace');
-    $workspace.nodeOutline();
-    var workspace = $workspace.data('nodeOutline');
-    var heading1 = workspace.headings.get({pk: 1});
-    heading1.toggle();
-    setTimeout(function() {
-	var heading8 = workspace.headings.get({pk: 8});
-	ok(
-	    heading8.get_children().length > 0,
-	    'heading 8 has at least one child'
-	);
-	ok(
-	    heading8.populated,
-	    'Heading 8 is populated after its parent is toggled'
-	);
-	start();
-    }, ajax_timer * 3.3 + 5);
+    }, ajax_timer * 4.4 + workspace.ANIM_SPEED);
 });
 
 asyncTest('Creates #add-heading button', function() {

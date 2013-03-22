@@ -185,3 +185,8 @@ div.ow-hoverable, div.clickable, div.ow-buttons
 {
     height: 200px;
 }
+/* Aloha text editor */
+.ow-text p
+{
+    margin-bottom: 0;
+}

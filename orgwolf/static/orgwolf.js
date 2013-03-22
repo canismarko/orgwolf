@@ -12,12 +12,14 @@ var validate_node = function($form) {
     $form.each(function() {
 	var $this_form = $(this);
 	reset_form( $this_form );
+	console.log($(this).find('[data-validate]'));
 	$(this).find('[data-validate]').each(function() {
 	    var method = $(this).attr('data-validate')
 	    if ( method == 'required' ) {
 		// Required fields
 		if ( ! NOTBLANK_RE.test($(this).attr('value'))) {
 		    success = false;
+		    $(this).focus();
 		    $(this).addClass('invalid');
 		    $(this).after('<span class="error"><br />This field is required</span>');
 		}
@@ -34,6 +36,7 @@ var validate_node = function($form) {
 			$(this).addClass('invalid');
 			$(this).after('<span class="error"><br />Please enter a valid date in the form YYYY-MM-DD</span>');
 			success = false;
+			$(this).focus()
 		    }
 		}
 	    } else if (method == 'time') {
@@ -48,12 +51,14 @@ var validate_node = function($form) {
 			$(this).addClass('invalid');
 			$(this).after('<span class="error"><br />Please enter a valid 24-hour time in the form HH:MM</span>');
 			success = false;
+			$(this).focus();
 		    }
 		}
 	    } else if (method == 'int') {
 		var s = $(this).attr('value')
 		if ( NOTBLANK_RE.test(s) && NOTINT_RE.test(s) ) { //Ignore empty fields
 		    success = false;
+		    $(this).focus();
 		    $(this).addClass('invalid');
 		    $(this).after('<span class="error"><br />Please enter an integer</span>');
 		}
@@ -69,6 +74,7 @@ var validate_node = function($form) {
 		    var s = $elem.attr('value');
 		    if ( ! NOTBLANK_RE.test(s) ) {
 			success = false;
+			$(this).focus();
 			$elem.addClass('invalid');
 			$elem.parent().append('<span class="error"><br />Field required by ' +
 		    				       $this.attr('id') + '</span>');
@@ -613,9 +619,11 @@ var get_heading = function (node_id) {
 		    new_string += '  <div class="details">\n';
 		    new_string += '    <div class="ow-text"></div>\n';
 		    new_string += '    <div class="children">\n';
-		    new_string += '      <div class="loading">\n';
-		    new_string += '        <em>Loading...</em>\n';
-		    new_string += '      </div>\n';
+		    if ( this.has_children ) {
+			new_string += '      <div class="loading">\n';
+			new_string += '        <em>Loading...</em>\n';
+			new_string += '      </div>\n';
+		    }
 		    new_string += '    </div>\n  </div>\n</div>\n';
 		    return new_string;
 		};
@@ -677,6 +685,7 @@ var get_heading = function (node_id) {
 			}
 			write(this.as_html());
 			this.set_selectors();
+			this.$element.hide();
 			// Apply tooltips
 			this.$buttons.children('i').tooltip({
 			    delay: {show:1000, hide: 100}
@@ -701,7 +710,7 @@ var get_heading = function (node_id) {
 			this.$buttons.find('.icon-arrow-right').click( function() {
 			    window.location = '/gtd/node/' + node_id + '/';
 			});
-			var heading = this;
+			this.$element.slideDown(this.workspace.ANIM_SPEED);
 			this.$buttons.find('.icon-pencil').click( function() {
 			    // Modal dialog for editing this heading
 			    var $this = $(this);
@@ -754,7 +763,7 @@ var get_heading = function (node_id) {
 					    tags: node.tag_string,
 					    parent_id: node_id
 					});
-					heading.workspace.headings.push(new_heading);
+					heading.workspace.headings.add(new_heading);
 					var parent = new_heading.get_parent();
 					parent.has_children = true;
 					parent.redraw();
@@ -906,7 +915,11 @@ var get_heading = function (node_id) {
 		    }
 		    if ( this.populated ) {
 			// Get rid of loading... indicator if expired
-			this.$children.children('.loading').remove();
+			this.$children.children('.loading').slideUp(
+			    this.workspace.ANIM_SPEED, function() {
+				$(this).remove();
+			    }
+			);
 		    }
 		    // Set autohide
 		    if( this.$hoverable ) {
@@ -969,7 +982,7 @@ var get_heading = function (node_id) {
 				    var node = nodes[i];
 				    node.workspace = parent.workspace;
 				    var heading = new outline_heading(node);
-				    parent.workspace.headings.push(heading);
+				    parent.workspace.headings.add(heading);
 				    heading.get_parent().populated = true;
 				}
 				parent.redraw();			
@@ -991,7 +1004,7 @@ var get_heading = function (node_id) {
 			var new_icon_class = 'icon-chevron-down';
 			this.$icon.removeClass('icon-chevron-right');
 			this.$icon.addClass('icon-chevron-down');
-			this.$details.slideDown();
+			this.$details.slideDown(this.workspace.ANIM_SPEED);
 		    }
 		    if ( this.has_children ) {
 			this.populate_children();
@@ -1001,7 +1014,7 @@ var get_heading = function (node_id) {
 		    // Closes a toggleable heading
 		    this.$icon.removeClass('icon-chevron-down');
 		    this.$icon.addClass('icon-chevron-right');
-		    this.$details.slideUp();		    
+		    this.$details.slideUp(this.workspace.ANIM_SPEED);		    
 		};
 		this.toggle = function( direction ) {
 		    // Show or hide the children div based on present state
@@ -1095,6 +1108,16 @@ var get_heading = function (node_id) {
 			sorted.reverse();
 		    }
 		    return sorted;
+		}; // end of headings.order_by
+		headings.add = function(new_heading) {
+		    // Add or replace a heading based on pk
+		    var other_heading = this.get({pk: new_heading.pk});
+		    if ( other_heading ) {
+			// Remove the old heading
+			var i = this.indexOf(other_heading);
+			this.splice(i, 1);
+		    }
+		    this.push(new_heading);
 		};
 		return headings;
 		// filter returns itself with the appropriate filter applied
@@ -1119,6 +1142,7 @@ var get_heading = function (node_id) {
 		// Some settings
 		// Array of browser recognized colors for each level of nodes
 		var COLORS = ['blue', 'brown', 'purple', 'red', 'green', 'teal', 'slateblue', 'darkred'];
+		var ANIM_SPEED = 300;
 		var workspace = new outline_heading( {
 		    node_id: node_id,
 		    title: 'Outline Workspace',
@@ -1131,6 +1155,7 @@ var get_heading = function (node_id) {
 		workspace.$element.data('nodeOutline', workspace);
 		workspace.level = 0;
 		workspace.COLORS = COLORS;
+		workspace.ANIM_SPEED = ANIM_SPEED;
 		workspace.color = workspace.COLORS[0];
 		workspace.headings = new HeadingManager();
 		if ( typeof args.todo_states != 'undefined' ) {
@@ -1147,7 +1172,7 @@ var get_heading = function (node_id) {
 			}
 		    }
 		};
-		workspace.headings.push(workspace);
+		workspace.headings.add(workspace);
 		// Sort through the elements in the old container and 
 		// populate the headings array.
 		$this.find('.ow-heading').each(function() {
@@ -1183,7 +1208,7 @@ var get_heading = function (node_id) {
 			   }
 		    // Marker
 		    var heading = new outline_heading(dict);
-		    workspace.headings.push(heading);
+		    workspace.headings.add(heading);
 		});
 		// Clear old content and replace
 		$this.html('<strong>' + header + '</strong><br />\n<div class="children"></div>');
@@ -1227,7 +1252,7 @@ var get_heading = function (node_id) {
 			    workspace: workspace,
 			    parent_id: workspace.node_id
 			});
-			workspace.headings.push(new_heading);
+			workspace.headings.add(new_heading);
 			workspace.redraw()
 		    }
 		});
