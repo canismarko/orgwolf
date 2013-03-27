@@ -41,8 +41,31 @@ var todo_state_list = [
      display: 'DONE',
      full: 'Completed'},
 ];
-var ajax_timer = 100; // how long fake ajax request takes (in milliseconds)
+var ajax_timer = 20; // how long fake ajax request takes (in milliseconds)
 // Setup fake AJAX responses
+var node8 = {
+    pk: 8,
+    title: 'it\'s all falling down',
+    todo_state: 1,
+    scheduled_date: '2012-03-27',
+    scheduled_time: '15:53:00',
+    scheduled_time_specific: true,
+    parent_id: 1,
+    deadline_date: '2012-03-27',
+    deadline_time: '08:00:00',
+    deadline_time_specific: true,
+    priority: 'B',
+    scope: [1, 2],
+    repeats: true,
+    repeating_number: 3,
+    repeating_unit: 'w',
+    repeats_from_completion: true,
+    archived: true,
+    related_projects: [11, 25, 12],
+    text: 'hello, world',
+    tag_string: ':work:',
+    is_leaf_node: true,
+	    };
 $.mockjax({
     url: '/gtd/node/1/descendants/',
     responseTime: ajax_timer,
@@ -50,11 +73,7 @@ $.mockjax({
 	status: 'success',
 	parent_id: 1,
 	nodes: [
-	    {
-		pk: 8,
-		parent_id: 1,
-		has_children: false,
-	    },
+	    node8,
 	    {
 		pk: 9,
 		parent_id: 1
@@ -98,6 +117,11 @@ $.mockjax({
 	    }
 	]
     }
+});
+$.mockjax({
+    url: '/gtd/node/new/',
+    responseTime: ajax_timer,
+    responseText: '<div class="modal hide fade" id="new-modal">\n  <div class="modal-header">\n    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>\n    <h3 class="header-title">\n      New Node\n      \n    </h3>\n  </div>\n  <form id="edit-form" action="/index.html" method="POST">\n    <div class="modal-body">\n      <table>\n<tr class="required"><th><label for="id_title">Title:</label></th><td><input autofocus="autofocus" data-validate="required" id="id_title" name="title" type="text" /></td></tr>\n<tr><th><label for="id_todo_state">Todo state:</label></th><td><select id="id_todo_state" name="todo_state">\n<option value="" selected="selected">---------</option>\n<option value="8"><strong>HARD</strong> - Hard Scheduled</option>\n<option value="9"><strong>SPED</strong> - Supersonic</option>\n<option value="10"><strong>BORE</strong> - Something boring to do</option>\n<option value="1"><strong>NEXT</strong> - Next Action</option>\n<option value="2"><strong>ACTN</strong> - Future Action</option>\n<option value="3">DONE - Completed</option>\n<option value="4"><strong>SMDY</strong> - Someday Maybe</option>\n<option value="5"><strong>DFRD</strong> - Deferred</option>\n<option value="6">WAIT - Waiting For</option>\n<option value="7"><span style="color: rgba(0, 51, 204, 1.0)">CNCL</span> - Cancelled</option>\n</select></td></tr>\n<tr><th><label for="id_scheduled_date">Scheduled date:</label></th><td><input class="datepicker" data-validate="date" id="id_scheduled_date" name="scheduled_date" type="text" /></td></tr>\n<tr><th><label for="id_scheduled_time">Scheduled time:</label></th><td><input class="timepicker" data-validate="time" id="id_scheduled_time" name="scheduled_time" type="text" /></td></tr>\n<tr><th><label for="id_scheduled_time_specific">Scheduled time specific:</label></th><td><input data-requires="#id_scheduled_date, #id_scheduled_time" id="id_scheduled_time_specific" name="scheduled_time_specific" toggles="scheduled_time" type="checkbox" /></td></tr>\n<tr><th><label for="id_deadline_date">Deadline date:</label></th><td><input class="datepicker" id="id_deadline_date" name="deadline_date" type="text" /></td></tr>\n<tr><th><label for="id_deadline_time">Deadline time:</label></th><td><input class="timepicker" id="id_deadline_time" name="deadline_time" type="text" /></td></tr>\n<tr><th><label for="id_deadline_time_specific">Deadline time specific:</label></th><td><input data-requires="#id_deadline_date, #id_deadline_time" id="id_deadline_time_specific" name="deadline_time_specific" toggles="deadline_time" type="checkbox" /></td></tr>\n<tr><th><label for="id_priority">Priority:</label></th><td><select id="id_priority" name="priority">\n<option value="" selected="selected">---------</option>\n<option value="A">A</option>\n<option value="B">B</option>\n<option value="C">C</option>\n</select></td></tr>\n<tr><th><label for="id_scope">Scope:</label></th><td><select multiple="multiple" id="id_scope" name="scope">\n<option value="1">joe_corp</option>\n<option value="2">Kalsec</option>\n</select><br /><span class="helptext"> Hold down "Control", or "Command" on a Mac, to select more than one.</span></td></tr>\n<tr><th><label for="id_repeats">Repeats:</label></th><td><input data-requires="#id_repeating_number, #id_repeating_unit" id="id_repeats" name="repeats" type="checkbox" /></td></tr>\n<tr><th><label for="id_repeating_number">Repeating number:</label></th><td><input data-validate="int" id="id_repeating_number" name="repeating_number" type="text" /></td></tr>\n<tr><th><label for="id_repeating_unit">Repeating unit:</label></th><td><select id="id_repeating_unit" name="repeating_unit">\n<option value="" selected="selected">---------</option>\n<option value="d">Days</option>\n<option value="w">Weeks</option>\n<option value="m">Months</option>\n<option value="y">Years</option>\n</select></td></tr>\n<tr><th><label for="id_repeats_from_completion">Repeats from completion:</label></th><td><select id="id_repeats_from_completion" name="repeats_from_completion">\n<option value="1">Unknown</option>\n<option value="2">Yes</option>\n<option value="3" selected="selected">No</option>\n</select></td></tr>\n<tr><th><label for="id_archived">Archived:</label></th><td><input id="id_archived" name="archived" type="checkbox" /></td></tr>\n<tr><th><label for="id_related_projects">Related projects:</label></th><td><select multiple="multiple" id="id_related_projects" name="related_projects">\n<option value="1">[<strong>NEXT</strong>] Errands</option>\n<option value="11">Hello</option>\n<option value="6">[<strong>NEXT</strong>] Home Node</option>\n<option value="12">Miscellaneous</option>\n<option value="28">Mischief</option>\n<option value="8">[<strong>ACTN</strong>] Ryan node</option>\n<option value="7">[<strong>NEXT</strong>] <span class="archived-text">Work Node</span></option>\n<option value="17">contxt parent</option>\n<option value="23">goodbye, world</option>\n<option value="22">hello, world</option>\n<option value="24">kjoweij</option>\n<option value="25">october</option>\n<option value="14">to the shows</option>\n</select></td></tr>\n<tr><th><label for="id_text">Text:</label></th><td><textarea cols="40" id="id_text" name="text" rows="10">\n</textarea></td></tr>\n<tr><th><label for="id_tag_string">Tag string:</label></th><td><textarea cols="40" id="id_tag_string" name="tag_string" rows="10">\n</textarea><input id="id_scheduled" name="scheduled" type="hidden" /><input id="id_deadline" name="deadline" type="hidden" /></td></tr>\n      </table>\n    </div>\n    <div class="modal-header">\n      <button type="submit" class="btn btn-primary">Save Changes</button>\n      <button class="btn" data-dismiss="modal" aria-hidden="true">Close</button>\n      <input type="hidden" name="form" value="modal"></input>\n    </div>\n  </form>\n</div>\n'
 });
 // mockjax request for /gtd/node/pk/children/ are deprecated
 $.mockjax({
@@ -204,7 +228,7 @@ $.mockjax({
 var options = "";
 for ( var i = 0; i < todo_state_list.length; i++ ) {
     var state = todo_state_list[i];
-    options += '<option value="' + state.todo_id + '"';
+    options += '<option value="' + state.pk + '"';
     if ( i == 1 ) {
 	options += ' selected';
     }
@@ -227,567 +251,6 @@ $.mockjax({
     responseTime: ajax_timer,
     responseText: '<div class="modal hide fade" id="node-edit-modal">\n<div class="modal-body"><select id="id_todo_state">' + options + '</select></div>\n</div>'
 });
-
-
-// var module_name = 'OutlineHeading jQuery plugin - ';
-// module(module_name + 'Heading');
-
-// test('outline object', function() {
-//     // Check if outline functionality exists
-//     equal(
-// 	typeof $.fn.nodeOutline,
-// 	'function',
-// 	'project_outline function exists')
-// });
-// var outline_heading = $.fn.nodeOutline({ get_proto: true });
-// test('heading object', function() {
-//     // Check that the heading object exists
-//     equal(typeof outline_heading, 'function', 'heading function exists')
-// });
-// test('create new heading object from full data', function() {
-//     var test_heading = new outline_heading(full_dict);
-//     equal(test_heading.title, full_dict.title, 'Title is set');
-//     console.log(test_heading);
-//     strictEqual(test_heading.todo_id, full_dict.todo_id, 'Todo ID is set');
-//     equal(test_heading.text, full_dict.text, 'Text set');
-//     equal(test_heading.tags, ':comp:', 'Tag string is set');
-// });
-
-// test('save heading object in DOM element data()', function() {
-//     var $workspace = $('#test_workspace');
-//     var heading = new outline_heading(full_dict);
-//     heading.create_div($workspace);
-//     var saved_heading = heading.$element.data('nodeOutline');
-//     equal(
-// 	saved_heading.node_id,
-// 	1,
-// 	'Saved object node_id'
-//     );
-// });
-// test('create new heading object from sparse data', function() {
-//     var test_heading = new outline_heading(sparse_dict);
-//     equal(test_heading.title, 'test_title', 'Title is set');
-//     equal(test_heading.todo_id, 0, 'Todo ID is set');
-//     equal(test_heading.tags, null, 'Tag string is set');
-// });
-
-// test('heading as_html method', function() {
-//     var test_heading = new outline_heading(sparse_dict);
-//     var expected_html = '<div class="heading" node_id="1">\n  <div class="ow-hoverable">\n    <i class="clickable icon-chevron-right"></i>\n    <span class="todo-state update" data-field="todo_abbr"></span>\n    <div class="clickable ow-title"></div>\n    <div class="ow-buttons">\n      <i class="icon-pencil" title="Edit"></i>\n      <i class="icon-arrow-right" title="Detail view"></i>\n      <i class="icon-plus" title="New subheading"></i>\n    </div>\n  </div>\n  <div class="details">\n    <div class=\"ow-text\"></div>\n    <div class="children">\n      <div class="loading">\n        <em>Loading...</em>\n      </div>\n    </div>\n  </div>\n</div>\n';
-//     equal(test_heading.as_html(), expected_html, 'outline_heading.as_html() output');
-// });
-
-// test('heading create_div method', function() {
-//     // Make sure the outline_heading objects create_div method works as expected
-//     var test_heading = new outline_heading(full_dict);
-//     var $workspace = $('#dummy');
-//     test_heading.create_div($workspace);
-//     var $heading = $workspace.children('.heading');
-//     equal($heading.length, 1, '1 heading created');
-//     equal(test_heading.$element.attr('node_id'), '1', 'node_id set');
-//     equal(
-// 	test_heading.$text.text(),
-// 	full_dict.text,
-// 	'text element created'
-//     );	
-//     equal(
-// 	test_heading.$details.css('display'),
-// 	'none',
-// 	'Initial details div is not displayed'
-//     );
-// });
-
-// test('create_div of archived node', function() {
-//     // Make sure the outline_heading objects create_div method works as expected
-//     var test_heading = new outline_heading(archived_dict);
-//     var $workspace = $('#test_workspace');
-//     test_heading.create_div($workspace);
-//     var $heading = $('#test_workspace').children('.heading');
-//     ok(
-// 	$heading.hasClass('archived'),
-// 	'Archived heading has \'archived\' class'
-//     );
-// });
-
-// test('update_dom method', function() {
-//     var test_heading = new outline_heading(full_dict);
-//     test_heading.todo = "NEXT";
-//     test_heading.todo_states = todo_state_list;
-//     equal(
-// 	typeof test_heading.update_dom,
-// 	'function',
-// 	'update_dom() method exists'
-//     );
-//     var $workspace = $('#test_workspace');
-//     test_heading.create_div($workspace);
-//     var $heading = test_heading.$element;
-//     // Test heading.node_id
-//     equal(
-// 	$heading.attr('node_id'),
-// 	1,
-// 	'Initial attribute: node_id set'
-//     );
-//     test_heading.node_id = 2;
-//     test_heading.update_dom();
-//     equal(
-// 	$heading.attr('node_id'),
-// 	2,
-// 	'Updated attribute: node_id'
-//     );
-//     // Test heading.text
-//     equal(
-// 	test_heading.$text.html(),
-// 	test_heading.text,
-// 	'Initial element: ow-text'
-//     );
-//     test_heading.text = 'Some other text here';
-//     test_heading.update_dom();
-//     equal(
-// 	test_heading.$text.html(),
-// 	'Some other text here',
-// 	'Update element: ow-text'
-//     );
-//     // Test heading.title
-//     equal(
-// 	test_heading.$title.html(),
-// 	'<strong class="update" data-field="title">' + test_heading.title + '</strong>',
-// 	'Initial element: ow-title'
-//     );
-//     test_heading.title = 'New title';
-//     test_heading.update_dom();
-//     equal(
-// 	test_heading.$title.html(),
-// 	'<strong class="update" data-field="title">New title</strong>',
-// 	'Update element: ow-title'
-//     );
-//     // Test heading.todo_id
-//     equal(
-// 	test_heading.$todo_state.html(),
-// 	'NEXT',
-// 	'Initial element: $todo_state'
-//     );
-//     test_heading.todo_id = 2;
-//     test_heading.update_dom();
-//     equal(
-// 	test_heading.$todo_state.html(),
-// 	'DONE',
-// 	'Update element: $todo_state'
-//     );
-//     equal(
-// 	test_heading.$todo_state.data('todo_id'),
-// 	2,
-// 	'Update data ($todo_id): todo_id'
-//     );
-//     strictEqual(
-// 	$heading.data('nodeOutline'),
-// 	test_heading,
-// 	'Updated data: object'
-//     );
-// });
-
-// test('outline indentations', function() {
-//     var $workspace = $('#test_workspace');
-//     var first = new outline_heading(full_dict);
-//     equal(first.level, 1, 'Detect parent level');
-//     first.create_div($workspace);
-//     second_dict['parent_id'] = '1';
-//     var second_heading = new outline_heading(second_dict);
-//     equal(second_heading.level, 2, 'Detect second level');
-//     var $first = get_heading(1);
-//     second_heading.create_div($first.children('.children'));
-//     var $second = get_heading(5);
-// });
-
-// test('add function buttons', function() {
-//     var $workspace = $('#test_workspace');
-//     var heading = new outline_heading(full_dict);
-//     heading.create_div($workspace);
-//     heading.create_add_button();
-//     equal(
-// 	heading.$children.children('.add-heading').data('parent_id'),
-// 	1,
-// 	'Set add heading button\'s parent_id data attribute'
-//     );
-//     equal(
-// 	heading.$buttons.length,
-// 	1,
-// 	'Creates a buttons div'
-//     );
-//     equal(
-// 	heading.$buttons.css('visibility'),
-// 	'hidden',
-// 	'Function buttons start off hidden'
-//     );
-//     heading.$buttons.mouseenter(),
-//     equal(
-// 	heading.$buttons.css('visibility'),
-// 	'visible',
-// 	'MouseEnter makes the buttons visible'
-//     );
-//     heading.$buttons.mouseleave(),
-//     equal(
-// 	heading.$buttons.css('visibility'),
-// 	'hidden',
-// 	'MouseLeave makes the buttons hidden again'
-//     );
-//     var $buttons = heading.$element.children('div.ow-buttons').children('i');
-// });
-
-// test('Heading toggle() method', function() {
-//     var $workspace = $('#test_workspace');
-//     var heading = new outline_heading(full_dict);
-//     heading.create_div($workspace);
-//     equal(
-// 	heading.$details.css('display'),
-// 	'none',
-// 	'.details starts off hidden'
-//     );
-//     var $icon = heading.$element.children('.ow-hoverable').children('i.clickable');
-//     ok($icon.hasClass('icon-chevron-right', 'Icon ends up closed'));
-//     heading.toggle();
-//     equal(
-// 	heading.$details.css('display'),
-// 	'block',
-// 	'.details get un-hidden on toggle'
-//     );
-//     ok($icon.hasClass('icon-chevron-down'), 'Icon ends up open');
-//     heading.toggle('open');
-//     ok($icon.hasClass('icon-chevron-down'), 'Icon ends up open');
-// });
-
-// asyncTest('Toggle clickable region on heading', function() {
-//     expect(1);
-//     var $workspace = $('#test_workspace');
-//     $workspace.nodeOutline();
-//     setTimeout(function() {
-// 	$workspace.find('.heading').first().each(function() {
-// 	    var $clickable = $(this).children('.ow-hoverable').children('.clickable');
-// 	    var heading = $clickable.data('$parent').data('nodeOutline');
-// 	    heading.has_children = true;
-// 	    $clickable.click();
-// 	    equal(
-// 		heading.$details.css('display'),
-// 		'block',
-// 		'CSS display set properly'
-// 	    );
-// 	});
-// 	start();
-//     }, (ajax_timer * 1.1 + 5));
-// });
-
-// test('Content detection', function() {
-//     // If a heading has text or children is should be expandable
-//     var $workspace = $('#test_workspace');
-//     var heading = new outline_heading(sparse_dict);
-//     heading.create_div( $workspace );
-//     ok(
-// 	!heading.expandable,
-// 	'sparse heading doesn\'t have it\'s exandable flag set'
-//     );
-//     var heading = new outline_heading(full_dict);
-//     heading.create_div( $workspace );
-//     ok(
-// 	heading.expandable,
-// 	'heading with text has it\'s exandable flag set'
-//     );
-//     ok(
-// 	heading.$element.hasClass('expandable'),
-// 	'heading element has class \'expandable\''
-//     );
-//     ok(
-// 	!heading.$element.hasClass('has_children'),
-// 	'heading element does not have class \'has_children\''
-//     );
-// });
-
-// test('Hovering actions', function() {
-//     // When an .ow-hoverable action is hovered over, the relevant buttons show
-//     var $workspace = $('#test_workspace');
-//     var heading = new outline_heading(sparse_dict);
-//     heading.todo_states = [
-// 	{todo_id: 1,
-// 	 todo: 'NEXT'},
-// 	{todo_id: 2,
-// 	 todo: 'DONE'},
-//     ]
-//     heading.create_div($workspace);
-//     var $hoverable = heading.$element.children('.ow-hoverable')
-//     var heading2 = new outline_heading(second_dict);
-//     heading2.todo_states = heading.todo_states;
-//     heading2.create_div($workspace);
-//     var $hoverable2 = heading2.$element.children('.ow-hoverable');
-//     // Tests before hover over
-//     equal(
-// 	$hoverable.children('.ow-buttons').length,
-// 	1,
-// 	'Buttons div exists'
-//     );
-//     equal(
-// 	$hoverable.children('.ow-buttons').css('visibility'),
-// 	'hidden',
-// 	'Buttons div starts out hidden'
-//     );
-//     equal(
-// 	$hoverable.children('.todo-state').length,
-// 	1,
-// 	'Todo state div exists'
-//     );
-//     equal(
-// 	$hoverable.children('.todo-state').text(),
-// 	'[]',
-// 	'Todo state div has \'[]\' as text'
-//     );
-//     // Tests after hover over
-//     $hoverable.mouseenter();
-//     equal(
-// 	$hoverable.children('.ow-buttons').css('visibility'),
-// 	'visible',
-// 	'Buttons div is visible after mouse enter'
-//     );
-//     // Tests after hover out
-//     $hoverable.mouseleave();
-//     equal(
-// 	$hoverable.children('.ow-buttons').css('visibility'),
-// 	'hidden',
-// 	'Buttons div is visible after mouse enter'
-//     );
-//     equal(
-// 	$hoverable.children('.todo-state').css('display'),
-// 	'none',
-// 	'Empty Todo state is hidden after mouse leave'
-//     );
-//     $hoverable2.mouseleave();
-//     equal(
-// 	$hoverable2.children('.todo-state').css('display'),
-// 	'inline',
-// 	'Real todo state is still visible after mouse leave'
-//     );
-// });
-
-// test('Clickable TodoState elements', function() {
-//     // When '.todostate' spans are clicked, they become a selection popover.
-//     var $workspace = $('#test_workspace');
-//     var heading = new outline_heading(second_dict);
-//     heading.todo_states = todo_state_list
-//     heading.create_div($workspace);
-//     var $todo = heading.$element.find('.todo-state');
-//     var $popover = heading.$element.find('.popover');
-//     equal(
-// 	$popover.css('position'), 
-// 	'absolute',
-// 	'Todo state element uses absolute positioning'
-//     );
-//     equal(
-// 	heading.$element.find('.todo-state').length,
-// 	1,
-// 	'One .todo-state element found'
-//     );
-//     equal(
-// 	$popover.length,
-// 	1,
-// 	'Popover div exists'
-//     );
-//     equal(
-// 	$popover.css('display'),
-// 	'none',
-// 	'Popover starts off hidden'
-//     );
-//     equal(
-// 	$popover.find('.todo-option').length,
-// 	todo_state_list.length,
-// 	'Correct number of todo state options in popover'
-//     );
-//     // Now click the todo state and check properties
-//     $todo.click();
-//     equal(
-// 	$popover.css('display'),
-// 	'block',
-// 	'Popover is displayed on todo state click'
-//     );
-// });
-
-// test('Todo state popover', function() {
-//     // When '.todostate' spans are clicked, they become a combo select box.
-//     var $workspace = $('#test_workspace');
-//     var heading = new outline_heading(second_dict);
-//     heading.todo_states = [
-// 	{todo_id: 1,
-// 	 display: 'TODO'},
-// 	{todo_id: 2,
-// 	 display: 'NEXT'},
-//     ]
-//     heading.create_div($workspace);
-//     var $todo = heading.$element.find('.todo-state');
-//     var $popover = heading.$element.find('.popover');
-//     equal(
-// 	$popover.find('.todo-option').length,
-// 	2,
-// 	'Created correct number of todo options'
-//     );
-//     equal(
-// 	$popover.find('.todo-option').attr('todo_id'),
-// 	'1',
-// 	'todo_id attribute set'
-//     );
-//     equal(
-// 	$popover.find('.todo-option[todo_id="1"]').html(),
-// 	'TODO',
-// 	'Other todo state has a white background'
-//     );
-//     // Hover-over
-//     var $option1 = $popover.find('.todo-option[todo_id="1"]')
-//     heading.$todo_state.click(); // To create the popover
-//     $option1.mouseenter();
-//     ok($option1.hasClass('ow-hover'),
-//        'Hovered element has class ow-hover');
-//     $option1.mouseleave();
-//     ok(!$option1.hasClass('ow-hover'),
-//        'Un-hovered element doesn\'t have class ow-hover');
-//     // Selected option does not have background set
-//     var $option2 = $popover.find('.todo-option[selected]');
-//     equal(
-// 	$option2.length,
-// 	1,
-// 	'1 Selected todo-option found'
-//     );
-//     $option2.mouseenter();
-//     ok(!$option1.hasClass('ow-hover'),
-// 	'Selected element doesn\'t get ow-hover class on hover');
-// });
-
-// test('Popover populating method', function() {
-//     // When '.todostate' spans are clicked, they become a combo select box.
-//     var $workspace = $('#test_workspace');
-//     var heading = new outline_heading(second_dict);
-//     heading.todo_states = todo_state_list;
-//     equal(
-// 	typeof heading.populate_todo_states,
-// 	'function',
-// 	'populate_todo_states method exists'
-//     );
-//     heading.create_div($workspace);
-//     var $todo = heading.$element.find('.todo-state');
-//     var $popover = heading.$element.find('.popover');
-//     var $inner = $popover.children('.popover-inner')
-//     $inner.html('');
-//     equal(
-// 	$inner.html(),
-// 	'',
-// 	'Popover inner html cleared'
-//     );
-//     heading.populate_todo_states($popover.find('.popover-inner'));
-//     equal(
-// 	$popover.children('.popover-inner').children('.todo-option').length,
-// 	todo_state_list.length,
-// 	'Correct number of todo states created'
-//     );
-//     var $option1 = $inner.children('.todo-option[todo_id="1"]');
-//     var $option2 = $inner.children('.todo-option[todo_id="2"]');
-//     equal(
-// 	$option1.attr('selected'),
-// 	undefined,
-// 	'Non-selected todo option does not have "selected" attribute set'
-//     );
-//     equal(
-// 	$option2.attr('selected'),
-// 	'selected',
-// 	'Selected todo option has "selected" attribute set'
-//     );
-// });
-
-// asyncTest('Todo state changing functionality', function() {
-//     var $workspace = $('#test_workspace');
-//     $workspace.nodeOutline({ todo_states: todo_state_list });
-//     var $heading1;
-//     setTimeout(function() {
-// 	start();
-// 	$heading1 = $workspace.find('.heading[node_id="1"]');
-// 	var $popover = $heading1.children('.ow-hoverable').children('.popover');
-// 	equal(
-// 	    $popover.length,
-// 	    1,
-// 	    'One popover exists before clicking'
-// 	);
-// 	equal(
-// 	    $heading1.length,
-// 	    1,
-// 	    'Node 1 heading exists'
-// 	);
-// 	equal(
-// 	    $heading1.find('.todo-option[selected]').html(),
-// 	    'NEXT',
-// 	    'Correct heading selected to start'
-// 	);
-// 	// Clicking on the selected node does nothing
-// 	$heading1.children('.ow-hoverable').children('.todo-state').click();
-// 	equal(
-// 	    $heading1.find('.popover').css('display'),
-// 	    'block',
-// 	    'Popover visible after mouseenter before clicking'
-// 	);
-// 	$heading1.find('.todo-option[selected]').click();
-// 	equal(
-// 	    $heading1.find('.popover').css('display'),
-// 	    'block',
-// 	    'Clicking Selected option does not dismiss popover'
-// 	);
-// 	// Now change it to the other todo state
-// 	$heading1.find('.todo-option[todo_id="2"]').click();
-// 	stop();
-//     }, (ajax_timer * 1.1 + 5));
-//     setTimeout(function() {
-// 	start();
-// 	var heading = $heading1.data('nodeOutline');
-// 	var $popover = $heading1.children('.ow-hoverable').children('.popover');
-// 	equal(
-// 	    $popover.length,
-// 	    1,
-// 	    'One $popover is created'
-// 	);
-// 	equal(
-// 	    heading.node_id,
-// 	    1,
-// 	    'Heading object successfully found after todo option click'
-// 	);
-// 	equal(
-// 	    heading.todo_id,
-// 	    2,
-// 	    'Todo state changed to 2'
-// 	);
-// 	equal(
-// 	    $popover.find('.todo-option[todo_id="2"]').attr('selected'),
-// 	    'selected',
-// 	    'Todo option 2 is now selected'
-// 	);
-//     }, (ajax_timer * 7.7 + 5));
-// });
-
-// test('test heading.get_todo_state()', function() {
-//     var $workspace = $('#test_workspace');
-//     $workspace.nodeOutline({
-// 	todo_states: todo_state_list
-//     });
-//     var heading = new outline_heading(full_dict);
-//     var outline = $workspace.data('nodeOutline');
-//     heading.outline = outline;
-//     equal(
-// 	typeof heading.get_todo_state,
-// 	'function',
-// 	'heading object has get_todo_state method'
-//     );
-//     var state = heading.get_todo_state();
-//     equal(
-// 	state.pk,
-// 	full_dict.todo_id,
-// 	'retrieved todo state has primary key set'
-//     );
-//     equal(
-// 	state,
-// 	todo_state_list[1],
-// 	'retrieved todo state has abbreviation set'
-//     );
-// });
-
 
 module('nodeOutline jQuery plugin');
 
@@ -962,53 +425,7 @@ asyncTest('set expandability and has-children data', function() {
 	    'Heading with only archived children is not expandable'
 	);
 	start();
-    }, ajax_timer );
-    // var heading3 = workspace.headings.get({pk: 3});
-    // var heading4 = workspace.headings.get({pk: 4});
-    // var outline_heading = $workspace.nodeOutline({'get_proto': true});
-    // var heading5 = new outline_heading(full_dict);
-    // heading5.pk = 5;
-    // heading5.parent_id = 3;
-    // heading5.archived = true;
-    // workspace.headings.push(heading5);
-    // var heading6 = new outline_heading(full_dict);
-    // heading6.pk = 6;
-    // heading6.parent_id = 4;
-    // workspace.headings.push(heading6);
-    // deepEqual(
-    // 	heading3.get_children(),
-    // 	workspace.headings.filter({pk: 5}),
-    // 	'heading.get_children() returns children'
-    // );
-    // ok(
-    // 	heading4.has_children,
-    // 	'Heading 1 has_children is set'
-    // );
-    
-    // ok(
-    // 	workspace.headings.get({pk: 1}).is_expandable(),
-    // 	'heading 1 is expandable (has text and children)'
-    // );
-    // ok(
-    // 	! workspace.headings.get({pk: 3}).is_expandable(),
-    // 	'heading 3 is not expandable'
-    // );
-    // ok(
-    // 	heading3.$element.hasClass('preexpandable'),
-    // 	'Heading 3 (with non-loaded children) has \'preexpandable\' class set'
-    // )
-    // ok(
-    // 	workspace.headings.get({pk: 2}).is_expandable(),
-    // 	'heading 2 is expandable (has text)'
-    // );
-    // ok(
-    // 	workspace.headings.get({pk: 4}).is_expandable(),
-    // 	'heading 4 is expandable (has children)'
-    // );
-    // ok(
-    // 	workspace.headings.get({pk: 1}).$element.hasClass('expandable'),
-    // 	'Heading 1 has expandable class set'
-    // );
+    }, ajax_timer);
 });
 
 test('heading colors', function() {
@@ -1023,11 +440,130 @@ test('heading colors', function() {
     );
 });
 
+asyncTest('Creating heading from /gtd/node/pk/descendants/', function() {
+    var $workspace = $('#test_workspace');
+    $workspace.nodeOutline();
+    var workspace = $workspace.data('nodeOutline');
+    workspace.headings.get({pk: 1}).open();
+    var heading2 = workspace.headings.get({pk: 2});
+    heading2.pk = 8 // Used to test for replacement of stale nodes
+    setTimeout(function() {
+	// node8 has full attributes set in mockjax call
+	var heading8 = workspace.headings.get({pk: 8});
+	equal(
+	    heading8.pk,
+	    node8.pk,
+	    'Heading8 has primary key set'
+	);
+	equal(
+	    heading8.title,
+	    node8.title,
+	    'Heading8 has title set'
+	);
+	equal(
+	    heading8.todo_id,
+	    node8.todo_state,
+	    'Heading8 has todo_state set'
+	);
+	equal(
+	    heading8.scheduled_date,
+	    node8.scheduled_date,
+	    'Heading8 has scheduled_date set'
+	);
+	equal(
+	    heading8.scheduled_time,
+	    node8.scheduled_time,
+	    'Heading8 has scheduled_time set'
+	);
+	strictEqual(
+	    heading8.scheduled_time_specific,
+	    node8.scheduled_time_specific,
+	    'Heading8 has scheduled_time_specific set'
+	);
+	equal(
+	    heading8.parent_id,
+	    node8.parent_id,
+	    'Heading8 has parent_id set'
+	);
+	equal(
+	    heading8.deadline_date,
+	    node8.deadline_date,
+	    'Heading8 has deadline_date set'
+	);
+	equal(
+	    heading8.deadline_time,
+	    node8.deadline_time,
+	    'Heading8 has deadline_time set'
+	);
+	strictEqual(
+	    heading8.deadline_time_specific,
+	    node8.deadline_time_specific,
+	    'Heading8 has deadline_time_specific set'
+	);
+	equal(
+	    heading8.priority,
+	    node8.priority,
+	    'Heading8 has priority set'
+	);
+	deepEqual(
+	    heading8.scope,
+	    node8.scope,
+	    'Heading8 has scope set'
+	);
+	strictEqual(
+	    heading8.repeats,
+	    node8.repeats,
+	    'Heading8 has repeats set'
+	);
+	equal(
+	    heading8.repeating_number,
+	    node8.repeating_number,
+	    'Heading8 has repeating_number set'
+	);
+	equal(
+	    heading8.repeating_unit,
+	    node8.repeating_unit,
+	    'Heading8 has repeating_unit set'
+	);
+	strictEqual(
+	    heading8.repeats_from_completion,
+	    node8.repeats_from_completion,
+	    'Heading8 has repeats_from_completion set'
+	);
+	strictEqual(
+	    heading8.archived,
+	    node8.archived,
+	    'Heading8 has archived set'
+	);
+	deepEqual(
+	    heading8.related_projects,
+	    node8.related_projects,
+	    'Heading8 has related_projects set'
+	);
+	equal(
+	    heading8.text,
+	    node8.text,
+	    'Heading8 has text set'
+	);
+	equal(
+	    heading8.tag_string,
+	    node8.tag_string,
+	    'Heading8 has tag_string set'
+	);
+	equal(
+	    heading8.has_children,
+	    ! node8.is_leaf_node,
+	    'Heading8 has has_children set based on is_leaf_node'
+	);
+	start();
+    }, ajax_timer * 1);
+});
+
 test('get_heading method', function() {
     var $workspace = $('#test_workspace');
     $workspace.nodeOutline();
-    outline = $workspace.data('nodeOutline');
-    added_heading = outline.get_heading(1);
+    var outline = $workspace.data('nodeOutline');
+    var added_heading = outline.get_heading(1);
     equal(
 	added_heading.node_id,
 	1,
@@ -1087,7 +623,7 @@ test('Headings manager order_by method', function() {
     var $workspace = $('#test_workspace');
     $workspace.nodeOutline({'simulate': true});
     var workspace = $workspace.data('nodeOutline');
-    response = workspace.headings.order_by('-pk');
+    var response = workspace.headings.order_by('-pk');
     ok(
 	response.length > 1,
 	'there are 2 or more headings to test ordering'
@@ -1121,45 +657,6 @@ test('Headings are properly drawn on init', function() {
 	'Element has $title set'
     );
 });
-
-// asyncTest('Populates children on outline init', function() {
-//     // See if the appliance properly converts the non-javascript
-//     // table to the outline workspace and gets first round of
-//     // grand-children.
-//     var $workspace = $('#test_workspace');
-//     $workspace.nodeOutline();
-//     var workspace = $workspace.data('nodeOutline');
-//     setTimeout(function() {
-// 	start();
-// 	equal(
-// 	    $workspace.find('.heading[node_id="5"]').length,
-// 	    1,
-// 	    'found heading 5'
-// 	);
-// 	equal(
-// 	    $workspace.find('.heading[node_id="6"]').length,
-// 	    1,
-// 	    'found heading 6'
-// 	);
-// 	equal(
-// 	    $workspace.find('.heading[node_id="7"]').length,
-// 	    1,
-// 	    'found heading 7'
-// 	);
-// 	equal(
-// 	    workspace.headings.get({pk: 5}).todo_id,
-// 	    1,
-// 	    'JSON callback sets todo_id'
-// 	);
-// 	var $heading1 = $workspace.find('.heading[node_id="1"]');
-// 	var $children = $heading1.children('.details').children('.children');
-// 	equal(
-// 	    $children.children('.loading').length,
-// 	    0,
-// 	    'Loading... marker removed from heading1'
-// 	);
-//     }, (ajax_timer * 1.1 + 5));
-// });
 
 test('ordering of inserted node', function() {
     var $workspace = $('#test_workspace');
@@ -1251,11 +748,6 @@ asyncTest('Clicking a heading populates it\'s children', function() {
 	    heading1.populated,
 	    'heading 1 has populated attribute set'
 	);
-	equal(
-	    heading1.$children.children('.loading').length,
-	    0,
-	    'Loading... indicator removed after populating'
-	);
 	start();
     }, ajax_timer * 4.4 + workspace.ANIM_SPEED);
 });
@@ -1319,6 +811,253 @@ test('Set todo states', function() {
 	heading.get_todo_state().display,
 	'$todo div has abbreviation as its html'
     );
+});
+
+asyncTest('todoState integration', function() {
+    // Make sure the todoState plugin handles headings properly
+    var $workspace = $('#test_workspace');
+    $workspace.nodeOutline({
+	todo_states: todo_state_list,
+	simulate: true
+    });
+    var workspace = $workspace.data('nodeOutline');
+    var heading1 = workspace.headings.get({pk: 1});
+    var todo_state = heading1.$todo_state.data('todoState');
+    equal(
+	todo_state.heading,
+	heading1,
+	'Heading1 $todo.data(\'todoState\').heading is set'
+    );
+    equal(
+	todo_state.get_todo_id(),
+	heading1.todo_id,
+	'Heading1 todo object has todo_id set'
+    );
+    heading1.$todo_state.click();
+    var $popover = heading1.$todo_state.next('.popover');
+    equal(
+	$popover.find('.todo-option[todo_id="'+heading1.todo_id+'"]').attr('selected'),
+	'selected',
+	'Heading1 popover has current todo state selected'
+    );
+    $popover.find('.todo-option[todo_id="2"]').click();
+    setTimeout( function() {
+	equal(
+	    heading1.todo_id,
+	    2,
+	    'Clicking a todo_option sets heading.todo_id'
+	);
+	start();
+    }, ajax_timer);
+})
+
+asyncTest('nodeEdit dialogs', function() {
+    var $workspace = $('#test_workspace');
+    $workspace.nodeOutline();
+    var workspace = $workspace.data('nodeOutline');
+    var heading1 = workspace.headings.get({pk: 1});
+    heading1.open();
+    setTimeout(function() {
+	equal(
+	    workspace.$edit_modal.length,
+	    1,
+	    'workspace has $edit_modal set'
+	);
+	// Now check the "edit" dialog
+	var heading8 = workspace.headings.get({pk: 8});
+	var $edit = heading8.$buttons.find('.edit-btn');
+	var $add = heading8.$buttons.find('.new-btn');
+	equal(
+	    $edit.length,
+	    1,
+	    'Edit button found'
+	);
+	$edit.click();
+	equal(
+	    $edit.data('nodeEdit').$modal,
+	    workspace.$edit_modal,
+	    'Edit button uses workspace $edit-modal'
+	);
+	equal(
+	    $edit.data('nodeEdit').edit_url,
+	    '/gtd/node/8/edit/',
+	    'Edit button uses correct editing url for existing node'
+	);
+	equal(
+	    $edit.data('nodeEdit').heading,
+	    heading8,
+	    'plugin saves heading if passed'
+	);
+	equal(
+	    workspace.$edit_modal.find('#id_title').attr('value'),
+	    heading8.title,
+	    'Opening the modal sets the title correctly'
+	);
+	equal(
+	    workspace.$edit_modal.find('.header-title').html(),
+	    'Edit "' + heading8.title + '"',
+	    'Opening the modal sets the header correctly'
+	)
+	equal(
+	    workspace.$edit_modal.find('#id_todo_state').children('option[value="' + heading8.todo_id + '"]').attr('selected'),
+	    'selected',
+	    'Opening the modal sets todo-state correctly'
+	);
+	equal(
+	    workspace.$edit_modal.find('#id_scheduled_date').attr('value'),
+	    heading8.scheduled_date,
+	    'Opening the modal sets the scheduled_date correctly'
+	);
+	equal(
+	    workspace.$edit_modal.find('#id_scheduled_time').attr('value'),
+	    heading8.scheduled_time,
+	    'Opening the modal sets the scheduled_time correctly'
+	);
+	equal(
+	    workspace.$edit_modal.find('#id_scheduled_time_specific').attr('checked'),
+	    'checked',
+	    'Opening the modal sets the scheduled_time_specific correctly'
+	);
+	equal(
+	    workspace.$edit_modal.find('#id_deadline_date').attr('value'),
+	    heading8.deadline_date,
+	    'Opening the modal sets the deadline_date correctly'
+	);
+	equal(
+	    workspace.$edit_modal.find('#id_deadline_time').attr('value'),
+	    heading8.deadline_time,
+	    'Opening the modal sets the deadline_time correctly'
+	);
+	equal(
+	    workspace.$edit_modal.find('#id_deadline_time_specific').attr('checked'),
+	    'checked',
+	    'Opening the modal sets the deadline_time_specific correctly'
+	);
+	equal(
+	    workspace.$edit_modal.find('#id_tag_string').attr('value'),
+	    heading8.tag_string,
+	    'Opening the modal sets the tag_string correctly'
+	);
+	equal(
+	    workspace.$edit_modal.find('#id_priority').find('option[value="'+heading8.priority+'"]').attr('selected'),
+	    'selected',
+	    'Opening the modal sets the priority correctly'
+	);
+	// Check that the scopes are set
+	var scopes = 0;
+	var $scope = workspace.$edit_modal.find('#id_scope');
+	for ( var i = 0; i < heading8.scope.length; i++ ) {
+	    equal(
+		$scope.find('option[value="'+heading8.scope[i]+'"]').attr('selected'),
+		'selected',
+		'Opening the modal selects scope ' + heading8.scope[i]
+	    );
+	    scopes++;
+	}
+	equal(
+	    scopes,
+	    heading8.scope.length,
+	    'All the scopes were checked'
+	);
+	equal(
+	    workspace.$edit_modal.find('#id_repeats').attr('checked'),
+	    'checked',
+	    'Opening the modal sets the repeats correctly'
+	);
+	equal(
+	    workspace.$edit_modal.find('#id_repeating_number').attr('value'),
+	    heading8.repeating_number,
+	    'Opening the modal sets the repeating_number correctly'
+	);
+	equal(
+	    workspace.$edit_modal.find('#id_repeating_unit').find('option[value="'+heading8.repeating_unit+'"]').attr('selected'),
+	    'selected',
+	    'Opening the modal sets the repeating unit correctly'
+	);
+	equal(
+	    workspace.$edit_modal.find('#id_repeats_from_completion').attr('checked'),
+	    'checked',
+	    'Opening the modal sets the repeats_from_completion box correctly'
+	);
+	equal(
+	    workspace.$edit_modal.find('#id_archived').attr('checked'),
+	    'checked',
+	    'Opening the modal sets the archived box correctly'
+	);
+	// Check that the related_projects are set
+	var projects = 0;
+	var $project = workspace.$edit_modal.find('#id_related_projects');
+	for ( var i = 0; i < heading8.related_projects.length; i++ ) {
+	    equal(
+		$project.find('option[value="'+heading8.related_projects[i]+'"]').attr('selected'),
+		'selected',
+		'Opening the modal selects scope ' + heading8.related_projects[i]
+	    );
+	    projects++;
+	}
+	equal(
+	    projects,
+	    heading8.related_projects.length,
+	    'All the related_projects were checked'
+	);
+	equal(
+	    workspace.$edit_modal.find('#id_text').attr('value'),
+	    heading8.text,
+	    'Opening the modal sets the text correctly'
+	);
+	equal(
+	    workspace.$edit_modal.find('#id_text-aloha').html(),
+	    heading8.text,
+	    'Opening the modal sets the text in the aloha box correctly'
+	);
+	// Now make sure that opening a new nodeEdit clears values
+	$add.click();
+	equal(
+	    $add.data('nodeEdit').$modal,
+	    workspace.$edit_modal,
+	    'New child button uses workspace $edit_modal'
+	);
+	equal(
+	    workspace.$edit_modal.find('#id_title').attr('value'),
+	    '',
+	    'Modal for new child has title field cleared'
+	);
+	equal(
+	    workspace.$edit_modal.find('.header-title').html(),
+	    'New node',
+	    'Modal for new child has "New node" as header'
+	);
+	equal(
+	    workspace.$edit_modal.find('#id_todo_state').find('option[value=""]').attr('selected'),
+	    'selected',
+	    'Modal for new child set no todo state'
+	);
+	equal(
+	    workspace.$edit_modal.find('#id_todo_state').find('option[selected="selected"]').length,
+	    1,
+	    'Modal for new child clears all other todo states'
+	);
+	equal(
+	    workspace.$edit_modal.find('#id_scheduled_date').attr('value'),
+	    '',
+	    'Modal for new child clears scheduled_date'
+	);
+	equal(
+	    workspace.$edit_modal.find('#id_scope').find('option:selected').length,
+	    0,
+	    'Modal for new child clears scopes'
+	);
+	ok(
+	    ! workspace.$edit_modal.find('#id_archived').is(':checked'),
+	    'Modal for new child clears archived checkbox'
+	);
+	equal(
+	    workspace.$edit_modal.find('#id_text-aloha').html(),
+	    '<br class="aloha-cleanme" style="">',
+	    'Modal for new child clears aloha editor text'
+	);
+	start();
+    }, ajax_timer);
 });
 
 module_name = 'todoState jQuery plugin - ';
@@ -1541,77 +1280,77 @@ asyncTest('Todo option click functionality', function() {
     }, (ajax_timer * 1.1 + 5));
 });
 
-asyncTest('Hidden status correct after click', function() {
-    var $todo = $('#todo-test');
-    $todo.attr('todo_id', 1);
-    $todo.todoState({
-	states: todo_state_list,
-	node_id: 5,
-	click: function() {$('body').data('test_value', true);}
-    });
-    var $popover = $todo.next('.popover');
-    equal(
-	$todo.css('display'),
-	'block',
-	'Non-zero todo state is visible before interaction'
-    )
-    $todo.click();
-    $popover.find('.todo-option[todo_id="0"]').click()
-    equal(
-	$popover.css('display'),
-	'none',
-	'Popover hidden after todo-option clicked'
-    );
-    setTimeout(function() {
-	start();
-	equal(
-	    $todo.attr('todo_id'),
-	    '0',
-	    '$todo element has todo_id attribute set'
-	)
-	equal(
-	    $todo.css('display'),
-	    'none',
-	    'Todo state is hidden after zero todo-state is chosen'
-	)
-    }, (ajax_timer * 1.1 + 5))
-});
+// asyncTest('Hidden status correct after click', function() {
+//     var $todo = $('#todo-test');
+//     $todo.attr('todo_id', 1);
+//     $todo.todoState({
+// 	states: todo_state_list,
+// 	node_id: 5,
+// 	click: function() {$('body').data('test_value', true);}
+//     });
+//     var $popover = $todo.next('.popover');
+//     equal(
+// 	$todo.css('display'),
+// 	'block',
+// 	'Non-zero todo state is visible before interaction'
+//     )
+//     $todo.click();
+//     $popover.find('.todo-option[todo_id="0"]').click()
+//     equal(
+// 	$popover.css('display'),
+// 	'none',
+// 	'Popover hidden after todo-option clicked'
+//     );
+//     setTimeout(function() {
+// 	start();
+// 	equal(
+// 	    $todo.attr('todo_id'),
+// 	    '0',
+// 	    '$todo element has todo_id attribute set'
+// 	)
+// 	equal(
+// 	    $todo.css('display'),
+// 	    'none',
+// 	    'Todo state is hidden after zero todo-state is chosen'
+// 	)
+//     }, (ajax_timer * 1.1 + 5))
+// });
 
-asyncTest('Auto-hide feature does not trigger for switching to regular nodes', function() {
-    var $todo = $('#todo-test')
-    $todo.attr('todo_id', 0);
-    $todo.todoState({
-	states: todo_state_list,
-	node_id: 1,
-	click: function() {$('body').data('test_value', true);}
-    });
-    var $popover = $todo.next('.popover');
-    equal(
-	$todo.css('display'),
-	'none',
-	'Zero todo state is hidden before interaction'
-    )
-    $todo.click();
-    $popover.find('.todo-option[todo_id="2"]').click()
-    equal(
-	$popover.css('display'),
-	'none',
-	'Popover hidden after todo-option clicked'
-    );
-    setTimeout(function() {
-	start();
-	equal(
-	    $todo.attr('todo_id'),
-	    '2',
-	    '$todo element has todo_id attribute set'
-	)
-	equal(
-	    $todo.css('display'),
-	    'block',
-	    'Todo state is visible after non-zero todo-state is chosen'
-	)
-    }, (ajax_timer * 1.1 + 5))
-});
+// asyncTest('Auto-hide feature does not trigger for switching to regular nodes', function() {
+//     var $todo = $('#todo-test')
+//     $todo.attr('todo_id', 0);
+//     $todo.todoState({
+// 	states: todo_state_list,
+// 	node_id: 1,
+// 	click: function() {$('body').data('test_value', true);}
+//     });
+//     var $popover = $todo.next('.popover');
+//     equal(
+// 	$todo.css('display'),
+// 	'none',
+// 	'Zero todo state is hidden before interaction'
+//     )
+//     $todo.click();
+//     $popover.find('.todo-option[todo_id="2"]').click()
+//     equal(
+// 	$popover.css('display'),
+// 	'none',
+// 	'Popover hidden after todo-option clicked'
+//     );
+//     setTimeout(function() {
+// 	start();
+// 	equal(
+// 	    $todo.attr('todo_id'),
+// 	    '2',
+// 	    '$todo element has todo_id attribute set'
+// 	)
+// 	equal(
+// 	    $todo.css('display'),
+// 	    'block',
+// 	    'Todo state is visible after non-zero todo-state is chosen'
+// 	)
+//     }, (ajax_timer * 1.1 + 5))
+// });
 
 module(module_name + 'update method');
 test('Update method changes settings', function() {
@@ -1899,8 +1638,8 @@ test('nodeList plugin initialization', function() {
 
 
 
-module_name = 'Node Edit Dialog';
-module(module_name);
+
+module('Node Edit Dialog');
 asyncTest('Check basic functionality', function() {
     equal(
 	'function',
@@ -1939,14 +1678,12 @@ asyncTest('Check basic functionality', function() {
     }, (ajax_timer * 1.1) + 5);
 });
 
-
 asyncTest('nodeEdit(\'update\') method', function() {
     var $button = $('#edit-btn');
     $button.nodeEdit({url: '/gtd/nodes/6/edit/',
 		      target: '#node-detail',
 		     });
     setTimeout( function() {
-	start();
 	$button.nodeEdit('update', { todo_id: 2});
 	var $modal = $button.siblings('#node-edit-modal');
 	var $select = $modal.find('#id_todo_state');
@@ -1968,7 +1705,8 @@ asyncTest('nodeEdit(\'update\') method', function() {
 	    2,
 	    '.data(\'nodeEdit\') is updated'
 	);
-    }, ajax_timer * 1.1 + 5);
+	start();
+    }, ajax_timer);
 });
 asyncTest('nodeEdit(\'reset\') method', function() {
    var $button = $('#edit-btn');

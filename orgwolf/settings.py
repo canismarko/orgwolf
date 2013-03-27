@@ -20,7 +20,7 @@
 # Django settings for orgwolf project.
 
 DEBUG = True
-TEMPLATE_DEBUG = False # DEBUG
+TEMPLATE_DEBUG = DEBUG
 ENABLE_CSS = True
 ENABLE_JS = True
 
@@ -42,7 +42,6 @@ DATABASES = {
 }
 
 AUTH_USER_MODEL = 'orgwolf.OrgWolfUser'
-# AUTH_PROFILE_MODULE = 'orgwolf.UserProfile'
 
 # Local time zone for this installation. Choices can be found here:
 # http://en.wikipedia.org/wiki/List_of_tz_zones_by_name
@@ -225,7 +224,7 @@ try:
 except ImportError:
     pass
 
-# Loggin, uses values taken from ../local_settings.py
+# Logging, uses values taken from ../local_settings.py
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,

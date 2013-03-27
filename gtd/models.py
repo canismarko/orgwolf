@@ -263,7 +263,7 @@ class Node(MPTTModel):
                                                ('y', 'Years')))
     # If repeats_from_completions is True, then when the system repeats this node,
     # it will schedule it from the current time rather than the original scheduled time.
-    repeats_from_completion = models.NullBooleanField(default=False)
+    repeats_from_completion = models.BooleanField(default=False)
     # Selection criteria
     priority = models.CharField(max_length=1, blank=True,
                                 choices=(('A', 'A'),
@@ -360,12 +360,30 @@ class Node(MPTTModel):
             string += self.todo_state.as_html() + ' '
         string += self.title
         return string
-    def as_json(self):
-        """Process the instance into a json string. Output contains
-        a few extra attributes for AJAX processing."""
+    def as_pre_json(self):
+        """Processes the instance into a dictionary that can be
+        converted to a JSON string. Output contains a few extra
+        attributes for AJAX processing."""
         new_dict = model_to_dict(self)
+        # Rename some keys
+        keys = [('id', 'pk'),
+                ('parent', 'parent_id')]
+        for key in keys:
+            new_dict[ key[1] ] = new_dict[ key[0] ]
+            del new_dict[ key[0] ]
+        # Convert parent_id=None to parent_id=0
+        if not new_dict['parent_id']:
+            new_dict['parent_id'] = 0
         # convert dates to strings
-        for field in ['closed', 'scheduled', 'deadline']:
+        for field in ['scheduled', 'deadline']:
+            if new_dict[field]:
+                new_dict[field+'_date'] = new_dict[field].date().isoformat()
+                new_dict[field+'_time'] = new_dict[field].time().isoformat()
+            else:
+                new_dict[field+'_date'] = ''
+                new_dict[field+'_time'] = ''
+            del new_dict[field]
+        for field in ['closed',]:
             if new_dict[field]:
                 new_dict[field] = new_dict[field].ctime()
         # Include the todo_state html
@@ -375,7 +393,16 @@ class Node(MPTTModel):
             new_dict['todo_html'] += ' - ' + self.todo_state.display_text
         else:
             new_dict['todo_html'] = '[None]'
-        return json.dumps(new_dict)
+        # Use styled title
+        new_dict['title'] = self.get_title()
+        # Include is_leaf_node()
+        new_dict['is_leaf_node'] = self.is_leaf_node()
+        return new_dict
+    def as_json(self):
+        """Process the instance into a json string. Output contains
+        a few extra attributes for AJAX processing."""
+        # Return dictionary as json
+        return json.dumps(self.as_pre_json())
     def get_tags(self):
         tag_strings = self.tag_string.split(":")
         tag_string = tag_strings[1:len(tag_strings)-1] # Get rid of the empty first and last elements

@@ -937,7 +937,8 @@ class Shortcuts(TestCase):
             )
     def test_node_as_json(self):
         """Translate Node details into a JSON string"""
-        node = Node.objects.get(pk=1)
+        node = Node.objects.get(pk=2)
+        node.archived = True
         self.assertEqual(
             'instancemethod',
             node.as_json.__class__.__name__
@@ -949,7 +950,7 @@ class Shortcuts(TestCase):
             )
         response_dict = json.loads(response)
         self.assertEqual(
-            node.title,
+            node.get_title(),
             response_dict['title']
             )
         self.assertEqual(
@@ -957,6 +958,97 @@ class Shortcuts(TestCase):
                 node.todo_state.as_html(),
                 node.todo_state.display_text),
             response_dict['todo_html'],
+            )
+        self.assertEqual(
+            node.todo_state.pk,
+            response_dict['todo_state']
+            )
+        self.assertEqual(
+            node.scheduled.date().isoformat(),
+            response_dict['scheduled_date']
+            )
+        self.assertEqual(
+            node.scheduled.time().isoformat(),
+            response_dict['scheduled_time']
+            )
+        self.assertEqual(
+            node.scheduled_time_specific,
+            response_dict['scheduled_time_specific']
+            )
+        self.assertEqual(
+            node.deadline.date().isoformat(),
+            response_dict['deadline_date']
+            )
+        self.assertEqual(
+            node.deadline.time().isoformat(),
+            response_dict['deadline_time']
+            )
+        self.assertEqual(
+            node.deadline_time_specific,
+            response_dict['deadline_time_specific']
+            )
+        self.assertEqual(
+            node.priority,
+            response_dict['priority']
+            )
+        self.assertEqual(
+            list(node.scope.values_list('pk', flat=True)),
+            response_dict['scope']
+            )
+        self.assertEqual(
+            node.repeats,
+            response_dict['repeats']
+            )
+        self.assertEqual(
+            node.repeating_number,
+            response_dict['repeating_number']
+            )
+        self.assertEqual(
+            node.repeating_unit,
+            response_dict['repeating_unit']
+            )
+        self.assertEqual(
+            node.repeats_from_completion,
+            response_dict['repeats_from_completion']
+            )
+        self.assertEqual(
+            node.archived,
+            response_dict['archived']
+            )
+        self.assertEqual(
+            list(node.related_projects.values_list('pk', flat=True)),
+            response_dict['related_projects']
+            )
+        self.assertEqual(
+            node.text,
+            response_dict['text']
+            )
+        self.assertEqual(
+            node.tag_string,
+            response_dict['tag_string']
+            )
+        self.assertEqual(
+            node.pk,
+            response_dict['pk']
+            )
+        self.assertEqual(
+            node.parent.pk,
+            response_dict['parent_id']
+            )
+        self.assertEqual(
+            node.is_leaf_node(),
+            response_dict['is_leaf_node']
+            )
+    def test_root_node_as_json(self):
+        """Make sure that a root node returns a parent_id of 0
+        instead of null"""
+        node = Node.objects.filter(parent=None)[0]
+        node.archived = True
+        response = node.as_json()
+        response_dict = json.loads(response)
+        self.assertEqual(
+            0,
+            response_dict['parent_id']
             )
 
 class NodePermissions(TestCase):

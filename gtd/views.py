@@ -177,8 +177,6 @@ def agenda_display(request, date=None):
         agenda_date = datetime.date.today()
     agenda_dt = datetime.datetime(year=agenda_date.year, month=agenda_date.month, day=agenda_date.day, hour=12, minute=0, second=0, tzinfo=get_current_timezone())
     one_day = datetime.timedelta(days=1)
-    print agenda_date
-    print agenda_dt
     tomorrow = agenda_date + one_day
     yesterday = agenda_date - one_day
     # Determine query filters for "Today" section
@@ -193,7 +191,7 @@ def agenda_display(request, date=None):
     time_specific_nodes = all_nodes_qs.filter((hard_Q | dfrd_Q), date_Q, time_specific_Q)
     time_specific_nodes = time_specific_nodes.order_by('scheduled')
     # Determine query filters for "Upcoming Deadlines" section
-    undone_Q = Q(todo_state__closed = False)
+    undone_Q = Q(todo_state__closed = False) | Q(todo_state = None)
     deadline = agenda_dt + datetime.timedelta(days=deadline_period)
     upcoming_deadline_Q = Q(deadline__lte = deadline) # TODO: fix this
     deadline_nodes = all_nodes_qs.filter(undone_Q, upcoming_deadline_Q)
@@ -606,21 +604,9 @@ def get_descendants(request, ancestor_pk):
     nodes_qs = all_descendants.filter(level=level)
     nodes_qs = nodes_qs & Node.objects.mine(request.user, get_archived=True)
     nodes = []
-    # Assemble the dictionary to return as JSON
+    # Add the node as JSON
     for node in nodes_qs:
-        new_dict = {
-            'pk': node.pk,
-            'parent_id': getattr(node.parent, 'pk', 0),
-            'title': node.get_title(),
-            'tags': node.tag_string,
-            'text': escape_html(node.text),
-            'archived': node.archived,
-            'is_leaf_node': node.is_leaf_node(),
-             }
-        if hasattr(node.todo_state, 'pk'):
-            new_dict['todo_id'] = node.todo_state.pk
-            new_dict['todo'] = node.todo_state.as_html()
-        nodes.append(new_dict)
+        nodes.append(node.as_pre_json())
     # Meta data
     data = {
         'status': 'success',

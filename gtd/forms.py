@@ -70,6 +70,9 @@ class NodeForm(forms.ModelForm):
                                             'data-requires': '#id_deadline_date, #id_deadline_time',
                                             })
         )
+    tag_string = forms.CharField(
+        required=False
+        )
     repeats = forms.BooleanField(
         required=False,
         widget=widgets.CheckboxInput(attrs={'data-requires': '#id_repeating_number, #id_repeating_unit'}),
@@ -93,6 +96,7 @@ class NodeForm(forms.ModelForm):
                   'deadline_date',
                   'deadline_time',
                   'deadline_time_specific',
+                  'tag_string',
                   'priority',
                   'scope',
                   'repeats',
@@ -102,7 +106,6 @@ class NodeForm(forms.ModelForm):
                   'archived',
                   'related_projects',
                   'text',
-                  'tag_string',
                   )
         model = Node
         widgets = {
