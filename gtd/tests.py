@@ -950,8 +950,12 @@ class Shortcuts(TestCase):
             )
         response_dict = json.loads(response)
         self.assertEqual(
-            node.get_title(),
+            node.title,
             response_dict['title']
+            )
+        self.assertEqual(
+            node.get_title(),
+            response_dict['title_html']
             )
         self.assertEqual(
             '{0} - {1}'.format(

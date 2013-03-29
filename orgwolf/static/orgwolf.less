@@ -1,0 +1,230 @@
+/* Navar */
+#logo.brand
+{
+    padding-bottom: 8px;
+    padding-top: 8px;
+}
+#new_inbox_form .input-append
+{
+    margin-top: 5px;
+}
+#new_inbox_item + .btn
+{
+    height: 30px;
+}
+.navbar
+{
+    margin-bottom: 15px;
+}
+.form-search
+{
+    position: absolute;
+    right: 15px;
+}
+/* Registration */
+a.btn-auth
+{
+    margin-top: 5px;
+}
+ul.social-auth
+{
+    margin-left: 0px;
+    list-style-type: none;
+}
+/* Node form */
+.required label:before
+{
+    content: "*"
+}
+.required label
+{
+    font-weight: bold;
+}
+form table input[type="checkbox"],label
+{
+    margin-top: 2px;
+    margin-bottom: 2px;
+}
+#logo
+{
+    margin-left: auto;
+    margin-right: auto;
+    width: auto;
+    padding-left: 0px;
+}
+.datepicker
+{
+    padding: 0px;
+}
+.dropdown-menu
+{
+    z-index: 1100;
+}
+span.add-on.disabled
+{
+    pointer-events: none;
+}
+span.alt
+{
+    display: none;
+}
+.spacer
+{
+    visibility: hidden;
+}
+.invalid
+{
+    background-color: #F2DEDE !important;
+}
+.error, .errorlist
+{
+    color: red;
+    font-size: 14px;
+}
+/* Node_view */
+.odd-heading
+{
+    background-color: #B6D6DB;
+}
+.even-heading
+{
+    background-color: white; 
+   /* Todo: figure out how to do this using background: transparent */
+}
+.ow-move form
+{
+    margin: 0px;
+}
+dd.todo
+{
+    display: inline-block;
+}
+.archived-text
+{
+    font-style: italic;
+    .opacify(80);
+}
+/* For moving node */
+.tree
+{
+    margin: 0px;
+    padding: 0px;
+}
+/* Javascript outline appliance */
+@anim-speed: 300ms;
+.ow-buttons, .add-heading, .todo-state, .todo-option
+{
+    cursor: pointer;
+}
+#show-all-label
+{
+    margin-left: 4px;
+}
+.ow-hoverable > i
+{
+    .opacify(0);
+}
+.ow-hoverable
+{
+    cursor: default;
+}
+.ow-hoverable > .ow-buttons
+{
+    visibility: hidden;
+}
+.ow-hoverable:hover > .ow-buttons
+{
+    visibility: visible;
+}
+.expandable > .ow-hoverable,.lazy-expandable > .ow-hoverable
+{
+    cursor: pointer;
+}
+.expandable > .ow-hoverable > i
+{
+    .opacify(100)
+}
+.lazy-expandable > .ow-hoverable > i
+{
+    .opacify(75);
+}
+.arch-expandable > .ow-hoverable > i
+{
+    .opacify(30);
+}
+.heading
+{
+    overflow: hidden;
+}
+.heading i.twisty, .heading div.details, .heading div.loading, .heading
+{
+    transition: opacity @anim-speed, transform @anim-speed;
+    -webkit-transition: opacity @anim-speed, -webkit-transform @anim-speed;
+    -moz-transition: opacity @anim-speed, -moz-transform @anim-speed;
+    -o-transition: opacity @anim-speed, -o-transform @anim-speed;
+}
+.rotate (@angle) {
+    -moz-transform: rotate(@angle);
+    -webkit-transform: rotate(@angle);
+    -o-transform: rotate(@angle);
+    transform: rotate(@angle);
+}
+.heading > .ow-hoverable > i
+{
+    .rotate(0deg);
+}
+.heading.open > .ow-hoverable > i
+{
+    .rotate(90deg);
+}
+.opacify (@opacity) { /* 0 to 100 */
+    opacity: (@opacity/100);
+    filter:alpha(opacity=@opacity);
+}
+.heading > .details
+{
+    .opacify(0);
+}
+.heading.open > .details
+{
+    .opacify(100);
+}
+div.ow-hoverable, div.clickable, div.ow-buttons
+{
+    display: inline-block;
+}
+.popover
+{
+    width: auto;
+}
+.todo-option
+{
+    margin: 3px;
+}
+.todo-option[selected]
+{
+    cursor: auto;
+}
+.ow-hover
+{
+    background-color: #DFF0D8;
+}
+.todo-option[selected]
+{
+    .opacify(50);
+}
+.markdown h1, h2
+{
+    margin-bottom: 2px;
+    margin-top: 20px;
+    line-height: 120%;
+}
+#id_text
+{
+    height: 200px;
+}
+/* Aloha text editor */
+.ow-text p
+{
+    margin-bottom: 0;
+}

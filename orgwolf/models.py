@@ -105,9 +105,10 @@ class HTMLEscaper(HTMLParser):
     ALLOWED_TAGS = ['h1', 'h2', 'h3', 'h4', 'h5', 'h6',
                     'b', 'i',
                     'ul', 'ol', 'li',
-                    'div', 'p', 'hr', 'a',
+                    'div', 'p', 'hr', 'a', 'br',
                     'sup', 'sub',
-                    'table', 'tbody', 'tr', 'td',
+                    'table', 'tbody', 'tr', 'td', 'th',
+                    'caption',
                     ]
     def __init__(self, white_tags=None):
         HTMLParser.__init__(self)

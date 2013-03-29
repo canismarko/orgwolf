@@ -478,6 +478,7 @@ $(document).ready(function(){
 			    node_id: $parent.attr('node_id'),
 			    text: new_text
 			};
+			console.log(new_text);
 			$.post(url, payload, function(r) {
 			    // Callback for aloha edit request
 			    r = $.parseJSON(r);
@@ -533,11 +534,488 @@ $(document).ready(function(){
     }
 })(jQuery);
 
-var get_heading = function (node_id) {
-    // Accepts a node_id and returns the JQuery selected element
-    node_id = Number(node_id); // In case a string was passed
-    return $('.heading[node_id="' + node_id + '"]');
+
+
+
+// Begin implementation of hierarchical expanding project list
+var GtdHeading = function GtdHeading( args ) {
+    if ( ! args ) {
+	args = {};
+    }
+    GtdHeading.ICON = 'icon-chevron-right';
+    // Set defaults in the constructor
+    //   Setting specific field values occurs in the set_fields() method
+    //   which is called at the end of the constructor
+    this.pk = 0;
+    this.populated = false;
+    this.text = '';
+    this.todo_id = 0;
+    this.archived = false;
+    this.level = 1;
+    // Determine the width of icon that is being used
+    var $body = $('body');
+    $body.append('<i id="7783452" class="' + GtdHeading.ICON + '"></i>');
+    this.icon_width = Number($body.find('#7783452').css('width').slice(0,-2));
+    $('#7783452').remove();
+    // Now update the fields with passed values
+    this.set_fields( args );
+}; // end of GtdHeading constructor
+
+// Methods for GtdHeading...
+GtdHeading.prototype.set_fields = function( fields ) {
+    // Updates properties based on dictionary of new fields
+    // First make some modifications to the dictionary
+    if ( typeof fields.title_html == 'undefined' ) {
+	fields.title_html = fields.title;
+    }
+    if ( typeof fields.pk != 'undefined' ) {
+	fields.pk = Number(fields.pk);
+    }
+    if ( typeof fields.is_leaf_node != 'undefined' ) {
+	fields.has_children = ! fields.is_leaf_node;
+	delete fields.is_leaf_node;
+    }
+    if ( typeof fields.todo_state != 'undefined' ) {
+	fields.todo_id = fields.todo_state;
+	delete fields.todo_state
+    }
+    if ( typeof fields.previous_sibling_id != 'undefined' ) {
+	fields._previous_sibling = fields.previous_sibling_id;
+	delete fields.previous_sibling_id;
+    }
+    // Now apply the dictionary
+    for ( var field in fields ) {
+	this[field] = fields[field];
+    }
+    return true;
+}
+
+GtdHeading.prototype.get_todo_state = function() {
+    // Look through the outline.todo_state and return the correct
+    // TodoState object
+    var found_state = null;
+    if ( typeof this.workspace != 'undefined' ) {
+	for ( var i=0; i < this.workspace.todo_states.length; i++ ) {
+	    var state = this.workspace.todo_states[i]
+	    if ( state.pk == this.todo_id ) {
+		found_state = state;
+	    }
+	}
+    }
+    if ( found_state ) {
+	return found_state;
+    } else {
+	return {pk: this.todo_id};
+    }
 };
+GtdHeading.prototype.set_selectors = function() {
+    if ( this.level > 0 ) {
+	// Determine how to find each piece of the heading
+	var new_selector = '.heading';
+	new_selector += '[node_id="' + this.pk + '"]';
+	// Set selectors
+	this.$element = this.workspace.$children.find(new_selector);
+	this.$hoverable = this.$element.children('.ow-hoverable');
+	this.$details = this.$element.children('.details');
+	this.$children = this.$details.children('.children');
+	this.$loading = this.$details.children('.loading');
+	this.$clickable = this.$hoverable.children('.clickable');
+	this.$todo_state = this.$hoverable.children('.todo-state');
+	this.$icon = this.$hoverable.children('i');
+	this.$text = this.$details.children('.ow-text');
+	this.$buttons = this.$hoverable.children('.ow-buttons');
+	this.$title = this.$hoverable.children('.ow-title');
+    }
+};
+GtdHeading.prototype.as_html = function() {
+    // Render to html
+    // This is just the skeleton of the html
+    // Actual values are added later using update_dom()
+    var new_string = '';
+    new_string += '<div class="heading" node_id="' + this.pk + '">\n';
+    new_string += '  <div class="ow-hoverable">\n';
+    new_string += '    <i class="twisty clickable ' + GtdHeading.ICON + '"></i>\n';
+    // Todo state
+    new_string += '    <span class="todo-state update" data-field="todo_abbr"></span>\n';
+    // title
+    new_string += '    <div class="clickable ow-title"></div>\n';
+    // Quick-action buttons
+    new_string += '    <div class="ow-buttons">\n';
+    new_string += '      <i class="icon-pencil edit-btn" title="Edit"></i>\n';		    
+    new_string += '      <i class="icon-arrow-right detail-btn" title="Detail view"></i>\n';
+    new_string += '      <i class="icon-plus new-btn" title="New subheading"></i>\n';
+    new_string += '    </div>\n';
+    new_string += '  </div>\n';
+    // Child containers
+    new_string += '  <div class="details">\n';
+    new_string += '    <div class="ow-text"></div>\n';
+    new_string += '    <div class="children">\n';
+    new_string += '    </div>\n';
+    if ( this.has_children ) {
+	new_string += '    <div class="loading">\n';
+	new_string += '      <em>Loading...</em>\n';
+	new_string += '    </div>\n';
+    }
+    new_string += '  </div>\n</div>\n';
+    return new_string;
+};
+GtdHeading.prototype.create_div = function( $target ) {
+    var heading = this;
+    // Create a new "<div></div>" element representing this heading
+    //  provided one does not already exist
+    // First determine if creating the div is necessary
+    if ( typeof this.$element == 'undefined' ) {
+	var do_create = true;
+    } else {
+	this.set_selectors()
+	if ( this.$element.length < 1 ) {
+	    var do_create = true;
+	} else if ( this.$element.length > 1 ) {
+	    // Extras were created, erase and start over
+	    this.$element.each( function() {
+		$(this).remove()
+	    });
+	    var do_create = true;
+	} else {
+	    var do_create = false;
+	}
+    }
+    // Then do the creating if necessary
+    if (do_create && (this.level > 0)) {
+	var node_id = this.pk;
+	if ($target) {
+	    var write = function(content) {
+		$target.append(content);
+	    };
+	} else { // Try and find the container if none was specified
+	    var previous = this.get_previous_sibling();
+	    var me = this.pk;
+	    var write;
+	    if ( previous ) {
+		previous.create_div(); // make sure the sibling exists;
+		write = function(content) {
+		    previous.$element.after(content);
+		};
+	    } else if ( this.workspace.get_heading(this.parent_id) ) {
+		var workspace = this.workspace;
+		var parent_id = this.parent_id;
+		var $target = workspace.get_heading(parent_id).$children;
+		write = function(content) {
+		    $target.prepend(content);
+		};
+	    } else {
+		return 1;
+	    }
+	}
+	write(this.as_html());
+	this.set_selectors();
+	this.state = 'closed';
+	this.$details.hide();
+	// Apply tooltips
+	this.$buttons.children('i').tooltip({
+	    delay: {show:1000, hide: 100}
+	});
+	// Set color based on indentation level
+	var COLORS = this.workspace.COLORS;
+	var color_i = this.level % COLORS.length;
+	this.color = COLORS[color_i-1];
+	this.$clickable.css('color', this.color);
+	this.set_indent(this.$children, 1);
+	this.set_indent(this.$loading, 1);
+	this.set_indent(this.$text, 1);
+	// Attach event handlers
+	var heading = this;
+	this.$clickable.click(function() {
+	    heading.toggle();
+	});
+	this.$buttons.find('.icon-arrow-right').click( function() {
+	    window.location = '/gtd/node/' + node_id + '/';
+	});
+	this.$buttons.find('.edit-btn').click( function() {
+	    // Modal dialog for editing this heading
+	    var $this = $(this);
+	    var $hoverable = $this.parent().parent();
+	    var $heading = $hoverable.parent();
+	    $hoverable.unbind('.autohide');
+	    $this.nodeEdit( {
+		$modal: heading.workspace.$edit_modal,
+		heading: heading,
+		show: true,
+		target: $hoverable,
+		node_id: node_id,
+		changed: function(node) {
+		    $hoverable.find('.todo-state').todoState(
+			'update', {todo_id: node.todo_state}
+		    );
+		    heading.text = node.text;
+		    heading.archived = node.archived;
+		    heading.title = node.title;
+		    var parent = heading.get_parent();
+		    if ( parent) {
+			parent.redraw();
+		    } else {
+			heading.redraw();
+		    };
+		},
+	    });
+	});
+	this.$buttons.find('.new-btn').click( function() {
+	    // Modal dialog for new children of this heading
+	    var $this = $(this);
+	    $this.parent().parent().unbind('.autohide');
+	    $this.nodeEdit( {
+		show: true,
+		// parent_id: heading.pk,
+		parent: heading,
+		$modal: heading.workspace.$edit_modal,
+		changed: function(node) {
+		    node.workspace = heading.workspace;
+		    console.log(typeof node);
+		    var new_heading = new GtdHeading( node );
+		    heading.workspace.headings.add(new_heading);
+		    var parent = new_heading.get_parent();
+		    parent.has_children = true;
+		    parent.redraw();
+		    parent.open();
+		},
+	    });
+	});
+	var todo_states = this.todo_states;
+	return 1;
+    }
+}; // end of GtdHeading.create_div()
+GtdHeading.prototype.get_previous_sibling = function() {
+    return this.workspace.headings.get(
+	{pk: Number(this._previous_sibling)}
+    );
+};
+GtdHeading.prototype.get_parent = function() {
+    return this.workspace.headings.get({pk: this.parent_id});
+}
+GtdHeading.prototype.get_children = function() {
+    return this.workspace.headings.filter({parent_id: this.pk});
+}
+GtdHeading.prototype.is_expandable = function() {
+    // Return true if the heading has information that
+    // can be seen by expanding a twisty.
+    if ( this.level == 0 ) {
+	// The main workspace is always expandable
+	return true;
+    }
+    if  ( this.text ) {
+	// Anything with text is always expandable
+	return true;
+    } else if ( this.workspace.show_all ) {
+	// Any children are visible
+	if ( this.has_children ) {
+	    return true;
+	} else {
+	    return false;
+	}
+    } else {
+	// Only non-archived children are visible
+	if ( this.get_children().filter({archived: false}).length ) {
+	    return true
+	} else if ( this.populated == false && this.has_children ) {
+	    return true;
+	} else {
+	    return false;
+	}
+    }
+};
+// Read the current object properties and update the
+//   DOM element to reflect any changes
+GtdHeading.prototype.redraw = function() {
+    // Test the various parts and update them as necessary
+    //   then call redraw on all children
+    this.set_selectors();
+    this.create_div();
+    // Set CSS classes
+    if (this.text) {
+	// Always show if there's text
+	this.$element.addClass('expandable');
+	this.$element.removeClass('lazy-expandable');
+	this.$element.removeClass('arch-expandable');
+    } else if (this.workspace.show_all && this.has_children) {
+	// If show_all box is checked then any heading
+	//   with children is expandable
+	this.$element.addClass('expandable');
+	this.$element.removeClass('lazy-expandable');
+	this.$element.removeClass('arch-expandable');
+    } else if ( this.populated && this.has_children ) {
+	if ( this.get_children().filter({archived: false}).length > 0 ) {
+	    this.$element.addClass('expandable');
+	    this.$element.removeClass('lazy-expandable');
+	    this.$element.removeClass('arch-expandable');
+	} else {
+	    this.$element.addClass('arch-expandable');
+	    this.$element.removeClass('expandable');
+	    this.$element.removeClass('lazy-expandable');
+	}
+    } else if ( this.has_children ) {
+	this.$element.addClass('lazy-expandable');
+	this.$element.removeClass('expandable');
+	this.$element.removeClass('arch-expandable');
+    } else {
+	this.$element.removeClass('lazy-expandable');
+	this.$element.removeClass('expandable');
+	this.$element.removeClass('arch-expandable');
+    }
+    if ( this.state == 'open' && this.is_expandable() ) {
+	this.$element.addClass('open');
+    } else {
+	this.$element.removeClass('open');
+    }
+    if ( this.workspace.show_all ) {
+	this.$element.removeClass('archived');
+	this.$element.slideDown(
+	    this.workspace.ANIM_SPEED
+	);
+    } else if ( this.archived ) {
+	this.$element.addClass('archived');
+	this.$element.slideUp(
+	    this.workspace.ANIM_SPEED
+	);
+    } else {
+	this.$element.removeClass('archived');
+	this.$element.slideDown(
+	    this.workspace.ANIM_SPEED
+	);
+    }
+    // Set content
+    if ( this.$todo_state ) {
+	var todo_state = this.get_todo_state();
+	if ( todo_state.pk > 0 ) {
+	    this.$todo_state.html(todo_state.display);
+	} else {
+	    this.$todo_state.html('');
+	}
+	// Attach the todoState plugin
+	var heading = this;
+	this.$todo_state.todoState({
+	    states: this.workspace.todo_states,
+	    node_id: this.pk,
+	    heading: this,
+	    click: function(ajax_response) {
+		heading.todo_id = ajax_response['todo_id'];
+	    }
+	}); // end of todoState plugin
+    }
+    if ( this.$title ) {
+	this.$title.html(this.title_html);
+    }
+    if ( this.$text && this.text ) {
+	// If text exists, display it
+	this.$text.html(this.text);
+	this.$text.alohaText({$parent: this.$element});
+    }
+    if ( this.populated ) {
+	// Get rid of loading... indicator if expired
+	this.$element.addClass('populated');
+    }
+    // Redraw children
+    var children = this.workspace.headings.filter(
+	{parent_id: this.pk}
+    );
+    for ( var i=0; i < children.length; i++ ) {
+	children[i].redraw();
+    }
+}
+GtdHeading.prototype.set_indent = function($target, offset) {
+    var indent = (this.icon_width + 4) * offset;
+    $target.css('margin-left', indent + 'px');
+};
+GtdHeading.prototype.show_error = function($container) {
+    var html = '';
+    html += '<i class="icon-warning-sign"></i>\n';
+    html += 'Error! Please refresh your browser\n';
+    $container.html(html);
+};
+GtdHeading.prototype.populate_children = function(options) {
+    // Gets children via AJAX request and creates their div elements
+    if ( typeof options == 'undefined' ) {
+	options = {};
+    }
+    var url = '/gtd/node/' + this.pk + '/descendants/';
+    var ancestor = this;
+    var get_nodes = function(options) {
+	// Get immediate children
+	var payload = {offset: options.offset};
+	$.getJSON(url, payload, function(response) {
+	    // (callback) Process AJAX to get an array of children objects
+	    if ( response['status'] == 'success' ) {
+		var nodes = response['nodes'];
+		// Process each node in the response
+		for ( var i=0; i < nodes.length; i++ ) {
+		    var node = nodes[i];
+		    node.workspace = ancestor.workspace;
+		    var heading = new GtdHeading(node);
+		    var parent = heading.get_parent();
+		    if ( parent ) {
+			// Only add this heading if the parent exists
+			ancestor.workspace.headings.add(heading);
+			heading.create_div();
+			// Remove the loading... indicator
+			if ( (!parent.populated) && parent.$details) {
+			    if ( options.offset == 1 ) {
+				parent.$loading.slideUp(
+				    parent.workspace.ANIM_SPEED
+				);
+			    } else {
+				parent.$loading.hide();
+			    }
+			}
+			parent.populated = true;
+		    }
+		}
+		ancestor.redraw();
+		// Now show the new children gracefully
+		if ( (options.offset == 1) && parent) {
+		    parent.$children.slideDown(
+			parent.workspace.ANIM_SPEED
+		    );
+		}
+	    }
+	});
+    };
+    if ( ! this.populated ) {
+	if ( this.level > 0 ) {
+	    this.$children.hide();
+	}
+	get_nodes( {offset: 1} );
+    }
+    if ( ! this.populated_level_2 ) {
+	get_nodes({offset: 2});
+	this.populated_level_2 = true;
+    }
+}; // end this.populate_children()
+GtdHeading.prototype.open = function() {
+    // Opens a toggleable heading and populates its children
+    this.state = 'open';
+    this.$details.slideDown(
+	this.workspace.ANIM_SPEED
+    );
+    this.populate_children();
+    this.redraw();
+};
+GtdHeading.prototype.close = function() {
+    // Closes a toggleable heading
+    this.state = 'closed';
+    this.$details.slideUp(
+	this.workspace.ANIM_SPEED
+    );
+    this.redraw();
+};
+GtdHeading.prototype.toggle = function( direction ) {
+    // Show or hide the children div based on present state
+    if(this.state == 'open') {
+	this.close();
+    } else if (this.state == 'closed') {
+	this.open();
+    }
+};
+
+// End of GtdHeading definition
 
 /*************************************************
 * jQuery nodeOutline plugin
@@ -555,504 +1033,6 @@ var get_heading = function (node_id) {
     var methods = {
 	// Plugin initialization
 	init: function( args ) {
-	    // Begin implementation of hierarchical expanding project list
-	    var outline_heading = function( args ) {
-		if ( ! args ) {
-		    args = {};
-		}
-		this.ICON = 'icon-chevron-right';
-		this.title = args['title'];
-		this.scheduled_date = args['scheduled_date'];
-		this.scheduled_time = args['scheduled_time'];
-		this.scheduled_time_specific = args['scheduled_time_specific'];
-		this.deadline_date = args['deadline_date'];
-		this.deadline_time = args['deadline_time'];
-		this.deadline_time_specific = args['deadline_time_specific'];
-		this.priority = args['priority'];
-		this.scope = args['scope'];
-		this.repeats = args['repeats'];
-		this.repeating_number = args['repeating_number'];
-		this.repeating_unit = args['repeating_unit'];
-		this.repeats_from_completion = args['repeats_from_completion'];
-		this.related_projects = args['related_projects'];
-		this.tag_string = args['tag_string'];
-		this.populated = false;
-		this._previous_sibling = args['previous_sibling_id'];
-		if (typeof args['workspace'] != 'undefined') {
-		    this.workspace = args['workspace'];
-		}
-		if (typeof args['text'] == 'undefined') {
-		    args['text'] = '';
-		}
-		this.text = args['text'];
-		if( typeof args['todo_state'] != 'undefined' ) {
-		    this.todo_id = args['todo_state'];
-		}
-		else {
-		    this.todo_id = 0;
-		}
-		if( typeof args['pk'] != 'undefined' ) {
-		    this.pk = Number(args['pk']);
-		    this.node_id = Number(args['pk']);
-		    }
-		if( typeof args['node_id'] != 'undefined' ) {
-		    this.node_id = Number(args['node_id']);
-		    this.pk = this.node_id;
-		}
-		this.tags = args['tags'];
-		if ( typeof args['archived'] != 'undefined' ) {
-		    this.archived = args['archived'];
-		} else {
-		    this.archived = false;
-		}
-		if (typeof args['level'] == 'undefined' ) {
-		    this.level = 1;
-		} else {
-		    this.level = args['level'];
-		}
-		// Detect the location in the hierarchy
-		this.parent_id = args['parent_id'];
-		this.has_children = args['has_children'];
-		if ( typeof args['is_leaf_node'] != 'undefined' ) {
-                    this.has_children = ! args['is_leaf_node'];
-		}
-		// Determine the width of icon that is being used
-		var $body = $('body');
-		$body.append('<i id="7783452" class="' + this.ICON + '"></i>');
-		this.icon_width = Number($body.find('#7783452').css('width').slice(0,-2));
-		$('#7783452').remove();
-		// Methods...
-		this.get_todo_state = function() {
-		    // Look through the outline.todo_state and return the correct
-		    // TodoState object
-		    var found_state = null;
-		    if ( typeof this.workspace != 'undefined' ) {
-			for ( var i=0; i < this.workspace.todo_states.length; i++ ) {
-			    var state = this.workspace.todo_states[i]
-			    if ( state.pk == this.todo_id ) {
-				found_state = state;
-			    }
-			}
-		    }
-		    if ( found_state ) {
-			return found_state;
-		    } else {
-			return {pk: this.todo_id};
-		    }
-		};
-		this.set_selectors = function() {
-		    if ( this.level > 0 ) {
-			// Determine how to find each piece of the heading
-			var new_selector = '.heading';
-			new_selector += '[node_id="' + this.pk + '"]';
-			// Set selectors
-			this.$element = this.workspace.$children.find(new_selector);
-			this.$hoverable = this.$element.children('.ow-hoverable');
-			this.$details = this.$element.children('.details');
-			this.$children = this.$details.children('.children');
-			this.$loading = this.$details.children('.loading');
-			this.$clickable = this.$hoverable.children('.clickable');
-			this.$todo_state = this.$hoverable.children('.todo-state');
-			this.$icon = this.$hoverable.children('i');
-			this.$text = this.$details.children('.ow-text');
-			this.$buttons = this.$hoverable.children('.ow-buttons');
-			this.$title = this.$hoverable.children('.ow-title');
-		    }
-		};
-		this.as_html = function() {
-		    // Render to html
-		    // This is just the skeleton of the html
-		    // Actual values are added later using update_dom()
-		    var new_string = '';
-		    new_string += '<div class="heading" node_id="' + this.node_id + '">\n';
-		    new_string += '  <div class="ow-hoverable">\n';
-		    new_string += '    <i class="twisty clickable ' + this.ICON + '"></i>\n';
-		    // Todo state
-		    new_string += '    <span class="todo-state update" data-field="todo_abbr"></span>\n';
-		    // title
-		    new_string += '    <div class="clickable ow-title"></div>\n';
-		    // Quick-action buttons
-		    new_string += '    <div class="ow-buttons">\n';
-		    new_string += '      <i class="icon-pencil edit-btn" title="Edit"></i>\n';		    
-		    new_string += '      <i class="icon-arrow-right detail-btn" title="Detail view"></i>\n';
-		    new_string += '      <i class="icon-plus new-btn" title="New subheading"></i>\n';
-		    new_string += '    </div>\n';
-		    new_string += '  </div>\n';
-		    // Child containers
-		    new_string += '  <div class="details">\n';
-		    new_string += '    <div class="ow-text"></div>\n';
-		    new_string += '    <div class="children">\n';
-		    new_string += '    </div>\n';
-		    if ( this.has_children ) {
-			new_string += '    <div class="loading">\n';
-			new_string += '      <em>Loading...</em>\n';
-			new_string += '    </div>\n';
-		    }
-		    new_string += '  </div>\n</div>\n';
-		    return new_string;
-		};
-		this.create_div = function( $target ) {
-		    var heading = this;
-		    // Create a new "<div></div>" element representing this heading
-		    //  provided one does not already exist
-		    // First determine if creating the div is necessary
-		    if ( typeof this.$element == 'undefined' ) {
-			var do_create = true;
-		    } else {
-			this.set_selectors()
-			if ( this.$element.length < 1 ) {
-			    var do_create = true;
-			} else if ( this.$element.length > 1 ) {
-			    // Extras were created, erase and start over
-			    this.$element.each( function() {
-				$(this).remove()
-			    });
-			    var do_create = true;
-			} else {
-			    var do_create = false;
-			}
-		    }
-		    // Then do the creating if necessary
-		    if (do_create && (this.level > 0)) {
-			var node_id = this.node_id;
-			if ($target) {
-			    var write = function(content) {
-				$target.append(content);
-			    };
-			} else { // Try and find the container if none was specified
-			    var previous = this.get_previous_sibling();
-			    var me = this.node_id;
-			    var write;
-			    if ( previous ) {
-				previous.create_div(); // make sure the sibling exists;
-				write = function(content) {
-				    previous.$element.after(content);
-				};
-			    } else if ( this.workspace.get_heading(this.parent_id) ) {
-				var workspace = this.workspace;
-				var parent_id = this.parent_id;
-				var $target = workspace.get_heading(parent_id).$children;
-				write = function(content) {
-				    $target.prepend(content);
-				};
-			    } else {
-				return 1;
-			    }
-			}
-			write(this.as_html());
-			this.set_selectors();
-			this.state = 'closed';
-			this.$details.hide();
-			// Apply tooltips
-			this.$buttons.children('i').tooltip({
-			    delay: {show:1000, hide: 100}
-			});
-			// Set color based on indentation level
-			var COLORS = this.workspace.COLORS;
-			var color_i = this.level % COLORS.length;
-			this.color = COLORS[color_i-1];
-			this.$clickable.css('color', this.color);
-			this.set_indent(this.$children, 1);
-			this.set_indent(this.$loading, 1);
-			this.set_indent(this.$text, 1);
-			// Attach event handlers
-			var heading = this;
-			this.$clickable.click(function() {
-				heading.toggle();
-			});
-			this.$buttons.find('.icon-arrow-right').click( function() {
-			    window.location = '/gtd/node/' + node_id + '/';
-			});
-			this.$buttons.find('.edit-btn').click( function() {
-			    // Modal dialog for editing this heading
-			    var $this = $(this);
-			    var $hoverable = $this.parent().parent();
-			    var $heading = $hoverable.parent();
-			    $hoverable.unbind('.autohide');
-			    $this.nodeEdit( {
-				$modal: heading.workspace.$edit_modal,
-				heading: heading,
-				show: true,
-				target: $hoverable,
-				node_id: node_id,
-				changed: function(node) {
-				    $hoverable.find('.todo-state').todoState(
-					'update', {todo_id: node.todo_state}
-				    );
-				    heading.text = node.text;
-				    heading.archived = node.archived;
-				    heading.title = node.title;
-				    heading.redraw();
-				},
-			    });
-			});
-			this.$buttons.find('.new-btn').click( function() {
-			    // Modal dialog for new children of this heading
-			    var $this = $(this);
-			    $this.parent().parent().unbind('.autohide');
-			    $this.nodeEdit( {
-				show: true,
-				parent_id: heading.pk,
-				$modal: heading.workspace.$edit_modal,
-				changed: function(node) {
-				    var new_heading = new outline_heading( {
-					title: node.title,
-					text: node.text,
-					node_id: node.id,
-					workspace: heading.workspace,
-					todo_state: node.todo_state,
-					tags: node.tag_string,
-					parent_id: node_id
-				    });
-				    heading.workspace.headings.add(new_heading);
-				    var parent = new_heading.get_parent();
-				    parent.has_children = true;
-				    parent.redraw();
-				    parent.open();
-				},
-			    });
-			});
-			var todo_states = this.todo_states;
-			return 1;
-		    }
-		}; // end of outline_heading.create_div()
-		this.get_previous_sibling = function() {
-		    return this.workspace.headings.get(
-			{pk: Number(this._previous_sibling)}
-		    );
-		};
-		this.get_parent = function() {
-		    return this.workspace.headings.get({pk: this.parent_id});
-		}
-		this.get_children = function() {
-		    return this.workspace.headings.filter({parent_id: this.pk});
-		}
-		this.is_expandable = function() {
-		    // Return true if the heading has information that
-		    // can be seen by expanding a twisty.
-		    if ( this.level == 0 ) {
-			// The main workspace is always expandable
-			return true;
-		    }
-		    if  ( this.text ) {
-			// Anything with text is always expandable
-			return true;
-		    } else if ( this.workspace.show_all ) {
-			// Any children are visible
-			if ( this.has_children ) {
-			    return true;
-			} else {
-			    return false;
-			}
-		    } else {
-			// Only non-archived children are visible
-			if ( this.get_children().filter({archived: false}).length ) {
-			    return true
-			} else if ( this.populated == false && this.has_children ) {
-			    return true;
-			} else {
-			    return false;
-			}
-		    }
-		};
-		// Read the current object properties and update the
-		//   DOM element to reflect any changes
-		this.redraw = function() {
-		    // Test the various parts and update them as necessary
-		    //   then call redraw on all children
-		    this.set_selectors();
-		    this.create_div();
-		    // Set CSS classes
-		    if (this.text) {
-			// Always show if there's text
-			this.$element.addClass('expandable');
-			this.$element.removeClass('lazy-expandable');
-			this.$element.removeClass('arch-expandable');
-		    } else if (this.workspace.show_all && this.has_children) {
-		    	// If show_all box is checked then any heading
-		    	//   with children is expandable
-		    	this.$element.addClass('expandable');
-		    	this.$element.removeClass('lazy-expandable');
-		    	this.$element.removeClass('arch-expandable');
-		    } else if ( this.populated && this.has_children ) {
-			if ( this.get_children().filter({archived: false}).length > 0 ) {
-		    	    this.$element.addClass('expandable');
-		    	    this.$element.removeClass('lazy-expandable');
-		    	    this.$element.removeClass('arch-expandable');
-			} else {
-		    	    this.$element.addClass('arch-expandable');
-			    this.$element.removeClass('expandable');
-		    	    this.$element.removeClass('lazy-expandable');
-			}
-		    } else if ( this.has_children ) {
-			this.$element.addClass('lazy-expandable');
-			this.$element.removeClass('expandable');
-			this.$element.removeClass('arch-expandable');
-		    } else {
-			this.$element.removeClass('lazy-expandable');
-			this.$element.removeClass('expandable');
-			this.$element.removeClass('arch-expandable');
-		    }
-		    if ( this.state == 'open' && this.is_expandable() ) {
-			this.$element.addClass('open');
-		    } else {
-			this.$element.removeClass('open');
-		    }
-		    if ( this.workspace.show_all ) {
-			this.$element.removeClass('archived');
-			this.$element.slideDown(
-			    this.workspace.ANIM_SPEED
-			);
-		    } else if ( this.archived ) {
-			this.$element.addClass('archived');
-			this.$element.slideUp(
-			    this.workspace.ANIM_SPEED
-			);
-		    } else {
-			this.$element.removeClass('archived');
-			this.$element.slideDown(
-			    this.workspace.ANIM_SPEED
-			);
-		    }
-		    // Set content
-		    if ( this.$todo_state) {
-			this.$todo_state.html(this.get_todo_state().display);
-			// Attach the todoState plugin
-			var heading = this;
-			this.$todo_state.todoState({
-			    states: this.workspace.todo_states,
-			    node_id: this.pk,
-			    heading: this,
-			    click: function(ajax_response) {
-				heading.todo_id = ajax_response['todo_id'];
-			    }
-			}); // end of todoState plugin
-		    }
-		    if ( this.$title ) {
-			this.$title.html(this.title);
-		    }
-		    if ( this.$text && this.text ) {
-			// If text exists, display it
-			this.$text.html(this.text);
-			this.$text.alohaText({$parent: this.$element});
-		    }
-		    if ( this.populated ) {
-			// Get rid of loading... indicator if expired
-			this.$element.addClass('populated');
-		    }
-		    // Redraw children
-		    var children = this.workspace.headings.filter(
-			{parent_id: this.pk}
-		    );
-		    for ( var i=0; i < children.length; i++ ) {
-			children[i].redraw();
-		    }
-		}
-		this.set_indent = function($target, offset) {
-		    var indent = (this.icon_width + 4) * offset;
-		    $target.css('margin-left', indent + 'px');
-		};
-		this.show_error = function($container) {
-		    var html = '';
-		    html += '<i class="icon-warning-sign"></i>\n';
-		    html += 'Error! Please refresh your browser\n';
-		    $container.html(html);
-		};
-		this.populate_children = function(options) {
-		    // Gets children via AJAX request and creates their div elements
-		    if ( typeof options == 'undefined' ) {
-			options = {};
-		    }
-		    var url = '/gtd/node/' + this.node_id + '/descendants/';
-		    var ancestor = this;
-		    var get_nodes = function(options) {
-			// Get immediate children
-			var payload = {offset: options.offset};
-			$.getJSON(url, payload, function(response) {
-			    // (callback) Process AJAX to get an array of children objects
-			    if ( response['status'] == 'success' ) {
-				var nodes = response['nodes'];
-				// Process each node in the response
-				for ( var i=0; i < nodes.length; i++ ) {
-				    var node = nodes[i];
-				    node.workspace = ancestor.workspace;
-				    var heading = new outline_heading(node);
-				    var parent = heading.get_parent();
-				    if ( parent ) {
-					// Only add this heading if the parent exists
-					ancestor.workspace.headings.add(heading);
-					heading.create_div();
-					// Remove the loading... indicator
-					if ( (!parent.populated) && parent.$details) {
-					    if ( options.offset == 1 ) {
-						parent.$loading.slideUp(
-						    parent.workspace.ANIM_SPEED
-						);
-					    } else {
-						parent.$loading.hide();
-					    }
-					}
-					parent.populated = true;
-				    }
-				}
-				ancestor.redraw();
-				// Now show the new children gracefully
-				if ( (options.offset == 1) && parent) {
-				    parent.$children.slideDown(
-					parent.workspace.ANIM_SPEED
-				    );
-				}
-			    }
-			});
-		    };
-		    if ( ! this.populated ) {
-			if ( this.level > 0 ) {
-			    this.$children.hide();
-			}
-			get_nodes( {offset: 1} );
-		    }
-		    if ( ! this.populated_level_2 ) {
-			get_nodes({offset: 2});
-			this.populated_level_2 = true;
-		    }
-		}; // end this.populate_children()
-		var rotate = function($icon, angle) {
-		    var PROPS = ['transform',
-				 '-moz-transform',
-				 '-webkit-transform',
-				 '-ms-transform',
-				 '-o-transform'];
-		    for ( var i = 0; i < PROPS.length; i++ ) {
-			$icon.css(PROPS[i],
-				  'rotate3d(1, 1, 0, ' + angle*2 + 'deg)');
-		    }
-		};
-		this.open = function() {
-		    // Opens a toggleable heading and populates its children
-		    this.state = 'open';
-		    this.$details.slideDown(
-			this.workspace.ANIM_SPEED
-		    );
-		    this.populate_children();
-		    this.redraw();
-		};
-		this.close = function() {
-		    // Closes a toggleable heading
-		    this.state = 'closed';
-		    this.$details.slideUp(
-			this.workspace.ANIM_SPEED
-		    );
-		    this.redraw();
-		};
-		this.toggle = function( direction ) {
-		    // Show or hide the children div based on present state
-		    if(this.state == 'open') {
-			this.close();
-		    } else if (this.state == 'closed') {
-			this.open();
-		    }
-		};
-	    }; // end of outline_heading prototype
 	    // Subclass an array that holds headings
 	    var HeadingManager = function() {
 		var headings = new Array();
@@ -1129,7 +1109,7 @@ var get_heading = function (node_id) {
 		args = {};
 	    }
 	    if ( args.get_proto ) {
-		return outline_heading;
+		return GtdHeading;
 	    }
 	    this.each(function() {
 		// process each outline element
@@ -1145,8 +1125,8 @@ var get_heading = function (node_id) {
 		// Array of browser recognized colors for each level of nodes
 		var COLORS = ['blue', 'brown', 'purple', 'red', 'green', 'teal', 'slateblue', 'darkred'];
 		var ANIM_SPEED = 300;
-		var workspace = new outline_heading( {
-		    node_id: node_id,
+		var workspace = new GtdHeading( {
+		    pk: node_id,
 		    title: 'Outline Workspace',
 		});
 		workspace.$element = $this;
@@ -1169,7 +1149,7 @@ var get_heading = function (node_id) {
 		workspace.get_heading = function(pk) {
 		    // Sort through the headings array and return the desired object
 		    for( var i=0; i<this.headings.length; i++ ){
-			if (this.headings[i].node_id == pk ){
+			if (this.headings[i].pk == pk ){
 			    return this.headings[i];
 			}
 		    }
@@ -1197,7 +1177,7 @@ var get_heading = function (node_id) {
 			sibling_id = Number(sibling_id);
 		    }
 		    var dict = {
-			node_id: pk,
+			pk: pk,
 			title: title,
 			text: text,
 			todo_state: todo_id,
@@ -1208,7 +1188,7 @@ var get_heading = function (node_id) {
 			has_children: has_children,
 			workspace: workspace
 			   }
-		    var heading = new outline_heading(dict);
+		    var heading = new GtdHeading(dict);
 		    workspace.headings.add(heading);
 		});
 		// Clear old content and replace
@@ -1250,17 +1230,10 @@ var get_heading = function (node_id) {
 			      $this.nodeEdit( {
 				  show: true,
 				  $modal: workspace.$edit_modal,
-				  parent_id: workspace.node_id,
+				  parent_id: workspace.pk,
 				  changed: function(node) {
-				      new_heading = new outline_heading( {
-					  title: node.title,
-					  text: node.text,
-					  node_id: node.id,
-					  todo_state: node.todo_state,
-					  tags: node.tag_string,
-					  workspace: workspace,
-					  parent_id: workspace.node_id
-				      });
+				      node.workspace = workspace;
+				      new_heading = new GtdHeading( node );
 				      workspace.headings.add(new_heading);
 				      workspace.redraw()
 				  }
@@ -1423,7 +1396,11 @@ var get_heading = function (node_id) {
 	    if ( args.url ) {
 		edit_url = args['url'];
 	    } else {
-		if ( args.node_id > 0 ) {
+		if ( args.heading ) {
+		    // Heading object was passed
+		    edit_url = '/gtd/node/' + args.heading.pk + '/edit/';
+		}
+		else if ( args.node_id > 0 ) {
 		    // Existing node
 		    edit_url = '/gtd/node/' + args.node_id + '/edit/';
 		} else if ( args.parent_id > 0 ) {
@@ -1435,6 +1412,12 @@ var get_heading = function (node_id) {
 		}
 	    }
 	    var data = this.data('nodeEdit');
+	    if ( args.parent ) {
+		if ( data ) {
+		    data.parent = args.parent;
+		}
+		args.parent_id = args.parent.pk;
+	    }
 	    if ( data ) {
 		data.edit_url = edit_url;
 		data.$modal.find('#edit_url').attr('value', edit_url);
@@ -1449,6 +1432,7 @@ var get_heading = function (node_id) {
 		var on_modal = args['on_modal'];
 		data.changed = changed
 		data.heading = args['heading'];
+		data.parent = args['parent'];
 		data.on_modal = args['on_modal'];
 		data.$target = $target;
 		var toggle = function() {
@@ -1456,7 +1440,7 @@ var get_heading = function (node_id) {
 			// Set current values based on existing heading
 			var heading = data.heading;
 			data.$modal.find('.header-title').html(
-			    'Edit "' + heading.title + '"');
+			    'Edit "' + heading.title_html + '"');
 			data.$modal.find('#id_title').attr('value', heading.title);
 			data.$modal.find('#id_text').attr('value', heading.text);
 			data.$modal.find('#id_text-aloha').html(heading.text);
@@ -1499,7 +1483,6 @@ var get_heading = function (node_id) {
 			var $scope = data.$modal.find('#id_scope');
 			for ( var i = 0; i < heading.scope.length; i++ ) {
 			    var s = 'option[value="' + heading.scope[i] + '"]'
-			    console.log($scope.find(s));
 			    $scope.find(s).attr('selected', 'selected');
 			}
 			// Find related_projects
@@ -1518,12 +1501,25 @@ var get_heading = function (node_id) {
 			for ( var i = 0; i < clear_text.length; i++ ) {
 			    data.$modal.find(clear_text[i]).attr('value', '');
 			}
-			// Clear select elementson
+			// Clear select elements
 			for ( var i = 0; i < clear_select.length; i++ ) {
 			    data.$modal.find(clear_select[i]).find('option:selected').each(function() {
 				$(this).removeAttr('selected');
 			    });
 			    data.$modal.find(clear_select[i]).find('option[value=""]').attr('selected', 'selected');
+			}
+			// Now set some select elements that inherit from their parent
+			if ( data.parent ) {
+			    var scopes = data.parent.scope;
+			    var $scope = data.$modal.find('#id_scope');
+			    for ( var i = 0; i<scopes.length; i++ ) {
+				$scope.find('option[value="' + scopes[i] + '"]').attr('selected', 'selected');
+			    }
+			    var related_projects = data.parent.related_projects;
+			    var $projects = data.$modal.find('#id_related_projects');
+			    for ( var i = 0; i<related_projects.length; i++ ) {
+				$projects.find('option[value="' + related_projects[i] + '"]').attr('selected', 'selected');
+			    }
 			}
 			// Clear checkboxes
 			for ( var i = 0; i < clear_check.length; i++ ) {
@@ -1552,8 +1548,10 @@ var get_heading = function (node_id) {
 		    data.$modal.on('hidden', function () {
 			methods['reset']({ $elem: $button });
 		    });
-		    data.$modal.on('shown', function() {
+		    data.$modal.on('show', function() {
 			data.$modal.find('.modal-body').scrollTop(0);
+		    });
+		    data.$modal.on('shown', function() {
 			data.$modal.find('#id_title').focus();
 		    });
 		    var $form = data.$modal.find('form');
@@ -1573,28 +1571,31 @@ var get_heading = function (node_id) {
 			} else {
 			    submit_url = data.edit_url;
 			}
+			$(this).data('nodeEdit', data);
+			var that = this;
 			$.post(submit_url, payload, function(r) {
 		      	    r = $.parseJSON(r)
 		      	    if (r.status == 'success') {
-				return false;
 		      		// Success! Now update the page
-		      		node = $.parseJSON(r.node_data);
+		      		node = r.node_data;
 		      		// Update data
+				var data = $(that).data('nodeEdit');
 		      		if ( node.todo_state == null ) {
 		      		    node.todo_state = 0;
 		      		}
-		      		var data = $button.data('nodeEdit');
 		      		data.todo_id = node.todo_state;
-		      		$button.data('nodeEdit', data);
 		      		// Update DOM
-		      		data.$modal.modal('hide');
-		      		if ( $target ) {
+				if ( data.heading ) {
+				    data.heading.set_fields( node );
+				}
+				if ( $target ) {
 		      		    $target.find('.update').each(function() {
 		      			var field = $(this).attr('data-field');
 		      			var new_html = node[field];
 		      			$(this).html(new_html);
 		      		    });
 		      		}
+		      		data.$modal.modal('hide');
 		      		// User supplied callback function
 		      		if (typeof data.changed != 'undefined') {
 		      		    data.changed(node);
@@ -1621,6 +1622,7 @@ var get_heading = function (node_id) {
 			  function(response) {
 			      $button.after(response);
 			      data.$modal = $button.next('.modal');
+			      attach_pickers(data.$modal);
 			      // Find some data for later resetting
 			      var $todo = data.$modal.find('#id_todo_state').children('option[selected="selected"]');
 			      if ($todo.length == 1) {

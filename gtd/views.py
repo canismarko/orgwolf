@@ -376,7 +376,7 @@ def edit_node(request, node_id, scope_id):
                 node = Node.objects.get(pk=node.pk)
                 node.title = node.get_title();
                 # Prepare the response
-                node_data = node.as_json()
+                node_data = node.as_pre_json()
                 data = {
                     'status': 'success',
                     'node_id': node.pk,
@@ -550,7 +550,7 @@ def new_node(request, node_id, scope_id):
                 new_node.parent = node
                 new_node.save()
                 # Prepare the response
-                node_data = new_node.as_json()
+                node_data = new_node.as_pre_json()
                 data = {
                     'status': 'success',
                     'node_id': new_node.pk,

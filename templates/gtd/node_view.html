@@ -61,8 +61,9 @@ $('document').ready(function() {
 	}
     });
     // Modal node edit form
+    var heading = new GtdHeading({% autoescape off %}{{parent_node.as_json}}{% endautoescape %});
     $('#edit-button').nodeEdit({
-	url: '{% url 'gtd.views.edit_node' node_id=parent_node.pk %}',
+	heading: heading,
 	target: '#node-detail',
 	callback: function(d) {
 	    update_todo( d.todo_state );

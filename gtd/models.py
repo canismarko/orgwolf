@@ -394,7 +394,7 @@ class Node(MPTTModel):
         else:
             new_dict['todo_html'] = '[None]'
         # Use styled title
-        new_dict['title'] = self.get_title()
+        new_dict['title_html'] = self.get_title()
         # Include is_leaf_node()
         new_dict['is_leaf_node'] = self.is_leaf_node()
         return new_dict

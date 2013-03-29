@@ -9,26 +9,27 @@ var console, getInterface;
 // Constants and setup
 var sparse_dict = {
     title: 'test_title',
-    node_id: '1',
+    pk: '1',
 };
 var full_dict = {
     title: 'test title',
     text: 'here\'s some text that goes with it',
-    node_id: '1',
+    pk: 1,
     todo_id: '1',
-    tags: ':comp:',
+    tag_string: ':comp:',
+    is_leaf_node: false,
 };
 var archived_dict = {
     title: 'test_title',
     text: 'here\' some text that goes with it',
-    node_id: '1',
+    pk: '1',
     todo_id: '1',
     tags: ':comp:',
     archived: true,
 };
 var second_dict = {
     title: 'maybe get some food',
-    node_id: '5',
+    pk: '5',
     todo_id: '2',
 };
 var todo_state_list = [
@@ -46,6 +47,7 @@ var ajax_timer = 20; // how long fake ajax request takes (in milliseconds)
 var node8 = {
     pk: 8,
     title: 'it\'s all falling down',
+    title_html: '<span class="archived-text">it\'s all falling down</span>',
     todo_state: 1,
     scheduled_date: '2012-03-27',
     scheduled_time: '15:53:00',
@@ -132,14 +134,14 @@ $.mockjax({
 	parent_id: 0,
 	children: [
 	    {
-		node_id: 1,
+		pk: 1,
 		title: 'Tasks',
 		todo_id: 1,
 		tags: '',
 		text: 'Mostly when I can...',
 	    },
 	    {
-		node_id: 2,
+		pk: 2,
 		title: 'Expense reports',
 		todo_id: 2,
 		tags: ':comp:',
@@ -156,14 +158,14 @@ $.mockjax({
 	parent_id: 1,
 	children: [
 	    {
-		node_id: 3,
+		pk: 3,
 		title: 'Buy a puppy',
 		todo: 'NEXT',
 		tags: ':car:',
 		text: 'I should really buy a puppy because they\'re cute',
 	    },
 	    {
-		node_id: 4,
+		pk: 4,
 		title: 'Pay my taxes',
 		todo: 'NEXT',
 		tags: '',
@@ -181,7 +183,7 @@ $.mockjax({
 	parent_id: 2,
 	children: [
 	    {
-		node_id: 5,
+		pk: 5,
 		title: 'Take puppy to the vet',
 		archived: true,
 		todo: 'NEXT',
@@ -199,7 +201,7 @@ $.mockjax({
 	parent_id: 3,
 	children: [
 	    {
-		node_id: 6,
+		pk: 6,
 		title: 'tax forms from Kalsec',
 		todo: 'WAIT',
 		tags: '',
@@ -211,12 +213,12 @@ $.mockjax({
 $.mockjax({
     url: '/gtd/node/1/edit/',
     responseTime: ajax_timer,
-    responseText: '{"status": "success", "node_id": 1, "todo_id": 2}'
+    responseText: '{"status": "success", "pk": 1, "todo_id": 2}'
 });
 $.mockjax({
     url: '/gtd/node/5/edit/',
     responseTime: ajax_timer,
-    responseText: '{"status": "success", "node_id": 5, "todo_id": 0}'
+    responseText: '{"status": "success", "pk": 5, "todo_id": 0}'
 });
 // For testing todo buttons plugin
 $.mockjax({
@@ -252,6 +254,46 @@ $.mockjax({
     responseText: '<div class="modal hide fade" id="node-edit-modal">\n<div class="modal-body"><select id="id_todo_state">' + options + '</select></div>\n</div>'
 });
 
+
+
+module('GtdHeading prototype');
+
+test('constructor defaults', function() {
+    // The constructor should set defaults if no fields are passed
+    var heading = new GtdHeading();
+    equal(
+	heading.pk,
+	0,
+	'Primary key defaults to zero'
+    );
+});
+
+test('set_fields() method', function() {
+    var heading = new GtdHeading();
+    heading.set_fields(full_dict);
+    equal(
+	heading.pk,
+	full_dict.pk,
+	'sets primary key'
+    );
+    strictEqual(
+	heading.is_leaf_node,
+	undefined,
+	'is_leaf_node is not set (defer to has_children)'
+    );
+    ok(
+	heading.has_children,
+	'has_children is set based on is_leaf_node'
+    );
+    equal(
+	heading.title_html,
+	full_dict.title,
+	'if title_html is omitted, title is used instead'
+    );
+});
+
+
+
 module('nodeOutline jQuery plugin');
 
 test('creates initial heading objects', function() {
@@ -259,10 +301,10 @@ test('creates initial heading objects', function() {
     var $workspace = $('#test_workspace');
     $workspace.nodeOutline();
     var outline = $workspace.data('nodeOutline');
-    var set_heading = outline.get_heading(full_dict.node_id);
+    var set_heading = outline.headings.get( {pk: full_dict.pk} );
     equal(
-	set_heading.node_id,
-	full_dict.node_id,
+	set_heading.pk,
+	full_dict.pk,
 	'Retrieved heading has correct primary key'
     );
     equal(
@@ -461,6 +503,11 @@ asyncTest('Creating heading from /gtd/node/pk/descendants/', function() {
 	    'Heading8 has title set'
 	);
 	equal(
+	    heading8.$title.html(),
+	    heading8.title_html,
+	    'title_html used for display purposes'
+	);
+	equal(
 	    heading8.todo_id,
 	    node8.todo_state,
 	    'Heading8 has todo_state set'
@@ -565,7 +612,7 @@ test('get_heading method', function() {
     var outline = $workspace.data('nodeOutline');
     var added_heading = outline.get_heading(1);
     equal(
-	added_heading.node_id,
+	added_heading.pk,
 	1,
 	'Returned heading has correct primary key'
     );
@@ -575,14 +622,14 @@ test('Headings manager get method', function() {
     var $workspace = $('#test_workspace');
     $workspace.nodeOutline({'simulate': true});
     var workspace = $workspace.data('nodeOutline');
-    var heading = workspace.headings.get({node_id: 2});
+    var heading = workspace.headings.get({pk: 2});
     equal(
 	typeof heading,
 	'object',
 	'get() method returns an object'
     );
     equal(
-	heading.node_id,
+	heading.pk,
 	2,
 	'get() returns heading with correct primary key'
     );
@@ -683,6 +730,11 @@ test('heading.redraw() method', function() {
     var workspace = $workspace.data('nodeOutline');
     var heading = workspace.headings.get({pk: 1});
     var s = '.heading[node_id="' + heading.pk + '"]';
+    equal(
+	heading.$todo_state.html(),
+	heading.get_todo_state().display,
+	'Heading with non-zero status has todo state drawn'
+    );
     heading.$element.remove();
     equal(
 	$(s).length,
@@ -709,12 +761,20 @@ test('heading.redraw() method', function() {
 	heading.get_todo_state().abbreviation,
 	'Heading is not correct prior to being redrawn'
     );
-    heading.redraw()
+    heading.redraw();
     equal(
 	heading.$todo_state.html(),
 	heading.get_todo_state().display,
 	'Heading is correct after being redrawn'
     );
+    heading.todo_id = 0;
+    heading.redraw();
+    equal(
+	heading.$todo_state.html(),
+	'',
+	'Zero todo-state is redrawn with no display'
+    );
+	
 });
 
 test('workspace.headings.add() method', function() {
@@ -865,8 +925,10 @@ asyncTest('nodeEdit dialogs', function() {
 	);
 	// Now check the "edit" dialog
 	var heading8 = workspace.headings.get({pk: 8});
+	heading8.get_parent().scope = [1];
 	var $edit = heading8.$buttons.find('.edit-btn');
-	var $add = heading8.$buttons.find('.new-btn');
+	var $add = workspace.$element.find('#add-heading');
+	var $new_child = heading8.$buttons.find('.new-btn');
 	equal(
 	    $edit.length,
 	    1,
@@ -895,7 +957,7 @@ asyncTest('nodeEdit dialogs', function() {
 	);
 	equal(
 	    workspace.$edit_modal.find('.header-title').html(),
-	    'Edit "' + heading8.title + '"',
+	    'Edit "' + heading8.title_html + '"',
 	    'Opening the modal sets the header correctly'
 	)
 	equal(
@@ -1010,7 +1072,8 @@ asyncTest('nodeEdit dialogs', function() {
 	    heading8.text,
 	    'Opening the modal sets the text in the aloha box correctly'
 	);
-	// Now make sure that opening a new nodeEdit clears values
+	// Now make sure that opening a new child nodeEdit clears values
+	console.log('===');
 	$add.click();
 	equal(
 	    $add.data('nodeEdit').$modal,
@@ -1032,6 +1095,11 @@ asyncTest('nodeEdit dialogs', function() {
 	    'selected',
 	    'Modal for new child set no todo state'
 	);
+	equal(
+	    $scope.find('option:selected').length,
+	    0,
+	    'No extra scopes were selected'
+	)
 	equal(
 	    workspace.$edit_modal.find('#id_todo_state').find('option[selected="selected"]').length,
 	    1,
@@ -1056,6 +1124,29 @@ asyncTest('nodeEdit dialogs', function() {
 	    '<br class="aloha-cleanme" style="">',
 	    'Modal for new child clears aloha editor text'
 	);
+	// Check that the scopes are set if it's a child of a parent
+	$new_child.click();
+	var scopes = 0;
+	console.log(heading8.get_parent());
+	var $scope = workspace.$edit_modal.find('#id_scope');
+	for ( var i = 0; i < heading8.scope.length; i++ ) {
+	    equal(
+		$scope.find('option[value="'+heading8.scope[i]+'"]').attr('selected'),
+		'selected',
+		'Opening the modal selects scope ' + heading8.scope[i]
+	    );
+	    scopes++;
+	}
+	equal(
+	    scopes,
+	    heading8.scope.length,
+	    'All the scopes were checked'
+	);
+	equal(
+	    $scope.find('option:selected').length,
+	    heading8.scope.length,
+	    'No extra scopes were selected'
+	)
 	start();
     }, ajax_timer);
 });
@@ -1280,77 +1371,7 @@ asyncTest('Todo option click functionality', function() {
     }, (ajax_timer * 1.1 + 5));
 });
 
-// asyncTest('Hidden status correct after click', function() {
-//     var $todo = $('#todo-test');
-//     $todo.attr('todo_id', 1);
-//     $todo.todoState({
-// 	states: todo_state_list,
-// 	node_id: 5,
-// 	click: function() {$('body').data('test_value', true);}
-//     });
-//     var $popover = $todo.next('.popover');
-//     equal(
-// 	$todo.css('display'),
-// 	'block',
-// 	'Non-zero todo state is visible before interaction'
-//     )
-//     $todo.click();
-//     $popover.find('.todo-option[todo_id="0"]').click()
-//     equal(
-// 	$popover.css('display'),
-// 	'none',
-// 	'Popover hidden after todo-option clicked'
-//     );
-//     setTimeout(function() {
-// 	start();
-// 	equal(
-// 	    $todo.attr('todo_id'),
-// 	    '0',
-// 	    '$todo element has todo_id attribute set'
-// 	)
-// 	equal(
-// 	    $todo.css('display'),
-// 	    'none',
-// 	    'Todo state is hidden after zero todo-state is chosen'
-// 	)
-//     }, (ajax_timer * 1.1 + 5))
-// });
 
-// asyncTest('Auto-hide feature does not trigger for switching to regular nodes', function() {
-//     var $todo = $('#todo-test')
-//     $todo.attr('todo_id', 0);
-//     $todo.todoState({
-// 	states: todo_state_list,
-// 	node_id: 1,
-// 	click: function() {$('body').data('test_value', true);}
-//     });
-//     var $popover = $todo.next('.popover');
-//     equal(
-// 	$todo.css('display'),
-// 	'none',
-// 	'Zero todo state is hidden before interaction'
-//     )
-//     $todo.click();
-//     $popover.find('.todo-option[todo_id="2"]').click()
-//     equal(
-// 	$popover.css('display'),
-// 	'none',
-// 	'Popover hidden after todo-option clicked'
-//     );
-//     setTimeout(function() {
-// 	start();
-// 	equal(
-// 	    $todo.attr('todo_id'),
-// 	    '2',
-// 	    '$todo element has todo_id attribute set'
-// 	)
-// 	equal(
-// 	    $todo.css('display'),
-// 	    'block',
-// 	    'Todo state is visible after non-zero todo-state is chosen'
-// 	)
-//     }, (ajax_timer * 1.1 + 5))
-// });
 
 module(module_name + 'update method');
 test('Update method changes settings', function() {
