@@ -9,13 +9,13 @@
 {% block content %}
   <div data-role="content">
     {% for node in breadcrumb_list %}
-    &gt; {{ node.display }}
+    &gt; {{ node.as_html }}
     {% endfor %}
     <ul data-role="listview" data-inset="true">
       {% if parent_node %}
-      <li data-icon="arrow-u"><a href="{{ base_url }}">Up to Top Level</a></li>
+      <li data-icon="arrow-u"><a href="{{ base_url }}">Projects List</a></li>
       {% if parent_node.parent %}
-      <li data-icon="arrow-l"><a href="{{ base_url }}{{ parent_node.parent.pk }}">Back to "{{ parent_node.parent }}"</a></li>
+      <li data-icon="arrow-l"><a href="{{ base_url }}{{ parent_node.parent.pk }}">Up to "{{ parent_node.parent }}"</a></li>
       {% endif %}
       {% endif %}
     </ul>

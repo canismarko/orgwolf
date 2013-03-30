@@ -8,7 +8,6 @@ var validate_node = function($form) {
 	$form.find('.error').remove();
 	$form.find('.invalid').removeClass('invalid');
     };
-    // Code execution starts here
     $form.each(function() {
 	var $this_form = $(this);
 	reset_form( $this_form );
@@ -85,24 +84,25 @@ var validate_node = function($form) {
     return success;
 };
 
+function repeating_toggle(selector, $target) {
+    if ($target.find(selector).attr('checked') == 'checked') {
+	$target.find('#id_repeating_number').removeAttr('disabled');
+	$target.find('#id_repeating_unit').removeAttr('disabled');
+	$target.find('#id_repeats_from_completion').removeAttr('disabled');
+    } else {
+	$target.find('#id_repeating_number').attr('disabled', 'disabled');
+	$target.find('#id_repeating_unit').attr('disabled', 'disabled');
+	$target.find('#id_repeats_from_completion').attr('disabled', 'disabled');
+    }
+}
+
 var attach_pickers = function( $target ) {
     if ( $.fn.datepicker ) {
 	// Disable inputs for repeating information if checkbox is blank
-	function repeating_toggle(selector) {
-	    if ($target.find(selector).attr('checked') == 'checked') {
-		$target.find('#id_repeating_number').removeAttr('disabled');
-		$target.find('#id_repeating_unit').removeAttr('disabled');
-		$target.find('#id_repeats_from_completion').removeAttr('disabled');
-	    } else {
-		$target.find('#id_repeating_number').attr('disabled', 'disabled');
-		$target.find('#id_repeating_unit').attr('disabled', 'disabled');
-		$target.find('#id_repeats_from_completion').attr('disabled', 'disabled');
-	    }
-	}
 	$target.find('#id_repeats').click(function() {
-	    repeating_toggle('#id_repeats');
+	    repeating_toggle('#id_repeats', $target);
 	});
-	repeating_toggle('#id_repeats');
+	repeating_toggle('#id_repeats', $target);
 	// Set up timepicker/datepicker functionality
 	$target.find("input.datepicker").each(function(ct) {
 	    // Prepare a date field for the date picker widget
@@ -587,6 +587,9 @@ GtdHeading.prototype.set_fields = function( fields ) {
     for ( var field in fields ) {
 	this[field] = fields[field];
     }
+    if ( fields.pk == 1 ) {
+	console.log(this);
+    }
     return true;
 }
 
@@ -798,29 +801,37 @@ GtdHeading.prototype.get_children = function() {
 GtdHeading.prototype.is_expandable = function() {
     // Return true if the heading has information that
     // can be seen by expanding a twisty.
+    var expandable = false;
     if ( this.level == 0 ) {
 	// The main workspace is always expandable
-	return true;
+	expandable = true
     }
     if  ( this.text ) {
 	// Anything with text is always expandable
-	return true;
+	expandable = true
     } else if ( this.workspace.show_all ) {
 	// Any children are visible
-	if ( this.has_children ) {
-	    return true;
+	if ( this.workspace.scope ) {
+	    expandable = this.get_children().filter( {scope: this.workspace.scope} ) .length
 	} else {
-	    return false;
+	    expandable = this.has_children;
 	}
     } else {
 	// Only non-archived children are visible
-	if ( this.get_children().filter({archived: false}).length ) {
-	    return true
-	} else if ( this.populated == false && this.has_children ) {
-	    return true;
-	} else {
-	    return false;
+	var children = this.get_children();
+	if ( this.workspace.scope ) {
+	    var children = children.filter({ scope: this.workspace.scope });
 	}
+	if ( children.filter({archived: false}).length ) {
+	    expandable = true;
+	} else if ( this.populated == false && this.has_children ) {
+	    expandable = true;
+	}
+    }
+    if ( expandable ) {
+	return true;
+    } else {
+	return false;
     }
 };
 // Read the current object properties and update the
@@ -831,6 +842,7 @@ GtdHeading.prototype.redraw = function() {
     this.set_selectors();
     this.create_div();
     // Set CSS classes
+    this.$element.removeClass('hidden');
     if (this.text) {
 	// Always show if there's text
 	this.$element.addClass('expandable');
@@ -843,7 +855,7 @@ GtdHeading.prototype.redraw = function() {
 	this.$element.removeClass('lazy-expandable');
 	this.$element.removeClass('arch-expandable');
     } else if ( this.populated && this.has_children ) {
-	if ( this.get_children().filter({archived: false}).length > 0 ) {
+	if ( this.is_expandable() ) {
 	    this.$element.addClass('expandable');
 	    this.$element.removeClass('lazy-expandable');
 	    this.$element.removeClass('arch-expandable');
@@ -860,6 +872,11 @@ GtdHeading.prototype.redraw = function() {
 	this.$element.removeClass('lazy-expandable');
 	this.$element.removeClass('expandable');
 	this.$element.removeClass('arch-expandable');
+    }
+    if ( this.pk == 6 ) {
+    }
+    if ( this.level > 0 && this.workspace.scope && (jQuery.inArray(this.workspace.scope, this.scope) < 0 ) ) {
+	this.$element.addClass('hidden');
     }
     if ( this.state == 'open' && this.is_expandable() ) {
 	this.$element.addClass('open');
@@ -1049,8 +1066,15 @@ GtdHeading.prototype.toggle = function( direction ) {
 			var passed = true;
 			for ( var key in criteria ) {
 			    // check each criterion, reject if it fails
-			    if ( heading[key] !== criteria[key] ) {
-				passed = false;
+			    if ( heading[key] instanceof Array ) {
+				if ( jQuery.inArray( criteria[key], heading[key] ) < 0 ) {
+				    passed = false
+				} 
+			    } else {
+				if ( heading[key] !== criteria[key] ) {
+				    passed = false;
+
+				}
 			    }
 			}
 			if (passed) {
@@ -1093,6 +1117,8 @@ GtdHeading.prototype.toggle = function( direction ) {
 		    var other_heading = this.get({pk: new_heading.pk});
 		    if ( other_heading ) {
 			// Heading already exists so just update it
+			// First preserve some data
+			new_heading.populated = other_heading.populated;
 			for ( var key in new_heading ) {
 			    other_heading[key] = new_heading[key];
 			}
@@ -1104,7 +1130,7 @@ GtdHeading.prototype.toggle = function( direction ) {
 		return headings;
 		// filter returns itself with the appropriate filter applied
 	    }; // end definition of HeadingManager()
-	    // Code execution starts here
+	    // Code execution starts here (jQuery.fn.nodeOutline)
 	    if ( !args ) {
 		args = {};
 	    }
@@ -1145,7 +1171,31 @@ GtdHeading.prototype.toggle = function( direction ) {
 		} else {
 	    	    workspace.todo_states = { todo_id: 0, display: '[None]' }
 		}
+		if ( args.scopes ) { 
+		    workspace.scopes = args.scopes;		    
+		} else {
+		    workspace.scopes = {};
+		}
 		// Override some methods
+		workspace.scopes.activate = function( pk ) {
+		    // Switch scopes
+		    workspace.scope = pk;
+		    workspace.$scope_tabs.find('li.active').each(function() {
+			$(this).removeClass('active');
+		    });
+		    workspace.$scope_tabs.find('li[pk="' + pk + '"]').addClass('active');
+		    workspace.$children.fadeOut(workspace.ANIM_SPEED, function() {
+			workspace.redraw();
+		    });
+		    workspace.$children.fadeIn(workspace.ANIM_SPEED);
+		};
+		workspace.scopes.get = function( pk ) {
+		    for ( scope in workspace.scopes ) {
+			if ( workspace.scopes[scope].pk == pk ) {
+			    return workspace.scopes[scope];
+			}
+		    }
+		};
 		workspace.get_heading = function(pk) {
 		    // Sort through the headings array and return the desired object
 		    for( var i=0; i<this.headings.length; i++ ){
@@ -1192,10 +1242,32 @@ GtdHeading.prototype.toggle = function( direction ) {
 		    workspace.headings.add(heading);
 		});
 		// Clear old content and replace
-		$this.html('<strong>' + header + '</strong><br />\n<div class="children"></div>');
+		$this.html('');
+		// scope tabs
+		var h = '';
+		h += '<ul class="nav nav-tabs" id="scope-tabs">';
+		h += '<li pk="0" class="pointer"><a>All</a></li>';
+		for ( var i in workspace.scopes ) {
+		    var scope = workspace.scopes[i];
+		    if ( scope.model == 'gtd.scope' ) {
+			h += '<li pk="'+scope.pk+'" class="pointer"><a>' + scope.fields.display + '</a></li>';
+		    }
+		}
+		h += '</ul>';
+		$this.append(h);
+		workspace.$scope_tabs = $this.children('#scope-tabs');
+		// Handler for scope clicks
+		workspace.$scope_tabs.find('li').on('click.switch', function(e) {
+		    var new_scope = Number($(this).attr('pk'))
+		    workspace.scopes.activate(new_scope);
+		});
+		// Heading and nodes
+		$this.append('<strong>' + header + '</strong><br />\n<div class="children"></div>');
 		workspace.$children = $this.children('.children');
 		var root_headings = workspace.headings.filter({level: 1});
+		// Activate a scope
 		workspace.redraw();
+		workspace.scopes.activate(0);
 		// Add some utility buttons at the end
 		var h = '';
 		h += '<div class="ow-buttons" id="add-heading">\n';
@@ -1205,7 +1277,7 @@ GtdHeading.prototype.toggle = function( direction ) {
 		h += '<label class="checkbox" id="show-all-label">\n';
 		h += '  <input class="ow-buttons show-all" type="checkbox">';
 		h += '  </input>Show archived</label>\n';
-		workspace.$element.append(h);
+		workspace.$children.append(h);
 		// Archived checkbox toggles visibility of archived nodes
 		workspace.$showall = $this.find('.show-all');
 		workspace.$showall.bind('change.show-all', function (e) {
@@ -1469,7 +1541,8 @@ GtdHeading.prototype.toggle = function( direction ) {
 			data.$modal.find('#id_repeating_unit').find(s).attr('selected', 'selected');
 			if ( heading.repeats_from_completion ) {
 			    data.$modal.find('#id_repeats_from_completion').attr('checked', 'checked');
-			}			
+			}
+			repeating_toggle('#id_repeats', data.$modal);
 			// Priority
 			var s = 'option[value="' + heading.priority + '"]';
 			data.$modal.find('#id_priority').find(s).attr('selected', 'selected');

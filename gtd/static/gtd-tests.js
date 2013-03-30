@@ -42,6 +42,14 @@ var todo_state_list = [
      display: 'DONE',
      full: 'Completed'},
 ];
+var scopes = [
+    {"pk": 1, "model": "gtd.scope",
+     "fields": {"owner": null, "public": false, "name": "joe_corp", "display": "joe_corp"}
+    }, 
+    {"pk": 2, "model": "gtd.scope", 
+     "fields": {"owner": null, "public": false, "name": "Kalsec", "display": "Kalsec"}
+    }
+];
 var ajax_timer = 20; // how long fake ajax request takes (in milliseconds)
 // Setup fake AJAX responses
 var node8 = {
@@ -664,6 +672,21 @@ test('Headings manager filter method', function() {
 	undefined,
 	'Filtering operates by strict comparison'
     );
+    // check on array values
+    workspace.headings.get({pk: 1}).scope = [1, 2];
+    var expected = []
+    console.log(workspace.headings);
+    for ( var i in workspace.headings) {
+	var r = jQuery.inArray(1, workspace.headings[i].scope);
+	if (r >= 0 ) {
+	    expected.push(workspace.headings[i]);
+	}
+    }
+    deepEqual(
+	workspace.headings.filter({scope: 1}),
+	expected,
+	'Filtering by scope'
+    );
 });
 
 test('Headings manager order_by method', function() {
@@ -804,12 +827,14 @@ asyncTest('Clicking a heading populates it\'s children', function() {
 	    $heading8.length>0,
 	    'Heading 8 element found'
 	);
+	console.log(heading1);
+	console.log('===');
 	ok(
 	    heading1.populated,
 	    'heading 1 has populated attribute set'
 	);
 	start();
-    }, ajax_timer * 4.4 + workspace.ANIM_SPEED);
+    }, ajax_timer * 4.4 + workspace.ANIM_SPEED * 5);
 });
 
 asyncTest('Creates #add-heading button', function() {
@@ -818,7 +843,7 @@ asyncTest('Creates #add-heading button', function() {
     setTimeout(function() {
 	start();
 	equal(
-	    $workspace.children('#add-heading').length,
+	    $workspace.find('#add-heading').length,
 	    1,
 	    'An #add-heading div was added to the end of the list'
 	);
@@ -1149,6 +1174,68 @@ asyncTest('nodeEdit dialogs', function() {
 	)
 	start();
     }, ajax_timer);
+});
+
+asyncTest('scope tabs', function() {
+    var $workspace = $('#test_workspace');
+    $workspace.nodeOutline({scopes: scopes});
+    var workspace = $workspace.data('nodeOutline');
+    equal(
+	workspace.scopes,
+	scopes,
+	'workspace scopes object set'
+    );
+    equal(
+	workspace.$scope_tabs.length,
+	1,
+	'$scope_tabs selection added to workspace'
+    );
+    equal(
+	workspace.$scope_tabs.children('li').length,
+	scopes.length + 1,
+	'Correct number of tabs created'
+    );
+    equal(
+	workspace.scopes.get(1),
+	scopes[0],
+	'Can retrieve scopes'
+    );
+    ok(
+	workspace.$scope_tabs.children('li[pk="0"]').hasClass('active'),
+	'\'All\' tab starts out active'
+    );
+    workspace.scopes.activate(1)
+    ok(
+	workspace.$scope_tabs.children('li[pk="1"]').hasClass('active'),
+	'Activating a scope makes its tab active'
+    );
+    equal(
+	workspace.$scope_tabs.children('li.active').length,
+	1,
+	'All other scopes are cleared'
+    );
+    workspace.$scope_tabs.children('li[pk="2"]').click();
+    ok(
+	workspace.$scope_tabs.children('li[pk="2"]').hasClass('active'),
+	'Clicking a tab activates it'
+    );
+    workspace.headings.get({pk: 1}).open();
+    setTimeout(function() {
+	var heading1 = workspace.headings.get({pk: 1});
+
+	ok(
+	    heading1.$element.hasClass('hidden'),
+	    'Non-scope headings have hidden class'
+	);
+	// Rest heading 8's scope to make test valid
+	workspace.headings.get({pk: 8}).scope = [];
+	workspace.scopes.activate(1);
+	ok(
+	    ! heading1.is_expandable(),
+	    'Heading with only non-scope children is not expandable'
+	);
+	start();
+    }, workspace.ANIM_SPEED + ajax_timer);
 });
 
 module_name = 'todoState jQuery plugin - ';

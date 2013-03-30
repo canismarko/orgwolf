@@ -294,6 +294,7 @@ def display_node(request, show_all=False, node_id=None, scope_id=None):
     all_todo_states_qs = TodoState.get_visible(user=request.user)
     child_nodes_qs = all_nodes_qs
     all_scope_qs = Scope.objects.all()
+    all_scope_json = serializers.serialize('json', all_scope_qs)
     app_url = reverse('gtd.views.display_node')
     scope_url = app_url + '{scope}/'
     scope = Scope.objects.get(pk=1)

@@ -42,10 +42,13 @@ $('document').ready(function() {
     Aloha.ready(function() {
     	$('#parent-text').alohaText();
     });
+    {% autoescape off %}
     // Project outline applicance
     $('#outline-workspace').nodeOutline( {
-	todo_states: {% autoescape off %}{{ all_todo_states_json }}{% endautoescape %}  
+	todo_states: {{ all_todo_states_json }},
+	scopes: {{ all_scope_json }}
     });
+    {% endautoescape %}
     {% if parent_node %}
     var update_todo = function ( todo_id ) {
 	$('#parent-todo').todoState('update', { todo_id: todo_id });
@@ -139,7 +142,6 @@ $('document').ready(function() {
 </div><!-- /div id="node-detail"-->
 <br />
 
-{% include 'gtd/scope_tabs.html' %}
 
 {# List of child nodes as links #}
 <div id="node-workspace">
@@ -149,6 +151,7 @@ $('document').ready(function() {
 
 {% if child_nodes_qs %}
 <div id="outline-workspace" data-node_id="{{ node_id }}">
+{% include 'gtd/scope_tabs.html' %}
   <strong>
     {% if parent_node %}
     Children:

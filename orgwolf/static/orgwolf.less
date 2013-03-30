@@ -112,7 +112,11 @@ dd.todo
 }
 /* Javascript outline appliance */
 @anim-speed: 300ms;
-.ow-buttons, .add-heading, .todo-state, .todo-option
+.opacify (@opacity) { /* 0 to 100 */
+    opacity: (@opacity/100);
+    filter:alpha(opacity=@opacity);
+}
+.pointer, .ow-buttons, .add-heading, .todo-state, .todo-option
 {
     cursor: pointer;
 }
@@ -169,25 +173,24 @@ dd.todo
     -o-transform: rotate(@angle);
     transform: rotate(@angle);
 }
-.heading > .ow-hoverable > i
-{
-    .rotate(0deg);
+.hidden {
+    height: 0px;
 }
-.heading.open > .ow-hoverable > i
-{
-    .rotate(90deg);
+.heading {
+    > .ow-hoverable > i {
+	/* .rotate(0deg); */
+    }
+    > .details {
+	.opacify(0);
+    }
 }
-.opacify (@opacity) { /* 0 to 100 */
-    opacity: (@opacity/100);
-    filter:alpha(opacity=@opacity);
-}
-.heading > .details
-{
-    .opacify(0);
-}
-.heading.open > .details
-{
-    .opacify(100);
+.heading.open {
+    > .ow-hoverable > i {
+    	.rotate(90deg);
+    }
+    > .details {
+	.opacify(100);
+    }
 }
 div.ow-hoverable, div.clickable, div.ow-buttons
 {
