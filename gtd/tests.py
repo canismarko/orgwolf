@@ -1427,9 +1427,12 @@ class MultiUser(TestCase):
             Node.objects.get(pk=nodes[0]['pk']).title,
             'ryan\'s movies'
             )
+        self.assertEqual(
+            [1],
+            nodes[0]['scope'],
+        )
 
     def test_get_root_descendants_json(self):
-        self.maxDiff = None
         url = reverse('gtd.views.get_descendants', kwargs={'ancestor_pk': '0'})
         payload = {'offset': 2}
         response = self.client.get(url, payload)

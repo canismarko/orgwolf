@@ -684,7 +684,7 @@
     "closed": null, 
     "tree_id": 4, 
     "todo_state": null, 
-    "scope": [], 
+    "scope": [1], 
     "energy": null, 
     "repeating_number": null, 
     "scheduled": null, 

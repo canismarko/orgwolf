@@ -18,6 +18,7 @@ var full_dict = {
     todo_id: '1',
     tag_string: ':comp:',
     is_leaf_node: false,
+    scope: [1, 2]
 };
 var archived_dict = {
     title: 'test_title',
@@ -298,6 +299,12 @@ test('set_fields() method', function() {
 	full_dict.title,
 	'if title_html is omitted, title is used instead'
     );
+    equal(
+	heading.scope,
+	full_dict.scope,
+	'Scope set'
+    );
+	  
 });
 
 
@@ -674,8 +681,7 @@ test('Headings manager filter method', function() {
     );
     // check on array values
     workspace.headings.get({pk: 1}).scope = [1, 2];
-    var expected = []
-    console.log(workspace.headings);
+    var expected = [];
     for ( var i in workspace.headings) {
 	var r = jQuery.inArray(1, workspace.headings[i].scope);
 	if (r >= 0 ) {
@@ -686,6 +692,19 @@ test('Headings manager filter method', function() {
 	workspace.headings.filter({scope: 1}),
 	expected,
 	'Filtering by scope'
+    );
+    // check on filtering by full arrays
+    var expected = [];
+    for ( var i in workspace.headings) {
+	var heading = workspace.headings[i];
+	if ( ($(heading.scope).not([]).length == 0 && $([]).not(heading.scope).length == 0) && (heading.level > 0) && typeof heading.scope != 'undefined') {
+	    expected.push(workspace.headings[i]);
+	}
+    }
+    deepEqual(
+	workspace.headings.filter( {scope: []} ),
+	expected,
+	'Filtering by an array of scopes'
     );
 });
 
@@ -827,8 +846,6 @@ asyncTest('Clicking a heading populates it\'s children', function() {
 	    $heading8.length>0,
 	    'Heading 8 element found'
 	);
-	console.log(heading1);
-	console.log('===');
 	ok(
 	    heading1.populated,
 	    'heading 1 has populated attribute set'
@@ -923,7 +940,7 @@ asyncTest('todoState integration', function() {
     equal(
 	$popover.find('.todo-option[todo_id="'+heading1.todo_id+'"]').attr('selected'),
 	'selected',
-	'Heading1 popover has current todo state selected'
+	'Heading 1 popover has current todo state selected'
     );
     $popover.find('.todo-option[todo_id="2"]').click();
     setTimeout( function() {
@@ -1098,7 +1115,6 @@ asyncTest('nodeEdit dialogs', function() {
 	    'Opening the modal sets the text in the aloha box correctly'
 	);
 	// Now make sure that opening a new child nodeEdit clears values
-	console.log('===');
 	$add.click();
 	equal(
 	    $add.data('nodeEdit').$modal,
@@ -1152,7 +1168,6 @@ asyncTest('nodeEdit dialogs', function() {
 	// Check that the scopes are set if it's a child of a parent
 	$new_child.click();
 	var scopes = 0;
-	console.log(heading8.get_parent());
 	var $scope = workspace.$edit_modal.find('#id_scope');
 	for ( var i = 0; i < heading8.scope.length; i++ ) {
 	    equal(
@@ -1176,6 +1191,32 @@ asyncTest('nodeEdit dialogs', function() {
     }, ajax_timer);
 });
 
+test('GtdHeading.has_scope() method', function() {
+    var $workspace = $('#test_workspace');
+    $workspace.nodeOutline({scopes: scopes});
+    var workspace = $workspace.data('nodeOutline');
+    var heading = workspace.headings.get({pk: 1});
+    heading.scope = [1];
+    ok(
+	heading.has_scope(1),
+	'has_scope() correctly identifies an active scope'
+    );
+    strictEqual( 
+	heading.has_scope(2),
+	false,
+	'has_scope() correctly rejects an inactive scope'
+    );
+    ok(
+	heading.has_scope(0),
+	'has_scope() always identifies scope 0'
+    );
+    heading.scope = [];
+    ok(
+	heading.has_scope(-1),
+	'has_scope(-1) identifies a node with no scope'
+    );
+});
+
 asyncTest('scope tabs', function() {
     var $workspace = $('#test_workspace');
     $workspace.nodeOutline({scopes: scopes});
@@ -1192,7 +1233,7 @@ asyncTest('scope tabs', function() {
     );
     equal(
 	workspace.$scope_tabs.children('li').length,
-	scopes.length + 1,
+	scopes.length + 2,
 	'Correct number of tabs created'
     );
     equal(
@@ -1222,20 +1263,31 @@ asyncTest('scope tabs', function() {
     workspace.headings.get({pk: 1}).open();
     setTimeout(function() {
 	var heading1 = workspace.headings.get({pk: 1});
-
 	ok(
 	    heading1.$element.hasClass('hidden'),
 	    'Non-scope headings have hidden class'
 	);
 	// Rest heading 8's scope to make test valid
 	workspace.headings.get({pk: 8}).scope = [];
+	heading1.text = '';
+
 	workspace.scopes.activate(1);
 	ok(
 	    ! heading1.is_expandable(),
 	    'Heading with only non-scope children is not expandable'
 	);
 	start();
+	workspace.scopes.activate(-1);
+	stop();
     }, workspace.ANIM_SPEED + ajax_timer);
+    setTimeout(function() {
+	var heading1 = workspace.headings.get({pk: 1});
+	ok(
+	    ! heading1.$element.hasClass('hidden'),
+	    'None tab shows headings with no scope'
+	);
+	start();
+    }, workspace.ANIM_SPEED * 3 + ajax_timer);
 });
 
 module_name = 'todoState jQuery plugin - ';
@@ -1925,7 +1977,7 @@ test('Meta', function() {
     );
     ok(
 	validate_node($good_form),
-	'Form with no validation returns true'
+	'Form with no validation error returns true'
     );
 });
 test('Required field', function() {
@@ -1954,6 +2006,12 @@ test('Date field', function() {
 	$bad_form.find('#date-field').next('span.error').length,
 	1,
 	'An error span is placed after the bad date'
+    );
+    var $good_form = $fixture.find('#good-form');
+    validate_node($good_form);
+    ok(
+	!$good_form.find('#date-field').hasClass('invalid'),
+	'good date field passes validation'
     );
 	
 });

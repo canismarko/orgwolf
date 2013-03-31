@@ -375,7 +375,6 @@ def edit_node(request, node_id, scope_id):
                     form.auto_repeat = False
                 form.save()
                 node = Node.objects.get(pk=node.pk)
-                node.title = node.get_title();
                 # Prepare the response
                 node_data = node.as_pre_json()
                 data = {

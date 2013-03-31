@@ -57,12 +57,14 @@ class NodeForm(forms.ModelForm):
         )
     deadline_date = forms.DateField(
         required=False,
-        widget=widgets.TextInput(attrs={'class': 'datepicker'}),
+        widget=widgets.TextInput(attrs={'class': 'datepicker',
+                                        'data-validate': 'date'}),
         )
     deadline_time = forms.TimeField(
         required=False, 
         localize=True,
-        widget=widgets.TextInput(attrs={'class': 'timepicker'}),
+        widget=widgets.TextInput(attrs={'class': 'timepicker',
+                                        'data-validate': 'time'}),
         )
     deadline_time_specific = forms.BooleanField(
         required=False,
