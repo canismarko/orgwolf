@@ -75,7 +75,7 @@ class TodoState(models.Model):
         return TodoState.objects.filter(query)
     @staticmethod
     def as_json(queryset=None, full=False, user=None):
-        new_array = [{'todo_id': 0, 'display': '[None]', 'full': ''}]
+        new_array = [{'todo_id': 0, 'pk': 0, 'display': '<span class="todo-none">[None]</span>', 'full': ''}]
         if not queryset:
             queryset=TodoState.get_visible(user=user)
         for state in queryset:

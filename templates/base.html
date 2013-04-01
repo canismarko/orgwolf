@@ -56,9 +56,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
     <script src="{{ STATIC_URL }}datepicker/bootstrap-datepicker.js"></script>
     <script src="{{ STATIC_URL }}timepicker/bootstrap-timepicker.js"></script>
     {% if debug %}
-    <script src="{{ STATIC_URL }}orgwolf-min.js"></script>
-    {% else %}
     <script src="{{ STATIC_URL }}orgwolf.js"></script>
+    {% else %}
+    <script src="{{ STATIC_URL }}orgwolf-min.js"></script>
     {% endif %}
     {% include 'aloha.html' %}
     {% block script %}

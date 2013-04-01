@@ -50,6 +50,12 @@ def order_nodes(qs, **kwargs):
     """
     select = {}
     order_by = []
+    # Sort by a supplied date field
+    field = kwargs.get('field')
+    if field:
+        select['date_is_null'] = '{0} IS NULL'.format(field)
+        order_by.append('date_is_null')
+        order_by.append(field)
     # Sort by a supplied context
     context = kwargs.get('context')
     if context:
@@ -58,13 +64,8 @@ def order_nodes(qs, **kwargs):
             name = 'loc{0}'.format(loc.pk)
             select[name] = 'tag_string LIKE \':%%{0}%%:\''.format(loc.tag_string)
             order_by.append('-{0}'.format(name))
-    # Sort by a supplied date field
-    field = kwargs.get('field')
-    if field:
-        select['date_is_null'] = '{0} IS NULL'.format(field)
-        order_by.append('date_is_null')
-        order_by.append(field)
     # Actually apply the sorting criteria
+    print order_by
     return qs.extra(
         select=select,
         order_by=order_by

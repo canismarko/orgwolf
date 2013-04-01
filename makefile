@@ -7,15 +7,17 @@ OW_JS = orgwolf/static/orgwolf.js
 LESS = lessc --yui-compress --verbose
 YUI = yuicompressor --verbose -o
 JSLINT = jslint --color --white
+bold = `tput bold`
+normal = `tput sgr0`
 
 all: $(ORGWOLF_CSS) $(MIN_JS)
 
 $(ORGWOLF_CSS): orgwolf/static/orgwolf.less
-	echo "Building stylesheet $(ORGWOLF_CSS)..."
+	echo "$(bold)Building stylesheet $(ORGWOLF_CSS)...$(normal)"
 	$(LESS) orgwolf/static/orgwolf.less $(ORGWOLF_CSS)
 
 $(MIN_JS): $(OW_JS)
-	echo "Cleaing $(OW_JS)..."
+	echo "$(bold)Cleaing $(OW_JS)...$(normal)"
 	$(JSLINT) $(OW_JS)
-	echo "Compacting $(OW_JS)..."
+	echo "$(bold)Compacting $(OW_JS)...$(normal)"
 	$(YUI) $(MIN_JS) $(OW_JS)

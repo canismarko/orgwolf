@@ -1,3 +1,10 @@
+/* Colors */
+@primary: rgb(69, 41, 159);
+@primary-faded: rgb(59, 51, 83);
+@primary-dark: rgb(13, 1, 53);
+@primary-light: rgb(127, 100, 214);
+@primary-pale: rgb(155, 136, 214);
+
 /* Navar */
 #logo.brand
 {
@@ -16,6 +23,31 @@
 {
     margin-bottom: 15px;
 }
+.gradient(@colora, @colorb) {
+    /* Gradients for modern browsers, replace as you see fit */
+    background-image: -moz-linear-gradient(top, @colora, @colorb);
+    background-image: -ms-linear-gradient(top, @colora, @colorb);
+    background-image: -webkit-gradient(linear, 0 0, 0 100%, from(@colora), to(@colorb));
+    background-image: -webkit-linear-gradient(top, @colora, @colorb);
+    background-image: -o-linear-gradient(top, @colora, @colorb);
+    background-image: linear-gradient(top, @colora, @colorb);
+    background-repeat: repeat-x;
+
+    /* IE8-9 gradient filter */
+    filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='@colora', endColorstr='@colorb', GradientType=0);
+}
+/* .navbar-inner { */
+/*     background-color: @primary-light; */
+/*     .gradient(@primary-light, @primary-pale); */
+/*     .nav > li { */
+/* 	> a { */
+/* 	    color: @primary; */
+/* 	} */
+/* 	> a:hover { */
+/* 	    color: @primary-dark; */
+/* 	} */
+/*     } */
+/* } */
 .form-search
 {
     position: absolute;
@@ -31,9 +63,13 @@ ul.social-auth
     margin-left: 0px;
     list-style-type: none;
 }
+/* Actions list */
+:not(.todo-option) > .todo-none {
+    .opacify(30);
+    font-style: italic;
+}
 /* Node form */
-.required label:before
-{
+.required label:before {
     content: "*"
 }
 .required label

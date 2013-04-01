@@ -46,8 +46,8 @@ validate_node = function ($form) {
 		if ( NOTBLANK_RE.test(s) ) { // Ignore empty times
 		    bits = s.split(':');
 		    t = new Date(0, 0, 0, bits[0], bits[1]);
-		    if ( t.getHours() !== bits[0] ||
-			 t.getMinutes() !== bits[1] 
+		    if ( t.getHours() !== Number(bits[0]) ||
+			 t.getMinutes() !== Number(bits[1])
 		       ) {
 			// Time does not match
 			$(this).addClass('invalid');
@@ -375,6 +375,7 @@ $(document).ready(function(){
 					old = $todo.attr('todo_id');
 					$todo.attr('todo_id', response.todo_id);
 					todo_id = response.todo_id;
+					settings.todo_id = response.todo_id;
 				    }
 				    new_state = get_state(response.todo_id);
 				    $todo.html(new_state.display);
@@ -549,7 +550,7 @@ $(document).ready(function(){
 	    // Reset blank todo states to zero for proper handling
 	    if ( todo_id === '' ) {
 		$todo.attr('todo_id', 0);
-		$todo.html('[None]');
+		$todo.html('<span class="todo-none">[None]</span>\n');
 	    }
 	    $todo.todoState({
 		states: args.states,
