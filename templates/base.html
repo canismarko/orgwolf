@@ -63,6 +63,22 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
     {% include 'aloha.html' %}
     {% block script %}
     <script type="text/javascript">
+    $(document).ready(function() {
+	// Tweak document for context filtering
+	$('#nav-actions').append('<b id="btn-actions" class="caret"></b>');
+	$('#lblContext').hide();
+	$('#nav-actions').bind('click', function(e) {
+	    console.log(e.target.className);
+	    if ( e.target.className !== 'caret' ) {
+		// Redirect if the caret was not clicked
+		window.location = e.currentTarget.href;
+		return false;
+	    } else {
+		// Otherwise just show the dropdown
+		return true;
+	    }
+	});
+    });
     </script>
     {% endblock %}
     {% endblock %}
@@ -85,9 +101,40 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 	      Today's Agenda
 	    </a>
 	  </li>
-	  <li{% if 'list' in request.get_full_path %} class="active"{% endif %}>
-	    {% if request.session.context %}<a href="{% url 'gtd.views.list_display' '/next' %}context{{ request.session.context.pk }}/">Actions ({{ request.session.context.name }})</a>
-	    {% else %}<a href="{% url 'gtd.views.list_display' '/next' %}">Next Actions</a>{% endif %}
+	  <!-- Next actions -->
+	  <li class="dropdown{% if 'list' in request.get_full_path %} active{% endif %}">
+	    <a id="nav-actions" class="dropdown-toggle" data-toggle="dropdown"
+	       {% if request.session.context %}href="{% url 'gtd.views.list_display' '/next' %}context{{ request.session.context.pk }}/" >
+	      Actions ({{ request.session.context.name }})
+	    {% else %}href="{% url 'gtd.views.list_display' '/next' %}">Next Actions
+	      {% endif %}
+	    </a>
+	    <ul class="dropdown-menu">
+	      <!-- Currently active context -->
+	      <li>
+	      {% if request.session.context %}
+		<a href="{% url 'gtd.views.list_display' '/next' %}context{{ request.session.context.pk }}/">{{ request.session.context.name }}</a>
+	      {% else %}
+		<a href="{% url 'gtd.views.list_display' '/next' %}">All</a>
+		{% endif %}
+	      </li>
+	      <li class="divider"></li>
+	      <!-- Other contexts -->
+	      {% if request.session.context %}
+	      <li>
+		<a href="{% url 'gtd.views.list_display' '/next' %}context0/">All</a>
+	      </li>
+	      {% endif %}
+	      {% for context in contexts %}
+	      {% if not context.pk == request.session.context.pk %}
+	      <li>
+		<a href="{% url 'gtd.views.list_display' '/next' %}context{{ context.pk }}/">
+		  {{ context.name }}
+		</a>
+	      </li>
+	      {% endif %}
+	      {% endfor %}
+	    </ul>
 	  </li>
 	  <li><a href="{% url 'wolfmail.views.display_label' %}">Inbox</a></li>
 	  <li{% if 'node' in request.get_full_path %} class="active"{% endif %}>

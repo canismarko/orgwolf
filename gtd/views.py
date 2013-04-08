@@ -103,7 +103,7 @@ def list_display(request, url_string=""):
     current_context = request.session['context']
     # Retrieve the context objects based on url
     url_data = parse_url(url_string, request)
-    if url_data.get('context'):
+    if url_data.get('context', False) != False: # `None` indicates context0
         if url_data.get('context') != current_context:
             # User is changing the context
             request.session['context'] = url_data.get('context')
@@ -386,10 +386,12 @@ def edit_node(request, node_id, scope_id):
                 print form.errors
                 return HttpResponseBadRequest(form.errors)
         else: # if post.get('form') != 'modal':
+            # Text
             new_text = post.get('text', node.text)
             if new_text == '\n<br>':
                 new_text = ''
             node.text = new_text
+            # todo_state
             new_todo_id = post.get('todo_id', None)
             if new_todo_id == '0':
                 node.todo_state = None
@@ -398,16 +400,26 @@ def edit_node(request, node_id, scope_id):
                     node.todo_state = TodoState.objects.get(pk=new_todo_id)
                 except TodoState.DoesNotExist:
                     return HttpResponseBadRequest('Invalid todo_id: %s' % new_todo_id)
+            # auto_repeat
             if post.get('auto_repeat') == 'false':
                 node.auto_repeat = False
             else:
                 node.auto_repeat = True
+            # archived
+            archived = post.get('archived')
+            if archived == 'true':
+                node.archived = True
+                print node.archived
+            elif archived == 'false':
+                node.archived = False
+                print node.archived
             node.save()
             data = {
                 'status': 'success',
                 'node_id': node.pk,
                 'todo_id': getattr(node.todo_state, 'pk', 0),
                 'text': node.text,
+                'archived': node.archived,
                 }
         return HttpResponse(json.dumps(data))
     if request.is_ajax() and request.GET.get('format') == 'modal_form':

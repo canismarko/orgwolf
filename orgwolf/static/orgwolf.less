@@ -23,6 +23,19 @@
 {
     margin-bottom: 15px;
 }
+b {
+    position: relative;
+}
+#btn-actions:after {
+    content: "";
+    padding-top: 20px;
+    padding-bottom: 20px;
+    padding-left: 8px;
+    padding-right: 20px;
+    position: absolute;
+    left: -9px;
+    top: -22px;
+}
 .gradient(@colora, @colorb) {
     /* Gradients for modern browsers, replace as you see fit */
     background-image: -moz-linear-gradient(top, @colora, @colorb);

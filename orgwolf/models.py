@@ -103,12 +103,11 @@ class Color:
 class HTMLEscaper(HTMLParser):
     # Default list of html tags to allow
     ALLOWED_TAGS = ['h1', 'h2', 'h3', 'h4', 'h5', 'h6',
-                    'b', 'i',
+                    'b', 'i', 'del', 'sup', 'sub',
                     'ul', 'ol', 'li',
                     'div', 'p', 'hr', 'a', 'br',
-                    'sup', 'sub',
                     'table', 'tbody', 'tr', 'td', 'th',
-                    'caption',
+                    'caption', 'pre',
                     ]
     def __init__(self, white_tags=None):
         HTMLParser.__init__(self)

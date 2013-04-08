@@ -56,8 +56,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 {# Filters #}
 <form action="" method="POST" class="form-inline">
   <input type="hidden" name="scope" value="{% if scope %}{{ scope.pk }}{% else %}0{% endif %}" />
-  Context:
-  <select name="context">
+  <label id="lblContext">
+    Context:
+    <select name="context">
+    <!-- Gets hidden by javascript in head section -->
     <option value="0"
 	    {% if current_context = None %}selected="selected"{% endif %}>
       None
@@ -69,6 +71,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
     </option>
     {% endfor %}
   </select>
+</label>
   {% for todo_state in all_todo_states_query %}
   <label for="todo{{ todo_state.id }}" class="checkbox inline">
   <input type="checkbox" 

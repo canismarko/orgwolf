@@ -110,7 +110,7 @@ TEMPLATE_LOADERS = (
     'django.template.loaders.eggs.Loader',
 )
 
-MIDDLEWARE_CLASSES = (
+MIDDLEWARE_CLASSES = [
     'django.middleware.common.CommonMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -119,7 +119,8 @@ MIDDLEWARE_CLASSES = (
     # Uncomment the next line for simple clickjacking protection:
     # 'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'orgwolf.middleware.MobileDetectionMiddleware',
-)
+]
+
 
 # Additional context processors
 from django.conf.global_settings import TEMPLATE_CONTEXT_PROCESSORS
@@ -147,7 +148,7 @@ TEMPLATE_DIRS = (
     # Don't forget to use absolute paths, not relative paths.
 )
 
-INSTALLED_APPS = (
+INSTALLED_APPS = [
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
@@ -165,7 +166,18 @@ INSTALLED_APPS = (
     'django.contrib.admin',
     # Uncomment the next line to enable admin documentation:
     'django.contrib.admindocs',
-)
+]
+
+# cProfile performance optimization
+PROFILING = False
+PROFILE_FILE = '/dev/null'
+
+# django-debug-toolbar initialization
+if DEBUG:
+    # List of internal IP's for debug toolbar
+    INTERNAL_IPS = ('127.0.0.1',)
+    MIDDLEWARE_CLASSES.append('debug_toolbar.middleware.DebugToolbarMiddleware')
+    INSTALLED_APPS.append('debug_toolbar')
 
 # Django-social-auth configuration
 SOCIAL_AUTH_BACKENDS = [
@@ -254,3 +266,7 @@ LOGGING = {
         },
     }
 }
+
+# Profiling
+if PROFILING:
+    MIDDLEWARE_CLASSES.insert(0, 'orgwolf.middleware.ProfilerMiddleware')

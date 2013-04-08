@@ -506,6 +506,7 @@ $(document).ready(function(){
 			    // Update modal dialog with new text
 			    if ( options.heading ) {
 				$modal = options.heading.$buttons.find('#edit-modal');
+				options.heading.text = r.text;
 			    } else {
 				$modal = $parent.data('nodeOutline').$buttons.find('#edit-modal');
 			    }
@@ -679,6 +680,7 @@ GtdHeading.prototype.as_html = function() {
     new_string += '    <div class="ow-buttons">\n';
     new_string += '      <i class="icon-pencil edit-btn" title="Edit"></i>\n';		    
     new_string += '      <i class="icon-arrow-right detail-btn" title="Detail view"></i>\n';
+    new_string += '      <i class="icon-folder-close archive-btn" title="Archive / Unarchive"></i>\n';
     new_string += '      <i class="icon-plus new-btn" title="New subheading"></i>\n';
     new_string += '    </div>\n';
     new_string += '  </div>\n';
@@ -804,7 +806,6 @@ GtdHeading.prototype.create_div = function( $target ) {
 	    $this.parent().parent().unbind('.autohide');
 	    $this.nodeEdit( {
 		show: true,
-		// parent_id: heading.pk,
 		parent: heading,
 		$modal: heading.workspace.$edit_modal,
 		changed: function(node) {
@@ -817,6 +818,25 @@ GtdHeading.prototype.create_div = function( $target ) {
 		    parent.redraw();
 		    parent.open();
 		},
+	    });
+	});
+	this.$buttons.find('.archive-btn').click( function() {
+	    // Toggles archiving nodes
+	    var url, payload={};
+	    url = '/gtd/node/' + heading.pk + '/edit/';
+	    payload.format = 'json';
+	    if ( heading.archived ) {
+		payload.archived = false;
+	    } else {
+		payload.archived = true;
+	    }
+	    $.post(url, payload, function(r) {
+		r = $.parseJSON(r);
+		if ( r.status === 'success' ) {
+		    // Success now update the object
+		    heading.archived = r.archived;
+		    heading.redraw();
+		}
 	    });
 	});
 	todo_states = this.todo_states;
@@ -899,7 +919,7 @@ GtdHeading.prototype.has_scope = function(pk) {
 GtdHeading.prototype.redraw = function() {
     // Test the various parts and update them as necessary
     //   then call redraw on all children
-    var todo_state, heading, children, i;
+    var todo_state, heading, children, i, new_title, $archbtn;
     this.set_selectors();
     this.create_div();
     // Set CSS classes
@@ -981,15 +1001,32 @@ GtdHeading.prototype.redraw = function() {
 	}); // end of todoState plugin
     }
     if ( this.$title ) {
-	this.$title.html(this.title_html);
+	if ( this.archived ) {
+	    new_title = '<span class="archived-text">';
+	    new_title += this.title;
+	    new_title += '</span>\n';
+	} else {
+	    new_title = this.title;
+	}
+	this.$title.html(new_title);
     }
     if ( this.$text && this.text ) {
-	// If text exists, display it
 	this.$text.html(this.text);
 	this.$text.alohaText(
 	    {heading: this,
 	     $parent: this.$element}
 	);
+    }
+    // Change archiving icon
+    if ( this.$buttons ) {
+	$archbtn = this.$buttons.children('.archive-btn');
+	if ( this.archived ) {
+	    $archbtn.addClass('icon-folder-open');
+	    $archbtn.removeClass('icon-folder-closed');
+	} else {
+	    $archbtn.addClass('icon-folder-closed');
+	    $archbtn.removeClass('icon-folder-open');
+	}
     }
     if ( this.populated ) {
 	// Get rid of loading... indicator if expired

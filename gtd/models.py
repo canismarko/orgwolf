@@ -181,8 +181,10 @@ class Context(models.Model):
         # For required_people we have to construct a Q object
         new_Q = Q()
         for contact in required_people:
+            print contact.tag_string
             new_Q = new_Q | Q(tag_string__icontains=contact.tag_string)
         final_queryset = final_queryset.filter(new_Q)
+        print final_queryset
         # Now return the resulting queryset
         return final_queryset
     @staticmethod
@@ -395,7 +397,7 @@ class Node(MPTTModel):
             new_dict['todo_html'] = '[None]'
         # Use styled title
         new_dict['title_html'] = self.get_title()
-        new_dict['title'] = self.title
+        new_dict['title'] = conditional_escape(self.title)
         # Include is_leaf_node()
         new_dict['is_leaf_node'] = self.is_leaf_node()
         return new_dict

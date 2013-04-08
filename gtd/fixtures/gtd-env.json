@@ -1,255 +1,335 @@
 [
 {
-  "pk": 1, 
-  "model": "gtd.todostate", 
-  "fields": {
-    "display_text": "Next Action", 
-    "actionable": true, 
-    "_color_rgb": 0, 
-    "_color_alpha": 0.0, 
-    "abbreviation": "NEXT", 
-    "closed": false, 
-    "owner": null, 
-    "order": 50
-  }
+    "pk": 1, 
+    "model": "gtd.todostate", 
+    "fields": {
+        "display_text": "Next Action", 
+        "actionable": true, 
+        "_color_rgb": 0, 
+        "_color_alpha": 0.0, 
+        "abbreviation": "NEXT", 
+        "closed": false, 
+        "owner": null, 
+        "order": 50, 
+        "class_size": 0
+    }
 },
 {
-  "pk": 2, 
-  "model": "gtd.todostate", 
-  "fields": {
-    "display_text": "Future Action", 
-    "actionable": true, 
-    "_color_rgb": 0, 
-    "_color_alpha": 0.0, 
-    "abbreviation": "ACTN", 
-    "closed": false, 
-    "owner": null, 
-    "order": 50
-  }
+    "pk": 2, 
+    "model": "gtd.todostate", 
+    "fields": {
+        "display_text": "Future Action", 
+        "actionable": true, 
+        "_color_rgb": 0, 
+        "_color_alpha": 0.0, 
+        "abbreviation": "ACTN", 
+        "closed": false, 
+        "owner": null, 
+        "order": 50, 
+        "class_size": 0
+    }
 },
 {
-  "pk": 3, 
-  "model": "gtd.todostate", 
-  "fields": {
-    "display_text": "Completed", 
-    "actionable": false, 
-    "_color_rgb": 0, 
-    "_color_alpha": 0.0, 
-    "abbreviation": "DONE", 
-    "closed": true, 
-    "owner": null, 
-    "order": 50
-  }
+    "pk": 3, 
+    "model": "gtd.todostate", 
+    "fields": {
+        "display_text": "Completed", 
+        "actionable": false, 
+        "_color_rgb": 0, 
+        "_color_alpha": 0.0, 
+        "abbreviation": "DONE", 
+        "closed": true, 
+        "owner": null, 
+        "order": 50, 
+        "class_size": 0
+    }
 },
 {
-  "pk": 4, 
-  "model": "gtd.todostate", 
-  "fields": {
-    "display_text": "Someday Maybe", 
-    "actionable": false, 
-    "_color_rgb": 0, 
-    "_color_alpha": 0.0, 
-    "abbreviation": "SMDY", 
-    "closed": false, 
-    "owner": null, 
-    "order": 50
-  }
+    "pk": 4, 
+    "model": "gtd.todostate", 
+    "fields": {
+        "display_text": "Someday Maybe", 
+        "actionable": false, 
+        "_color_rgb": 0, 
+        "_color_alpha": 0.0, 
+        "abbreviation": "SMDY", 
+        "closed": false, 
+        "owner": null, 
+        "order": 50, 
+        "class_size": 0
+    }
 },
 {
-  "pk": 5, 
-  "model": "gtd.todostate", 
-  "fields": {
-    "display_text": "Deferred", 
-    "actionable": false, 
-    "_color_rgb": 0, 
-    "_color_alpha": 0.0, 
-    "abbreviation": "DFRD", 
-    "closed": false, 
-    "owner": null, 
-    "order": 50
-  }
+    "pk": 5, 
+    "model": "gtd.todostate", 
+    "fields": {
+        "display_text": "Deferred", 
+        "actionable": false, 
+        "_color_rgb": 0, 
+        "_color_alpha": 0.0, 
+        "abbreviation": "DFRD", 
+        "closed": false, 
+        "owner": null, 
+        "order": 50, 
+        "class_size": 0
+    }
 },
 {
-  "pk": 6, 
-  "model": "gtd.todostate", 
-  "fields": {
-    "display_text": "Waiting For", 
-    "actionable": false, 
-    "_color_rgb": 0, 
-    "_color_alpha": 0.0, 
-    "abbreviation": "WAIT", 
-    "closed": true, 
-    "owner": null, 
-    "order": 50
-  }
+    "pk": 6, 
+    "model": "gtd.todostate", 
+    "fields": {
+        "display_text": "Waiting For", 
+        "actionable": false, 
+        "_color_rgb": 0, 
+        "_color_alpha": 0.0, 
+        "abbreviation": "WAIT", 
+        "closed": true, 
+        "owner": null, 
+        "order": 50, 
+        "class_size": 0
+    }
 },
 {
-  "pk": 7, 
-  "model": "gtd.todostate", 
-  "fields": {
-    "display_text": "Cancelled", 
-    "actionable": false, 
-    "_color_rgb": 13260, 
-    "_color_alpha": 1.0, 
-    "abbreviation": "CNCL", 
-    "closed": true, 
-    "owner": null, 
-    "order": 50
-  }
+    "pk": 7, 
+    "model": "gtd.todostate", 
+    "fields": {
+        "display_text": "Cancelled", 
+        "actionable": false, 
+        "_color_rgb": 13260, 
+        "_color_alpha": 1.0, 
+        "abbreviation": "CNCL", 
+        "closed": true, 
+        "owner": null, 
+        "order": 50, 
+        "class_size": 0
+    }
 },
 {
-  "pk": 8, 
-  "model": "gtd.todostate", 
-  "fields": {
-    "display_text": "Hard Scheduled", 
-    "actionable": false, 
-    "_color_rgb": 0, 
-    "_color_alpha": 0.0, 
-    "abbreviation": "HARD", 
-    "closed": false, 
-    "owner": null, 
-    "order": 45
-  }
+    "pk": 8, 
+    "model": "gtd.todostate", 
+    "fields": {
+        "display_text": "Hard Scheduled", 
+        "actionable": false, 
+        "_color_rgb": 0, 
+        "_color_alpha": 0.0, 
+        "abbreviation": "HARD", 
+        "closed": false, 
+        "owner": null, 
+        "order": 45, 
+        "class_size": 0
+    }
 },
 {
-  "pk": 9, 
-  "model": "gtd.todostate", 
-  "fields": {
-    "display_text": "Supersonic", 
-    "actionable": false, 
-    "_color_rgb": 0, 
-    "_color_alpha": 0.0, 
-    "abbreviation": "SPED", 
-    "closed": false, 
-    "owner": 1, 
-    "order": 45
-  }
+    "pk": 9, 
+    "model": "gtd.todostate", 
+    "fields": {
+        "display_text": "Supersonic", 
+        "actionable": false, 
+        "_color_rgb": 0, 
+        "_color_alpha": 0.0, 
+        "abbreviation": "SPED", 
+        "closed": false, 
+        "owner": 1, 
+        "order": 45, 
+        "class_size": 0
+    }
 },
 {
-  "pk": 10, 
-  "model": "gtd.todostate", 
-  "fields": {
-    "display_text": "Something boring to do", 
-    "actionable": false, 
-    "_color_rgb": 0, 
-    "_color_alpha": 0.0, 
-    "abbreviation": "BORE", 
-    "closed": false, 
-    "owner": 2, 
-    "order": 45
-  }
+    "pk": 10, 
+    "model": "gtd.todostate", 
+    "fields": {
+        "display_text": "Something boring to do", 
+        "actionable": false, 
+        "_color_rgb": 0, 
+        "_color_alpha": 0.0, 
+        "abbreviation": "BORE", 
+        "closed": false, 
+        "owner": 2, 
+        "order": 45, 
+        "class_size": 0
+    }
 },
 {
-  "pk": 1, 
-  "model": "gtd.tag", 
-  "fields": {
-    "owner": 1, 
-    "tag_string": "work", 
-    "display": "Kalsec", 
-    "public": true
-  }
+    "pk": 1, 
+    "model": "gtd.tag", 
+    "fields": {
+        "owner": 1, 
+        "tag_string": "work", 
+        "display": "Kalsec", 
+        "public": true
+    }
 },
 {
-  "pk": 2, 
-  "model": "gtd.tag", 
-  "fields": {
-    "owner": 1, 
-    "tag_string": "home", 
-    "display": "Sheldon", 
-    "public": true
-  }
+    "pk": 2, 
+    "model": "gtd.tag", 
+    "fields": {
+        "owner": 1, 
+        "tag_string": "home", 
+        "display": "Sheldon", 
+        "public": true
+    }
 },
 {
-  "pk": 3, 
-  "model": "gtd.tag", 
-  "fields": {
-    "owner": 1, 
-    "tag_string": "comp", 
-    "display": "Computer", 
-    "public": true
-  }
+    "pk": 3, 
+    "model": "gtd.tag", 
+    "fields": {
+        "owner": 1, 
+        "tag_string": "comp", 
+        "display": "Computer", 
+        "public": true
+    }
 },
 {
-  "pk": 4, 
-  "model": "gtd.tag", 
-  "fields": {
-    "owner": 1, 
-    "tag_string": "phone", 
-    "display": "Phone", 
-    "public": true
-  }
+    "pk": 4, 
+    "model": "gtd.tag", 
+    "fields": {
+        "owner": 1, 
+        "tag_string": "phone", 
+        "display": "Phone", 
+        "public": true
+    }
 },
 {
-  "pk": 3, 
-  "model": "gtd.tool", 
-  "fields": {}
+    "pk": 5, 
+    "model": "gtd.tag", 
+    "fields": {
+        "owner": null, 
+        "tag_string": "", 
+        "display": "", 
+        "public": true
+    }
 },
 {
-  "pk": 4, 
-  "model": "gtd.tool", 
-  "fields": {}
+    "pk": 6, 
+    "model": "gtd.tag", 
+    "fields": {
+        "owner": null, 
+        "tag_string": "", 
+        "display": "", 
+        "public": true
+    }
 },
 {
-  "pk": 1, 
-  "model": "gtd.location", 
-  "fields": {
-    "tools_available": []
-  }
+    "pk": 7, 
+    "model": "gtd.tag", 
+    "fields": {
+        "owner": 1, 
+        "tag_string": "LB", 
+        "display": "Lou Burroughs", 
+        "public": true
+    }
 },
 {
-  "pk": 2, 
-  "model": "gtd.location", 
-  "fields": {
-    "tools_available": []
-  }
+    "pk": 3, 
+    "model": "gtd.tool", 
+    "fields": {}
 },
 {
-  "pk": 1, 
-  "model": "gtd.context", 
-  "fields": {
-    "people_required": [], 
-    "tools_available": [
-      3, 
-      4
-    ], 
-    "name": "Work", 
-    "locations_available": [
-      1
-    ],
-    "owner": 1
-  }
+    "pk": 4, 
+    "model": "gtd.tool", 
+    "fields": {}
 },
 {
-  "pk": 2, 
-  "model": "gtd.context", 
-  "fields": {
-    "people_required": [], 
-    "tools_available": [], 
-    "name": "Home", 
-    "locations_available": [
-      2
-    ],
-    "owner": 1
-  }
+    "pk": 1, 
+    "model": "gtd.location", 
+    "fields": {
+        "tools_available": []
+    }
 },
 {
-  "pk": 1, 
-  "model": "gtd.scope", 
-  "fields": {
-    "owner": null, 
-    "public": false, 
-    "name": "joe_corp", 
-    "display": "joe_corp"
-  }
+    "pk": 2, 
+    "model": "gtd.location", 
+    "fields": {
+        "tools_available": []
+    }
 },
 {
-  "pk": 2, 
-  "model": "gtd.scope", 
-  "fields": {
-    "owner": null, 
-    "public": false, 
-    "name": "Kalsec", 
-    "display": "Kalsec"
-  }
+    "pk": 5, 
+    "model": "gtd.contact", 
+    "fields": {
+        "l_name": "", 
+        "f_name": "", 
+        "user": 4
+    }
+},
+{
+    "pk": 6, 
+    "model": "gtd.contact", 
+    "fields": {
+        "l_name": "Wolf", 
+        "f_name": "Mark", 
+        "user": 1
+    }
+},
+{
+    "pk": 7, 
+    "model": "gtd.contact", 
+    "fields": {
+        "l_name": "Burroughs", 
+        "f_name": "Lou", 
+        "user": 1
+    }
+},
+{
+    "pk": 1, 
+    "model": "gtd.context", 
+    "fields": {
+        "owner": 1, 
+        "people_required": [], 
+        "tools_available": [
+            3, 
+            4
+        ], 
+        "name": "Work", 
+        "locations_available": [
+            1
+        ]
+    }
+},
+{
+    "pk": 2, 
+    "model": "gtd.context", 
+    "fields": {
+        "owner": 1, 
+        "people_required": [], 
+        "tools_available": [], 
+        "name": "Home", 
+        "locations_available": [
+            2
+        ]
+    }
+},
+{
+    "pk": 3, 
+    "model": "gtd.context", 
+    "fields": {
+        "owner": 1, 
+        "people_required": [
+            7
+        ], 
+        "tools_available": [], 
+        "name": "Lou B", 
+        "locations_available": []
+    }
+},
+{
+    "pk": 1, 
+    "model": "gtd.scope", 
+    "fields": {
+        "owner": null, 
+        "public": false, 
+        "name": "joe_corp", 
+        "display": "joe_corp"
+    }
+},
+{
+    "pk": 2, 
+    "model": "gtd.scope", 
+    "fields": {
+        "owner": null, 
+        "public": false, 
+        "name": "Kalsec", 
+        "display": "Kalsec"
+    }
 }
 ]

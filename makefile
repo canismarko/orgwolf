@@ -13,11 +13,11 @@ normal = `tput sgr0`
 all: $(ORGWOLF_CSS) $(MIN_JS)
 
 $(ORGWOLF_CSS): orgwolf/static/orgwolf.less
-	echo "$(bold)Building stylesheet $(ORGWOLF_CSS)...$(normal)"
+	@echo "$(bold)Building stylesheet $(ORGWOLF_CSS)...$(normal)"
 	$(LESS) orgwolf/static/orgwolf.less $(ORGWOLF_CSS)
 
 $(MIN_JS): $(OW_JS)
-	echo "$(bold)Cleaing $(OW_JS)...$(normal)"
+	@echo "$(bold)Cleaing $(OW_JS)...$(normal)"
 	$(JSLINT) $(OW_JS)
-	echo "$(bold)Compacting $(OW_JS)...$(normal)"
+	@echo "$(bold)Compacting $(OW_JS)...$(normal)"
 	$(YUI) $(MIN_JS) $(OW_JS)

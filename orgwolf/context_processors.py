@@ -1,4 +1,4 @@
-from gtd.models import Scope
+from gtd.models import Scope, Context
 
 def debug_variables(request):
     from django.conf import settings
@@ -11,7 +11,9 @@ def debug_variables(request):
 
 def scope_context(request):
     """Retrieve avaialable scope and context information"""
-    scope_list = Scope.objects.all() # Todo: collect for current user only
+    scopes = Scope.objects.all() # Todo: collect for current user only
+    contexts = Context.get_visible(request.user)
     return {
-        'scopes': scope_list
+        'scopes': scopes,
+        'contexts': contexts
         }

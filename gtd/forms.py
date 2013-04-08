@@ -1,4 +1,4 @@
-#######################################################################
+######################################################################
 # Copyright 2012 Mark Wolf
 #
 # This file is part of OrgWolf.
@@ -90,6 +90,7 @@ class NodeForm(forms.ModelForm):
     class Meta:
         fields = ('title',
                   'todo_state',
+                  'tag_string',
                   'scheduled',
                   'scheduled_date',
                   'scheduled_time',
@@ -98,7 +99,6 @@ class NodeForm(forms.ModelForm):
                   'deadline_date',
                   'deadline_time',
                   'deadline_time_specific',
-                  'tag_string',
                   'priority',
                   'scope',
                   'repeats',

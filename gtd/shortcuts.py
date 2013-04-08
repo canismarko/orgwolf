@@ -65,7 +65,6 @@ def order_nodes(qs, **kwargs):
             select[name] = 'tag_string LIKE \':%%{0}%%:\''.format(loc.tag_string)
             order_by.append('-{0}'.format(name))
     # Actually apply the sorting criteria
-    print order_by
     return qs.extra(
         select=select,
         order_by=order_by
@@ -126,7 +125,10 @@ def parse_url(raw_url, request=None):
         if result.groups()[1]:
             # Context found
             context_id = result.groups()[1]
-            data['context'] = get_object_or_404(Context, pk=context_id)
+            if int(context_id) == 0:
+                data['context'] = None
+            else:
+                data['context'] = get_object_or_404(Context, pk=context_id)
     return data
 
 def generate_url(**kwargs):

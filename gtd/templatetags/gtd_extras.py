@@ -73,7 +73,7 @@ def nodes_as_hierarchy_table(qs, base_url, autoescape=None):
         html += '<a href="' + base_url + str(obj.id) + '">'
         html += esc(obj.get_title())
         html += '</a><br />'
-        html += '<small>' + esc(obj.get_hierarchy_as_string()) + '</small>'
+        html += '<small>' + obj.get_hierarchy_as_string() + '</small>'
         html += '</td>\n<td>'
         html += esc(obj.tag_string)
         html += '</td>\n</tr>\n'

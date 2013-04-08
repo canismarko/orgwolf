@@ -327,6 +327,31 @@ class EditNode(TestCase):
             '',
             node.text
             )
+        
+    def test_archive_by_json(self):
+        """Tests archiving/unarchived node by AJAX"""
+        node = Node.objects.get(pk=1)
+        self.assertTrue(
+            not node.archived,
+            'Node starts out archived'
+        )
+        url = reverse('gtd.views.edit_node', kwargs={'node_id': node.pk})
+        data = {'format': 'json',
+                'archived': 'true'}
+        response = self.client.post(
+            url, data,
+            HTTP_X_REQUESTED_WITH='XMLHttpRequest',
+            )
+        self.assertEqual(
+            200,
+            response.status_code
+            )
+        node = Node.objects.get(pk = node.pk)
+        self.assertTrue(
+            node.archived,
+            'Node does not become archived after changing via AJAX'
+        )
+
     def test_edit_node_through_json(self):
         """Tests AJAX editing of entire node at once via form-like submission"""
         node = Node.objects.get(pk=1)
@@ -787,10 +812,10 @@ class ContextFiltering(TestCase):
         self.assertTrue(
             self.client.login(username='test', password='secret')
             )
-    def test_context0(self):
-        """Confirm that trying to set context0 returns a 404"""
+    def test_bad_context(self):
+        """Confirm that trying to set context that does not exist returns a 404"""
         url = reverse('gtd.views.list_display', 
-                      kwargs={'url_string': '/context0'} )
+                      kwargs={'url_string': '/context99'} )
         response = self.client.get(url)
         self.assertEqual(response.status_code, 404)
     def test_home_tag(self):
@@ -850,6 +875,15 @@ class ContextFiltering(TestCase):
             list(Context.objects.filter(owner=user)),
             list(contexts)
             )
+    def test_context_person(self):
+        lou_node = Node.objects.get(pk=21)
+        context = Context.objects.get(pk=3)
+        result = context.apply()
+        self.assertEqual(
+            1,
+            result.count(),
+            'Filtering person context returns {0} nodes instead of 1'.format(result.count())
+        )
 
 class ProjectSublist(TestCase):
     fixtures = ['test-users.json', 'gtd-test.json', 'gtd-env.json']
@@ -928,11 +962,11 @@ class Shortcuts(TestCase):
                                     field='deadline',
                                     )
         self.assertEqual(
-            context_node,
+            deadline_node,
             ordered_nodes[0]
             )
         self.assertEqual(
-            deadline_node,
+            context_node,
             ordered_nodes[1]
             )
     def test_node_as_json(self):
