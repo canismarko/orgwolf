@@ -2,10 +2,8 @@
 
 <!-- load the Aloha Editor core and some plugins -->
 {% if local_net %}
-  <link href="{{ STATIC_URL }}aloha/css/aloha.css" rel="stylesheet" type="text/css" />
   <script src="{{ STATIC_URL }}aloha/lib/aloha-full.js"
 {% else %}
-  <link href="http://cdn.aloha-editor.org/latest/css/aloha.css" rel="stylesheet" type="text/css" />
   <script src="http://cdn.aloha-editor.org/latest/lib/aloha-full.js"
 {% endif %}
           data-aloha-plugins="common/ui,

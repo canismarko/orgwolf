@@ -190,7 +190,10 @@ class Context(models.Model):
     @staticmethod
     def get_visible(user):
         """Return all the Context objects visible to this user"""
-        return Context.objects.filter(Q(owner=user)|Q(owner=None))
+        if user.is_authenticated():
+            return Context.objects.filter(Q(owner=user)|Q(owner=None))
+        else:
+            return Context.objects.filter(Q(owner=None))
 
 class Priority(models.Model):
     priority_value = models.IntegerField(default=50)
