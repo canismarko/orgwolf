@@ -409,10 +409,8 @@ def edit_node(request, node_id, scope_id):
             archived = post.get('archived')
             if archived == 'true':
                 node.archived = True
-                print node.archived
             elif archived == 'false':
                 node.archived = False
-                print node.archived
             node.save()
             data = {
                 'status': 'success',

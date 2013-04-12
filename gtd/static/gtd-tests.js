@@ -76,7 +76,8 @@ var node8 = {
     text: 'hello, world',
     tag_string: ':work:',
     is_leaf_node: true,
-	    };
+};
+console.log($);
 $.mockjax({
     url: '/gtd/node/1/descendants/',
     responseTime: ajax_timer,
@@ -519,7 +520,7 @@ asyncTest('Creating heading from /gtd/node/pk/descendants/', function() {
 	);
 	equal(
 	    heading8.$title.html(),
-	    heading8.title_html,
+	    heading8.title_html + '\n',
 	    'title_html used for display purposes'
 	);
 	equal(
@@ -993,7 +994,7 @@ asyncTest('nodeEdit dialogs', function() {
 	    'plugin saves heading if passed'
 	);
 	equal(
-	    workspace.$edit_modal.find('#id_title').attr('value'),
+	    workspace.$edit_modal.find('#id_title').val(),
 	    heading8.title,
 	    'Opening the modal sets the title correctly'
 	);
@@ -1002,58 +1003,56 @@ asyncTest('nodeEdit dialogs', function() {
 	    'Edit "' + heading8.title_html + '"',
 	    'Opening the modal sets the header correctly'
 	)
-	equal(
-	    workspace.$edit_modal.find('#id_todo_state').children('option[value="' + heading8.todo_id + '"]').attr('selected'),
-	    'selected',
+	ok(
+	    workspace.$edit_modal.find('#id_todo_state').children('option[value="' + heading8.todo_id + '"]').is(':selected'),
 	    'Opening the modal sets todo-state correctly'
 	);
 	equal(
-	    workspace.$edit_modal.find('#id_scheduled_date').attr('value'),
+	    workspace.$edit_modal.find('#id_scheduled_date').val(),
 	    heading8.scheduled_date,
 	    'Opening the modal sets the scheduled_date correctly'
 	);
 	equal(
-	    workspace.$edit_modal.find('#id_scheduled_time').attr('value'),
+	    workspace.$edit_modal.find('#id_scheduled_time').val(),
 	    heading8.scheduled_time,
 	    'Opening the modal sets the scheduled_time correctly'
 	);
-	equal(
-	    workspace.$edit_modal.find('#id_scheduled_time_specific').attr('checked'),
-	    'checked',
+	ok(
+	    workspace.$edit_modal.find('#id_scheduled_time_specific').prop('checked'),
 	    'Opening the modal sets the scheduled_time_specific correctly'
 	);
 	equal(
-	    workspace.$edit_modal.find('#id_deadline_date').attr('value'),
+	    workspace.$edit_modal.find('#id_deadline_date').val(),
 	    heading8.deadline_date,
 	    'Opening the modal sets the deadline_date correctly'
 	);
 	equal(
-	    workspace.$edit_modal.find('#id_deadline_time').attr('value'),
+	    workspace.$edit_modal.find('#id_deadline_time').val(),
 	    heading8.deadline_time,
 	    'Opening the modal sets the deadline_time correctly'
 	);
-	equal(
-	    workspace.$edit_modal.find('#id_deadline_time_specific').attr('checked'),
-	    'checked',
+	ok(
+	    workspace.$edit_modal.find('#id_deadline_time_specific')
+		.is(':checked'),
 	    'Opening the modal sets the deadline_time_specific correctly'
 	);
 	equal(
-	    workspace.$edit_modal.find('#id_tag_string').attr('value'),
+	    workspace.$edit_modal.find('#id_tag_string').val(),
 	    heading8.tag_string,
 	    'Opening the modal sets the tag_string correctly'
 	);
-	equal(
-	    workspace.$edit_modal.find('#id_priority').find('option[value="'+heading8.priority+'"]').attr('selected'),
-	    'selected',
+	ok(
+	    workspace.$edit_modal.find('#id_priority')
+		.find('option[value="'+heading8.priority+'"]').is(':selected'),
 	    'Opening the modal sets the priority correctly'
 	);
 	// Check that the scopes are set
 	var scopes = 0;
 	var $scope = workspace.$edit_modal.find('#id_scope');
 	for ( var i = 0; i < heading8.scope.length; i++ ) {
-	    equal(
-		$scope.find('option[value="'+heading8.scope[i]+'"]').attr('selected'),
-		'selected',
+	    ok(
+		$scope.find('option[value="'+heading8.scope[i]+'"]')
+		    .is(':selected'),
 		'Opening the modal selects scope ' + heading8.scope[i]
 	    );
 	    scopes++;
@@ -1063,39 +1062,39 @@ asyncTest('nodeEdit dialogs', function() {
 	    heading8.scope.length,
 	    'All the scopes were checked'
 	);
-	equal(
-	    workspace.$edit_modal.find('#id_repeats').attr('checked'),
-	    'checked',
+	ok(
+	    workspace.$edit_modal.find('#id_repeats').prop('checked'),
 	    'Opening the modal sets the repeats correctly'
 	);
 	equal(
-	    workspace.$edit_modal.find('#id_repeating_number').attr('value'),
+	    workspace.$edit_modal.find('#id_repeating_number').val(),
 	    heading8.repeating_number,
 	    'Opening the modal sets the repeating_number correctly'
 	);
-	equal(
-	    workspace.$edit_modal.find('#id_repeating_unit').find('option[value="'+heading8.repeating_unit+'"]').attr('selected'),
-	    'selected',
+	ok(
+	    workspace.$edit_modal.find('#id_repeating_unit')
+		.find('option[value="'+heading8.repeating_unit+'"]')
+		.is(':selected'),
 	    'Opening the modal sets the repeating unit correctly'
 	);
-	equal(
-	    workspace.$edit_modal.find('#id_repeats_from_completion').attr('checked'),
-	    'checked',
+	console.log(heading8);
+	ok(
+	    workspace.$edit_modal.find('#id_repeats_from_completion')
+		.prop('checked'),
 	    'Opening the modal sets the repeats_from_completion box correctly'
 	);
-	equal(
-	    workspace.$edit_modal.find('#id_archived').attr('checked'),
-	    'checked',
+	ok(
+	    workspace.$edit_modal.find('#id_archived').prop('checked'),
 	    'Opening the modal sets the archived box correctly'
 	);
 	// Check that the related_projects are set
 	var projects = 0;
 	var $project = workspace.$edit_modal.find('#id_related_projects');
 	for ( var i = 0; i < heading8.related_projects.length; i++ ) {
-	    equal(
-		$project.find('option[value="'+heading8.related_projects[i]+'"]').attr('selected'),
-		'selected',
-		'Opening the modal selects scope ' + heading8.related_projects[i]
+	    ok(
+		$project.find('option[value="'+heading8.related_projects[i]+'"]')
+		    .is(':selected'),
+		'Opening the modal selects project ' + heading8.related_projects[i]
 	    );
 	    projects++;
 	}
@@ -1105,7 +1104,7 @@ asyncTest('nodeEdit dialogs', function() {
 	    'All the related_projects were checked'
 	);
 	equal(
-	    workspace.$edit_modal.find('#id_text').attr('value'),
+	    workspace.$edit_modal.find('#id_text').val(),
 	    heading8.text,
 	    'Opening the modal sets the text correctly'
 	);
@@ -1122,7 +1121,7 @@ asyncTest('nodeEdit dialogs', function() {
 	    'New child button uses workspace $edit_modal'
 	);
 	equal(
-	    workspace.$edit_modal.find('#id_title').attr('value'),
+	    workspace.$edit_modal.find('#id_title').val(),
 	    '',
 	    'Modal for new child has title field cleared'
 	);
@@ -1147,7 +1146,7 @@ asyncTest('nodeEdit dialogs', function() {
 	    'Modal for new child clears all other todo states'
 	);
 	equal(
-	    workspace.$edit_modal.find('#id_scheduled_date').attr('value'),
+	    workspace.$edit_modal.find('#id_scheduled_date').val(),
 	    '',
 	    'Modal for new child clears scheduled_date'
 	);
@@ -1170,9 +1169,9 @@ asyncTest('nodeEdit dialogs', function() {
 	var scopes = 0;
 	var $scope = workspace.$edit_modal.find('#id_scope');
 	for ( var i = 0; i < heading8.scope.length; i++ ) {
-	    equal(
-		$scope.find('option[value="'+heading8.scope[i]+'"]').attr('selected'),
-		'selected',
+	    ok(
+		$scope.find('option[value="'+heading8.scope[i]+'"]')
+		    .is(':selected'),
 		'Opening the modal selects scope ' + heading8.scope[i]
 	    );
 	    scopes++;
@@ -1838,6 +1837,34 @@ asyncTest('Check basic functionality', function() {
     }, (ajax_timer * 1.1) + 5);
 });
 
+asyncTest('nodeEdit repeating box activation', function() {
+    var $workspace = $('#test_workspace');
+    $workspace.nodeOutline();
+    var outline = $workspace.data('nodeOutline');
+    setTimeout( function() {
+	var $modal = $workspace.find('#new-modal');
+	equal(
+	    $modal.length,
+	    1,
+	    'Modal found'
+	);
+	attach_pickers($modal);
+	var $number = $modal.find('#id_repeating_number');
+	equal(
+	    $number.attr('disabled'),
+	    'disabled',
+	    'Repeating number box starts out disabled'
+	);
+	$modal.find('#id_repeats').click();
+	notEqual(
+	    $number.attr('disabled'),
+	    'disabled',
+	    'Repeating number box is enabled after repeats is clicked'
+	);
+	start();
+    }, ajax_timer)
+});
+
 asyncTest('nodeEdit(\'update\') method', function() {
     var $button = $('#edit-btn');
     $button.nodeEdit({url: '/gtd/nodes/6/edit/',
@@ -1854,9 +1881,8 @@ asyncTest('nodeEdit(\'update\') method', function() {
 	    1,
 	    'Only one option is selected'
 	)
-	equal(
-	    $option.attr('selected'),
-	    'selected',
+	ok(
+	    $option.is(':selected'),
 	    'New option has selected attribute'
 	);
 	var settings = $button.data('nodeEdit');
@@ -1881,7 +1907,7 @@ asyncTest('nodeEdit(\'reset\') method', function() {
 	$select.find('option[value="2"]').attr('selected', 'selected');
 	$button.nodeEdit('reset');
 	equal(
-	    $select.find('option[selected]').attr('value'),
+	    $select.find('option:selected').attr('value'),
 	    "1",
 	    'Todostate select element is reset upon calling reset method'
 	);
@@ -2056,11 +2082,18 @@ test('Requires other fields', function() {
 });
 test('Integer field', function() {
     var $bad_form = $fixture.find('#bad-form');
+    var $good_form = $fixture.find('#good-form');
     validate_node($bad_form);
     var $bad_int = $bad_form.find('#bad-int');
     ok(
 	$bad_int.hasClass('invalid'),
 	'Non-numbers marked as invalid'
+    );
+    validate_node($good_form);
+    var $blank_int = $good_form.find('#blank-int')
+    ok(
+	! $blank_int.hasClass('invalid'),
+	'Blank ints not marked as invalid'
     );
 });
     

@@ -19,7 +19,7 @@
 {% endblock %}
 
 {% block all_script %}
-<script src="{{ STATIC_URL }}jquery-1.8.3.min.js"></script>
+<script src="{{ STATIC_URL }}jquery-1.9.1.min.js"></script>
 <script src="{{ STATIC_URL }}jquery.mockjax.js"></script>
 <script src="{{ STATIC_URL }}bootstrap/js/bootstrap.js"></script>
 <script src="{{ STATIC_URL }}orgwolf.js"></script>
@@ -87,6 +87,7 @@
     <input type="text" data-validate="required" value="hello" />
     <input type="text" id="date-field" data-validate="date" value="2013-11-11" />
     <input type="text" id="time-field" data-validate="time" value="04:00" />
+    <input type="text" id="blank-int" data-validate="int" value="" />
   </form>
   <form id="bad-form">
     <input type="text" id="required" data-validate="required" />

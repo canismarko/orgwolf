@@ -128,7 +128,7 @@ $('document').ready(function() {
     <dl>
       {% include 'gtd/node_detail.html' %}
       <dt>Text:</dt>
-      <dd>
+      <dd node_id="{{ parent_node.pk }}">
 	<div id="parent-text" class="update" data-field="text">
 	  {{ parent_node.text|escape_html }}
 	</div>

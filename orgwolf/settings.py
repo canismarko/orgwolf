@@ -174,13 +174,6 @@ INSTALLED_APPS = [
 PROFILING = False
 PROFILE_FILE = '/dev/null'
 
-# django-debug-toolbar initialization
-if DEBUG:
-    # List of internal IP's for debug toolbar
-    INTERNAL_IPS = ('127.0.0.1',)
-    MIDDLEWARE_CLASSES.append('debug_toolbar.middleware.DebugToolbarMiddleware')
-    INSTALLED_APPS.append('debug_toolbar')
-
 # Django-social-auth configuration
 SOCIAL_AUTH_BACKENDS = [
     {'title': 'Facebook',
@@ -268,6 +261,13 @@ LOGGING = {
         },
     }
 }
+
+# django-debug-toolbar initialization
+if DEBUG and DEBUG_BAR:
+    # List of internal IP's for debug toolbar
+    INTERNAL_IPS = ('127.0.0.1',)
+    MIDDLEWARE_CLASSES.append('debug_toolbar.middleware.DebugToolbarMiddleware')
+    INSTALLED_APPS.append('debug_toolbar')
 
 # Profiling
 if PROFILING:
