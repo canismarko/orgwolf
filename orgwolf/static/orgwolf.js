@@ -19,7 +19,7 @@ validate_node = function ($form) {
 	    var method = $(this).attr('data-validate');
 	    if ( method === 'required' ) {
 		// Required fields
-		if ( ! NOTBLANK_RE.test($(this).attr('value'))) {
+		if ( ! NOTBLANK_RE.test($(this).val())) {
 		    success = false;
 		    $(this).focus();
 		    $(this).addClass('invalid');
@@ -27,7 +27,7 @@ validate_node = function ($form) {
 		}
 	    } else if (method === 'date') {
 		// Dates
-		s = $(this).attr('value');
+		s = $(this).val();
 		if ( NOTBLANK_RE.test(s) ) { // Ignore empty dates
 		    bits = s.split('-');
 		    d = new Date(bits[0], bits[1]-1, bits[2]);
@@ -42,7 +42,8 @@ validate_node = function ($form) {
 		    }
 		}
 	    } else if (method === 'time') {
-		s = $(this).attr('value');
+		// Times
+		s = $(this).val();
 		if ( NOTBLANK_RE.test(s) ) { // Ignore empty times
 		    bits = s.split(':');
 		    t = new Date(0, 0, 0, bits[0], bits[1]);
@@ -57,7 +58,8 @@ validate_node = function ($form) {
 		    }
 		}
 	    } else if (method === 'int') {
-		s = $(this).attr('value');
+		// Integers
+		s = $(this).val();
 		if ( NOTBLANK_RE.test(s) && NOTINT_RE.test(s) ) { //Ignore empty fields
 		    success = false;
 		    $(this).focus();
@@ -70,11 +72,11 @@ validate_node = function ($form) {
 	    // Check for elements requiring cross-reference validation
 	    var $this, reqs, i, $elem, s;
 	    $this = $(this);
-	    if ( $this.attr('checked') ) {
+	    if ( $this.prop('checked') ) {
 		reqs = $(this).attr('data-requires').split(',');
 		for ( i=0; i<reqs.length; i += 1 ) {
 		    $elem = $this_form.find(reqs[i]);
-		    s = $elem.attr('value');
+		    s = $elem.val();
 		    if ( ! NOTBLANK_RE.test(s) ) {
 			success = false;
 			$(this).focus();
@@ -90,25 +92,25 @@ validate_node = function ($form) {
 };
 
 function repeating_toggle(selector, $target) {
-    if ($target.find(selector).attr('checked') === 'checked') {
-	$target.find('#id_repeating_number').removeAttr('disabled');
-	$target.find('#id_repeating_unit').removeAttr('disabled');
-	$target.find('#id_repeats_from_completion').removeAttr('disabled');
+    if ($target.find(selector).prop('checked')) {
+	$target.find('#id_repeating_number').prop('disabled', false);
+	$target.find('#id_repeating_unit').prop('disabled', false);
+	$target.find('#id_repeats_from_completion').prop('disabled', false);
     } else {
-	$target.find('#id_repeating_number').attr('disabled', 'disabled');
-	$target.find('#id_repeating_unit').attr('disabled', 'disabled');
-	$target.find('#id_repeats_from_completion').attr('disabled', 'disabled');
+	$target.find('#id_repeating_number').prop('disabled', true);
+	$target.find('#id_repeating_unit').prop('disabled', true);
+	$target.find('#id_repeats_from_completion').prop('disabled', true);
     }
 }
 
 attach_pickers = function( $target ) {
     var btn_width, mod_width, timepicker_toggle;
-    if ( $.fn.datepicker ) {
-	// Disable inputs for repeating information if checkbox is blank
-	$target.find('#id_repeats').click(function() {
-	    repeating_toggle('#id_repeats', $target);
-	});
+    // Disable inputs for repeating information if checkbox is blank
+    $target.find('#id_repeats').bind('change.repeat', function() {
 	repeating_toggle('#id_repeats', $target);
+    });
+    repeating_toggle('#id_repeats', $target);
+    if ( $.fn.datepicker ) {
 	// Set up timepicker/datepicker functionality
 	$target.find("input.datepicker").each(function(ct) {
 	    // Prepare a date field for the date picker widget
@@ -143,14 +145,14 @@ attach_pickers = function( $target ) {
 	    checkbox = '#' + id_attr;
 	    input = '#id_' + $("#" + id_attr).attr('toggles');
 	    button = input + ' ~ span.add-on';
-	    if ($target.find(checkbox).attr('checked') === 'checked')
+	    if ($target.find(checkbox).prop('checked'))
 	    {
-		$target.find(input).removeAttr('disabled');
+		$target.find(input).prop('disabled', false);
 		$target.find(button).removeClass('disabled');
 	    }
 	    else
 	    {
-		$target.find(input).attr('disabled', 'disabled');
+		$target.find(input).prop('disabled', true);
 		$target.find(button).addClass('disabled');
 	    }
 	};
@@ -480,13 +482,20 @@ $(document).ready(function(){
     $('document').ready(function() {
 	Aloha.ready(function() {
 	    console.log('# Todo: Switch Aloha editor to PubSub');
+	    Aloha.bind('aloha-editable-activated', function(e, args) {
+		var editable, options, $text;
+		editable = args.editable;
+		$text = $(editable.obj.context);
+		options = $text.data('alohaText')
+		options.old_text = editable.snapshotContent;
+	    });
 	    Aloha.bind('aloha-editable-deactivated', function(e, arg) {
 		var editable, $text, options, $parent, url, new_text, payload;
 		editable = arg.editable;
-		if (editable.snapshotContent !== editable.obj.html()) {
-		    // If they text was changed, submit the ajax request
-		    $text = $(editable.obj.context);
-		    options = $text.data('alohaText');
+		// If they text was changed, submit the ajax request
+		$text = $(editable.obj.context);
+		options = $text.data('alohaText');
+		if (options.old_text !== editable.obj.html()) {
 		    if ( options ) { // Only if an AlohaText exists
 			$parent = options.$parent;
 			url = '/gtd/node/' + $parent.attr('node_id') + '/edit/';
@@ -500,21 +509,27 @@ $(document).ready(function(){
 			    text: new_text
 			};
 			$.post(url, payload, function(r) {
-			    var $modal;
+			    var $modal = [], outline;
 			    // Callback for aloha edit request
 			    r = $.parseJSON(r);
 			    // Update modal dialog with new text
 			    if ( options.heading ) {
-				$modal = options.heading.$buttons.find('#edit-modal');
+				$modal = options.heading.$buttons
+				    .find('#edit-modal');
 				options.heading.text = r.text;
 			    } else {
-				$modal = $parent.data('nodeOutline').$buttons.find('#edit-modal');
+				outline = $parent.data('nodeOutline');
+				if (outline) {
+				    $modal = $parent.data('nodeOutline').$buttons
+					.find('#edit-modal');
+				}
 			    }
 			    if ( $modal.length > 0 ) {
 				$modal.each( function() {
 				    var $text, $aloha_text;
 				    $text = $(this).find('#id_text');
-				    $aloha_text = $text.siblings('#id_text-aloha');
+				    $aloha_text = $text
+					.siblings('#id_text-aloha');
 				    $text.html(r.text);
 				    $aloha_text.html(r.text);
 				});
@@ -1663,56 +1678,67 @@ GtdHeading.prototype.toggle = function( direction ) {
 			heading = data.heading;
 			data.$modal.find('.header-title').html(
 			    'Edit "' + heading.title_html + '"');
-			data.$modal.find('#id_title').attr('value', heading.title);
-			data.$modal.find('#id_text').attr('value', heading.text);
+			data.$modal.find('#id_title').val(heading.title);
+			data.$modal.find('#id_text').val(heading.text);
 			data.$modal.find('#id_text-aloha').html(heading.text);
-			data.$modal.find('#id_tag_string').attr('value', heading.tag_string);
-			if ( heading.archived ) {
-			    data.$modal.find('#id_archived').attr('checked', 'checked');
-			}
+			data.$modal.find('#id_tag_string').val(heading.tag_string);
+			data.$modal.find('#id_archived').prop(
+			    'checked', 
+			    heading.archived
+			);
 			// Scheduled information
-			data.$modal.find('#id_scheduled_date').attr('value', heading.scheduled_date);
-			data.$modal.find('#id_scheduled_time').attr('value', heading.scheduled_time);
+			data.$modal.find('#id_scheduled_date').val(heading.scheduled_date);
+			data.$modal.find('#id_scheduled_time').val(heading.scheduled_time);
 			if ( heading.scheduled_time_specific ) {
 			    data.$modal.find('#id_scheduled_time_specific').attr('checked', 'checked');
 			}
 			// Deadline information
-			data.$modal.find('#id_deadline_date').attr('value', heading.deadline_date);
-			data.$modal.find('#id_deadline_time').attr('value', heading.deadline_time);
+			data.$modal.find('#id_deadline_date').val(heading.deadline_date);
+			data.$modal.find('#id_deadline_time').val(heading.deadline_time);
 			if ( heading.deadline_time_specific ) {
 			    data.$modal.find('#id_deadline_time_specific').attr('checked', 'checked');
 			}
 			// Repeating information
-			data.$modal.find('#id_repeating_number').attr('value', heading.repeating_number);
-			if ( heading.repeats ) {
-			    data.$modal.find('#id_repeats').attr('checked', 'checked');
-			}			
+			data.$modal.find('#id_repeating_number')
+			    .val( heading.repeating_number );
+			data.$modal.find('#id_repeats')
+			    .prop( 'checked', heading.repeats );
 			s = 'option[value="' + heading.repeating_unit + '"]';
-			data.$modal.find('#id_repeating_unit').find(s).attr('selected', 'selected');
-			if ( heading.repeats_from_completion ) {
-			    data.$modal.find('#id_repeats_from_completion').attr('checked', 'checked');
-			}
+			data.$modal.find('#id_repeating_unit option')
+			    .prop( 'selected', false );
+			data.$modal.find('#id_repeating_unit').find(s)
+			    .prop( 'selected', true );
+			data.$modal.find('#id_repeats_from_completion')
+			    .prop( 'checked', heading.repeats_from_completion );
 			repeating_toggle('#id_repeats', data.$modal);
 			// Priority
 			s = 'option[value="' + heading.priority + '"]';
-			data.$modal.find('#id_priority').find(s).attr('selected', 'selected');
+			data.$modal.find('#id_priority option')
+			    .prop( 'selected', false );
+			data.$modal.find('#id_priority').find(s)
+			    .prop( 'selected', true );
 			// Find todo state
 			if (heading.todo_id) {
-			    data.$modal.find('#id_todo_state').children('option[value="' + heading.todo_id + '"]').attr('selected', 'selected');
+			    s = 'option[value="' + heading.todo_id + '"]';
 			} else {
-			    data.$modal.find('#id_todo_state').children('option[value="0"]').attr('selected', 'selected');
+			    s = 'option[value="0"]';
 			}
+			data.$modal.find('#id_todo_state').children(s)
+			    .prop('selected', true);
 			// Find scopes
 			$scope = data.$modal.find('#id_scope');
+			$scope.find('option').prop('selected', false);
 			for ( i = 0; i < heading.scope.length; i += 1 ) {
 			    s = 'option[value="' + heading.scope[i] + '"]';
-			    $scope.find(s).attr('selected', 'selected');
+			    $scope.find(s).prop('selected', true);
 			}
 			// Find related_projects
 			$project = data.$modal.find('#id_related_projects');
+			$project.find('option').prop('selected', false);
 			for ( i = 0; i < heading.related_projects.length; i+=1 ) {
-			    s = 'option[value="' + heading.related_projects[i] + '"]';
-			    $project.find(s).attr('selected', 'selected');
+			    s = 'option[value="' + heading.related_projects[i]
+				+ '"]';
+			    $project.find(s).prop('selected', true);
 			}
 		    } else {
 			// No heading, so clear current values
@@ -1722,32 +1748,34 @@ GtdHeading.prototype.toggle = function( direction ) {
 			data.$modal.find('.header-title').html('New node');
 			// Clear text boxes (clear_text array)
 			for ( i = 0; i < clear_text.length; i+=1 ) {
-			    data.$modal.find(clear_text[i]).attr('value', '');
+			    data.$modal.find(clear_text[i]).val('');
 			}
 			// Clear select elements
 			f = function() {
-			    $(this).removeAttr('selected');
+			    $(this).prop('selected', false);
 			};
 			for ( i = 0; i < clear_select.length; i+=1 ) {
 			    data.$modal.find(clear_select[i]).find('option:selected').each(f);
-			    data.$modal.find(clear_select[i]).find('option[value=""]').attr('selected', 'selected');
+			    data.$modal.find(clear_select[i]).find('option[value=""]').prop('selected', true);
 			}
 			// Now set some select elements that inherit from their parent
 			if ( data.parent ) {
 			    scopes = data.parent.scope;
 			    $scope = data.$modal.find('#id_scope');
 			    for ( i = 0; i<scopes.length; i+=1 ) {
-				$scope.find('option[value="' + scopes[i] + '"]').attr('selected', 'selected');
+				$scope.find('option[value="' + scopes[i] + '"]')
+				    .prop('selected', true);
 			    }
 			    related_projects = data.parent.related_projects;
 			    $projects = data.$modal.find('#id_related_projects');
 			    for ( i = 0; i<related_projects.length; i+=1 ) {
-				$projects.find('option[value="' + related_projects[i] + '"]').attr('selected', 'selected');
+				s = 'option[value="' + related_projects[i] + '"]';
+				$projects.find(s).prop('selected', true);
 			    }
 			}
 			// Clear checkboxes
 			for ( i = 0; i < clear_check.length; i+=1 ) {
-			    data.$modal.find(clear_check[i]).removeAttr('checked');
+			    data.$modal.find(clear_check[i]).prop('checked', false);
 			}
 			// Clear aloha editor
 			data.$modal.find('#id_text-aloha').html('<br class="aloha-cleanme" style="">');
@@ -1791,7 +1819,7 @@ GtdHeading.prototype.toggle = function( direction ) {
 			e.preventDefault();
 			payload = $form.serialize();
 			payload += '&format=json&auto_repeat=false';
-			saved_url = data.$modal.find('#edit_url').attr('value');
+			saved_url = data.$modal.find('#edit_url').val();
 			if ( saved_url ) {
 			    submit_url = saved_url;
 			} else {
@@ -1841,7 +1869,7 @@ GtdHeading.prototype.toggle = function( direction ) {
 		if ( args.$modal ) {
 		    // client has already gotten the $modal dialog
 		    data.$modal = args.$modal;
-		    data.$modal.find('#edit_url').attr('value', data.edit_url);
+		    data.$modal.find('#edit_url').val( data.edit_url );
 		    connect_handlers();
 		} else {
 		    // Retrieve the modal form itself
@@ -1866,7 +1894,7 @@ GtdHeading.prototype.toggle = function( direction ) {
 	}, // end of init
 	update: function ( args ) {
 	    // Updates the DOM to reflect changes made through other sources
-	    var $this, data, $modal, $select, $new_opt;
+	    var $this, data, $modal, $select, $new_opt, s;
 	    $this = this;
 	    data = $this.data('nodeEdit');
 	    if ( data ) {
@@ -1875,9 +1903,10 @@ GtdHeading.prototype.toggle = function( direction ) {
 		if ( typeof args.todo_id !== 'undefined' ) {
 		    data.todo_id = args.todo_id;
 		    $select = $modal.find('#id_todo_state');
-		    $select.find('option').removeAttr('selected');
-		    $new_opt = $select.find('option[value="' + args.todo_id +  '"]');
-		    $new_opt.attr('selected', 'selected');
+		    $select.find('option').prop('selected', false);
+		    s = 'option[value="' + args.todo_id +  '"]';
+		    $new_opt = $select.find(s);
+		    $new_opt.prop('selected', true);
 		}
 		$this.data('nodeEdit', data); // Write the settings
 	    }
@@ -1901,9 +1930,9 @@ GtdHeading.prototype.toggle = function( direction ) {
 		    $modal = data.$modal;
 		    // Reset the todo_state select element
 		    $todo = $modal.find('#id_todo_state');
-		    $todo.find('option').removeAttr('selected');
+		    $todo.find('option').prop('selected', false);
 		    sel = 'option[value="' + data.todo_id + '"]';
-		    $todo.find(sel).attr('selected', 'selected');
+		    $todo.find(sel).prop('selected', true);
 		}
 	    });
 	} // end of reset method

@@ -84,6 +84,7 @@ class HTMLParserTest(TestCase):
 
 class NewUser(TestCase):
     """Check new user registration"""
+    fixtures = ['gtd-env.json']
     def setUp(self):
         self.url = '/accounts/register/'
     def test_registration_form(self):
