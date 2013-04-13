@@ -349,6 +349,7 @@ class Node(MPTTModel):
     def get_hierarchy_as_string(self):
         """Return a string showing the trail of ancestors
         leading up to this node"""
+        return "Coming soon"
         delimiter = '>'
         node_list = self.get_ancestors(include_self=True)
         string = ''

@@ -174,6 +174,9 @@ INSTALLED_APPS = [
 PROFILING = False
 PROFILE_FILE = '/dev/null'
 
+# Django debug toolbar
+DEBUG_BAR = False
+
 # Django-social-auth configuration
 SOCIAL_AUTH_BACKENDS = [
     {'title': 'Facebook',

@@ -41,7 +41,7 @@ from orgwolf.preparation import translate_old_text
 from orgwolf.models import OrgWolfUser as User
 from gtd.forms import NodeForm
 from gtd.models import Node, TodoState, node_repeat, Location, Tool, Context, Scope, Contact
-from gtd.shortcuts import parse_url, generate_url, get_todo_states, get_todo_abbrevs, order_nodes
+from gtd.shortcuts import parse_url, generate_url, get_todo_abbrevs, order_nodes
 from gtd.templatetags.gtd_extras import overdue, upcoming, escape_html, add_scope
 
 class EditNode(TestCase):
@@ -913,11 +913,6 @@ class ProjectSublist(TestCase):
 
 class Shortcuts(TestCase):
     fixtures = ['test-users.json', 'gtd-test.json', 'gtd-env.json']
-    def test_gets_states(self):
-        self.assertEqual(
-            list(TodoState.objects.all()),
-            list(get_todo_states()),
-            )
     def test_order_nodes(self):
         """Tests the gtd.shortcuts.order_by_date function."""
         # First make sure the method actual does something
@@ -1525,4 +1520,22 @@ class HTMLEscape(TestCase):
             '<h1>',
             self.f('<h1>')
             )
+
+class DBOptimization(TestCase):
+    """Define and test the optimal database plan for different views"""
+    fixtures = ['test-users.json', 'gtd-test.json', 'gtd-env.json']
+    def setUp(self):
+        self.user = User.objects.get(username='test')
+        self.assertTrue(
+            self.client.login(username='test', password='secret')
+        )
+    def test_display_list(self):
+        response = self.client.get(
+            reverse('gtd.views.list_display')
+        )
+        self.assertNumQueries(
+            6,
+            self.client.get,
+            reverse('gtd.views.list_display'),
+        )
 

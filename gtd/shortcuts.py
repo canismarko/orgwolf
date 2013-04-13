@@ -25,12 +25,6 @@ import re
 
 from gtd.models import TodoState, Context, Scope, Node
 
-def get_todo_states():
-    """Return a list of the "in-play" Todo states."""
-    # TODO: be more selective about returning todo_states
-    todo_states = TodoState.objects.all()
-    return todo_states
-
 def get_todo_abbrevs(todo_state_list=None):
     """Return a list of the TODO State abbreviations corresponding to TodoState models. If a list of TodoState objects is passed, it will use that instead of retrieving a new list. This is recommended to avoid hitting the database unnecessarily."""
     if not todo_state_list:
@@ -70,7 +64,7 @@ def order_nodes(qs, **kwargs):
         order_by=order_by
         )
 
-def parse_url(raw_url, request=None):
+def parse_url(raw_url, request=None, todo_states=None):
     """Detects context, scope and parent information from the url that 
     was requested. Returns the results as a dictionary.
     Note: this function will throw a 404 exception if any unprocessable bits are
@@ -87,7 +81,8 @@ def parse_url(raw_url, request=None):
             )
         raw_url = regex.sub('', raw_url)
     # Find any todo states
-    todo_states = TodoState.get_visible(getattr(request, 'user', None))
+    if todo_states == None:
+        todo_states = TodoState.get_visible(getattr(request, 'user', None))
     todo_abbrevs = get_todo_abbrevs(todo_states)
     todo_states_query = TodoState.objects.none()
     seperator = ''

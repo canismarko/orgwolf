@@ -35,7 +35,7 @@ import json
 
 from mptt.exceptions import InvalidMove
 from gtd.models import TodoState, Node, Context, Scope
-from gtd.shortcuts import parse_url, generate_url, get_todo_states, get_todo_abbrevs, order_nodes
+from gtd.shortcuts import parse_url, generate_url, get_todo_abbrevs, order_nodes
 from gtd.templatetags.gtd_extras import escape_html
 from wolfmail.models import MailItem, Label
 from gtd.forms import NodeForm
@@ -48,11 +48,13 @@ def home(request):
 def list_display(request, url_string=""):
     """Determines which list the user has requested and fetches it."""
     all_todo_states_query = TodoState.get_visible(request.user)
-    all_contexts = Context.get_visible(request.user)
+    # all_contexts = Context.get_visible(request.user)
     all_scope_qs = Scope.objects.all()
-    all_todo_states_json = TodoState.as_json(user=request.user)
+    todo_states = all_todo_states_query
+    list(todo_states)
+    all_todo_states_json = TodoState.as_json(queryset = todo_states)
     todo_states_query = TodoState.objects.none()
-    todo_abbrevs = get_todo_abbrevs(get_todo_states())
+    todo_abbrevs = get_todo_abbrevs(todo_states)
     todo_abbrevs_lc = []
     base_url = reverse('gtd.views.list_display')
     scope_url = base_url # for urls of scope tabs
@@ -102,7 +104,7 @@ def list_display(request, url_string=""):
         request.session['context'] = None
     current_context = request.session['context']
     # Retrieve the context objects based on url
-    url_data = parse_url(url_string, request)
+    url_data = parse_url(url_string, request, todo_states=todo_states)
     if url_data.get('context', False) != False: # `None` indicates context0
         if url_data.get('context') != current_context:
             # User is changing the context
@@ -122,7 +124,7 @@ def list_display(request, url_string=""):
         scope_url += '{0}/'.format(todo_state.abbreviation)
         final_Q = final_Q | Q(todo_state=todo_state)
     scope_url += '{scope}/'
-    nodes = Node.objects.owned(request.user)
+    nodes = Node.objects.owned(request.user).select_related('context', 'todo_state', 'root')
     nodes = nodes.filter(final_Q)
     # Now apply the context
     if current_context:
@@ -166,7 +168,7 @@ def agenda_display(request, date=None):
             new_url = "/gtd/agenda/" + request.POST['date']
             return redirect(new_url)
     deadline_period = 7 # In days # TODO: pull deadline period from user
-    all_nodes_qs = Node.objects.owned(request.user)
+    all_nodes_qs = Node.objects.owned(request.user).select_related('todo_state')
     final_Q = Q()
     if date:
         try:
@@ -183,8 +185,9 @@ def agenda_display(request, date=None):
     date_Q = Q(scheduled__lte=agenda_dt)
     time_specific_Q = Q(scheduled_time_specific=False)
     # TODO: allow user to set todo states
-    hard_Q = Q(todo_state = TodoState.objects.get(abbreviation="HARD"))
-    dfrd_Q = Q(todo_state = TodoState.objects.get(abbreviation="DFRD"))
+    todo_states = TodoState.get_visible(request.user)
+    hard_Q = Q(todo_state = todo_states.get(abbreviation="HARD"))
+    dfrd_Q = Q(todo_state = todo_states.get(abbreviation="DFRD"))
     day_specific_nodes = all_nodes_qs.filter((hard_Q | dfrd_Q), date_Q, time_specific_Q)
     day_specific_nodes = day_specific_nodes.order_by('scheduled')
     time_specific_Q = Q(scheduled_time_specific=True)
@@ -234,7 +237,8 @@ def agenda_display(request, date=None):
         new_dict['repeats'] = node.repeats
         new_dict['hierarchy'] = node.get_hierarchy_as_string()
         deadline_nodes.append(new_dict)
-    all_todo_states_json = TodoState.as_json(user=request.user)
+    all_todo_states_json = TodoState.as_json(queryset=todo_states, 
+                                             user=request.user)
     if request.GET.get('format') == 'json':
         # Render just the table rows for AJAX functionality
         json_data = {'status': 'success'}
