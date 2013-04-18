@@ -17,6 +17,8 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #######################################################################
 
+from django.core.exceptions import ImproperlyConfigured
+
 # Django settings for orgwolf project.
 
 DEBUG = True
@@ -268,8 +270,14 @@ LOGGING = {
 # django-debug-toolbar initialization
 if DEBUG and DEBUG_BAR:
     # List of internal IP's for debug toolbar
-    INTERNAL_IPS = ('127.0.0.1',)
-    MIDDLEWARE_CLASSES.append('debug_toolbar.middleware.DebugToolbarMiddleware')
+    try:
+        INTERNAL_IPS
+    except NameError:
+        raise ImproperlyConfigured(
+            'DEBUG_BAR is True but INTERNAL_IPS is not set.')
+    MIDDLEWARE_CLASSES.insert(
+        0,
+        'debug_toolbar.middleware.DebugToolbarMiddleware')
     INSTALLED_APPS.append('debug_toolbar')
 
 # Profiling

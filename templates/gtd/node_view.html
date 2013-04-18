@@ -172,14 +172,14 @@ $('document').ready(function() {
       <th>Actions</th>
     </tr>
     {% for node in child_nodes_qs %}
-    <tr class="ow-heading" data-node_id="{{ node.id }}" data-title="{{ node.title|escape }}" data-text="{{ node.text|escape }}" data-is_leaf_node="{{ node.is_leaf_node }}" data-todo_id="{{ node.todo_state.pk }}" data-previous_sibling="{{ node.get_previous_sibling.pk }}">
+    <tr class="ow-heading" data-node_id="{{ node.id }}" data-title="{{ node.title|escape }}" data-text="{{ node.text|escape }}" data-is_leaf_node="{{ node.is_leaf_node }}" data-todo_id="{{ node.todo_state.pk }}">
       <td class="ow-todo">{{ node.todo_state.as_html }}</td>
       <td class="ow-title">
-	<a href="{{ base_url }}{{ node.id }}">{{ node.get_title }}</a>
+	<a href="{{ base_url }}{{ node.pk }}">{{ node.get_title }}</a>
       </td>
       <td class="ow-tags">{{ node.tag_string }}</td>
       <td class="ow-move">
-	<form action="{% url 'gtd.views.edit_node' node.id %}" method="POST">
+	  <form action="{{ base_url }}{{ node.pk }}/edit/" method="POST">
 	  <div class="btn-group">
 	    <button class="btn" type="submit" name="move_up"><i class="icon-arrow-up"></i><span class="alt">Up</span></button>
 	    <button class="btn" type="submit" name="move_down"><i class="icon-arrow-down"></i><span class="alt">Down</span></button>

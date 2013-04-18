@@ -35,11 +35,12 @@ import json
 
 from mptt.exceptions import InvalidMove
 from gtd.models import TodoState, Node, Context, Scope
-from gtd.shortcuts import parse_url, generate_url, get_todo_abbrevs, order_nodes
+from gtd.shortcuts import parse_url, generate_url, get_todo_abbrevs, order_nodes, qs_to_dicts
 from gtd.templatetags.gtd_extras import escape_html
 from wolfmail.models import MailItem, Label
 from gtd.forms import NodeForm
 from orgwolf.models import OrgWolfUser as User
+from orgwolf import settings
 
 def home(request):
     pass # Todo GTD/home view
@@ -48,7 +49,6 @@ def home(request):
 def list_display(request, url_string=""):
     """Determines which list the user has requested and fetches it."""
     all_todo_states_query = TodoState.get_visible(request.user)
-    # all_contexts = Context.get_visible(request.user)
     all_scope_qs = Scope.objects.all()
     todo_states = all_todo_states_query
     list(todo_states)
@@ -57,6 +57,7 @@ def list_display(request, url_string=""):
     todo_abbrevs = get_todo_abbrevs(todo_states)
     todo_abbrevs_lc = []
     base_url = reverse('gtd.views.list_display')
+    base_node_url = reverse('gtd.views.display_node')
     scope_url = base_url # for urls of scope tabs
     if url_string == None:
         url_string = ""
@@ -617,17 +618,19 @@ def get_descendants(request, ancestor_pk):
         level = int(offset)-1
     nodes_qs = all_descendants.filter(level=level)
     nodes_qs = nodes_qs & Node.objects.mine(request.user, get_archived=True)
-    nodes = []
-    # Add the node as JSON
-    for node in nodes_qs:
-        nodes.append(node.as_pre_json())
+    nodes = qs_to_dicts(nodes_qs)
     # Meta data
     data = {
         'status': 'success',
         'parent_id': ancestor_pk,
         'nodes': nodes,
         }
-    return HttpResponse(json.dumps(data))
+    if request.is_ajax() or not settings.DEBUG_BAR:
+        return HttpResponse(json.dumps(data))
+    else:
+        return render_to_response('base.html',
+                                  locals(),
+                                  RequestContext(request))
 
 @login_required
 def node_search(request):

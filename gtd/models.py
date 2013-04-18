@@ -75,6 +75,7 @@ class TodoState(models.Model):
         return TodoState.objects.filter(query)
     @staticmethod
     def as_json(queryset=None, full=False, user=None):
+        """Converts a queryset of todo states into a JSON string"""
         new_array = [{'todo_id': 0, 'pk': 0, 'display': '<span class="todo-none">[None]</span>', 'full': ''}]
         if not queryset:
             queryset=TodoState.get_visible(user=user)
@@ -368,13 +369,39 @@ class Node(MPTTModel):
         """Processes the instance into a dictionary that can be
         converted to a JSON string. Output contains a few extra
         attributes for AJAX processing."""
-        new_dict = model_to_dict(self)
+        exclude = []
+        # exclude=['scope',
+        #          'users',
+        #          'related_projects']
+        new_dict = model_to_dict(
+            self,
+            exclude = exclude
+            )
+        # Handle many to many fields
+        # new_dict['scope'] = list(self.scope.values_list('pk', flat=True))
+        # new_dict['users'] = self.users.values_list('pk', flat=True)
+        # new_dict['related_projects'] = self.related_projects.values_list(
+        #     'pk', flat=True
+        #     )
         # Rename some keys
         keys = [('id', 'pk'),
                 ('parent', 'parent_id')]
         for key in keys:
             new_dict[ key[1] ] = new_dict[ key[0] ]
             del new_dict[ key[0] ]
+        # for key in keys:
+        #     if new_dict[ key[0] ]:
+        #         new_dict[ key[1] ] = int(new_dict[ key[0] ])
+        #     else:
+        #         new_dict[ key[1] ] = new_dict[ key[0] ]
+        #     del new_dict[ key[0] ]
+        # # Convert long ints to standard ints for serliaziation
+        # for key in exclude:
+        #     l = new_dict[key]
+        #     d = []
+        #     for pk in l:
+        #         d.append(int(pk))
+        #     new_dict[key] = d
         # Convert parent_id=None to parent_id=0
         if not new_dict['parent_id']:
             new_dict['parent_id'] = 0

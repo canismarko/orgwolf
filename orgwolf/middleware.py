@@ -1,3 +1,7 @@
+import sys
+import cProfile
+from cStringIO import StringIO
+from django.conf import settings
 import re
 
 
@@ -57,11 +61,6 @@ class MobileDetectionMiddleware(object):
                     is_mobile = True
 
         request.is_mobile = is_mobile
-
-import sys
-import cProfile
-from cStringIO import StringIO
-from django.conf import settings
 
 class ProfilerMiddleware(object):
     def process_view(self, request, callback, callback_args, callback_kwargs):

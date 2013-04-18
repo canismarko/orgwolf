@@ -102,27 +102,27 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
     <!-- Column for node todo state -->
     <td class="todo-col">
       <div class="todo-state" todo_id="{{ node.todo_state_id }}">
-	<a href="{% url 'gtd.views.display_node' node_id=node.id %}" title="{#{{ node.get_hierarchy_as_string }}#}">
+	<a href="{{ base_node_url }}{{ node.pk }}" title="{#{{ node.get_hierarchy_as_string }}#}">
 	  {{ node.todo_state.as_html }}
 	</a>
       </div>
     </td>
     <!-- Column for node description -->
     <td>
-      <a href="{% url 'gtd.views.display_node' node_id=node.id %}" title="{#{ node.get_hierarchy_as_string }#}">
+      <a href="{{ base_node_url }}{{ node.pk }}" title="{#{ node.get_hierarchy_as_string }#}">
 	{{ node.get_title }}
       </a>
       {% if node.deadline %}Due {{ node.deadline|upcoming }}{% endif %}
     </td>
     <!-- Column for root level project -->
     <td>
-      <a href="{#% url 'gtd.views.display_node' node_id=node.get_root.pk %#}{% url 'gtd.views.display_node' node_id=node.pk %}" title="{#{ node.get_root.get_hierarchy_as_string }#}">
+      <a href="{{ base_node_url }}{{ node.pk }}" title="{#{ node.get_root.get_hierarchy_as_string }#}">
 	{#{ node.get_root.get_title }#}Coming soon
       </a>
     </td>
     <!-- Column for Node.tag_string -->
     <td>
-      <a href="{% url 'gtd.views.display_node' node_id=node.id %}" title="{#{ node.get_hierarchy_as_string }#}">
+      <a href="{{ base_node_url }}{{ node.pk }}" title="{#{ node.get_hierarchy_as_string }#}">
 	{{ node.tag_string }}
       </a>
     </td>

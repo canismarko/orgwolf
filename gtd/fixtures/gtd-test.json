@@ -24,10 +24,14 @@
         "energy": null, 
         "repeating_number": null, 
         "scheduled": "2012-12-31T10:00:00Z", 
-        "users": [], 
+        "users": [
+	    2
+	], 
         "parent": null, 
         "repeating_unit": null, 
-        "related_projects": [], 
+        "related_projects": [
+	    5
+	], 
         "level": 0, 
         "scheduled_time_specific": false, 
         "repeats_from_completion": false, 

@@ -41,7 +41,7 @@ from orgwolf.preparation import translate_old_text
 from orgwolf.models import OrgWolfUser as User
 from gtd.forms import NodeForm
 from gtd.models import Node, TodoState, node_repeat, Location, Tool, Context, Scope, Contact
-from gtd.shortcuts import parse_url, generate_url, get_todo_abbrevs, order_nodes
+from gtd.shortcuts import parse_url, generate_url, get_todo_abbrevs, order_nodes, qs_to_dicts
 from gtd.templatetags.gtd_extras import overdue, upcoming, escape_html, add_scope
 
 class EditNode(TestCase):
@@ -1072,6 +1072,60 @@ class Shortcuts(TestCase):
             node.is_leaf_node(),
             response_dict['is_leaf_node']
             )
+    def test_qs_to_dicts(self):
+        """Testing for the helper function that converts a queryset of Node
+        objects to a list of dictionary objects."""
+        self.maxDiff = None
+        node = Node.objects.get(pk=1)
+        node_expected = {
+            str('text'): node.text,
+            str('tag_string'): node.tag_string,
+            str('assigned'): node.assigned,
+            'deadline_date': node.deadline.strftime('%Y-%m-%d'),
+            str('owner'): node.owner.pk,
+            'scheduled_time': node.scheduled.strftime('%H:%M:%S'),
+            str('archived'): node.archived,
+            'deadline_time': node.deadline.strftime('%H:%M:%S'),
+            str('title'): node.title,
+            'title_html': node.get_title(),
+            str('time_needed'): node.time_needed,
+            str('priority'): node.priority,
+            'parent_id': getattr(node.parent, 'pk', 0),
+            str('closed'): node.closed.strftime('%a %b %d %H:%M:%S %Y'),
+            str('todo_state'): node.todo_state.pk,
+            str('scope'): node.scope.all().values_list('pk', flat=True),
+            str('energy'): node.energy,
+            str('repeating_number'): node.repeating_number,
+            str('users'): node.users.all().values_list('pk', flat=True),
+            'is_leaf_node': node.is_leaf_node(), 
+            'todo_html': '{0} - {1}'.format(
+                node.todo_state.as_html(),
+                node.todo_state.display_text
+                ), 
+            'todo_abbr': node.todo_state.as_html(),
+            str('repeating_unit'): node.repeating_unit, 
+            'scheduled_date': node.scheduled.strftime('%Y-%m-%d'),
+            'pk': node.pk, 
+            str('related_projects'): node.related_projects.all().values_list(
+                'pk', flat=True),
+            str('scheduled_time_specific'): node.scheduled_time_specific, 
+            str('repeats_from_completion'): node.repeats_from_completion, 
+            str('deadline_time_specific'): node.deadline_time_specific, 
+            str('repeats'): node.repeats,
+            }
+        nodes = Node.objects.all()
+        # Should run 1 query to evaluate nodes and one for each M2M field
+        self.assertNumQueries(2, qs_to_dicts, nodes)
+        node_dict = qs_to_dicts(nodes)[0]
+        # check values of the returned dictionary
+        for key in node_expected.keys():
+            self.assertEqual(
+                str(node_expected[key]),
+                str(node_dict[key]),
+                '{0} not returned correctly. Expected {1}, got {2}'.format(
+                    key, node_expected[key], node_dict[key]
+                    )
+                )
     def test_root_node_as_json(self):
         """Make sure that a root node returns a parent_id of 0
         instead of null"""
@@ -1538,4 +1592,11 @@ class DBOptimization(TestCase):
             self.client.get,
             reverse('gtd.views.list_display'),
         )
-
+    def test_as_pre_json_db(self):
+        node = Node.objects.select_related('todo_state')
+        node = Node.objects.get(pk=1)
+        self.assertNumQueries(
+            0,
+            node.as_pre_json,
+            False
+            )

@@ -17,6 +17,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #######################################################################
 
+from __future__ import unicode_literals
 from django.db import transaction
 from django.db.models.query import QuerySet
 from django.shortcuts import get_object_or_404
@@ -151,3 +152,13 @@ def generate_url(**kwargs):
     if context:
         new_url += 'context{0}/'.format(context.pk)
     return new_url
+
+def qs_to_dicts(qs):
+    """Convert a queryset of Node objects to a list of dict objects suitable
+    for JSON serialization. Some field modification also takes place as needed.
+    NB: This function evaluates the queryset."""
+    out = []
+    qs = qs.select_related('todo_state', 'owner')
+    for node in qs:
+        out.append(node.as_pre_json())
+    return out
