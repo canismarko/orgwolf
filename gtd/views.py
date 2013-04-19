@@ -665,21 +665,30 @@ def node_search(request):
             pages = []
             if page != 1:
                 prev = {'url': search_url.format(page-1),
-                        'display': 'Prev'}
+                        'display': 'Prev',
+                        'icon': 'arrow-l'}
                 pages.append(prev)
-            for x in range(num_pages):
-                page_num = x+1
-                new_page = {
-                    'url': search_url.format(page_num),
-                    'display': page_num
-                }
-                if page_num == page:
-                    new_page['class'] = 'active'
-                    del new_page['url']
-                pages.append(new_page)
+            if request.is_mobile:
+                pages.append({
+                    'url': '#',
+                    'display': 'Page {0} of {1}'.format(page, num_pages)
+                })
+            else:
+                for x in range(num_pages):
+                    page_num = x+1
+                    new_page = {
+                        'url': search_url.format(page_num),
+                        'display': page_num
+                    }
+                    if page_num == page:
+                        new_page['class'] = 'active'
+                        del new_page['url']
+                    pages.append(new_page)
             if page != num_pages:
                 nextt = {'url': search_url.format(page+1),
-                        'display': 'Next'}
+                         'display': 'Next',
+                         'icon': 'arrow-r',
+                         'iconpos': 'right'}
                 pages.append(nextt)
     else:
         query = ''
