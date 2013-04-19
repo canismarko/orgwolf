@@ -5,6 +5,7 @@
 
 {% if query %}
 {% if nodes_found.count > 0 %}
+<h3>Showing results {{ found_range }} of {{ total_found }}</h3>
 <ul data-role="listview">
   {% for node in nodes_found %}
   <li>
@@ -18,6 +19,13 @@
   </li>
   {% endfor %}
 </ul>
+{% if pages %}
+<div data-role="controlgroup" data-type="horizontal" class="center">
+  {% for item in pages %}
+  <a href="{{ item.url }}" data-role="button" data-icon="{{ item.icon }}" data-iconpos="{{ item.iconpos }}">{{ item.display }}</a>
+  {% endfor %}
+</div>
+{% endif %}
 {% else %}
 Sorry, your search did not match any results.
 {% endif %}
