@@ -21,10 +21,22 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 {% block title %}
 Search{% if query %} results for {{ query }}{% endif %}
 {% endblock %}
+
+{% block style %}
+<style type="text/css">
+.form-search, #results-summary
+{
+    position: static;
+    margin-left: 5px;
+}
+</style>
+{% endblock %}
+
 {% block content %}
 
 {% if query %}
 {% if nodes_found.count > 0 %}
+<p id="results-summary">Showing results {{ found_range }} of {{ total_found }}</p>
 {{ nodes_found|nodes_as_hierarchy_table:base_url }}
 {% else %}
 Sorry, your search did not match any results.

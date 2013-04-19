@@ -360,6 +360,8 @@ class Node(MPTTModel):
             delimiter = ' >'
         return string
     def as_html(self):
+        """Return a string representing the todo state and title of this node,
+        properly html escaped."""
         string = ''
         if self.todo_state:
             string += self.todo_state.as_html() + ' '
@@ -448,10 +450,10 @@ class Node(MPTTModel):
         
     # Methods return miscellaneous information
     @staticmethod
-    def search(query, user):
+    def search(query, user, page=0, count=None):
         """Look in columns specified by self.SEARCH_FIELDS for the given query.
         Return a queryset with the results."""
-        qs = Node.objects.mine(user)
+        qs = Node.objects.mine(user).select_related('todo_state')
         # Apply keyword searches.
         def construct_search(field_name):
             if field_name.startswith('^'):
@@ -470,7 +472,11 @@ class Node(MPTTModel):
                 if '__' in field_name:
                     qs = qs.distinct()
                     break
-        return qs
+        # Limit the number of results to the value of `count`
+        total = qs.count()
+        if count:
+            qs = qs[page*count:(page+1)*count]
+        return (qs, total)
     def __str__(self):
         if hasattr(self.todo_state, "abbreviation"):
             return mark_safe("[" + self.todo_state.as_html() + "] " + conditional_escape(self.get_title()))

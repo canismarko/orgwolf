@@ -637,10 +637,25 @@ def node_search(request):
     """Simple search module."""
     if request.GET.has_key('q'):
         query = request.GET['q']
-        nodes_found = Node.search(query, request.user)
+        page = int(request.GET.get('page', 1))-1
+        count = int(request.GET.get('count', 20))
+        results = Node.search(
+            query,
+            request.user,
+            page,
+            count,
+        )
+        nodes_found = results[0]
+        num_found = len(results[0])
+        total_found = results[1]
+        found_range = '{0}-{1}'.format(
+            page*count + 1,
+            page*count + num_found
+        )
     else:
         query = ''
     base_url = reverse('gtd.views.display_node')
+    
     if request.is_mobile:
         template = 'gtd/node_search_m.html'
     else:
