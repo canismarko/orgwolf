@@ -29,6 +29,7 @@ from django.http import HttpResponse, HttpResponseRedirect, Http404, HttpRespons
 from django.db.models import Q
 from django.utils.timezone import get_current_timezone
 from itertools import chain
+import math
 import re
 import datetime
 import json
@@ -637,21 +638,49 @@ def node_search(request):
     """Simple search module."""
     if request.GET.has_key('q'):
         query = request.GET['q']
-        page = int(request.GET.get('page', 1))-1
+        page = int(request.GET.get('page', 1))
         count = int(request.GET.get('count', 20))
         results = Node.search(
             query,
             request.user,
-            page,
+            page-1,
             count,
         )
         nodes_found = results[0]
         num_found = len(results[0])
         total_found = results[1]
+        num_pages = int(math.ceil(total_found/float(count)))
         found_range = '{0}-{1}'.format(
-            page*count + 1,
-            page*count + num_found
+            (page-1)*count + 1,
+            (page-1)*count + num_found
         )
+        # Figure out pagination details
+        search_url = '{0}?q={1}&page={2}&count={3}'.format(
+            reverse('gtd.views.node_search'),
+            query,
+            '{0}',
+            count,
+        )
+        if num_pages > 1:
+            pages = []
+            if page != 1:
+                prev = {'url': search_url.format(page-1),
+                        'display': 'Prev'}
+                pages.append(prev)
+            for x in range(num_pages):
+                page_num = x+1
+                new_page = {
+                    'url': search_url.format(page_num),
+                    'display': page_num
+                }
+                if page_num == page:
+                    new_page['class'] = 'active'
+                    del new_page['url']
+                pages.append(new_page)
+            if page != num_pages:
+                nextt = {'url': search_url.format(page+1),
+                        'display': 'Next'}
+                pages.append(nextt)
     else:
         query = ''
     base_url = reverse('gtd.views.display_node')

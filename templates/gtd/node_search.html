@@ -24,10 +24,10 @@ Search{% if query %} results for {{ query }}{% endif %}
 
 {% block style %}
 <style type="text/css">
-.form-search, #results-summary
+.form-search, #results-summary, .pagination
 {
     position: static;
-    margin-left: 5px;
+    margin-left: 8px;
 }
 </style>
 {% endblock %}
@@ -38,8 +38,18 @@ Search{% if query %} results for {{ query }}{% endif %}
 {% if nodes_found.count > 0 %}
 <p id="results-summary">Showing results {{ found_range }} of {{ total_found }}</p>
 {{ nodes_found|nodes_as_hierarchy_table:base_url }}
+
+{% if pages %}
+<div class="pagination">
+  <ul>
+    {% for page in pages %}
+    <li{% if page.class %} class="{{ page.class }}"{% endif %}><a{% if page.url %} href="{{ page.url }}"{% endif %}>{{ page.display }}</a></li>
+    {% endfor %}
+  </ul>
+</div>
+{% endif %}
 {% else %}
-Sorry, your search did not match any results.
+<p id="results-summary">Sorry, your search did not match any results.</p>
 {% endif %}
 {% endif %}
 
