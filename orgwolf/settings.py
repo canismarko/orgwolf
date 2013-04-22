@@ -179,6 +179,9 @@ PROFILE_FILE = '/dev/null'
 # Django debug toolbar
 DEBUG_BAR = False
 
+# Persona authentication settings
+PERSONA_AUDIENCE = 'http://localhost:8000'
+
 # Django-social-auth configuration
 SOCIAL_AUTH_BACKENDS = [
     {'title': 'Facebook',

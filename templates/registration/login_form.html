@@ -1,16 +1,6 @@
-{% extends 'base.html' %}
 {% load accounts %}
 
-{% block nav %}
-<!-- Navbar disabled on login pages -->
-{% endblock %}
-
-{% block search %}
-<!-- Search box disabled on login pages --> 
-{% endblock %}
-
-{% block content %}
-<table id="login">
+<table id="login" class="login">
   <form action="{% url 'django.contrib.auth.views.login' %}" method="post">
     {{ form.as_table }}
     {% csrf_token %}
@@ -30,4 +20,3 @@
     </tr>
   </form>    
 </table>
-{% endblock %}

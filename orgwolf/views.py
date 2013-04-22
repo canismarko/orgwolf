@@ -20,11 +20,14 @@
 from django.core.urlresolvers import reverse
 from django.shortcuts import render_to_response, redirect
 from django.template import RequestContext
-from django.contrib.auth import authenticate, login
+from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.forms import AuthenticationForm
 from django.contrib.auth.hashers import is_password_usable
 from django.contrib.auth.decorators import login_required
+from django.http import HttpResponse
 from datetime import datetime
+import json
+import urllib
 
 from orgwolf import settings
 from orgwolf.models import OrgWolfUser as User
@@ -163,6 +166,48 @@ def change_password(request):
         return render_to_response('registration/password.html',
                                   locals(),
                                   RequestContext(request))
+
+def persona_login(request):
+    """Authenticates a user based on the persona library by Mozilla."""
+    # First validate assertiong with identifer
+    data = {'audience': settings.PERSONA_AUDIENCE,
+            'assertion': request.POST['assertion'] }
+    r = urllib.urlopen(
+        'https://verifier.login.persona.org/verify',
+        urllib.urlencode(data)
+    )
+    r = json.loads( r.read() )
+    if r['status'] == 'okay':
+        # Persona login succeeded
+        users = User.objects.filter(email=r['email'])
+        if len(users) == 1:
+            # Existing user
+            user = users[0]
+        elif len(users) == 0:
+            # Create new user
+            user = User()
+            user.home = 'orgwolf.views.home'
+            user.email = r['email']
+            user.username = r['email']
+            user.password = '!'
+            user.save()
+        else:
+            # Ambiguous e-mail address, multiple users
+            r['status'] = 'failure'
+            r['reason'] = 'multiple users with email'
+        if r['status'] == 'okay':
+            # Now login
+            user.backend = 'django.contrib.auth.backends.ModelBackend'
+            login(request, user)
+            r['next'] = reverse(user.home)
+    response = HttpResponse(json.dumps(r))
+    if r['status'] == 'failure':
+        response.status_code = 400
+    return response
+
+def persona_logout(request):
+    logout(request)
+    return response
 
 def jstest(request):
     """Executes the javascript test runner (QUnit).

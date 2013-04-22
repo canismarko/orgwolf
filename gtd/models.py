@@ -102,8 +102,9 @@ class TodoState(models.Model):
 @python_2_unicode_compatible
 class Tag(models.Model):
     display = models.CharField(max_length=100)
-    tag_string = models.CharField(max_length=10)
-    owner = models.ForeignKey(settings.AUTH_USER_MODEL, blank=True, null=True) # no owner means built-in tag
+    tag_string = models.CharField(max_length=10, unique=True)
+    # user that created this tag (no owner means built-in tag)
+    owner = models.ForeignKey(settings.AUTH_USER_MODEL, blank=True, null=True)
     public = models.BooleanField(default=True)
     def __str__(self):
         return self.display
@@ -215,8 +216,8 @@ class NodeManager(TreeManager):
         else:
             qs = Node.objects.filter(archived=False)
         owned = Q(owner=user)
-        assigned = Q(assigned=user)
-        qs = qs.filter(owned | assigned)
+        others = Q(users=user)
+        qs = qs.filter(owned | others)
         return qs
     def owned(self, user, get_archived=False):
         """Get all the objects owned by the user with some optional 
@@ -439,8 +440,11 @@ class Node(MPTTModel):
         return json.dumps(self.as_pre_json())
     def get_tags(self):
         tag_strings = self.tag_string.split(":")
-        tag_string = tag_strings[1:len(tag_strings)-1] # Get rid of the empty first and last elements
-        tags_qs = Tag.objects.all()
+        tag_strings = tag_strings[1:len(tag_strings)-1] # Get rid of the empty first and last elements
+        if len(tag_strings) > 0:
+            tags_qs = Tag.objects.all()
+        else:
+            tags_qs = Tag.objects.none()
         # Build and return a Q filter
         tag_Q = Q()
         for tag_string in tag_strings:

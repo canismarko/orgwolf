@@ -5,6 +5,7 @@
 @primary-light: rgb(127, 100, 214);
 @primary-pale: rgb(155, 136, 214);
 
+
 /* Navar */
 #logo.brand
 {
@@ -66,6 +67,32 @@ b {
 {
     position: absolute;
     right: 15px;
+}
+
+/* Loading indicators */
+.fullscreen() {
+    position: fixed;
+    top: 0;
+    left: 0;
+    height: 100%;
+    width: 100%;
+}
+#loading
+{
+    display: none;
+    .fullscreen();
+    cursor: wait;
+    z-index: 999;
+    #dark{
+	.fullscreen();
+	background-color: black;
+	.opacify(17);
+    }
+    #spinner{
+	position: fixed;
+	left: 50%;
+	top: 50%;
+    }
 }
 /* Registration */
 a.btn-auth
