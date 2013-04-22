@@ -639,7 +639,7 @@ def node_search(request):
     if request.GET.has_key('q'):
         query = request.GET['q']
         page = int(request.GET.get('page', 1))
-        count = int(request.GET.get('count', 20))
+        count = int(request.GET.get('count', 50))
         results = Node.search(
             query,
             request.user,
