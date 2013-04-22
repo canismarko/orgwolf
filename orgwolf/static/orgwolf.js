@@ -1,6 +1,7 @@
 /*globals $, jQuery, document, Aloha, window */
 "use strict";
 var attach_pickers, validate_node, GtdHeading;
+
 // Function validates a form based on data-validate attribute
 validate_node = function ($form) {
     var NOTBLANK_RE, NOTINT_RE, success, reset_form, s, bits, d, t;
@@ -90,6 +91,41 @@ validate_node = function ($form) {
     });
     return success;
 };
+
+function ow_waiting(cmd, callback) {
+    // Displays an image that informs that user that 
+    // something is going on in the background.
+    console.log('waiting');
+    var $loading, $mask, $spinner;
+    var $loading = $('#loading')
+    if ( cmd === 'clear' ) {
+	$loading.fadeOut();
+    } else {
+	$mask = $loading.find('#mask');
+	$mask.hide();
+	$loading.show(callback);
+	// Displays the longer waiting time "spinner" icon
+	if ( cmd === 'spinner' ) {
+	    $mask.fadeIn();
+	}
+    }
+};
+var persona_user = undefined
+// Create the loading mask for later use
+$(document).ready(function() {
+    var $loading, $mask;
+    $('body').prepend('<div id="loading"></div>')
+    $loading = $('#loading');
+    $loading.hide();
+    $loading.append(
+	'<div id="mask"></div>'
+    );
+    $mask = $loading.find('#mask');
+    $mask.append('<div id="dark"></div>');
+    $mask.append(
+	'<img id="spinner" alt="loading" src="/static/ajax-loader.gif"></img>'
+    );
+});
 
 function repeating_toggle(selector, $target) {
     if ($target.find(selector).prop('checked')) {
@@ -686,17 +722,24 @@ GtdHeading.prototype.as_html = function() {
     var new_string = '';
     new_string += '<div class="heading" node_id="' + this.pk + '">\n';
     new_string += '  <div class="ow-hoverable">\n';
-    new_string += '    <i class="twisty clickable ' + GtdHeading.ICON + '"></i>\n';
+    new_string += 
+    '    <i class="twisty clickable ' + GtdHeading.ICON + '"></i>\n';
     // Todo state
-    new_string += '    <span class="todo-state update" data-field="todo_abbr"></span>\n';
+    new_string += 
+    '    <span class="todo-state update" data-field="todo_abbr"></span>\n';
     // title
     new_string += '    <div class="clickable ow-title"></div>\n';
     // Quick-action buttons
     new_string += '    <div class="ow-buttons">\n';
-    new_string += '      <i class="icon-pencil edit-btn" title="Edit"></i>\n';		    
-    new_string += '      <i class="icon-arrow-right detail-btn" title="Detail view"></i>\n';
-    new_string += '      <i class="icon-folder-close archive-btn" title="Archive / Unarchive"></i>\n';
-    new_string += '      <i class="icon-plus new-btn" title="New subheading"></i>\n';
+    new_string += '      <i class="icon-pencil edit-btn" title="Edit"></i>\n';
+    new_string += '      <i class="icon-th-list list-btn" ' + 
+	'title="View As List"></i>\n';
+    new_string += '      <i class="icon-arrow-right detail-btn" ' + 
+	'title="Detail view"></i>\n';
+    new_string += '      <i class="icon-folder-close archive-btn" ' + 
+	'title="Archive / Unarchive"></i>\n';
+    new_string += '      <i class="icon-plus new-btn" ' + 
+	'title="New subheading"></i>\n';
     new_string += '    </div>\n';
     new_string += '  </div>\n';
     // Child containers
@@ -782,8 +825,11 @@ GtdHeading.prototype.create_div = function( $target ) {
 	this.$clickable.click(function() {
 	    heading.toggle();
 	});
-	this.$buttons.find('.icon-arrow-right').click( function() {
+	this.$buttons.find('.detail-btn').click( function() {
 	    window.location = '/gtd/node/' + node_id + '/';
+	});
+	this.$buttons.find('.list-btn').click( function() {
+	    window.location = '/gtd/lists/parent' + node_id + '/';
 	});
 	this.$buttons.find('.edit-btn').click( function() {
 	    // Modal dialog for editing this heading
@@ -931,9 +977,15 @@ GtdHeading.prototype.has_scope = function(pk) {
 
 // Read the current object properties and update the
 //   DOM element to reflect any changes
-GtdHeading.prototype.redraw = function() {
+GtdHeading.prototype.redraw = function(options) {
     // Test the various parts and update them as necessary
     //   then call redraw on all children
+    if ( typeof options === 'undefined' ) {
+	options = {}
+    }
+    if ( typeof options.level === 'undefined' ) {
+	options.level = 0;
+    }
     var todo_state, heading, children, i, new_title, $archbtn;
     this.set_selectors();
     this.create_div();
@@ -1052,7 +1104,10 @@ GtdHeading.prototype.redraw = function() {
 	{parent_id: this.pk}
     );
     for ( i=0; i < children.length; i += 1 ) {
-	children[i].redraw();
+	children[i].redraw({level: options.level + 1});
+    }
+    if ( typeof options.callback !== 'undefined' ) {
+	options.callback();
     }
 };
 
@@ -1423,7 +1478,7 @@ GtdHeading.prototype.toggle = function( direction ) {
 		// Activate a scope
 		workspace.redraw();
 		workspace.scopes.activate(0);
-		// Add some utility buttons at the end
+		// Add utility buttons at the beginning and end
 		h = '';
 		h += '<div class="ow-buttons" id="add-heading">\n';
 		h += '  <i class="icon-plus-sign"></i>Add Heading\n';
@@ -1432,16 +1487,17 @@ GtdHeading.prototype.toggle = function( direction ) {
 		h += '<label class="checkbox" id="show-all-label">\n';
 		h += '  <input class="ow-buttons show-all" type="checkbox">';
 		h += '  </input>Show archived</label>\n';
-		workspace.$children.append(h);
+		workspace.$children.before(h);
 		// Archived checkbox toggles visibility of archived nodes
 		workspace.$showall = $this.find('.show-all');
 		workspace.$showall.bind('change.show-all', function (e) {
-		    if ( workspace.show_all ) {
-			workspace.show_all = false;
-		    } else {
-			workspace.show_all = true;
-		    }
-		    workspace.redraw();
+		    ow_waiting('cursor', function() {
+			workspace.show_all = ! workspace.show_all;
+			workspace.$showall.prop('checked', workspace.show_all);
+			workspace.redraw( {callback: function() {
+			    ow_waiting('clear');
+			}});
+		    });
 		});
 		workspace.$add = $this.find('#add-heading');
 		// Retrieve the node edit modal form
@@ -1672,13 +1728,17 @@ GtdHeading.prototype.toggle = function( direction ) {
 		data.on_modal = args.on_modal;
 		data.$target = $target;
 		toggle = function() {
-		    var heading, s, $scope, i, $project, clear_text, clear_select, clear_check, f, scopes, related_projects, $projects;
+		    var heading, s, $scope, $header, $title, i, $project, clear_text, clear_select, clear_check, f, scopes, related_projects, $projects;
 		    if ( data.heading ) {
 			// Set current values based on existing heading
 			heading = data.heading;
-			data.$modal.find('.header-title').html(
-			    'Edit "' + heading.title_html + '"');
-			data.$modal.find('#id_title').val(heading.title);
+			$header = data.$modal.find('.header-title');
+			$title = data.$modal.find('#id_title');
+			$header.html(heading.title);
+			$title.val($header.text());
+			$header.html(
+			    'Edit "' + heading.title_html + '"'
+			);
 			data.$modal.find('#id_text').val(heading.text);
 			data.$modal.find('#id_text-aloha').html(heading.text);
 			data.$modal.find('#id_tag_string').val(heading.tag_string);

@@ -27,12 +27,9 @@ from HTMLParser import HTMLParser
 class OrgWolfUser(AbstractUser):
     """Holds profile information for users."""
     preferred_timezone = models.CharField(max_length=25, blank=True)
-    home = models.CharField(max_length=100)
+    home = models.CharField(max_length=100, default='orgwolf.views.home')
     def get_display(self):
-        # if self.first_name or self.last_name:
-        #     return self.get_full_name()
-        # else:
-        #     return self.username
+        """How should this user be shown to others"""
         full_name = self.get_full_name()
         if full_name:
             display = full_name

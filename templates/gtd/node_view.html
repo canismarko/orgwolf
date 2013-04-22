@@ -31,6 +31,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 {
     cursor: pointer;
 }
+dl
+{
+    margin-bottom: 0px;
+}
 </style>
 {% endblock %}
 {% block script %}
@@ -38,6 +42,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 {{ block.super }}
 <script>
 $('document').ready(function() {
+    // Hide non-JS elements
+    $('#add-node').remove();
+    $('#todo-buttons').remove();
     // Aloha text editor
     Aloha.ready(function() {
     	$('#parent-text').alohaText();
@@ -134,22 +141,14 @@ $('document').ready(function() {
 	</div>
       </dd>
     </dl>
-    <a href="new/" class="btn"><i class="icon-plus"></i>&nbsp;New Node</a>
+    <a href="new/" class="btn" id="add-node"><i class="icon-plus"></i>&nbsp;New Node</a>
     {% else %}
-    <a href="new/" class="btn"><i class="icon-plus"></i>&nbsp;New Project</a>
+    <a href="new/" class="btn" id="add-node"><i class="icon-plus"></i>&nbsp;New Project</a>
     {% endif %}{# if parent_node #}
     </span>
 </div><!-- /div id="node-detail"-->
 <br />
 
-
-{# List of child nodes as links #}
-<div id="node-workspace">
-  <!-- Used as a place to put twisty drop downs of all Nodes.  -->
-  <!-- Populated with javascript -->
-</div>
-
-{% if child_nodes_qs %}
 <div id="outline-workspace" data-node_id="{{ node_id }}">
 {% include 'gtd/scope_tabs.html' %}
   <strong>
@@ -192,5 +191,5 @@ $('document').ready(function() {
     {% endfor %}
   </table>
 </div><!-- /div id="outline-workspace" -->
-{% endif %}
+
 {% endblock %}
