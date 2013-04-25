@@ -1562,7 +1562,7 @@ GtdHeading.prototype.toggle = function( direction ) {
 
 (function( $ ) {
     $.fn.agenda = function(options) {
-	var $form, $text, $agenda, data, get_date, now, today, update_agenda;
+	var $form, $text, $agenda, data, get_date, now, today, update_agenda, add_todo_plugin;
 	$form = this.find('form.date');
 	$text = $form.find('input[name="date"][type="text"]');
 	$agenda = this;
@@ -1615,6 +1615,7 @@ GtdHeading.prototype.toggle = function( direction ) {
 		    date_string += data.date.getDate() + ', ';
 		    date_string += data.date.getFullYear();
 		    $agenda.children('.date:header').html(date_string);
+		    add_todo_plugin();
 		}
 	    });
 	};
@@ -1633,16 +1634,19 @@ GtdHeading.prototype.toggle = function( direction ) {
 	    return false;
 	});
 	// Quick-change todo states
-	$agenda.find('.todo-state').each(function() {
-	    var node_id = $(this).parent().attr('node_id');
-	    $(this).todoState({
-		states: data.states,
-		node_id: node_id,
-		click: function() {
-		    update_agenda();
-		}
+	add_todo_plugin = function() {
+	    $agenda.find('.todo-state').each(function() {
+		var node_id = $(this).parent().attr('node_id');
+		$(this).todoState({
+		    states: data.states,
+		    node_id: node_id,
+		    click: function() {
+			update_agenda();
+		    }
+		});
 	    });
-	});
+	};
+	add_todo_plugin();
 	return this;
     };
 }(jQuery));
@@ -1878,7 +1882,7 @@ GtdHeading.prototype.toggle = function( direction ) {
 			// Handle submission of the form
 			e.preventDefault();
 			payload = $form.serialize();
-			payload += '&format=json&auto_repeat=false';
+			payload += '&format=json&auto_update=false';
 			saved_url = data.$modal.find('#edit_url').val();
 			if ( saved_url ) {
 			    submit_url = saved_url;

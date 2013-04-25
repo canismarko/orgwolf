@@ -34,6 +34,7 @@ from django.utils.html import conditional_escape
 from django.contrib.auth.models import AnonymousUser
 from django.http import Http404
 from django.utils.timezone import get_current_timezone
+from django.views.generic import View
 import re
 import json
 
@@ -43,6 +44,7 @@ from gtd.forms import NodeForm
 from gtd.models import Node, TodoState, node_repeat, Location, Tool, Context, Scope, Contact
 from gtd.shortcuts import parse_url, generate_url, get_todo_abbrevs, order_nodes, qs_to_dicts
 from gtd.templatetags.gtd_extras import overdue, upcoming, escape_html, add_scope
+from gtd.views import Descendants
 
 class EditNode(TestCase):
     fixtures = ['test-users.json', 'gtd-test.json', 'gtd-env.json']
@@ -200,7 +202,7 @@ class EditNode(TestCase):
             )
 
     def test_edit_autorepeat_by_json(self):
-        """Tests changing a repeating node by JSON with auto_repeat off"""
+        """Tests changing a repeating node by JSON with auto_update off"""
         node = Node.objects.get(pk=6)
         old_state = node.todo_state
         new_state = TodoState.objects.get(pk=3)
@@ -214,7 +216,7 @@ class EditNode(TestCase):
         url = reverse('gtd.views.edit_node', kwargs={'node_id': node.pk})
         payload = {
             'format': 'json',
-            'auto_repeat': 'false',
+            'auto_update': 'false',
             'todo_id': new_state.pk,
             }
         self.client.post(
@@ -370,6 +372,7 @@ class EditNode(TestCase):
         data['scheduled'] = ''
         data['deadline'] = ''
         data['todo_state'] = 0
+        del data['related_projects']
         response = self.client.post(
             url, data,
             HTTP_X_REQUESTED_WITH='XMLHttpRequest',
@@ -649,13 +652,14 @@ class NodeArchive(TestCase):
     fixtures = ['test-users.json', 'gtd-test.json', 'gtd-env.json']
     def test_auto_archive(self):
         """Test that a node being closed gets auto archived"""
-        node = Node.objects.get(pk=5)
+        node = Node.objects.get(pk=11)
         self.assertFalse(node.archived)
         self.assertFalse(node.todo_state.closed)
         done = TodoState.objects.get(pk=3)
         node.todo_state = done
+        node.auto_update = True
         node.save()
-        node = Node.objects.get(pk=5)
+        node = Node.objects.get(pk=11)
         self.assertTrue(node.todo_state.closed)
         self.assertTrue(node.archived)
 
@@ -669,7 +673,7 @@ class RepeatingNodeTest(TestCase):
         self.assertTrue(node.repeats)
         # Close the node
         node.todo_state = closed
-        node.auto_repeat = True
+        node.auto_update = True
         node.save()
         node = Node.objects.get(title='Buy cat food')
         # The state shouldn't actually change since it's repeating
@@ -686,7 +690,7 @@ class RepeatingNodeTest(TestCase):
         node.scheduled = old_date
         node.save()
         node.todo_state=closed
-        node.auto_repeat = True
+        node.auto_update = True
         node.save()
         self.assertFalse(node.is_closed())
         new_date = dt.datetime(2013, 1, 3, tzinfo=get_current_timezone())
@@ -729,7 +733,7 @@ class RepeatingNodeTest(TestCase):
         node.scheduled = old_date
         node.save()
         node.todo_state=closed
-        node.auto_repeat = True
+        node.auto_update = True
         node.save()
         self.assertFalse(node.is_closed())
         new_date = dt.datetime(2013, 9, 30, tzinfo=get_current_timezone())
@@ -755,7 +759,7 @@ class RepeatingNodeTest(TestCase):
         node.save()
         self.assertTrue(node.todo_state.actionable)
         node.todo_state = closed
-        node.auto_repeat = True
+        node.auto_update = True
         node.save()
         self.assertEqual(dt.datetime(2012, 12, 25, 0, 0, tzinfo=get_current_timezone()),
                          node.scheduled)
@@ -1263,7 +1267,7 @@ class UrlGenerate(TestCase):
             generate_url.__class__.__name__
             )
         self.assertTrue(
-            isinstance(generate_url(), str),
+            isinstance(generate_url(), unicode),
             'generate_url() did not return string. Got {0}'.format(
                 generate_url().__class__
                 )
@@ -1412,9 +1416,10 @@ class MultiUser(TestCase):
         self.assertTrue(
             len(results) > 0,
             )
+        # Should match nodes where user2 is in owner or users
         for node in results:
             self.assertTrue(
-                node.owner == self.user2 or node.assigned.user == self.user2,
+                node.owner == self.user2 or self.user2 in node.users.all(),
                 'Node {0} not related to {1}'.format(
                     node, self.user2)
                 )
@@ -1598,5 +1603,29 @@ class DBOptimization(TestCase):
         self.assertNumQueries(
             0,
             node.as_pre_json,
-            False
             )
+
+class DescendantsAPI(TestCase):
+    """Tests for getting a list of descendants of a given node
+    of varying levels."""
+    fixtures = ['test-users.json', 'gtd-test.json', 'gtd-env.json']
+    def setUp(self):
+        self.url = reverse('gtd.views.get_descendants', 
+                           kwargs={'ancestor_pk': 1})
+        self.assertTrue(
+            self.client.login(username='test', password='secret')
+        )
+    def test_basic_view_behavior(self):
+        """Make sure that the view uses the class based system"""
+        desc_view = Descendants()
+        self.assertTrue(
+            isinstance(desc_view, View),
+            u'Descendants is not a subclass of generic View'
+        )
+        response = self.client.get(self.url)
+        self.assertEqual(
+            200,
+            response.status_code,
+        )
+    def test_return_offset1(self):
+        pass

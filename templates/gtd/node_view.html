@@ -94,14 +94,18 @@ $('document').ready(function() {
 {% block content %}
 
 <div id="node-detail">
-{# Breadcrumb trail #}
-    <a href="{{ base_url }}">Project List</a>
-    {% for node in breadcrumb_list %}&gt;
-    <a href="{{ base_url }}{{node.pk}}/"{% if node.pk = parent_node.pk %} class="update" data-field="title"{% endif %}>{{ node.get_title }}</a>
-{% endfor %}
+  {# Breadcrumb trail #}
+  {% for node in breadcrumb_list %}{% if forloop.first %}&nbsp;{% else %}&gt;{% endif %}
+  {% if forloop.last %}
+  <span class="update" data-field="title">{{ node.get_title }}</span>
+  {% else %}
+  <a href="{{ base_url }}{{node.pk}}/">{{ node.get_title }}</a>
+  {% endif %}
+  {% endfor %}
 
-    <h3 class="update" data-field="title">{{ parent_node.get_title }}</h3>
-    {% if node_id %}
+  <h3 class="update" data-field="title">{{ parent_node.get_title }}</h3>
+
+  {% if node_id %}
   <form action="edit/" method="POST">
     <div class="btn-toolbar" id="todo-buttons" node_id="{{ parent_node.pk }}">
       <div class="btn-group">

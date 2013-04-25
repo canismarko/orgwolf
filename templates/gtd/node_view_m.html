@@ -9,7 +9,16 @@
 {% block content %}
   <div data-role="content">
     {% for node in breadcrumb_list %}
-    &gt; {{ node.as_html }}
+    {% if forloop.first %}
+    &nbsp;
+    {% else %}
+    &gt;
+    {% endif %}
+    {% if forloop.last %}
+    {{ node.as_html }}
+    {% else %}
+    <a href="{{ base_url }}{{ node.pk }}/">{{ node.as_html }}</a>
+    {% endif %}
     {% endfor %}
     <ul data-role="listview" data-inset="true">
       {% if parent_node %}
