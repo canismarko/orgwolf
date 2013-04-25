@@ -77,7 +77,6 @@ var node8 = {
     tag_string: ':work:',
     is_leaf_node: true,
 };
-console.log($);
 $.mockjax({
     url: '/gtd/node/1/descendants/',
     responseTime: ajax_timer,

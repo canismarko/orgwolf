@@ -116,7 +116,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
     <!-- Column for root level project -->
     <td>
       <a href="{{ base_node_url }}{{ node.pk }}" title="Project: {#{ node.get_root.get_hierarchy_as_string }#}">
-	{#{ node.get_root.get_title }#}Coming soon
+	{#{ node.get_root.get_title }#}{{ node.electric }}
       </a>
     </td>
     <!-- Column for Node.tag_string -->
@@ -132,5 +132,4 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 {# No nodes matched so display an error message #}
 <h4>No items matched your criteria. Please change filters and resubmit.</h4>
 {% endif %}
-{% debug %}
 {% endblock %}

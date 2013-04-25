@@ -1,8 +1,11 @@
+/*globals $, jQuery, document, Aloha, window, navigator, persona_user, ow_waiting, alert */
+"use strict";
 $(document).ready(function() {
     // Rearrange to the login windows to show persona login
-    var $login = $('.login');
+    var $login, $btn;
+    $login = $('.login');
     $login.after(
-  	'<a href="#" class="persona-button"><span>Sign in with your Email</span></a>'
+	'<a href="#" class="persona-button"><span>Sign in with your Email</span></a>'
     );
     $btn = $login.next('a.persona-button');
     $login.remove();
@@ -48,5 +51,5 @@ $(document).ready(function() {
 	    });
 	}
     });
-})
+});
     

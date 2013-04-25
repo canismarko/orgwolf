@@ -24,6 +24,7 @@ from django.forms.models import model_to_dict
 from django.shortcuts import render_to_response, redirect, get_object_or_404
 from django.template import RequestContext
 from django.template.loader import render_to_string
+from django.views.generic import View
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponse, HttpResponseRedirect, Http404, HttpResponseBadRequest
 from django.db.models import Q
@@ -59,7 +60,10 @@ def list_display(request, url_string=""):
     todo_abbrevs_lc = []
     base_url = reverse('gtd.views.list_display')
     base_node_url = reverse('gtd.views.display_node')
-    scope_url = base_url # for urls of scope tabs
+    list_url = base_url
+    list_url += '{parent}{states}{scope}{context}'
+    scope_url_data = {}
+    # scope_url = base_url # for urls of scope tabs
     if url_string == None:
         url_string = ""
     for todo_abbrev in todo_abbrevs:
@@ -95,7 +99,7 @@ def list_display(request, url_string=""):
         if parent:
             new_url += 'parent{0}/'.format(parent.pk)
         for todo_state in matched_todo_states:
-           new_url += todo_state.abbreviation.lower() + '/'
+            new_url += todo_state.abbreviation.lower() + '/'
         if new_scope_id > 0:
             new_url += 'scope' + str(new_scope_id) + '/'
         if new_context_id > 0:
@@ -122,15 +126,22 @@ def list_display(request, url_string=""):
     # Filter by todo state (use of Q() objects means we only hit database once
     final_Q = Q()
     todo_states_query = url_data.get('todo_states', [])
+    todo_string = ''
     for todo_state in todo_states_query:
-        scope_url += '{0}/'.format(todo_state.abbreviation)
+        todo_string += '{0}/'.format(todo_state.abbreviation.lower())
         final_Q = final_Q | Q(todo_state=todo_state)
-    scope_url += '{scope}/'
-    nodes = Node.objects.owned(request.user).select_related('context', 'todo_state', 'root')
+    scope_url_data['states'] = todo_string
+    nodes = Node.objects.owned(request.user).select_related(
+        'context', 'todo_state', 'root'
+    )
     nodes = nodes.filter(final_Q)
     # Now apply the context
     if current_context:
-        scope_url += 'context{0}/'.format(current_context.pk)
+        scope_url_data['context'] = 'context{0}/'.format(
+            current_context.pk
+        )
+    else:
+        scope_url_data['context'] = ''
     try:
         nodes = current_context.apply(nodes)
     except AttributeError:
@@ -146,8 +157,22 @@ def list_display(request, url_string=""):
     parent = url_data.get('parent')
     if parent:
         nodes = nodes & parent.get_descendants(include_self=True)
+        scope_url_data['parent'] = 'parent{0}/'.format(parent.pk)
+    else:
+        scope_url_data['parent'] = ''
     # Put nodes with deadlines first
     nodes = order_nodes(nodes, field='deadline', context=current_context)
+    # -------------------- Queryset evaluated --------------------
+    # Add a field for the root node
+    for node in nodes:
+        node.electric = 'forest'
+    # Prepare the URL for use in the scope tabs
+    scope_url = list_url.format(
+        context = scope_url_data['context'],
+        scope = '{scope}/',
+        states = scope_url_data['states'],
+        parent = scope_url_data['parent'],
+    )
     # And serve response
     if request.is_mobile:
         template = 'gtd/gtd_list_m.html'
@@ -377,8 +402,8 @@ def edit_node(request, node_id, scope_id):
                 post.pop('todo_state')
             form = NodeForm(post, instance=node)
             if form.is_valid():
-                if post.get('auto_repeat') == 'false':
-                    form.auto_repeat = False
+                if post.get('auto_update') == 'false':
+                    form.auto_update = False
                 form.save()
                 node = Node.objects.get(pk=node.pk)
                 # Prepare the response
@@ -407,10 +432,10 @@ def edit_node(request, node_id, scope_id):
                 except TodoState.DoesNotExist:
                     return HttpResponseBadRequest('Invalid todo_id: %s' % new_todo_id)
             # auto_repeat
-            if post.get('auto_repeat') == 'false':
-                node.auto_repeat = False
+            if post.get('auto_update') == 'false':
+                node.auto_update = False
             else:
-                node.auto_repeat = True
+                node.auto_update = True
             # archived
             archived = post.get('archived')
             if archived == 'true':
@@ -455,7 +480,7 @@ def edit_node(request, node_id, scope_id):
             node.todo_state = None
         else:
             node.todo_state = TodoState.objects.get(pk=new_todo_id)
-        node.auto_repeat = True
+        node.auto_update = True
         node.save()
         todo_state = node.todo_state
         url_kwargs['node_id'] = node.pk
@@ -602,6 +627,11 @@ def new_node(request, node_id, scope_id):
     return render_to_response('gtd/node_edit.html',
                               locals(),
                               RequestContext(request))
+
+class Descendants(View):
+    """Manages the retrieval of descendants of a given node"""
+    def get(self, request, *args, **kwargs):
+        return HttpResponse()
 
 @login_required
 def get_descendants(request, ancestor_pk):

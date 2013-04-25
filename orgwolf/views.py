@@ -179,7 +179,7 @@ def persona_login(request):
     r = json.loads( r.read() )
     if r['status'] == 'okay':
         # Persona login succeeded
-        users = User.objects.filter(email=r['email'])
+        users = User.objects.filter(username=r['email'])
         if len(users) == 1:
             # Existing user
             user = users[0]

@@ -36,9 +36,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 {# Breadcrumb trail #}
 {% block content %}
-<a href="{{ base_url }}">Project List</a>
-{% for node in breadcrumb_list %}&gt;
-  <a href="{{ base_url }}{{ node.id }}/">{{node.display}}</a>
+{% for node in breadcrumb_list %}{% if forloop.first %}&nbsp;{% else %}&gt;{% endif %}
+  <a href="{{ base_url }}{{ node.id }}/">{{ node.get_title }}</a>
 {% endfor %}
 {% if new = "Yes" %}
   &gt; New Node
@@ -57,8 +56,15 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 <input type="submit" value="Save &amp; Add New" name="add-another" class="btn"/>
 {% endif %}
 <a href="../" class="btn">Cancel</a>
+<br />
 <table>
 {{ form.as_table }}
 </table>
+<br />
+<input type="submit" value="Save" class="btn btn-primary"/>
+{% if new == "Yes" %}
+<input type="submit" value="Save &amp; Add New" name="add-another" class="btn"/>
+{% endif %}
+<a href="../" class="btn">Cancel</a>
 </form>
 {% endblock %}

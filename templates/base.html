@@ -1,49 +1,49 @@
 {% load gtd_extras %}
 {% comment %}
-Copyright 2012 Mark Wolf
+  Copyright 2012 Mark Wolf
 
-This file is part of OrgWolf.
+  This file is part of OrgWolf.
 
-OrgWolf is free software: you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation, either version 3 of the License, or
-(at your option) any later version.
+  OrgWolf is free software: you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation, either version 3 of the License, or
+  (at your option) any later version.
 
-This program is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.
+  This program is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
 
-You should have received a copy of the GNU General Public License
-along with this program.  If not, see <http://www.gnu.org/licenses/>.
+  You should have received a copy of the GNU General Public License
+  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 {% endcomment %}
 <!DOCTYPE html>
 <html lang="en" xmlns="http://www.w3.org/1999/xhtml">
   <head>
-    <title>{% block title%}TODO: implement title{% endblock %}</title>
+    <title>
+      {% block title%}TODO: implement title{% endblock %}
+    </title>
     {% if debug %}
-    <link rel="icon"
-	  type="image/png"
-	  href="{{ STATIC_URL }}orgwolf-icon-debug.png" />
+      <link rel="icon"
+	    type="image/png"
+	    href="{{ STATIC_URL }}orgwolf-icon-debug.png" />
     {% else %}
-    <link rel="icon"
-	  type="image/png"
-	  href="{{ STATIC_URL }}orgwolf-icon.ico" />
+      <link rel="icon"
+	    type="image/png"
+	    href="{{ STATIC_URL }}orgwolf-icon.ico" />	    
     {% endif %}
     {% if enable_css %}
-    {% block all_style %}
+      {% block all_style %}
 
-    {% if local_net %}
-    <link rel="stylesheet" type="text/css" 
-	  href="{{ STATIC_URL }}bootstrap/css/bootstrap.css" />
-    <link rel="stylesheet" type="text/css" 
-	  href="{{ STATIC_URL }}aloha/css/aloha.css" />
-    {% else %}
-    <link rel="stylesheet" type="text/css" 
-	  href="//netdna.bootstrapcdn.com/twitter-bootstrap/2.3.1/css/bootstrap-combined.min.css" />
-    <link rel="stylesheet" type="text/css" 
-	  href="http://cdn.aloha-editor.org/latest/css/aloha.css" />
-    {% endif %}
+	{% if local_net %}
+	  <link rel="stylesheet" type="text/css" 
+		href="{{ STATIC_URL }}bootstrap/css/bootstrap.css" />
+	  <link rel="stylesheet" type="text/css" 
+		href="{{ STATIC_URL }}aloha/css/aloha.css" />
+	{% else %}
+	  <link rel="stylesheet" type="text/css" href="//netdna.bootstrapcdn.com/twitter-bootstrap/2.3.1/css/bootstrap-combined.min.css" />
+	  <link rel="stylesheet" type="text/css" href="http://cdn.aloha-editor.org/latest/css/aloha.css" />
+	{% endif %}
 
     {% if debug %}
     <link rel="stylesheet" type="text/css"

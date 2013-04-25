@@ -91,7 +91,8 @@ class TodoState(models.Model):
             new_array.append(new_dict)
         return unicode(json.dumps(new_array))
     def as_html(self):
-        """Converts this todostate to an HTML string that can be put into tempaltes"""
+        """Converts this todostate to an HTML string that can 
+        be put into templates"""
         html = conditional_escape(self.abbreviation)
         if self.color().get_alpha() > 0:
             html = '<span style="color: ' + self.color().rgba_string() + '">' + html + '</span>'
@@ -238,8 +239,8 @@ class Node(MPTTModel):
     Django model that holds some sort of divisional heading. Similar to 
     orgmode's '*** Heading' syntax. It can have todo states associated 
     with it as well as scheduling and other information."""
-    SEARCH_FIELDS = ['title']
-    auto_repeat = False
+    SEARCH_FIELDS = ['title', 'text']
+    auto_update = False
     auto_close = True
     objects = NodeManager()
     owner = models.ForeignKey(settings.AUTH_USER_MODEL, related_name="owned_node_set")
@@ -366,45 +367,23 @@ class Node(MPTTModel):
         string = ''
         if self.todo_state:
             string += self.todo_state.as_html() + ' '
-        string += self.title
-        return string
+        string += self.get_title()
+        return mark_safe(string)
     def as_pre_json(self):
         """Processes the instance into a dictionary that can be
         converted to a JSON string. Output contains a few extra
         attributes for AJAX processing."""
         exclude = []
-        # exclude=['scope',
-        #          'users',
-        #          'related_projects']
         new_dict = model_to_dict(
             self,
             exclude = exclude
             )
-        # Handle many to many fields
-        # new_dict['scope'] = list(self.scope.values_list('pk', flat=True))
-        # new_dict['users'] = self.users.values_list('pk', flat=True)
-        # new_dict['related_projects'] = self.related_projects.values_list(
-        #     'pk', flat=True
-        #     )
         # Rename some keys
         keys = [('id', 'pk'),
                 ('parent', 'parent_id')]
         for key in keys:
             new_dict[ key[1] ] = new_dict[ key[0] ]
             del new_dict[ key[0] ]
-        # for key in keys:
-        #     if new_dict[ key[0] ]:
-        #         new_dict[ key[1] ] = int(new_dict[ key[0] ])
-        #     else:
-        #         new_dict[ key[1] ] = new_dict[ key[0] ]
-        #     del new_dict[ key[0] ]
-        # # Convert long ints to standard ints for serliaziation
-        # for key in exclude:
-        #     l = new_dict[key]
-        #     d = []
-        #     for pk in l:
-        #         d.append(int(pk))
-        #     new_dict[key] = d
         # Convert parent_id=None to parent_id=0
         if not new_dict['parent_id']:
             new_dict['parent_id'] = 0
@@ -558,7 +537,7 @@ def node_repeat(sender, **kwargs):
             return new
         # Code execution starts here
         instance = kwargs['instance']
-        if instance.repeats and instance.auto_repeat:
+        if instance.repeats and instance.auto_update:
             if instance.id: # if existing node
                 old_node = Node.objects.get(pk=instance.pk)
                 if not (old_node.todo_state == instance.todo_state):
@@ -594,7 +573,7 @@ def auto_archive(sender, **kwargs):
     """pre_save receiver that archives the node if it's being closed"""
     if not kwargs['raw']:
         instance = kwargs['instance']
-        if instance.pk and getattr(instance.todo_state, 'closed', False):
+        if instance.pk and getattr(instance.todo_state, 'closed', False) and instance.auto_update:
             old_node = Node.objects.get(pk=instance.pk)
             if not getattr(old_node.todo_state, 'closed', False):
                 instance.archived = True

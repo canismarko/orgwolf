@@ -40,6 +40,8 @@ $(MIN_JS): $(OW_JS) $(STATIC)jquery.cookie.js $(STATIC)datepicker/bootstrap-date
 	$(YUI) $(STATIC)timepicker/bootstrap-timepicker.js >> $(MIN_JS)
 	$(JSLINT) $(OW_JS)
 	$(YUI) $(OW_JS) >> $(MIN_JS)
+	$(JSLINT) $(STATIC)persona.js
+	$(YUI) $(STATIC)persona.js >> $(MIN_JS)
 	$(DIVIDER)
 
 $(MOBILE_MIN_JS): $(MOBILE_OW_JS) $(STATIC)jquery.cookie.js 
