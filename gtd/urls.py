@@ -23,6 +23,8 @@ from django.conf.urls import patterns, include, url
 from django.contrib import admin
 admin.autodiscover()
 
+from gtd.views import Descendants
+
 urlpatterns = patterns('gtd.views',
                        url(r'^$', 'home'),
 
@@ -37,6 +39,9 @@ urlpatterns = patterns('gtd.views',
                        url(r'^node/(?:scope(?P<scope_id>\d+)/)?(?P<node_id>\d+)/edit/', 'edit_node'),
                        url(r'^node/(?:scope(?P<scope_id>\d+)/)?(?P<node_id>\d+)/move/', 'move_node'),
                        url(r'^node/(?:scope(?P<scope_id>\d+)/)?(?:(?P<node_id>\d+)/)?new/', 'new_node'),
-                       url(r'^node/(?P<ancestor_pk>\d+)/descendants/$', 'get_descendants'),
+                       # url(r'^node/(?P<ancestor_pk>\d+)/descendants/$', 'get_descendants'),
+                       url(r'^node/(?P<ancestor_pk>\d+)/descendants/$', 
+                           Descendants.as_view(),
+                           name='node_descendants'),
                        url(r'^node/search/', 'node_search'),
 )

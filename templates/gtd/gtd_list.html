@@ -115,8 +115,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
     </td>
     <!-- Column for root level project -->
     <td>
-      <a href="{{ base_node_url }}{{ node.pk }}" title="Project: {#{ node.get_root.get_hierarchy_as_string }#}">
-	{#{ node.get_root.get_title }#}{{ node.electric }}
+      <a href="{{ node.root_url }}" title="Project: {{ node.root_title }}">
+	{{ node.root_title }}
       </a>
     </td>
     <!-- Column for Node.tag_string -->
