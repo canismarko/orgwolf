@@ -24,7 +24,10 @@ validate_node = function ($form) {
 		    success = false;
 		    $(this).focus();
 		    $(this).addClass('invalid');
-		    $(this).after('<span class="error"><br />This field is required</span>');
+		    $(this).after(
+			'<span class="error"><br />' +
+			    'This field is required</span>'
+		    );
 		}
 	    } else if (method === 'date') {
 		// Dates
@@ -37,7 +40,11 @@ validate_node = function ($form) {
 			 d.getDate() !== Number(bits[2]) ) {
 			// Date does not match
 			$(this).addClass('invalid');
-			$(this).after('<span class="error"><br />Please enter a valid date in the form YYYY-MM-DD</span>');
+			$(this).after(
+			    '<span class="error"><br />' +
+				'Please enter a valid date ' +
+				'in the form YYYY-MM-DD</span>'
+			);
 			success = false;
 			$(this).focus();
 		    }
@@ -53,7 +60,11 @@ validate_node = function ($form) {
 		       ) {
 			// Time does not match
 			$(this).addClass('invalid');
-			$(this).after('<span class="error"><br />Please enter a valid 24-hour time in the form HH:MM</span>');
+			$(this).after(
+			    '<span class="error"><br />' +
+				'Please enter a valid 24-hour ' +
+				'time in the form HH:MM</span>'
+			);
 			success = false;
 			$(this).focus();
 		    }
@@ -61,11 +72,15 @@ validate_node = function ($form) {
 	    } else if (method === 'int') {
 		// Integers
 		s = $(this).val();
-		if ( NOTBLANK_RE.test(s) && NOTINT_RE.test(s) ) { //Ignore empty fields
+		if ( NOTBLANK_RE.test(s) && NOTINT_RE.test(s) ) {
+		    //Ignore empty fields
 		    success = false;
 		    $(this).focus();
 		    $(this).addClass('invalid');
-		    $(this).after('<span class="error"><br />Please enter an integer</span>');
+		    $(this).after(
+			'<span class="error"><br />' +
+			    'Please enter an integer</span>'
+		    );
 		}
 	    }
 	});
@@ -82,8 +97,10 @@ validate_node = function ($form) {
 			success = false;
 			$(this).focus();
 			$elem.addClass('invalid');
-			$elem.parent().append('<span class="error"><br />Field required by ' +
-					      $this.attr('id') + '</span>');
+			$elem.parent().append(
+			    '<span class="error"><br />Field required by ' +
+				$this.attr('id') + '</span>'
+			);
 		    }
 		}
 	    }
@@ -149,8 +166,12 @@ attach_pickers = function( $target ) {
 	// Set up timepicker/datepicker functionality
 	$target.find("input.datepicker").each(function(ct) {
 	    // Prepare a date field for the date picker widget
-	    $(this).wrap('<div class="date datepicker input-append" data-date></div>');
-	    $(this).after('<span class="add-on">\n<i class="icon-calendar"></i>\n</span>');
+	    $(this).wrap(
+		'<div class="date datepicker input-append" data-date></div>'
+	    );
+	    $(this).after(
+		'<span class="add-on">\n<i class="icon-calendar"></i>\n</span>'
+	    );
 	    btn_width = $(this).next('span.add-on').outerWidth();
 	    mod_width = $(this).width() - btn_width;
 	    // Shrink the field by the size of the button
@@ -662,7 +683,9 @@ GtdHeading.prototype.import_node_fields = function( node ) {
     if ( node.pk !== undefined ) {
 	this.pk = Number(node.pk);
     }
-    this.workspace = node.workspace;
+    if ( typeof node.workspace !== 'undefined' ) {
+	this.workspace = node.workspace;
+    }
     for ( field in node.fields ) {
 	if ( node.fields.hasOwnProperty(field) ) {
 	    // Check for datestring
@@ -801,11 +824,13 @@ GtdHeading.prototype.create_div = function( $target ) {
 	    previous = this.get_previous_sibling();
 	    me = this.pk;
 	    if ( previous ) {
+		// Try previous_sibling
 		previous.create_div(); // make sure the sibling exists;
 		write = function(content) {
 		    previous.$element.after(content);
 		};
 	    } else if ( this.workspace.get_heading(this.parent) ) {
+		// Try parent
 		workspace = this.workspace;
 		parent = this.parent;
 		$target = workspace.get_heading(parent).$children;
@@ -857,14 +882,15 @@ GtdHeading.prototype.create_div = function( $target ) {
 		target: $hoverable,
 		node_id: node_id,
 		changed: function(node) {
+		    var parent;
 		    $hoverable.find('.todo-state').todoState(
 			'update', {todo_id: node.todo_state}
 		    );
 		    heading.text = node.text;
 		    heading.archived = node.archived;
 		    heading.title = node.title;
-		    var parent = heading.get_parent();
-		    if ( parent) {
+		    parent = heading.get_parent();
+		    if ( parent ) {
 			parent.redraw();
 		    } else {
 			heading.redraw();
@@ -922,6 +948,10 @@ GtdHeading.prototype.get_previous_sibling = function() {
     // Find the previous sibling.
     // If the node is a root node this means the one with the next lowest
     //   tree_id. Else use MPTT edges.
+    // Returns:
+    //   GtdHeading object if previous sibling is found
+    //   null if heading is first child
+    //   undefined if previous sibling exists by edge but is not in headings
     var found, curr_tree, curr_lft;
     found = null;
     if ( this.level === 0 ) {
@@ -945,6 +975,7 @@ GtdHeading.prototype.get_previous_sibling = function() {
 		{
 		    tree_id: this.tree_id,
 		    level: this.level,
+		    parent: this.parent,
 		    lft: curr_lft
 		}
 	    );
@@ -1217,9 +1248,6 @@ GtdHeading.prototype.redraw = function(options) {
 	    this.$element.removeClass('lazy-expandable');
 	}
     } else if ( !this.is_leaf_node() ) {
-	if( this.pk === 21 ) {
-	    console.log('inner');
-	}
 	this.$element.addClass('lazy-expandable');
 	this.$element.removeClass('expandable');
 	this.$element.removeClass('arch-expandable');
@@ -1393,7 +1421,7 @@ GtdHeading.prototype.populate_children = function(options) {
 			ancestor.populated_level_2 = true;
 		    }
 		}
-	    } 
+	    }
 	);
     }
 }; // end this.populate_children()
@@ -1985,7 +2013,7 @@ GtdHeading.prototype.toggle = function( direction ) {
 			data.$modal.find('#id_text-aloha').html(heading.text);
 			data.$modal.find('#id_tag_string').val(heading.tag_string);
 			data.$modal.find('#id_archived').prop(
-			    'checked', 
+			    'checked',
 			    heading.archived
 			);
 			// Scheduled information
@@ -1993,10 +2021,15 @@ GtdHeading.prototype.toggle = function( direction ) {
 			    // Helper function for processing Date() into strings
 			    // Also converts to local time
 			    var ds, dt;
-			    ds = date.getFullYear() + '-' +
-				(date.getMonth()+1) + '-' +
-				date.getDate();
-			    dt = date.toTimeString().slice(0, 5);
+			    if ( date ) {
+				ds = date.getFullYear() + '-' +
+				    (date.getMonth()+1) + '-' +
+				    date.getDate();
+				dt = date.toTimeString().slice(0, 5);
+			    } else {
+				ds = '';
+				dt = '';
+			    }
 			    return [ds, dt];
 			};
 			date = parse_dt(heading.scheduled);
