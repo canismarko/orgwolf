@@ -18,16 +18,21 @@
 #######################################################################
 
 from __future__ import unicode_literals
+import re
+
+from django.db import DatabaseError
 from django.db import transaction
 from django.db.models.query import QuerySet
 from django.shortcuts import get_object_or_404
 from django.http import Http404
-import re
 
-from gtd.models import TodoState, Context, Scope, Node
+from gtd.models import TodoState, Context, Scope, Node, Tag, Priority
 
 def get_todo_abbrevs(todo_state_list=None):
-    """Return a list of the TODO State abbreviations corresponding to TodoState models. If a list of TodoState objects is passed, it will use that instead of retrieving a new list. This is recommended to avoid hitting the database unnecessarily."""
+    """Return a list of the TODO State abbreviations corresponding
+    to TodoState models. If a list of TodoState objects is passed,
+    it will use that instead of retrieving a new list. This is recommended
+    to avoid hitting the database unnecessarily."""
     if not todo_state_list:
         todo_state_list = get_todo_states()
     abbreviation_list = []
@@ -37,7 +42,7 @@ def get_todo_abbrevs(todo_state_list=None):
 
 def order_nodes(qs, **kwargs):
     """Accepts a queryset (nominally of Node objects) and
-    sorts them by context and/or date. Similar to 
+    sorts them by context and/or date. Similar to
     queryset.order_by() except more fine-grained.
     Accepts these argument and applies them in order:
     - context
@@ -66,7 +71,7 @@ def order_nodes(qs, **kwargs):
         )
 
 def parse_url(raw_url, request=None, todo_states=None):
-    """Detects context, scope and parent information from the url that 
+    """Detects context, scope and parent information from the url that
     was requested. Returns the results as a dictionary.
     Note: this function will throw a 404 exception if any unprocessable bits are
     passed so it's important for the calling view to strip any parts that
@@ -99,7 +104,8 @@ def parse_url(raw_url, request=None, todo_states=None):
         result = regex.search(raw_url)
         if result:
             states_found = True
-            todo_states_query = todo_states_query | TodoState.objects.filter(abbreviation__iexact=result.groups()[0])
+            todo_states_query = todo_states_query | TodoState.objects.filter(
+                abbreviation__iexact=result.groups()[0])
             raw_url = raw_url.replace('/' + result.groups()[0], '')
         else:
             break
@@ -162,3 +168,21 @@ def qs_to_dicts(qs):
     for node in qs:
         out.append(node.as_pre_json())
     return out
+
+def reset_env(commit=False):
+    """Delete large portions of the database. Since this is irrevesible,
+    it will not actually succeed unless commit is passed True.
+    """
+    if commit is True:
+        try:
+            TodoState.objects.all().delete()
+        except DatabaseError:
+            for state in TodoState.objects.all():
+                state.delete()
+        Context.objects.all().delete()
+        Scope.objects.all().delete()
+        Tag.objects.all().delete()
+        Priority.objects.all().delete()
+    else:
+        print('Warning: this function irreversibly destoroys data,')
+        print('pass commit=True if you are sure you want to continue.')

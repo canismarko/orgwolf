@@ -47,15 +47,28 @@ var todo_state_list = [
      display: 'DONE',
      full: 'Completed'},
 ];
+
 var scopes = [
     {"pk": 1, "model": "gtd.scope",
-     "fields": {"owner": null, "public": false, "name": "joe_corp", "display": "joe_corp"}
-    }, 
-    {"pk": 2, "model": "gtd.scope", 
-     "fields": {"owner": null, "public": false, "name": "Kalsec", "display": "Kalsec"}
+     "fields": {
+	 "owner": null,
+	 "public": false,
+	 "name": "joe_corp",
+	 "display": "joe_corp"
+     }
+    },
+    {"pk": 2, "model": "gtd.scope",
+     "fields": {
+	 "owner": null,
+	 "public": false,
+	 "name": "Kalsec",
+	 "display": "Kalsec"
+     }
     }
 ];
+
 var ajax_timer = 20; // how long fake ajax request takes (in milliseconds)
+
 // Setup fake AJAX responses
 var node8 = {
     pk: 8,
