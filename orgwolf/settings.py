@@ -278,9 +278,9 @@ if DEBUG and DEBUG_BAR:
     except NameError:
         raise ImproperlyConfigured(
             'DEBUG_BAR is True but INTERNAL_IPS is not set.')
-    MIDDLEWARE_CLASSES.insert(
-        0,
-        'debug_toolbar.middleware.DebugToolbarMiddleware')
+    MIDDLEWARE_CLASSES.append(
+        'debug_toolbar.middleware.DebugToolbarMiddleware'
+    )
     INSTALLED_APPS.append('debug_toolbar')
 
 # Profiling

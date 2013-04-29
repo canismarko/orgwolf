@@ -135,6 +135,10 @@ def list_display(request, url_string=""):
         'context', 'todo_state', 'root'
     )
     nodes = nodes.filter(final_Q)
+    root_nodes = Node.objects.mine(
+        request.user, get_archived=True
+    )
+    root_nodes = root_nodes.filter(level=0)
     # Now apply the context
     if current_context:
         scope_url_data['context'] = 'context{0}/'.format(
@@ -163,16 +167,32 @@ def list_display(request, url_string=""):
     # Put nodes with deadlines first
     nodes = order_nodes(nodes, field='deadline', context=current_context)
     # -------------------- Queryset evaluated --------------------
-    # Add a field for the root node
-    for node in nodes:
-        node.electric = 'forest'
-    # Prepare the URL for use in the scope tabs
+    # Prepare the URLs for use in the scope and parent links tabs
     scope_url = list_url.format(
         context = scope_url_data['context'],
         scope = '{scope}/',
         states = scope_url_data['states'],
         parent = scope_url_data['parent'],
     )
+    if scope:
+        scope_s = 'scope{0}/'.format(scope.pk)
+    else:
+        scope_s = ''
+    parent_url = list_url.format(
+        context = scope_url_data['context'],
+        scope = scope_s,
+        states = scope_url_data['states'],
+        parent = 'parent{0}/'
+    )
+    print(parent_url)
+    # Prepare an array of root node data
+    root_list = list(root_nodes)
+    # Add a field for the root node
+    for node in nodes:
+        root_node = [n for n in root_nodes if n.tree_id == node.tree_id]
+        if len(root_node) > 0:
+            node.root_url = parent_url.format(root_node[0].pk)
+            node.root_title = root_node[0].title
     # And serve response
     if request.is_mobile:
         template = 'gtd/gtd_list_m.html'
@@ -631,7 +651,30 @@ def new_node(request, node_id, scope_id):
 class Descendants(View):
     """Manages the retrieval of descendants of a given node"""
     def get(self, request, *args, **kwargs):
-        return HttpResponse()
+        # result = []
+        # print(self.kwargs)
+        # return HttpResponse(json.dumps(result))
+        ancestor_pk = self.kwargs['ancestor_pk']
+        offset = request.GET.get('offset', 1)
+        if int(ancestor_pk) > 0:
+            parent = get_object_or_404(Node, pk=ancestor_pk)
+            all_descendants = parent.get_descendants()
+            level = parent.level + int(offset)
+        elif int(ancestor_pk) == 0:
+            parent = None
+            all_descendants = Node.objects.all()
+            level = int(offset)-1
+        nodes_qs = all_descendants.filter(level=level)
+        nodes_qs = nodes_qs & Node.objects.mine(request.user, get_archived=True)
+        if request.is_ajax() or not settings.DEBUG_BAR:
+            return HttpResponse(
+                serializers.serialize('json', nodes_qs)
+            )
+        else:
+            serializers.serialize('json', nodes_qs)
+            return render_to_response('base.html',
+                                      locals(),
+                                      RequestContext(request))
 
 @login_required
 def get_descendants(request, ancestor_pk):
@@ -649,13 +692,6 @@ def get_descendants(request, ancestor_pk):
         level = int(offset)-1
     nodes_qs = all_descendants.filter(level=level)
     nodes_qs = nodes_qs & Node.objects.mine(request.user, get_archived=True)
-    nodes = qs_to_dicts(nodes_qs)
-    # Meta data
-    data = {
-        'status': 'success',
-        'parent_id': ancestor_pk,
-        'nodes': nodes,
-        }
     if request.is_ajax() or not settings.DEBUG_BAR:
         return HttpResponse(json.dumps(data))
     else:

@@ -33,6 +33,7 @@ from django.core.urlresolvers import reverse
 from django.utils.html import conditional_escape
 from django.contrib.auth.models import AnonymousUser
 from django.http import Http404
+from django.core import serializers
 from django.utils.timezone import get_current_timezone
 from django.views.generic import View
 import re
@@ -1601,17 +1602,24 @@ class DBOptimization(TestCase):
         node = Node.objects.select_related('todo_state')
         node = Node.objects.get(pk=1)
         self.assertNumQueries(
-            0,
+            4,
             node.as_pre_json,
             )
+    def test_node_view(self):
+        self.assertNumQueries(
+            9,
+            self.client.get,
+            '/gtd/lists/next/',
+        )
 
 class DescendantsAPI(TestCase):
     """Tests for getting a list of descendants of a given node
     of varying levels."""
     fixtures = ['test-users.json', 'gtd-test.json', 'gtd-env.json']
     def setUp(self):
-        self.url = reverse('gtd.views.get_descendants', 
-                           kwargs={'ancestor_pk': 1})
+        self.node = Node.objects.get(pk=1)
+        self.url = reverse('node_descendants', 
+                           kwargs={'ancestor_pk': self.node.pk})
         self.assertTrue(
             self.client.login(username='test', password='secret')
         )
@@ -1628,4 +1636,26 @@ class DescendantsAPI(TestCase):
             response.status_code,
         )
     def test_return_offset1(self):
-        pass
+        self.maxDiff = None
+        response_text = self.client.get(self.url).content
+        response = json.loads(response_text)
+        self.assertTrue(
+            isinstance(response, list),
+            'request did not return a list (got {0})'.format(response.__class__)
+        )
+        target = Node.objects.get(pk=1).get_descendants().filter(
+            level = self.node.level + 1
+        )
+        response_qs = Node.objects.filter(
+            id__in=[node['pk'] for node in response]
+        )
+        # Test that response returns the right nodes
+        self.assertEqual(
+            list(target),
+            list(response_qs),
+        )
+        json_target = json.loads(serializers.serialize('json', target))
+        self.assertEqual(
+            json_target,
+            response
+        )

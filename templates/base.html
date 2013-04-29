@@ -88,7 +88,9 @@
     <script src="{{ STATIC_URL }}datepicker/bootstrap-datepicker.js"></script>
     <script src="{{ STATIC_URL }}timepicker/bootstrap-timepicker.js"></script>
     <script src="{{ STATIC_URL }}orgwolf.js"></script>
+    {% if not local_net %}
     <script src="{{ STATIC_URL }}persona.js"></script>
+    {% endif %}
     {% else %}
     <script src="{{ STATIC_URL }}orgwolf-min.js"></script>
     {% endif %}

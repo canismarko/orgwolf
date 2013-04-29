@@ -12,13 +12,17 @@ var sparse_dict = {
     pk: '1',
 };
 var full_dict = {
-    title: 'test title',
-    text: 'here\'s some text that goes with it',
     pk: 1,
-    todo_id: '1',
-    tag_string: ':comp:',
-    is_leaf_node: false,
-    scope: [1, 2]
+    fields: {
+	title: 'test title',
+	text: 'here\'s some text that goes with it',
+	pk: 1,
+	lft: 14,
+	rght: 15,
+	todo_state: '1',
+	tag_string: ':comp:',
+	scope: [1, 2]
+    }
 };
 var archived_dict = {
     title: 'test_title',
@@ -55,79 +59,92 @@ var ajax_timer = 20; // how long fake ajax request takes (in milliseconds)
 // Setup fake AJAX responses
 var node8 = {
     pk: 8,
-    title: 'it\'s all falling down',
-    title_html: '<span class="archived-text">it\'s all falling down</span>',
-    todo_state: 1,
-    scheduled_date: '2012-03-27',
-    scheduled_time: '15:53:00',
-    scheduled_time_specific: true,
-    parent_id: 1,
-    deadline_date: '2012-03-27',
-    deadline_time: '08:00:00',
-    deadline_time_specific: true,
-    priority: 'B',
-    scope: [1, 2],
-    repeats: true,
-    repeating_number: 3,
-    repeating_unit: 'w',
-    repeats_from_completion: true,
-    archived: true,
-    related_projects: [11, 25, 12],
-    text: 'hello, world',
-    tag_string: ':work:',
-    is_leaf_node: true,
+    model: 'gtd.node',
+    fields: {
+	rght: 5,
+	text: 'hello, world',
+	energy: null,
+	assigned: null,
+	lft: 2,
+	deadline: '2011-05-13T08:00:00Z',
+	owner: 1,
+	archived: true,
+	opened: '2012-11-17T11:10:39.658Z',
+	title: 'it\'s all falling down',
+	time_needed: null,
+	priority: 'B',
+	closed: '2012-12-28T04:00:00.101Z',
+	tree_id: 1,
+	todo_state: 1,
+	scope: [1, 2],
+	tag_string: ':work:',
+	deadline_time_specific: false,
+	scheduled: '2012-12-31T10:00:00Z',
+	users: [],
+	parent: 1,
+	repeating_unit: 'w',
+	related_projects: [11, 25, 12],
+	level: 1,
+	scheduled_time_specific: true,
+	repeats_from_completion: true,
+	repeating_number: 3,
+	repeats: true
+    }
 };
+$.mockjax({
+    url: '/gtd/node/0/descendants/',
+    responseTime: ajax_timer,
+    responseText: []
+});
 $.mockjax({
     url: '/gtd/node/1/descendants/',
     responseTime: ajax_timer,
-    responseText: {
-	status: 'success',
-	parent_id: 1,
-	nodes: [
-	    node8,
-	    {
-		pk: 9,
-		parent_id: 1
-	    },
-	    {
-		pk: 10,
-		parent_id: 1
+    responseText: [
+	node8,
+	{
+	    pk: 9,
+	    fields: {
+		parent: 1,
+		tree_id: 1,
+		lft: 6,
+		rght: 7,
+		level: 1
 	    }
-	]
-    }
+	},
+	{
+	    pk: 10,
+	    fields: {
+		parent: 1,
+		tree_id: 1,
+		lft: 8,
+		rght: 9,
+		level: 1
+	    }
+	}
+    ]
 });
 $.mockjax({
     url: '/gtd/node/2/descendants/',
     responseTime: ajax_timer,
-    responseText: {
-	status: 'success',
-	parent_id: 2,
-	nodes: []
-    }
+    responseText: []
 });
 $.mockjax({
     url: '/gtd/node/3/descendants/',
     responseTime: ajax_timer,
-    responseText: {
-	status: 'success',
-	parent_id: 3,
-	nodes: []
-    }
+    responseText: []
 });
 $.mockjax({
     url: '/gtd/node/4/descendants/',
     responseTime: ajax_timer,
-    responseText: {
-	status: 'success',
-	parent_id: 4,
-	nodes: [
-	    {
-		pk: 11,
-		parent_id: 4,
+    responseText: [
+	{
+	    pk: 11,
+	    fields: {
+		parent: 4,
 		archived: true
 	    }
-	]
-    }
+	}
+    ]
 });
 $.mockjax({
     url: '/gtd/node/new/',
@@ -285,26 +302,47 @@ test('set_fields() method', function() {
 	full_dict.pk,
 	'sets primary key'
     );
-    strictEqual(
-	heading.is_leaf_node,
-	undefined,
-	'is_leaf_node is not set (defer to has_children)'
-    );
-    ok(
-	heading.has_children,
-	'has_children is set based on is_leaf_node'
-    );
-    equal(
-	heading.title_html,
-	full_dict.title,
-	'if title_html is omitted, title is used instead'
-    );
     equal(
 	heading.scope,
-	full_dict.scope,
+	full_dict.fields.scope,
 	'Scope set'
     );
-	  
+});
+
+test('MPTT: is_leaf_node', function() {
+    // Test various methods related to hierarchical configuration.
+    // Uses mptt principles
+    var heading = new GtdHeading();
+    heading.set_fields(full_dict);
+    equal(
+	heading.lft,
+	full_dict.fields.lft,
+	'GtdHeading.lft set correctly'
+    );
+    equal(
+	heading.rght,
+	full_dict.fields.rght,
+	'GtdHeading.rght set correctly'
+    );
+    strictEqual(
+	heading.is_leaf_node(),
+	true,
+	'GtdHeading.is_leaf_node() returns true if lft/rght indicate no child'
+    )
+    // Pretend there's a child and check again
+    heading.rght = heading.rght+2;
+    strictEqual(
+	heading.is_leaf_node(),
+	false,
+	'GtdHeading.is_leaf_node() returns false if lft/rght indicate a child'
+    );
+    // Delete heading.rght and chack again
+    delete heading.rght;
+    equal(
+	heading.is_leaf_node(),
+	undefined,
+	'GtdHeading.is_leaf_node() returns undefined if rght is missing'
+    );
 });
 
 
@@ -324,23 +362,43 @@ test('creates initial heading objects', function() {
     );
     equal(
 	set_heading.title,
-	full_dict.title,
+	full_dict.fields.title,
 	'Retrieved heading has correct title'
     );
     equal(
 	set_heading.get_todo_state().pk,
-	full_dict.todo_id,
-	'Retrieved heading has correct todo state'
+	Number(full_dict.fields.todo_state),
+	'Retrieved heading returns correct todo_state by get_todo_state()' 
     );
     equal(
 	set_heading.text,
-	full_dict.text,
+	full_dict.fields.text,
 	'Retrieve heading has correct text'
     );
     deepEqual(
 	set_heading.workspace,
 	outline,
 	'heading has outline attribute set'
+    );
+    equal(
+	set_heading.lft,
+	1,
+	'Initial population reads data-lft attribute'
+    );
+    equal(
+	set_heading.rght,
+	4,
+	'Initial population reads data-rght attribute'
+    );
+    equal(
+	set_heading.tree_id,
+	1,
+	'Initial population reads data-tree-id attribute'
+    );
+    equal(
+	set_heading.level,
+	0,
+	'Initial population reads data-level attribute'
     );
 });
 
@@ -369,6 +427,217 @@ test('converts initial workspace', function() {
 	1,
 	'Heading 2 has element'
     );
+});
+
+test('MPTT move_to method (first-child)', function() {
+    var $workspace = $('#test_workspace');
+    $workspace.nodeOutline({simulate: true});
+    var workspace = $workspace.data('nodeOutline');
+    var parent = workspace.headings.get({pk: 3});
+    var first_child = new GtdHeading(
+	$.extend( {}, node8, {workspace: workspace} )
+    );
+    workspace.headings.add( first_child );
+    equal(
+	parent.get_children().length,
+	0,
+	'first_child has no children to start'
+    );
+    // Add one child to the parent
+    first_child.move_to(
+	parent,
+	{ position: 'first-child' }
+    );
+    equal(
+	first_child.parent,
+	parent.pk,
+	'first_child has parent set after calling move_to()'
+    );
+    equal(
+	parent.get_children().length,
+	1,
+	'first_child has one child after new_heading called move_to()'
+    );
+    equal(
+	first_child.lft,
+	parent.lft + 1,
+	'first_child.lft is one more than parent.lft'
+    );
+    equal(
+	first_child.rght,
+	parent.rght - 1,
+	'first_child.rght is one less than parent.rght'
+    );
+    equal(
+	first_child.level,
+	parent.level + 1,
+	'first_child.level is one more than parent.level'
+    );
+    equal(
+	first_child.rank,
+	parent.rank + 1,
+	'first_child.rank is one more than parent.rank'
+    );
+    // Make sure setting a child to itself fails
+    equal(
+	first_child.move_to(first_child, { position: 'first-child' }),
+	false,
+	'Moving a node as a child of itself returns false'
+    );
+});
+
+test('MPTT move_to method (other positions)', function() {
+    var $workspace = $('#test_workspace');
+    $workspace.nodeOutline({simulate: true});
+    var workspace = $workspace.data('nodeOutline');
+    var parent = workspace.headings.get({pk: 3});
+    var first_child = new GtdHeading( node8 );
+    var second_child = new GtdHeading(
+	$.extend( {}, node8, 
+		  { pk: 9, title: 'What\'s up doc?' } )
+    );
+    workspace.headings.add( first_child );
+    workspace.headings.add( second_child );
+    // Add one child to the parent
+    first_child.move_to(
+	parent, 
+	{ position: 'first-child' }
+    );
+    equal(
+	parent.get_children().length,
+	1,
+	'Parent has only one child to start'
+    );
+    // Check 'last-child' position
+    second_child.move_to( parent, {position: 'last-child'} );
+    deepEqual(
+	[ second_child.lft, second_child.rght ],
+	[ first_child.rght + 1, parent.rght - 1],
+	'Adding as last-child sets lft and rght correctly'
+    );
+    // Check 'left' position
+    second_child.move_to( first_child, {position: 'left'} );
+    deepEqual(
+	[ second_child.lft, second_child.rght ],
+	[ parent.lft + 1, first_child.lft - 1],
+	'Adding to position \'left\' sets lft and rght correctly'
+    );
+    // Check 'right' position
+    second_child.move_to( first_child, {position: 'right'} );
+    deepEqual(
+	[ second_child.lft, second_child.rght ],
+	[ first_child.rght + 1, parent.rght - 1],
+	'Adding to position \'right\' sets lft and rght correctly'
+    );
+});
+
+test('MPTT move_to method (invalid conditions)', function() {
+    // Test what happens when a child becomes its own parent, etc...
+    var $workspace = $('#test_workspace');
+    $workspace.nodeOutline({simulate: true});
+    var workspace = $workspace.data('nodeOutline');
+    var parent = workspace.headings.get({pk: 3});
+    var first_child = new GtdHeading( node8 );
+    var second_child = new GtdHeading(
+	$.extend( {}, node8, 
+		  { pk: 9, title: 'What\'s up doc?' } )
+    );
+    workspace.headings.add( first_child );
+    workspace.headings.add( second_child );
+    first_child.move_to( parent, { position: 'first-child' } );
+    // Check what happens with a gibberish position argument
+    equal(
+	second_child.move_to( parent, {position: 'gibberish'} ),
+	false,
+	'Using an invalid position argument returns false'
+    );
+    equal(
+	parent.get_children().length,
+	1,
+	'Using an invalid position argument does not add the child'
+    );
+    // Make sure setting a child to itself fails
+    equal(
+	first_child.move_to(first_child, { position: 'first-child' }),
+	false,
+	'Moving a node as a child of itself returns false'
+    );
+    // Make sure fails if target is a child of node
+    equal(
+	parent.move_to( first_child, { position: 'left' }),
+	false,
+	'Moving a node to the left of a child returns false'
+    );
+});
+
+asyncTest( 'MPTT rebuild() method', function() {
+    var $workspace = $('#test_workspace');
+    $workspace.nodeOutline();
+    var workspace = $workspace.data('nodeOutline');
+    var heading1 = workspace.headings.get( {pk: 1} );
+    heading1.populate_children();
+    setTimeout( function() {
+	children = heading1.get_children();
+	heading1.rebuild();
+	equal(
+	    heading1.lft,
+	    1,
+	    'heading1.lft set to 1'
+	);
+	equal(
+	    heading1.rght,
+	    children.length * 2 + 2,
+	    'heading1.rght set to ' + children.length * 2 + 2
+	);
+	deepEqual(
+	    [children[0].lft, children[0].rght],
+	    [2, 3],
+	    'first child has lft of 2 and rght of 3'
+	);
+	deepEqual(
+	    [children[1].lft, children[1].rght],
+	    [4, 5],
+	    'second child has lft of 4 and rght of 5'
+	);
+	deepEqual(
+	    [children[2].lft, children[2].rght],
+	    [6, 7],
+	    'third child has lft of 6 and rght of 7'
+	);
+	start();
+    }, ajax_timer );
+});
+
+asyncTest('MPTT get_previous_sibling', function() {
+    var $workspace = $('#test_workspace');
+    $workspace.nodeOutline();
+    var workspace = $workspace.data('nodeOutline');
+    var heading1 = workspace.headings.get({pk: 1});
+    var heading4 = workspace.headings.get({pk: 4});
+    heading1.populate_children();
+    // Check get_previous_sibling() of root node
+    equal(
+	heading4.get_previous_sibling().pk,
+	heading1.pk,
+	'Retrieved previous sibling of root node'
+    );
+    setTimeout(function() {
+	// Check get_previous_sibling() of non-root node
+	var heading8 = workspace.headings.get({pk: 8});
+	var heading9 = workspace.headings.get({pk: 9});
+	heading1.rebuild();
+	equal(
+	    heading9.get_previous_sibling().pk,
+	    heading8.pk,
+	    'Retrieved previous sibling of non-root node'
+	);
+	equal(
+	    heading8.get_previous_sibling(),
+	    null,
+	    'First non-root node get_previous_sibling() return null'
+	);
+	start();
+    }, ajax_timer );
 });
 
 asyncTest('set expandability and has-children data', function() {
@@ -514,109 +783,89 @@ asyncTest('Creating heading from /gtd/node/pk/descendants/', function() {
 	);
 	equal(
 	    heading8.title,
-	    node8.title,
+	    node8.fields.title,
 	    'Heading8 has title set'
 	);
 	equal(
-	    heading8.$title.html(),
-	    heading8.title_html + '\n',
-	    'title_html used for display purposes'
-	);
-	equal(
-	    heading8.todo_id,
-	    node8.todo_state,
+	    heading8.todo_state,
+	    node8.fields.todo_state,
 	    'Heading8 has todo_state set'
 	);
 	equal(
-	    heading8.scheduled_date,
-	    node8.scheduled_date,
-	    'Heading8 has scheduled_date set'
+	    heading8.scheduled.toISOString(),
+	    new Date(node8.fields.scheduled).toISOString(),
+	    'Heading8 has scheduled set as Date() object'
 	);
 	equal(
-	    heading8.scheduled_time,
-	    node8.scheduled_time,
-	    'Heading8 has scheduled_time set'
-	);
-	strictEqual(
-	    heading8.scheduled_time_specific,
-	    node8.scheduled_time_specific,
-	    'Heading8 has scheduled_time_specific set'
-	);
-	equal(
-	    heading8.parent_id,
-	    node8.parent_id,
+	    heading8.parent,
+	    node8.fields.parent,
 	    'Heading8 has parent_id set'
 	);
 	equal(
-	    heading8.deadline_date,
-	    node8.deadline_date,
+	    heading8.deadline.toISOString(),
+	    new Date(node8.fields.deadline).toISOString(),
 	    'Heading8 has deadline_date set'
-	);
-	equal(
-	    heading8.deadline_time,
-	    node8.deadline_time,
-	    'Heading8 has deadline_time set'
 	);
 	strictEqual(
 	    heading8.deadline_time_specific,
-	    node8.deadline_time_specific,
+	    node8.fields.deadline_time_specific,
 	    'Heading8 has deadline_time_specific set'
 	);
 	equal(
 	    heading8.priority,
-	    node8.priority,
+	    node8.fields.priority,
 	    'Heading8 has priority set'
 	);
 	deepEqual(
 	    heading8.scope,
-	    node8.scope,
+	    node8.fields.scope,
 	    'Heading8 has scope set'
 	);
 	strictEqual(
 	    heading8.repeats,
-	    node8.repeats,
+	    node8.fields.repeats,
 	    'Heading8 has repeats set'
 	);
 	equal(
 	    heading8.repeating_number,
-	    node8.repeating_number,
+	    node8.fields.repeating_number,
 	    'Heading8 has repeating_number set'
 	);
 	equal(
 	    heading8.repeating_unit,
-	    node8.repeating_unit,
+	    node8.fields.repeating_unit,
 	    'Heading8 has repeating_unit set'
 	);
 	strictEqual(
 	    heading8.repeats_from_completion,
-	    node8.repeats_from_completion,
+	    node8.fields.repeats_from_completion,
 	    'Heading8 has repeats_from_completion set'
 	);
 	strictEqual(
 	    heading8.archived,
-	    node8.archived,
+	    node8.fields.archived,
 	    'Heading8 has archived set'
 	);
 	deepEqual(
 	    heading8.related_projects,
-	    node8.related_projects,
+	    node8.fields.related_projects,
 	    'Heading8 has related_projects set'
 	);
 	equal(
 	    heading8.text,
-	    node8.text,
+	    node8.fields.text,
 	    'Heading8 has text set'
 	);
 	equal(
 	    heading8.tag_string,
-	    node8.tag_string,
+	    node8.fields.tag_string,
 	    'Heading8 has tag_string set'
 	);
-	equal(
-	    heading8.has_children,
-	    ! node8.is_leaf_node,
-	    'Heading8 has has_children set based on is_leaf_node'
-	);
+	// equal(
+	//     heading8.has_children,
+	//     ! node8.is_leaf_node,
+	//     'Heading8 has has_children set based on is_leaf_node'
+	// );
 	start();
     }, ajax_timer * 1);
 });
@@ -656,7 +905,7 @@ test('Headings manager get method', function() {
     heading = workspace.headings.get({text: 'other text'});
 });
 
-test('Headings manager filter method', function() {
+test('Headings manager filter_by method', function() {
     var $workspace = $('#test_workspace');
     $workspace.nodeOutline({'simulate': true});
     var workspace = $workspace.data('nodeOutline');
@@ -668,7 +917,7 @@ test('Headings manager filter method', function() {
 			 archived: 1};
     workspace.headings.push(archived_node);
     workspace.headings.push(fake_archived);
-    var response = workspace.headings.filter({archived: true});
+    var response = workspace.headings.filter_by({archived: true});
     equal(
 	response[0],
 	archived_node,
@@ -689,20 +938,20 @@ test('Headings manager filter method', function() {
 	}
     }
     deepEqual(
-	workspace.headings.filter({scope: 1}),
+	workspace.headings.filter_by({scope: 1}),
 	expected,
 	'Filtering by scope'
     );
     // check on filtering by full arrays
     var expected = [];
-    for ( var i in workspace.headings) {
+    for ( var i = 0; i < workspace.headings.length; i++ ) {
 	var heading = workspace.headings[i];
-	if ( ($(heading.scope).not([]).length == 0 && $([]).not(heading.scope).length == 0) && (heading.level > 0) && typeof heading.scope != 'undefined') {
+	if ( ($(heading.scope).not([]).length == 0 && $([]).not(heading.scope).length == 0) && (heading.rank > 0) && typeof heading.scope != 'undefined') {
 	    expected.push(workspace.headings[i]);
 	}
     }
     deepEqual(
-	workspace.headings.filter( {scope: []} ),
+	workspace.headings.filter_by( {scope: []} ),
 	expected,
 	'Filtering by an array of scopes'
     );
@@ -727,6 +976,11 @@ test('Headings manager order_by method', function() {
 	    'heading ' + pk + ' in correct ordering'
 	);
     }
+    equal(
+	typeof response.filter_by,
+	'function',
+	'order_by returns a headings manager to preserve chainability'
+    );
 });
 
 test('Headings are properly drawn on init', function() {
@@ -772,6 +1026,7 @@ test('heading.redraw() method', function() {
     var workspace = $workspace.data('nodeOutline');
     var heading = workspace.headings.get({pk: 1});
     var s = '.heading[node_id="' + heading.pk + '"]';
+    console.log(heading.todo_state);
     equal(
 	heading.$todo_state.html(),
 	heading.get_todo_state().display,
@@ -809,7 +1064,7 @@ test('heading.redraw() method', function() {
 	heading.get_todo_state().display,
 	'Heading is correct after being redrawn'
     );
-    heading.todo_id = 0;
+    heading.todo_state = 0;
     heading.redraw();
     equal(
 	heading.$todo_state.html(),
@@ -828,9 +1083,22 @@ test('workspace.headings.add() method', function() {
     heading_new.pk = 1;
     workspace.headings.add(heading_new);
     equal(
-	workspace.headings.filter({pk: 1}).length,
+	workspace.headings.filter_by({pk: 1}).length,
 	1,
 	'Adding a duplicate heading.pk removes the other heading'
+    );
+    // Test that headings manager sets workspace attribute
+    equal(
+	workspace.headings.workspace,
+	workspace,
+	'workspace.headings.workspace is set'
+    );
+    var new_heading = new GtdHeading(node8);
+    workspace.headings.add(new_heading);
+    equal(
+	new_heading.workspace,
+	workspace,
+	'heading.workspace set of being added by manager'
     );
 });
 
@@ -899,7 +1167,7 @@ test('Set todo states', function() {
     );
     var heading = workspace.headings.get({pk: 2});
     equal(
-	heading.todo_id,
+	heading.todo_state,
 	1,
 	'heading object has todo_id set'
     );
@@ -932,20 +1200,22 @@ asyncTest('todoState integration', function() {
     );
     equal(
 	todo_state.get_todo_id(),
-	heading1.todo_id,
+	heading1.todo_state,
 	'Heading1 todo object has todo_id set'
     );
     heading1.$todo_state.click();
     var $popover = heading1.$todo_state.next('.popover');
     equal(
-	$popover.find('.todo-option[todo_id="'+heading1.todo_id+'"]').attr('selected'),
+	$popover.find(
+	    '.todo-option[todo_id="'+heading1.todo_state+'"]'
+	).attr('selected'),
 	'selected',
 	'Heading 1 popover has current todo state selected'
     );
     $popover.find('.todo-option[todo_id="2"]').click();
     setTimeout( function() {
 	equal(
-	    heading1.todo_id,
+	    heading1.todo_state,
 	    2,
 	    'Clicking a todo_option sets heading.todo_id'
 	);
@@ -997,41 +1267,44 @@ asyncTest('nodeEdit dialogs', function() {
 	    heading8.title,
 	    'Opening the modal sets the title correctly'
 	);
+	console.log(heading8);
 	equal(
 	    workspace.$edit_modal.find('.header-title').html(),
-	    'Edit "' + heading8.title_html + '"',
+	    'Edit "' + heading8.get_title() + '"',
 	    'Opening the modal sets the header correctly'
 	)
 	ok(
-	    workspace.$edit_modal.find('#id_todo_state').children('option[value="' + heading8.todo_id + '"]').is(':selected'),
+	    workspace.$edit_modal.find('#id_todo_state').children('option[value="' + heading8.todo_state + '"]').is(':selected'),
 	    'Opening the modal sets todo-state correctly'
 	);
+	var sch = heading8.scheduled;
 	equal(
 	    workspace.$edit_modal.find('#id_scheduled_date').val(),
-	    heading8.scheduled_date,
+	    sch.getFullYear() + '-' + (sch.getMonth() + 1) + '-' + sch.getDate(),
 	    'Opening the modal sets the scheduled_date correctly'
 	);
 	equal(
 	    workspace.$edit_modal.find('#id_scheduled_time').val(),
-	    heading8.scheduled_time,
+	    sch.toTimeString().slice(0, 5),
 	    'Opening the modal sets the scheduled_time correctly'
 	);
 	ok(
 	    workspace.$edit_modal.find('#id_scheduled_time_specific').prop('checked'),
 	    'Opening the modal sets the scheduled_time_specific correctly'
 	);
+	sch = heading8.deadline;
 	equal(
 	    workspace.$edit_modal.find('#id_deadline_date').val(),
-	    heading8.deadline_date,
+	    sch.getFullYear() + '-' + (sch.getMonth() + 1) + '-' + sch.getDate(),
 	    'Opening the modal sets the deadline_date correctly'
 	);
 	equal(
 	    workspace.$edit_modal.find('#id_deadline_time').val(),
-	    heading8.deadline_time,
+	    sch.toTimeString().slice(0, 5),
 	    'Opening the modal sets the deadline_time correctly'
 	);
 	ok(
-	    workspace.$edit_modal.find('#id_deadline_time_specific')
+	    ! workspace.$edit_modal.find('#id_deadline_time_specific')
 		.is(':checked'),
 	    'Opening the modal sets the deadline_time_specific correctly'
 	);
@@ -1076,8 +1349,7 @@ asyncTest('nodeEdit dialogs', function() {
 		.is(':selected'),
 	    'Opening the modal sets the repeating unit correctly'
 	);
-	console.log(heading8);
-	ok(
+ 	ok(
 	    workspace.$edit_modal.find('#id_repeats_from_completion')
 		.prop('checked'),
 	    'Opening the modal sets the repeats_from_completion box correctly'
@@ -1195,6 +1467,11 @@ test('GtdHeading.has_scope() method', function() {
     var workspace = $workspace.data('nodeOutline');
     var heading = workspace.headings.get({pk: 1});
     heading.scope = [1];
+    equal(
+	workspace.scope,
+	0,
+	'workspace initial scope is 0'
+    );
     ok(
 	heading.has_scope(1),
 	'has_scope() correctly identifies an active scope'
