@@ -173,7 +173,7 @@ def reset_env(commit=False):
     """Delete large portions of the database. Since this is irrevesible,
     it will not actually succeed unless commit is passed True.
     """
-    if commit is True:
+    if commit:
         try:
             TodoState.objects.all().delete()
         except DatabaseError:

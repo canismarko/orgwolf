@@ -193,10 +193,11 @@
 	  </li>
 	  <li><a href="{% url 'wolfmail.views.display_label' %}">Inbox</a></li>
 	  <li{% if 'node' in request.get_full_path %} class="active"{% endif %}>
-	    <a href="{% url 'gtd.views.display_node' %}">Projects</a>
+	    {#<a href="{% url 'gtd.views.display_node' %}">Projects</a>#}
+	    <a href="{% url 'node_object' %}">Projects</a>
 	  </li>
 	</ul>
-	
+
 	{% block inbox_widget %}
 	<form class="navbar-form pull-left" method="POST" action="/gtd/toinbox/?next={{request.get_full_path}}" id="new_inbox_form">
 	  <div class="input-append">

@@ -194,7 +194,7 @@
     "model": "gtd.tag", 
     "fields": {
         "owner": null, 
-        "tag_string": "", 
+        "tag_string": "marzipan", 
         "display": "", 
         "public": true
     }
@@ -204,7 +204,7 @@
     "model": "gtd.tag", 
     "fields": {
         "owner": null, 
-        "tag_string": "", 
+        "tag_string": "magic", 
         "display": "", 
         "public": true
     }

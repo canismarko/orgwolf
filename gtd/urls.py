@@ -23,25 +23,36 @@ from django.conf.urls import patterns, include, url
 from django.contrib import admin
 admin.autodiscover()
 
-from gtd.views import Descendants
+from gtd.views import Descendants, NodeView
 
-urlpatterns = patterns('gtd.views',
-                       url(r'^$', 'home'),
+urlpatterns = patterns(
+    'gtd.views',
+    url(r'^$', 'home'),
 
-                       url(r'^lists(?P<url_string>/[\w/]+)?/$', 'list_display'),
+    url(r'^lists(?P<url_string>/[\w/]+)?/$', 'list_display'),
 
-                       url(r'^agenda(?:/(?P<date>\d{4}-\d{1,2}-\d{1,2}))?/$', 'agenda_display'),
+    url(r'^agenda(?:/(?P<date>\d{4}-\d{1,2}-\d{1,2}))?/$', 'agenda_display'),
 
-                       url(r'^toinbox/$', 'capture_to_inbox'),
+    url(r'^toinbox/$', 'capture_to_inbox'),
 
-                       url(r'^node/(?:scope(?P<scope_id>\d+)/)?(?P<show_all>all/)?$', 'display_node'),
-                       url(r'^node/(?:scope(?P<scope_id>\d+)/)?(?P<show_all>all/)?(?P<node_id>\d+)/$', 'display_node'),
-                       url(r'^node/(?:scope(?P<scope_id>\d+)/)?(?P<node_id>\d+)/edit/', 'edit_node'),
-                       url(r'^node/(?:scope(?P<scope_id>\d+)/)?(?P<node_id>\d+)/move/', 'move_node'),
-                       url(r'^node/(?:scope(?P<scope_id>\d+)/)?(?:(?P<node_id>\d+)/)?new/', 'new_node'),
-                       # url(r'^node/(?P<ancestor_pk>\d+)/descendants/$', 'get_descendants'),
-                       url(r'^node/(?P<ancestor_pk>\d+)/descendants/$', 
-                           Descendants.as_view(),
-                           name='node_descendants'),
-                       url(r'^node/search/', 'node_search'),
+    # url(r'^node/(?:scope(?P<scope_id>\d+)/)?(?P<show_all>all/)?$',
+    #     'display_node'),
+    # url(r'^node/(?:scope(?P<scope_id>\d+)/)?(?P<show_all>all/)?(?P<node_id>\d+)/$',
+    # 'display_node'),
+    url(r'^node/(?:scope(?P<scope_id>\d+)/)?(?P<node_id>\d+)/(?:(?P<slug>[-\w\d]+)/)?edit/',
+        'edit_node'),
+    url(r'^node/(?:scope(?P<scope_id>\d+)/)?(?P<node_id>\d+)/move/',
+        'move_node'),
+    url(r'^node/(?:scope(?P<scope_id>\d+)/)?(?:(?P<node_id>\d+)/)?new/',
+        'new_node'),
+    # url(r'^node/(?P<ancestor_pk>\d+)/descendants/$', 'get_descendants'),
+    url(r'^node/search/', 'node_search'),
+
+    # New API urls below
+    url(r'^node/(?:(?P<pk>\d+)/)?(?:(?P<slug>[-\w\d]+)/)?(?P<show_all>all/)?$',
+        NodeView.as_view(),
+        name='node_object'),
+    url(r'^node/descendants/(?P<ancestor_pk>\d+)/$',
+        Descendants.as_view(),
+        name='node_descendants'),
 )
