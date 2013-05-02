@@ -333,7 +333,7 @@ $(document).ready(function(){
 			$popover.show();
 			// Hide the popover if something else is clicked
 			$('body').one('click.autohide', function() {
-			    hide_popover();	
+			    hide_popover();
 			});
 			$popover.bind('click', function(e) {
 			    e.stopPropagation();
@@ -412,42 +412,46 @@ $(document).ready(function(){
 			new_id = Number($(this).attr('todo_id'));
 			$popover = $(this).parent().parent();
 			heading = $popover.parent().parent().data('nodeOutline');
-			url = '/gtd/node/' + settings.node_id + '/edit/';
+			// url = '/gtd/node/' + settings.node_id + '/edit/';
+			url = '/gtd/node/' + settings.node_id + '/';
 			payload = {
-			    format: 'json',
-			    todo_id: new_id,
+			    todo_state: new_id,
+			    auto_update: true
 			};
 			// Avoid dismissing if same todo state selected
 			if ( new_id !== settings.get_todo_id() ) {
 			    // If todo state is being changed then...
 			    $.post(url, payload, function(response) {
 				var heading, old, new_state, s;
-				response = $.parseJSON(response);
-				// (callback) update the document todo states after change
-				if ( response.status === 'success' ) {
-				    if ( settings.heading ) {
-					heading = settings.heading;
-					old = heading.todo_state;
-					heading.todo_state = response.todo_id;
-				    } else {
-					old = $todo.attr('todo_id');
-					$todo.attr('todo_id', response.todo_id);
-					todo_id = response.todo_id;
-					settings.todo_id = response.todo_id;
-				    }
-				    new_state = get_state(response.todo_id);
-				    $todo.html(new_state.display);
-				    $todo.attr('data-original-title', new_state.full);
-				    $options.removeAttr('selected'); // clear selected
-				    s = '.todo-option[todo_id="';
-				    s += response.todo_id + '"]';
-				    $inner.children(s).attr('selected', '');
-				    // Run the user submitted callback
-				    settings.click(response);
-				    // Kludge to avoid stale css
-				    $todo.mouseenter();
-				    $todo.mouseleave();
+				// convert response from string into JSON
+				while ( typeof response === 'string' ) {
+				    response = $.parseJSON(response);
 				}
+				response = response[0];
+				// (callback) update the document todo states after change
+				if ( settings.heading ) {
+				    settings.heading.set_fields(
+					response
+				    );
+				    settings.heading.redraw();
+				} else {
+				    old = $todo.attr('todo_id');
+				    $todo.attr('todo_id', response.fields.todo_state);
+				    todo_id = response.fields.todo_state;
+				    settings.todo_id = response.fields.todo_state;
+				}
+				new_state = get_state(response.fields.todo_state);
+				$todo.html(new_state.display);
+				$todo.attr('data-original-title', new_state.full);
+				$options.removeAttr('selected'); // clear selected
+				s = '.todo-option[todo_id="';
+				s += response.todo_id + '"]';
+				$inner.children(s).attr('selected', '');
+				// Run the user submitted callback
+				settings.click(response);
+				// Kludge to avoid stale css
+				$todo.mouseenter();
+				$todo.mouseleave();
 			    }); // end of $.post
 			    hide_popover();
 			}
@@ -464,19 +468,19 @@ $(document).ready(function(){
 		$todo = $(this);
 		data = $todo.data('todoState');
 		$popover = $todo.next('.popover');
-		if ( typeof options.todo_id !== 'undefined' ) {
+		if ( typeof options.todo_state !== 'undefined' ) {
 		    // if a new todo_id is being assigned
-		    data.todo_id = options.todo_id;
-		    $todo.attr('todo_id', options.todo_id);
+		    data.todo_state = options.todo_state;
+		    $todo.attr('todo_id', options.todo_state);
 		    s_all = '.todo-option';
-		    s_new = s_all + '[todo_id="' + options.todo_id + '"]';
+		    s_new = s_all + '[todo_id="' + options.todo_state + '"]';
 		    $popover.find(s_all).removeAttr('selected');
 		    $popover.find(s_new).attr('selected', 'selected');
 		    new_todo = data.states.filter( function ( state ) {
-			return state.pk === Number(options.todo_id);
+			return state.pk === Number(options.todo_state);
 		    })[0];
 		    $todo.html(new_todo.display);
-		    if ( data.todo_id > 0 ) {
+		    if ( data.todo_state > 0 ) {
 			$todo.show();
 		    } else {
 			$todo.hide();
@@ -554,7 +558,8 @@ $(document).ready(function(){
 		if (options.old_text !== editable.obj.html()) {
 		    if ( options ) { // Only if an AlohaText exists
 			$parent = options.$parent;
-			url = '/gtd/node/' + $parent.attr('node_id') + '/edit/';
+			url = '/gtd/node/' + $parent.attr('node_id') + '/';
+			// url = '/gtd/node/' + $parent.attr('node_id') + '/edit/';
 			new_text = $text.html();
 			if ( new_text === '<br>' ) {
 			    new_text = '';
@@ -567,28 +572,16 @@ $(document).ready(function(){
 			$.post(url, payload, function(r) {
 			    var $modal = [], outline;
 			    // Callback for aloha edit request
-			    r = $.parseJSON(r);
-			    // Update modal dialog with new text
+			    r = $.parseJSON($.parseJSON(r))[0];
+			    // Update headings/data with new text
 			    if ( options.heading ) {
-				$modal = options.heading.$buttons
-				    .find('#edit-modal');
-				options.heading.text = r.text;
+				options.heading.set_fields(r);
 			    } else {
 				outline = $parent.data('nodeOutline');
 				if (outline) {
 				    $modal = $parent.data('nodeOutline').$buttons
 					.find('#edit-modal');
 				}
-			    }
-			    if ( $modal.length > 0 ) {
-				$modal.each( function() {
-				    var $text, $aloha_text;
-				    $text = $(this).find('#id_text');
-				    $aloha_text = $text
-					.siblings('#id_text-aloha');
-				    $text.html(r.text);
-				    $aloha_text.html(r.text);
-				});
 			    }
 			});
 		    }
@@ -638,6 +631,7 @@ $(document).ready(function(){
 
 // Begin implementation of hierarchical expanding project list
 GtdHeading = function ( args ) {
+    var parent, $body;
     if ( ! args ) {
 	args = {};
     }
@@ -654,7 +648,7 @@ GtdHeading = function ( args ) {
     this.scope = [];
     this.related_projects = [];
     // Determine the width of icon that is being used
-    var $body = $('body');
+    $body = $('body');
     $body.append('<i id="7783452" class="' + GtdHeading.ICON + '"></i>');
     this.icon_width = Number($body.find('#7783452').css('width').slice(0,-2));
     $('#7783452').remove();
@@ -664,8 +658,12 @@ GtdHeading = function ( args ) {
     } else {
 	this.set_fields( args );
     }
-    if ( this.workspace && this.parent ) {
-	this.rank = this.get_parent().rank + 1;
+    // determine rank if possible
+    if ( this.workspace && parent ) {
+	parent = this.get_parent();
+	if ( parent ) {
+	    this.rank = parent.rank + 1;
+	}
     }
 }; // end of GtdHeading constructor
 
@@ -863,7 +861,7 @@ GtdHeading.prototype.create_div = function( $target ) {
 	    heading.toggle();
 	});
 	this.$buttons.find('.detail-btn').click( function() {
-	    window.location = '/gtd/node/' + node_id + '/';
+	    window.location = '/gtd/node/' + node_id + '/' + heading.slug + '/';
 	});
 	this.$buttons.find('.list-btn').click( function() {
 	    window.location = '/gtd/lists/parent' + node_id + '/';
@@ -884,11 +882,11 @@ GtdHeading.prototype.create_div = function( $target ) {
 		changed: function(node) {
 		    var parent;
 		    $hoverable.find('.todo-state').todoState(
-			'update', {todo_id: node.todo_state}
+			'update', {todo_id: node.fields.todo_state}
 		    );
-		    heading.text = node.text;
-		    heading.archived = node.archived;
-		    heading.title = node.title;
+		    heading.text = node.fields.text;
+		    heading.archived = node.fields.archived;
+		    heading.title = node.fields.title;
 		    parent = heading.get_parent();
 		    if ( parent ) {
 			parent.redraw();
@@ -913,7 +911,6 @@ GtdHeading.prototype.create_div = function( $target ) {
 		    new_heading = new GtdHeading( node );
 		    heading.workspace.headings.add(new_heading);
 		    parent = new_heading.get_parent();
-		    parent.has_children = true;
 		    parent.redraw();
 		    parent.open();
 		},
@@ -922,20 +919,18 @@ GtdHeading.prototype.create_div = function( $target ) {
 	this.$buttons.find('.archive-btn').click( function() {
 	    // Toggles archiving nodes
 	    var url, payload={};
-	    url = '/gtd/node/' + heading.pk + '/edit/';
-	    payload.format = 'json';
+	    url = '/gtd/node/' + heading.pk + '/';
+	    // url = '/gtd/node/' + heading.pk + '/edit/';
 	    if ( heading.archived ) {
 		payload.archived = false;
 	    } else {
 		payload.archived = true;
 	    }
+	    payload.auto_update = true;
 	    $.post(url, payload, function(r) {
-		r = $.parseJSON(r);
-		if ( r.status === 'success' ) {
-		    // Success now update the object
-		    heading.archived = r.archived;
-		    heading.redraw();
-		}
+		r = $.parseJSON($.parseJSON(r))[0];
+		heading.set_fields(r);
+		heading.redraw();
 	    });
 	});
 	todo_states = this.todo_states;
@@ -985,7 +980,13 @@ GtdHeading.prototype.get_previous_sibling = function() {
 };
 
 GtdHeading.prototype.get_parent = function() {
-    return this.workspace.headings.get({pk: this.parent});
+    var parent;
+    if ( this.rank > 0 ) {
+	parent = this.workspace.headings.get({pk: this.parent});
+    } else {
+	parent = null;
+    }
+    return parent;
 };
 
 GtdHeading.prototype.get_children = function() {
@@ -1294,10 +1295,7 @@ GtdHeading.prototype.redraw = function(options) {
 	this.$todo_state.todoState({
 	    states: this.workspace.todo_states,
 	    node_id: this.pk,
-	    heading: this,
-	    click: function(ajax_response) {
-		heading.todo_state = ajax_response.todo_id;
-	    }
+	    heading: this
 	}); // end of todoState plugin
     }
     if ( this.$title ) {
@@ -1359,7 +1357,7 @@ GtdHeading.prototype.populate_children = function(options) {
     if ( typeof options === 'undefined' ) {
 	options = {};
     }
-    url = '/gtd/node/' + this.pk + '/descendants/';
+    url = '/gtd/node/descendants/' + this.pk + '/';
     ancestor = this;
     get_nodes = function(options) {
 	// Get immediate children
@@ -1632,8 +1630,8 @@ GtdHeading.prototype.toggle = function( direction ) {
 		} else {
 		    workspace.todo_states = { todo_id: 0, display: '[None]' };
 		}
-		if ( args.scopes ) { 
-		    workspace.scopes = args.scopes;		    
+		if ( args.scopes ) {
+		    workspace.scopes = args.scopes;
 		} else {
 		    workspace.scopes = {};
 		}
@@ -1671,7 +1669,7 @@ GtdHeading.prototype.toggle = function( direction ) {
 		    }
 		};
 		workspace.headings.add(workspace);
-		// Sort through the elements in the old container and 
+		// Sort through the elements in the old container and
 		// populate the headings array.
 		$this.find('.ow-heading').each(function() {
 		    var $row, pk, todo_id, title, text, parent_id, tags, sibling_id, dict, heading, lft, rght, tree_id, level;
@@ -1947,30 +1945,37 @@ GtdHeading.prototype.toggle = function( direction ) {
     var methods = {
 	// Initialization
 	init: function( args ) {
-	    var edit_url, data, start_shown, $target, $button, node_id, parent_id, changed, on_modal, toggle, connect_handlers, parent;
+	    var edit_url, post_url, data, start_shown, $target, $button, node_id, parent_id, changed, on_modal, toggle, connect_handlers, parent;
 	    if ( typeof args === 'undefined' ) {
 		args = {};
 	    }
 	    // Determine what the correct URL is
 	    edit_url = '';
+	    post_url = '';
 	    if ( args.url ) {
 		edit_url = args.url;
+		post_url = args.url;
 	    } else {
 		if ( args.heading ) {
 		    // Heading object was passed
 		    edit_url = '/gtd/node/' + args.heading.pk + '/edit/';
+		    post_url = '/gtd/node/' + args.heading.pk + '/';
 		}
 		else if ( args.node_id > 0 ) {
 		    // Existing node
 		    edit_url = '/gtd/node/' + args.node_id + '/edit/';
+		    post_url = '/gtd/node/' + args.node_id + '/';
 		} else if ( args.parent_id > 0 ) {
 		    // new node with parent
 		    edit_url = '/gtd/node/' + args.parent_id + '/new/';
+		    post_url = '/gtd/node/' + args.parent_id + '/new/';
 		} else if ( args.parent ) {
 		    edit_url = '/gtd/node/' + args.parent.pk + '/new/';
+		    post_url = '/gtd/node/' + args.parent.pk + '/new/';
 		} else {
 		    // New top-level node
 		    edit_url = '/gtd/node/new/';
+		    post_url = '/gtd/node/new/';
 		}
 	    }
 	    data = this.data('nodeEdit');
@@ -1982,9 +1987,11 @@ GtdHeading.prototype.toggle = function( direction ) {
 	    }
 	    if ( data ) {
 		data.edit_url = edit_url;
-		data.$modal.find('#edit_url').attr('value', edit_url);
+		data.post_url = post_url;
+		data.$modal.find('#post_url').val(post_url);
 	    } else {
-		data = {edit_url: edit_url};
+		data = {edit_url: edit_url,
+			post_url: post_url};
 		start_shown = args.show;
 		$target = $(args.target);
 		$button = this;
@@ -2088,19 +2095,19 @@ GtdHeading.prototype.toggle = function( direction ) {
 		    } else {
 			// No heading, so clear current values
 			clear_text = [
-			    '#id_title', '#id_scheduled_date', 
-			    '#id_scheduled_time', '#id_deadline_date', 
-			    '#id_deadline_time', '#id_tag_string', 
+			    '#id_title', '#id_scheduled_date',
+			    '#id_scheduled_time', '#id_deadline_date',
+			    '#id_deadline_time', '#id_tag_string',
 			    '#id_text', '#id_repeating_number'
 			];
 			clear_select = [
-			    '#id_todo_state', '#id_priority', 
-			    '#id_related_projects', '#id_scope', 
+			    '#id_todo_state', '#id_priority',
+			    '#id_related_projects', '#id_scope',
 			    '#id_repeating_unit'
 			];
 			clear_check = [
-			    '#id_archived', '#id_scheduled_time_specific', 
-			    '#id_deadline_time_specific', 
+			    '#id_archived', '#id_scheduled_time_specific',
+			    '#id_deadline_time_specific',
 			    '#id_repeats', '#id_repeats_from_completion'
 			];
 			data.$modal.find('.header-title').html('New node');
@@ -2140,7 +2147,7 @@ GtdHeading.prototype.toggle = function( direction ) {
 		    } // end of setting current values
 		    data.$modal.modal('toggle');
 			// Focus the title box
-			data.$modal.find('#id_title').focus();		    
+			data.$modal.find('#id_title').focus();
 		}; // end of toggle function
 		connect_handlers = function() {
 		    var $text, $text_a, $form, that;
@@ -2177,45 +2184,41 @@ GtdHeading.prototype.toggle = function( direction ) {
 			e.preventDefault();
 			payload = $form.serialize();
 			payload += '&format=json&auto_update=false';
-			saved_url = data.$modal.find('#edit_url').val();
+			saved_url = data.$modal.find('#post_url').val();
 			if ( saved_url ) {
 			    submit_url = saved_url;
 			} else {
-			    submit_url = data.edit_url;
+			    submit_url = data.post_url;
 			}
 			$(this).data('nodeEdit', data);
 			that = this;
 			$.post(submit_url, payload, function(r) {
 			    var node, data;
-			    r = $.parseJSON(r);
-			    if (r.status === 'success') {
-				// Success! Now update the page
-				node = r.node_data;
-				// Update data
-				data = $(that).data('nodeEdit');
-				if ( node.todo_state === null ) {
-				    node.todo_state = 0;
-				}
-				data.todo_id = node.todo_state;
-				// Update DOM
-				if ( data.heading ) {
-				    data.heading.set_fields( node );
-				}
-				if ( $target ) {
-				    $target.find('.update').each(function() {
-					var field, new_html;
-					field = $(this).attr('data-field');
-					new_html = node[field];
-					$(this).html(new_html);
-				    });
-				}
-				data.$modal.modal('hide');
-				// User supplied callback function
-				if (typeof data.changed !== 'undefined') {
-				    data.changed(node);
-				}
-			    } else { // JSON response was not successful
-				console.log(r);
+			    r = $.parseJSON($.parseJSON(r))[0];
+			    // Success! Now update the page
+			    // Update data
+			    data = $(that).data('nodeEdit');
+			    if (data) {
+				data.todo_state = r.fields.todo_state;
+			    } else {
+				data = {};
+			    }
+			    // Update DOM
+			    if ( data.heading ) {
+				data.heading.set_fields( r );
+			    }
+			    if ( $target ) {
+				$target.find('.update').each(function() {
+				    var field, new_html;
+				    field = $(this).attr('data-field');
+				    new_html = r.fields[field];
+				    $(this).html(new_html);
+				});
+			    }
+			    data.$modal.modal('hide');
+			    // User supplied callback function
+			    if (typeof data.changed !== 'undefined') {
+				data.changed(r);
 			    }
 			});
 		    });
@@ -2227,7 +2230,7 @@ GtdHeading.prototype.toggle = function( direction ) {
 		if ( args.$modal ) {
 		    // client has already gotten the $modal dialog
 		    data.$modal = args.$modal;
-		    data.$modal.find('#edit_url').val( data.edit_url );
+		    data.$modal.find('#edit_url').val( data.post_url );
 		    connect_handlers();
 		} else {
 		    // Retrieve the modal form itself
@@ -2305,110 +2308,6 @@ GtdHeading.prototype.toggle = function( direction ) {
 	    response = methods.init.apply( this, arguments );
 	} else {
 	    $.error( 'Method ' + method + ' does not exist on jQuery.nodeEdit' );
-	}
-	return response;
-    };
-}(jQuery));
-
-/*************************************************
-* jQuery todoButtons plugin
-* 
-* Adds javascript functionality to a series of
-* buttons to be used for easily changing todostate
-* 
-* Process the following elements:
-* - $(this) is an element with a series of buttons
-* 
-* Options:
-* - callback: a function to run upon successful
-*   JSON response
-*************************************************/
-(function( $ ){
-    // Define different methods inside this plugin
-    var methods = {
-	// Initialization
-	init: function( args ) {
-	    return this.each(function() {
-		var $this, data, $buttons;
-		// Handle some setup stuff first (settings, etc.)
-		if ( typeof args === 'undefined' ) {
-		    args = {};
-		}
-		$this = $(this);
-		data = {};
-		data.node_id = $this.attr('node_id');
-		data.url = '/gtd/node/' + data.node_id + '/edit/';
-		data.sel = 'button';
-		$buttons = $this.find(data.sel);
-		// Bind to each buttons click event
-		$buttons.bind('click.buttons', function(e) {
-		    var $btn, new_todo_id, payload;
-		    e.preventDefault();
-		    $btn = $(this);
-		    new_todo_id = $btn.attr('value');
-		    payload = {
-			format: 'json',
-			todo_id: new_todo_id
-		    };
-		    // Submit the change to server
-		    jQuery.post(data.url, payload, function(r) {
-			//data = $this.data('todobuttons'); // Read in settings
-			r = $.parseJSON(r);
-			if ( r.status === 'success' ) {
-			    // Call the update method to update the DOM
-			    methods.update({ todo_id: r.todo_id,
-						$elem: $this });
-			    // Call user-submitted callback
-			    if ( typeof args.callback !== 'undefined' ) {
-				args.callback(r);
-			    }
-			}
-		    });
-		});
-		// Save settings to element
-		$this.data('todobuttons', data);
-	    });
-	}, // end of init method
-	// Method accepts new data and updates the DOM elements and jQuery.data()
-	update: function( args ) {
-	    var $elem;
-	    if (typeof args.$elem === 'undefined') {
-		$elem = this;
-	    } else {
-		$elem = args.$elem;
-	    }
-	    return $elem.each(function() {
-		var $this, data, new_sel;
-		$this = $(this);
-		data = $this.data('todobuttons'); // Read in settings
-		// Make sure the plugin has been initialized
-		if ( !data ) {
-		    methods.init();
-		}
-		// Now update the element
-		if ( typeof args.todo_id !== 'undefined' ) {
-		    data.todo_id = args.todo_id;
-		}
-		// Clear all active states
-		$(data.sel).removeClass('active');
-		// And activate the new button
-		new_sel = data.sel + '[value="' + data.todo_id + '"]';
-		$this.find(new_sel).addClass('active');
-		// Write the new settings
-		$this.data('todobuttons', data);
-	    });
-	} // end of update method
-    };
-	
-    // Method selection magic
-    $.fn.todoButtons = function( method ) {
-	var response;
-	if ( methods[method] ) {
-	    response = methods[method].apply( this, Array.prototype.slice.call( arguments, 1));
-	} else if ( typeof method === 'object' || !method ) {
-	    response = methods.init.apply( this, arguments );
-	} else {
-	    $.error( 'Method ' + method + ' does not exist on jQuery.todoButtons' );
 	}
 	return response;
     };

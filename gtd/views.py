@@ -18,6 +18,12 @@
 #######################################################################
 
 from __future__ import unicode_literals
+import math
+import re
+import datetime
+import json
+from itertools import chain
+
 from django.core import serializers
 from django.core.urlresolvers import reverse
 from django.forms.models import model_to_dict
@@ -25,19 +31,17 @@ from django.shortcuts import render_to_response, redirect, get_object_or_404
 from django.template import RequestContext
 from django.template.loader import render_to_string
 from django.views.generic import View
+from django.views.generic.detail import DetailView
 from django.contrib.auth.decorators import login_required
-from django.http import HttpResponse, HttpResponseRedirect, Http404, HttpResponseBadRequest
+from django.http import HttpResponse, HttpResponseRedirect
+from django.http import Http404, HttpResponseBadRequest
 from django.db.models import Q
 from django.utils.timezone import get_current_timezone
-from itertools import chain
-import math
-import re
-import datetime
-import json
 
 from mptt.exceptions import InvalidMove
 from gtd.models import TodoState, Node, Context, Scope
-from gtd.shortcuts import parse_url, generate_url, get_todo_abbrevs, order_nodes, qs_to_dicts
+from gtd.shortcuts import parse_url, generate_url, get_todo_abbrevs
+from gtd.shortcuts import order_nodes, qs_to_dicts
 from gtd.templatetags.gtd_extras import escape_html
 from wolfmail.models import MailItem, Label
 from gtd.forms import NodeForm
@@ -59,7 +63,7 @@ def list_display(request, url_string=""):
     todo_abbrevs = get_todo_abbrevs(todo_states)
     todo_abbrevs_lc = []
     base_url = reverse('gtd.views.list_display')
-    base_node_url = reverse('gtd.views.display_node')
+    base_node_url = reverse('node_object')
     list_url = base_url
     list_url += '{parent}{states}{scope}{context}'
     scope_url_data = {}
@@ -184,7 +188,6 @@ def list_display(request, url_string=""):
         states = scope_url_data['states'],
         parent = 'parent{0}/'
     )
-    print(parent_url)
     # Prepare an array of root node data
     root_list = list(root_nodes)
     # Add a field for the root node
@@ -340,67 +343,20 @@ def display_node(request, show_all=False, node_id=None, scope_id=None):
                 url_kwargs['scope_id'] = request.POST['scope']
             if request.POST['node_id']:
                 url_kwargs['node_id'] = request.POST['node_id']
-            return redirect(reverse('gtd.views.display_node', kwargs=url_kwargs))
-    all_nodes_qs = Node.objects.mine(request.user, get_archived=show_all)
-    all_todo_states_qs = TodoState.get_visible(user=request.user)
-    child_nodes_qs = all_nodes_qs
-    all_scope_qs = Scope.objects.all()
-    all_scope_json = serializers.serialize('json', all_scope_qs)
-    app_url = reverse('gtd.views.display_node')
-    scope_url = app_url + '{scope}/'
-    scope = Scope.objects.get(pk=1)
-    url_data = {}
-    # If the user asked for a specific node
-    if node_id:
-        scope_url += '{0}/'.format(node_id)
-        child_nodes_qs = child_nodes_qs.filter(parent__id=node_id)
-        parent_node = Node.objects.get(id=node_id)
-        parent_tags = parent_node.get_tags()
-        breadcrumb_list = parent_node.get_ancestors(include_self=True)
-    else:
-        child_nodes_qs = child_nodes_qs.filter(parent=None)
-    url_kwargs = {}
-    # Filter by scope
-    if scope_id:
-        scope = get_object_or_404(Scope, pk=scope_id)
-        url_data['scope'] = scope
-        child_nodes_qs = child_nodes_qs.filter(scope=scope)
-        url_kwargs['scope_id'] = scope_id
-    base_url = reverse('gtd.views.display_node', kwargs=url_kwargs)
-    # Make sure user is authorized to see this node
-    if node_id:
-        if not (parent_node.access_level(request.user) in ['write', 'read']):
-            new_url = reverse('django.contrib.auth.views.login')
-            new_url += '?next=' + base_url + node_id + '/'
-            return redirect(new_url)
-    if node_id == None:
-        node_id = 0
-    all_todo_states_json = TodoState.as_json(all_todo_states_qs,
-                                             user=request.user)
-    all_todo_states_json_full = TodoState.as_json(
-        queryset=all_todo_states_qs,
-        full=True,
-        user=request.user
-        )
-    if request.is_mobile:
-        template = 'gtd/node_view_m.html'
-    else:
-        template = 'gtd/node_view.html'
-    return render_to_response(template,
-                              locals(),
-                              RequestContext(request))
+            return redirect(reverse('node_object', kwargs=url_kwargs))
 
 @login_required
-def edit_node(request, node_id, scope_id):
+def edit_node(request, node_id, scope_id, slug):
     """Display a form to allow the user to edit a node"""
     if request.method == 'POST':
         post = request.POST
     url_kwargs = {}
-    if scope_id:
-        url_kwargs['scope_id'] = scope_id
-    base_url = reverse('gtd.views.display_node', kwargs=url_kwargs)
     new = "No"
     node = Node.objects.get(pk=node_id)
+    if scope_id:
+        url_kwargs['scope_id'] = scope_id
+    url_kwargs['slug'] = node.slug
+    base_url = reverse('node_object', kwargs=url_kwargs)
     breadcrumb_list = node.get_ancestors(include_self=True)
     # Make sure user is authorized to edit this node
     if node.access_level(request.user) != 'write':
@@ -490,8 +446,8 @@ def edit_node(request, node_id, scope_id):
         else:
             return HttpResponseBadRequest('Missing request data')
         if node.parent:
-            url_kwargs['node_id'] = node.parent.pk
-        redirect_url = reverse('gtd.views.display_node', kwargs=url_kwargs)
+            url_kwargs['pk'] = node.parent.pk
+        redirect_url = reverse('node_object', kwargs=url_kwargs)
         return redirect(redirect_url)
     elif request.method == 'POST' and request.POST.get('function') == 'change_todo_state':
         # User has asked to change TodoState
@@ -503,16 +459,16 @@ def edit_node(request, node_id, scope_id):
         node.auto_update = True
         node.save()
         todo_state = node.todo_state
-        url_kwargs['node_id'] = node.pk
-        redirect_url = reverse('gtd.views.display_node', kwargs=url_kwargs)
+        url_kwargs['pk'] = node.pk
+        redirect_url = reverse('node_object', kwargs=url_kwargs)
         return redirect(redirect_url)
     elif request.method == "POST": # Form submission
         post = request.POST
         form = NodeForm(request.POST, instance=node)
         if form.is_valid():
             form.save()
-            url_kwargs['node_id'] = node_id
-            redirect_url = reverse('gtd.views.display_node', kwargs=url_kwargs)
+            url_kwargs['pk'] = node_id
+            redirect_url = reverse('node_object', kwargs=url_kwargs)
             return redirect(redirect_url)
     else: # Blank form
         form = NodeForm(instance=node)
@@ -549,7 +505,7 @@ def move_node(request, node_id, scope_id):
         except InvalidMove:
             return HttpResponseBadRequest('A node may not be made a child of any of its descendents')
         url_kwargs['node_id'] = node.pk
-        redir_url = reverse('gtd.views.display_node', kwargs=url_kwargs)
+        redir_url = reverse('node_object', kwargs=url_kwargs)
         return redirect(redir_url)
     # No action, so prompt the user for the new parent
     list = [] # Hold the final output
@@ -584,7 +540,7 @@ def new_node(request, node_id, scope_id):
     url_kwargs = {}
     if scope_id:
         url_kwargs['scope_id'] = scope_id
-    base_url = reverse('gtd.views.display_node', kwargs=url_kwargs)
+    base_url = reverse('node_object', kwargs=url_kwargs)
     new = "Yes" # Used in template logic
     node = None
     if node_id:
@@ -611,12 +567,13 @@ def new_node(request, node_id, scope_id):
                 new_node.parent = node
                 new_node.save()
                 # Prepare the response
-                node_data = new_node.as_pre_json()
-                data = {
-                    'status': 'success',
-                    'node_id': new_node.pk,
-                    'node_data': node_data,
-                    }
+                # node_data = new_node.as_pre_json()
+                # data = {
+                #     'status': 'success',
+                #     'node_id': new_node.pk,
+                #     'node_data': node_data,
+                #     }
+                data = serializers.serialize('json', [new_node])
             else:
                 return HttpResponseBadRequest(str(form.errors))
         return HttpResponse(json.dumps(data))
@@ -638,7 +595,7 @@ def new_node(request, node_id, scope_id):
             if 'add-another' in request.POST:
                 redirect_url = reverse('gtd.views.new_node', kwargs=url_kwargs)
             else:
-                redirect_url = reverse('gtd.views.display_node', kwargs=url_kwargs)
+                redirect_url = reverse('node_object', kwargs=url_kwargs)
             return redirect(redirect_url)
     else: # Blank form
         initial_dict = {}
@@ -648,12 +605,193 @@ def new_node(request, node_id, scope_id):
                               locals(),
                               RequestContext(request))
 
+class NodeView(DetailView):
+    """Manages the retrieval of an individual node"""
+    model = Node
+    template_name = 'gtd/node_view.html'
+    context_object_name = 'parent_node'
+    def get(self, request, *args, **kwargs):
+        # First unpack arguments
+        node_id = kwargs.get('pk')
+        scope_id = 0
+        show_all = request.GET.get('archived')
+        slug = kwargs.get('slug')
+        # Some setup work
+        all_nodes_qs = Node.objects.mine(request.user, get_archived=show_all)
+        # all_nodes_qs = Node.objects.mine(request.user, get_archived=False)
+        all_todo_states_qs = TodoState.get_visible(user=request.user)
+        child_nodes_qs = all_nodes_qs
+        all_scope_qs = Scope.objects.all()
+        all_scope_json = serializers.serialize('json', all_scope_qs)
+        app_url = reverse('node_object')
+        scope_url = app_url + '{scope}/'
+        scope = Scope.objects.get(pk=1)
+        url_data = {}
+        url_kwargs = {}
+        # If the user asked for a specific node
+        if node_id:
+            scope_url += '{0}/'.format(node_id)
+            child_nodes_qs = child_nodes_qs.filter(parent__id=node_id)
+            parent_node = Node.objects.get(id=node_id)
+            parent_json = serializers.serialize('json', [parent_node])
+            parent_tags = parent_node.get_tags()
+            breadcrumb_list = parent_node.get_ancestors(include_self=True)
+            # Redirect in case of incorrect slug
+            if slug != parent_node.slug:
+                return redirect(
+                    reverse(
+                        'node_object',
+                        kwargs={'pk': str(parent_node.pk),
+                                'slug': parent_node.slug}
+                    )
+                )
+        else:
+            child_nodes_qs = child_nodes_qs.filter(parent=None)
+        # Filter by scope
+        if scope_id:
+            scope = get_object_or_404(Scope, pk=scope_id)
+            url_data['scope'] = scope
+            child_nodes_qs = child_nodes_qs.filter(scope=scope)
+            url_kwargs['scope_id'] = scope_id
+        base_url = reverse('node_object', kwargs=url_kwargs)
+        if node_id:
+            url_kwargs['pk'] = parent_node.pk
+            url_kwargs['slug'] = parent_node.slug
+        node_url = reverse('node_object', kwargs=url_kwargs)
+        # Make sure user is authorized to see this node
+        if node_id:
+            if not (parent_node.access_level(request.user) in ['write', 'read']):
+                new_url = reverse('django.contrib.auth.views.login')
+                new_url += '?next=' + base_url + node_id + '/'
+                return redirect(new_url)
+        if node_id == None:
+            node_id = 0
+        all_todo_states_json = TodoState.as_json(all_todo_states_qs,
+                                                 user=request.user)
+        all_todo_states_json_full = TodoState.as_json(
+            queryset=all_todo_states_qs,
+            full=True,
+            user=request.user
+            )
+        if request.is_mobile:
+            template = 'gtd/node_view_m.html'
+        else:
+            template = 'gtd/node_view.html'
+        return render_to_response(template,
+                                  locals(),
+                                  RequestContext(request))
+    def post(self, request, *args, **kwargs):
+        post = request.POST
+        url_kwargs = {}
+        new = "No"
+        node_id = kwargs['pk']
+        try:
+            self.node = Node.objects.mine(request.user,
+                                  get_archived=True).get(pk=node_id)
+        except Node.DoesNotExist:
+            # If the node is not accessible return a 404
+            raise Http404()
+        scope_id = kwargs.get('scope_id')
+        if scope_id:
+            url_kwargs['scope_id'] = scope_id
+        url_kwargs['slug'] = self.node.slug
+        base_url = reverse('node_object', kwargs=url_kwargs)
+        breadcrumb_list = self.node.get_ancestors(include_self=True)
+        # Make sure user is authorized to edit this node
+        if self.node.access_level(request.user) != 'write':
+            new_url = reverse('django.contrib.auth.views.login')
+            new_url += '?next=' + base_url + node_id + '/'
+            return redirect(new_url)
+        if request.is_ajax():
+            return self.ajax_post(request, *args, **kwargs)
+        elif (request.method == "POST" and
+              request.POST.get('function') == 'reorder'):
+            # User is trying to move the node up or down
+            if 'move_up' in request.POST:
+                self.node.move_to(node.get_previous_sibling(),
+                             position='left'
+                             )
+            elif 'move_down' in request.POST:
+                self.node.move_to(self.node.get_next_sibling(),
+                             position='right'
+                             )
+            else:
+                return HttpResponseBadRequest('Missing request data')
+            if self.node.parent:
+                url_kwargs['pk'] = self.node.parent.pk
+            redirect_url = reverse('node_object', kwargs=url_kwargs)
+            return redirect(redirect_url)
+        elif (request.method == 'POST' and
+              request.POST.get('function') == 'change_todo_state'):
+            # User has asked to change TodoState
+            new_todo_id = request.POST['new_todo']
+            if new_todo_id == '0':
+                self.node.todo_state = None
+            else:
+                self.node.todo_state = TodoState.objects.get(pk=new_todo_id)
+            self.node.auto_update = True
+            self.node.save()
+            todo_state = self.node.todo_state
+            url_kwargs['pk'] = self.node.pk
+            redirect_url = reverse('node_object', kwargs=url_kwargs)
+            return redirect(redirect_url)
+        elif request.method == "POST": # Form submission
+            post = request.POST
+            form = NodeForm(request.POST, instance=self.node)
+            if form.is_valid():
+                form.save()
+                url_kwargs['pk'] = node_id
+                redirect_url = reverse('node_object', kwargs=url_kwargs)
+                return redirect(redirect_url)
+        else: # Blank form
+            form = NodeForm(instance=node)
+        if request.is_mobile:
+            template = 'gtd/node_edit_m.html'
+        else:
+            template = 'gtd/node_edit.html'
+        return render_to_response(template,
+                                  locals(),
+                                  RequestContext(request))
+    def ajax_post(self, request, *args, **kwargs):
+        """Handles ajax interactions, eg. editing Node objects. Called from
+        with self.post(). Mostly conducted through JSON format:
+        {
+          pk: [node primary key],
+          model: (eg 'gtd.node'),
+          fields: [dict of fields to change with new values]
+        }
+
+        Returns: JSON object of all node fields, with changes.
+        """
+        # Unpack arguments
+        node_id = kwargs['pk']
+        post = request.POST
+        if post.get('form') == 'modal':
+            # Form posted from the modal javascript dialog
+            if post.get('todo_state') == '0':
+                post.pop('todo_state')
+            form = NodeForm(post, instance=self.node)
+            if form.is_valid():
+                if post.get('auto_update') == 'false':
+                    form.auto_update = False
+                form.save()
+                self.node = Node.objects.get(pk=self.node.pk)
+                # Prepare the response
+                node_data = self.node.as_pre_json()
+            else:
+                print form.errors
+                return HttpResponseBadRequest(form.errors)
+        else: # if post.get('form') != 'modal':
+            # Text
+            self.node.set_fields(post)
+            self.node.save()
+            self.node = Node.objects.get(pk=self.node.pk)
+        data = serializers.serialize('json', [self.node])
+        return HttpResponse(json.dumps(data))
+
 class Descendants(View):
     """Manages the retrieval of descendants of a given node"""
     def get(self, request, *args, **kwargs):
-        # result = []
-        # print(self.kwargs)
-        # return HttpResponse(json.dumps(result))
         ancestor_pk = self.kwargs['ancestor_pk']
         offset = request.GET.get('offset', 1)
         if int(ancestor_pk) > 0:
@@ -758,8 +896,8 @@ def node_search(request):
                 pages.append(nextt)
     else:
         query = ''
-    base_url = reverse('gtd.views.display_node')
-    
+    base_url = reverse('node_object')
+
     if request.is_mobile:
         template = 'gtd/node_search_m.html'
     else:

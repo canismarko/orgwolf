@@ -105,12 +105,12 @@ var node8 = {
     }
 };
 $.mockjax({
-    url: '/gtd/node/0/descendants/',
+    url: '/gtd/node/descendants/0/',
     responseTime: ajax_timer,
     responseText: []
 });
 $.mockjax({
-    url: '/gtd/node/1/descendants/',
+    url: '/gtd/node/descendants/1/',
     responseTime: ajax_timer,
     responseText: [
 	node8,
@@ -137,17 +137,17 @@ $.mockjax({
     ]
 });
 $.mockjax({
-    url: '/gtd/node/2/descendants/',
+    url: '/gtd/node/descendants/2/',
     responseTime: ajax_timer,
     responseText: []
 });
 $.mockjax({
-    url: '/gtd/node/3/descendants/',
+    url: '/gtd/node/descendants/3/',
     responseTime: ajax_timer,
     responseText: []
 });
 $.mockjax({
-    url: '/gtd/node/4/descendants/',
+    url: '/gtd/node/descendants/4/',
     responseTime: ajax_timer,
     responseText: [
 	{
@@ -250,20 +250,20 @@ $.mockjax({
     }
 });
 $.mockjax({
-    url: '/gtd/node/1/edit/',
+    url: '/gtd/node/1/',
     responseTime: ajax_timer,
-    responseText: '{"status": "success", "pk": 1, "todo_id": 2}'
+    responseText: '[{"pk": 1, "fields": {"todo_state": 2}}]'
 });
 $.mockjax({
     url: '/gtd/node/5/edit/',
     responseTime: ajax_timer,
-    responseText: '{"status": "success", "pk": 5, "todo_id": 0}'
+    responseText: '{"status": "success", "pk": 5, "todo_state": 0}'
 });
 // For testing todo buttons plugin
 $.mockjax({
     url: '/gtd/node/7/edit/',
     responseTime: ajax_timer,
-    responseText: '{"status": "success", "todo_id": 1}'
+    responseText: '{"fields": {"todo_state": 1}}'
 });
 // For testing modal edit dialog
 var options = "";
@@ -638,6 +638,7 @@ asyncTest('MPTT get_previous_sibling', function() {
 	// Check get_previous_sibling() of non-root node
 	var heading8 = workspace.headings.get({pk: 8});
 	var heading9 = workspace.headings.get({pk: 9});
+	console.log(workspace.headings);
 	heading1.rebuild();
 	equal(
 	    heading9.get_previous_sibling().pk,
@@ -1793,7 +1794,7 @@ asyncTest('Todo option click functionality', function() {
 	    'DONE',
 	    'todo state html is updated to reflect new todo state'
 	);
-	ok($fixture.data('test_value'), 
+	ok($fixture.data('test_value'),
 	   'Callback function was called after click');
     }, (ajax_timer * 1.1 + 5));
 });
@@ -1814,11 +1815,11 @@ test('Update method changes settings', function() {
 	'Correct initial settings.todo_id'
     );
     $todo.todoState('update', {
-	todo_id: "2"
+	todo_state: "2"
 	});
     settings = $todo.data('todoState');
     equal(
-	settings.todo_id,
+	settings.todo_state,
 	2,
 	'settings.todo_id correct after update method called'
     );
@@ -2203,82 +2204,6 @@ asyncTest('nodeEdit(\'reset\') method', function() {
     }, ajax_timer * 1.1 + 5);
 });
 
-
-module_name = 'Todo State Buttons';
-module(module_name);
-test('Plugin exists', function() {
-    equal(
-	'function',
-	typeof $.fn.todoButtons,
-	'todoButtons is a function'
-    );
-    var $buttons = $('#todo-buttons');
-    var r = $buttons.todoButtons();
-    equal(
-	r,
-	$buttons,
-	'Plugin prefers chainability'
-    );
-});
-
-asyncTest('Button clicks', function() {
-    var $buttons = $('#todo-buttons');
-    $buttons.todoButtons();
-    var $button0 = $buttons.find('button[value=0]');
-    var $button1 = $buttons.find('button[value=1]');
-    ok(
-	$button0.hasClass('active'),
-	'Button 0 starts out active'
-    );
-    ok(
-	!$button1.hasClass('active'),
-	'Button 1 starts out inactive'
-    );
-    $button1.click();
-    setTimeout(function() {
-	start();
-	ok(
-	    $button1.hasClass('active'),
-	    'Clicked button becomes active'
-	);
-	ok(
-	    !$button0.hasClass('active'),
-	    'Other button becomes inactive'
-	);
-    }, ajax_timer * 1.1 + 5);
-});
-
-test('todoButtons(\'update\') method', function() {
-    var $buttons = $('#todo-buttons');
-    $buttons.todoButtons();
-    var $button0 = $buttons.find('button[value=0]');
-    var $button1 = $buttons.find('button[value=1]');
-    $buttons.todoButtons('update', {todo_id: 1});
-    ok(
-	$button1.hasClass('active'),
-	'New button is activated'
-    );
-});
-
-asyncTest('callback', function() {
-    var $buttons = $('#todo-buttons');
-    $buttons.data('test_value', false);
-    $buttons.todoButtons({ 
-	callback: function() {
-	    $buttons.data('test_value', true);
-	}
-    });
-    var $button0 = $buttons.find('button[value=0]');
-    var $button1 = $buttons.find('button[value=1]');
-    $button1.click();
-    setTimeout( function() {
-	start();
-	ok(
-	    $buttons.data('test_value'),
-	    'callback function executed'
-	);
-    }, ajax_timer * 1.1 + 5);
-})
 
 
 module('Node Form Validation');

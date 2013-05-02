@@ -18,23 +18,25 @@
 #######################################################################
 
 from __future__ import unicode_literals
-from django.core.exceptions import ValidationError
-from django.db import models, transaction
-from django.db.models import Q, signals
-from django.forms.models import model_to_dict
-from django.dispatch import receiver
-from django.utils.encoding import python_2_unicode_compatible
-from django.utils.timezone import get_current_timezone
-from django.utils.html import conditional_escape
-from django.utils.safestring import mark_safe
-from datetime import datetime, timedelta
-from mptt.models import MPTTModel, TreeForeignKey
-from mptt.managers import TreeManager
 import re
 import math
 import operator
 import json
+from datetime import datetime, timedelta
+from django.core.exceptions import ValidationError
+from django.db import models, transaction
+from django.db.models import Q, signals
+from django.dispatch import receiver
+from django.forms.models import model_to_dict
+from django.template.defaultfilters import slugify
+from django.utils.encoding import python_2_unicode_compatible
+from django.utils.html import conditional_escape
+from django.utils.safestring import mark_safe
+from django.utils.timezone import get_current_timezone
 
+
+from mptt.managers import TreeManager
+from mptt.models import MPTTModel, TreeForeignKey
 from orgwolf import settings
 from orgwolf.models import Color, HTMLEscaper, OrgWolfUser as User
 
@@ -91,7 +93,7 @@ class TodoState(models.Model):
             new_array.append(new_dict)
         return unicode(json.dumps(new_array))
     def as_html(self):
-        """Converts this todostate to an HTML string that can 
+        """Converts this todostate to an HTML string that can
         be put into templates"""
         html = conditional_escape(self.abbreviation)
         if self.color().get_alpha() > 0:
@@ -112,10 +114,13 @@ class Tag(models.Model):
 
 class Tool(Tag):
     pass
-    
+
 class Location(Tag):
     GPS_info = False # TODO
-    tools_available = models.ManyToManyField('Tool', related_name='including_locations_set', blank=True)
+    tools_available = models.ManyToManyField(
+        'Tool',
+        related_name='including_locations_set', blank=True
+    )
 
 class Contact(Tag):
     f_name = models.CharField(max_length = 50)
@@ -131,31 +136,42 @@ class Contact(Tag):
 # Saving a new user creates a new contact
 @receiver(signals.post_save, sender=User)
 def contact_post_save(sender, **kwargs):
-    instance = kwargs['instance']
-    if not Contact.objects.filter(user=instance).exists():
-        contact = Contact()
-        contact.f_name = instance.first_name
-        contact.l_name = instance.last_name
-        contact.user = instance
-        contact.save()
+    if not kwargs['raw']:
+        instance = kwargs['instance']
+        if not Contact.objects.filter(user=instance).exists():
+            contact = Contact()
+            contact.f_name = instance.first_name
+            contact.l_name = instance.last_name
+            contact.user = instance
+            if instance.first_name or instance.last_name:
+                contact.tag_string = '{0}{1}'.format(
+                    contact.f_name[0].upper(),
+                    contact.l_name[0].upper()
+                )
+            else:
+                contact.tag_string = instance.username[0:1].upper()
+            contact.save()
 
 @python_2_unicode_compatible
 class Context(models.Model):
     """A context is a [Location], with [Tool]s and/or [Contact]s available"""
     name = models.CharField(max_length=100)
     owner = models.ForeignKey(settings.AUTH_USER_MODEL, blank=True, null=True)
-    tools_available = models.ManyToManyField('Tool', related_name='including_contexts_set', blank=True)
-    locations_available = models.ManyToManyField('Location', related_name='including_contexts_set', blank=True)
-    people_required = models.ManyToManyField('Contact', related_name='including_contexts_set', blank=True)
+    tools_available = models.ManyToManyField(
+        'Tool', related_name='including_contexts_set', blank=True)
+    locations_available = models.ManyToManyField(
+        'Location', related_name='including_contexts_set', blank=True)
+    people_required = models.ManyToManyField(
+        'Contact', related_name='including_contexts_set', blank=True)
     def __str__(self):
         return self.name
     def apply(self, queryset="blank"):
         """
         Filter a query set for this context.
-        Gets queryset of all objects of the Node class if no queryset 
-        provided, then selects based on the tag_string of each object 
+        Gets queryset of all objects of the Node class if no queryset
+        provided, then selects based on the tag_string of each object
         in the queryset. Note that this method doesn't hit the database
-        on the passed queryset, it just modifies the queryset based on 
+        on the passed queryset, it just modifies the queryset based on
         Context object attributes.
         """
         if queryset == "blank":
@@ -178,9 +194,11 @@ class Context(models.Model):
         # Filter based on excluded tools and locations
         for tool in excluded_tools:
             tag_string = tool.tag_string
-            final_queryset = final_queryset.exclude(tag_string__icontains=tool.tag_string)
+            final_queryset = final_queryset.exclude(
+                tag_string__icontains=tool.tag_string)
         for location in excluded_locations:
-            final_queryset = final_queryset.exclude(tag_string__icontains=location.tag_string)
+            final_queryset = final_queryset.exclude(
+                tag_string__icontains=location.tag_string)
         # For required_people we have to construct a Q object
         new_Q = Q()
         for contact in required_people:
@@ -212,16 +230,20 @@ class Scope(models.Model):
 class NodeManager(TreeManager):
     def mine(self, user, get_archived=False):
         """Get all the objects that have user as the owner or assigned."""
-        if get_archived:
-            qs = Node.objects.all()
+        if user.is_authenticated():
+            if get_archived:
+                qs = Node.objects.all()
+            else:
+                qs = Node.objects.filter(archived=False)
+            owned = Q(owner=user)
+            others = Q(users=user)
+            qs = qs.filter(owned | others)
+            return qs
         else:
-            qs = Node.objects.filter(archived=False)
-        owned = Q(owner=user)
-        others = Q(users=user)
-        qs = qs.filter(owned | others)
-        return qs
+            raise RuntimeWarning('user not authenticated')
+            return Node.objects.none()
     def owned(self, user, get_archived=False):
-        """Get all the objects owned by the user with some optional 
+        """Get all the objects owned by the user with some optional
         filters applied"""
         if get_archived:
             qs = Node.objects.all()
@@ -236,23 +258,32 @@ class NodeManager(TreeManager):
 @python_2_unicode_compatible
 class Node(MPTTModel):
     """
-    Django model that holds some sort of divisional heading. Similar to 
-    orgmode's '*** Heading' syntax. It can have todo states associated 
+    Django model that holds some sort of divisional heading. Similar to
+    orgmode's '*** Heading' syntax. It can have todo states associated
     with it as well as scheduling and other information."""
     SEARCH_FIELDS = ['title', 'text']
     auto_update = False
     auto_close = True
     objects = NodeManager()
-    owner = models.ForeignKey(settings.AUTH_USER_MODEL, related_name="owned_node_set")
+    owner = models.ForeignKey(settings.AUTH_USER_MODEL,
+                              related_name="owned_node_set")
     users = models.ManyToManyField(settings.AUTH_USER_MODEL, blank=True)
-    assigned = models.ForeignKey('Contact', blank=True, null=True, related_name="assigned_node_set")
+    assigned = models.ForeignKey('Contact',
+                                 blank=True, null=True,
+                                 related_name="assigned_node_set")
     title = models.TextField(blank=True)
-    todo_state = models.ForeignKey('TodoState', blank=True, null=True)
+    slug = models.SlugField()
+    todo_state = models.ForeignKey('TodoState',
+                                   blank=True, null=True)
     archived = models.BooleanField(default=False)
     text = models.TextField(blank=True)
     # Determine where this heading is
-    parent = TreeForeignKey('self', blank=True, null=True, related_name='children')
-    related_projects = models.ManyToManyField('Node', related_name='project_set', blank=True)
+    parent = TreeForeignKey('self',
+                            blank=True, null=True,
+                            related_name='children')
+    related_projects = models.ManyToManyField('Node',
+                                              blank=True,
+                                              related_name='project_set')
     # Scheduling details
     scheduled = models.DateTimeField(blank=True, null=True)
     scheduled_time_specific = models.BooleanField()
@@ -267,15 +298,17 @@ class Node(MPTTModel):
                                                ('w', 'Weeks'),
                                                ('m', 'Months'),
                                                ('y', 'Years')))
-    # If repeats_from_completions is True, then when the system repeats this node,
-    # it will schedule it from the current time rather than the original scheduled time.
+    # If repeats_from_completions is True, then when the system
+    # repeats this node, it will schedule it from the current
+    # time rather than the original scheduled time.
     repeats_from_completion = models.BooleanField(default=False)
     # Selection criteria
     priority = models.CharField(max_length=1, blank=True,
                                 choices=(('A', 'A'),
                                          ('B', 'B'),
                                          ('C', 'C')))
-    tag_string = models.TextField(blank=True) # Org-mode style string (eg ":comp:home:RN:")
+    # Org-mode style string (eg ":comp:home:RN:")
+    tag_string = models.TextField(blank=True)
     energy = models.CharField(max_length=2, blank=True, null=True,
                               choices=(('High', 'HI'),
                                        ('Low', 'LO'))
@@ -419,7 +452,8 @@ class Node(MPTTModel):
         return json.dumps(self.as_pre_json())
     def get_tags(self):
         tag_strings = self.tag_string.split(":")
-        tag_strings = tag_strings[1:len(tag_strings)-1] # Get rid of the empty first and last elements
+        # Get rid of the empty first and last elements
+        tag_strings = tag_strings[1:len(tag_strings)-1]
         if len(tag_strings) > 0:
             tags_qs = Tag.objects.all()
         else:
@@ -430,7 +464,7 @@ class Node(MPTTModel):
             tag_Q = tag_Q | Q(tag_string = tag_string)
         tags_qs = tags_qs.filter(tag_Q)
         return tags_qs
-        
+
     # Methods return miscellaneous information
     @staticmethod
     def search(query, user, page=0, count=None):
@@ -449,7 +483,10 @@ class Node(MPTTModel):
                 return "%s__icontains" % field_name
         if Node.SEARCH_FIELDS and query:
             for bit in query.split():
-                or_queries = [models.Q(**{construct_search(str(field_name)): bit}) for field_name in Node.SEARCH_FIELDS]
+                or_queries = [
+                    models.Q(**{construct_search(str(field_name)): bit})
+                    for field_name in Node.SEARCH_FIELDS
+                ]
                 qs = qs.filter(reduce(operator.or_, or_queries))
             for field_name in Node.SEARCH_FIELDS:
                 if '__' in field_name:
@@ -460,9 +497,39 @@ class Node(MPTTModel):
         if count:
             qs = qs[page*count:(page+1)*count]
         return (qs, total)
+    def set_fields(self, fields):
+        """Accepts a dictionary of fields and updates them on the object.
+        Does not alter the database.
+        """
+        boolean_fields = ['archived', 'auto_update']
+        for key in fields.keys():
+            if key == 'todo_state':
+                # Set foreign keys
+                if isinstance(fields[key], list):
+                    fields[key] = fields[key][0]
+                self.todo_state = TodoState.objects.get(pk=fields[key])
+            elif key in boolean_fields:
+                if isinstance(fields[key], list):
+                    fields[key] = fields[key][0]
+                if fields[key] == 'true':
+                    setattr(self, key, True)
+                else:
+                    setattr(self, key, False)
+            else:
+                # Set other things
+                setattr(self, key, fields[key])
+    # Override superclass methods
+    def save(self, *args, **kwargs):
+        if not self.id:
+            # set slug field on newly created nodes
+            self.slug = slugify(self.title)
+        return super(Node, self).save(*args, **kwargs)
     def __str__(self):
         if hasattr(self.todo_state, "abbreviation"):
-            return mark_safe("[" + self.todo_state.as_html() + "] " + conditional_escape(self.get_title()))
+            return mark_safe(
+                "[" + self.todo_state.as_html() + "] " + conditional_escape(
+                    self.get_title())
+            )
         else:
             return self.get_title()
 

@@ -25,27 +25,32 @@ Replace this with more appropriate tests for your application.
 
 from __future__ import unicode_literals
 import datetime as dt
+import json
+import re
+
+from django.contrib.auth.models import AnonymousUser
+from django.core import serializers
+from django.core.urlresolvers import reverse
+from django.db.models import Q
+from django.forms.models import model_to_dict
+from django.http import Http404
+from django.template.defaultfilters import slugify
 from django.test import TestCase
 from django.test.client import Client, RequestFactory
-from django.forms.models import model_to_dict
-from django.db.models import Q
-from django.core.urlresolvers import reverse
 from django.utils.html import conditional_escape
-from django.contrib.auth.models import AnonymousUser
-from django.http import Http404
-from django.core import serializers
 from django.utils.timezone import get_current_timezone
 from django.views.generic import View
-import re
-import json
 
+from gtd.forms import NodeForm
+from gtd.models import Node, TodoState, node_repeat, Location
+from gtd.models import Tool, Context, Scope, Contact
+from gtd.shortcuts import parse_url, generate_url, get_todo_abbrevs
+from gtd.shortcuts import order_nodes, qs_to_dicts
+from gtd.templatetags.gtd_extras import overdue, upcoming, escape_html
+from gtd.templatetags.gtd_extras import add_scope
+from gtd.views import Descendants
 from orgwolf.preparation import translate_old_text
 from orgwolf.models import OrgWolfUser as User
-from gtd.forms import NodeForm
-from gtd.models import Node, TodoState, node_repeat, Location, Tool, Context, Scope, Contact
-from gtd.shortcuts import parse_url, generate_url, get_todo_abbrevs, order_nodes, qs_to_dicts
-from gtd.templatetags.gtd_extras import overdue, upcoming, escape_html, add_scope
-from gtd.views import Descendants
 
 class EditNode(TestCase):
     fixtures = ['test-users.json', 'gtd-test.json', 'gtd-env.json']
@@ -132,76 +137,6 @@ class EditNode(TestCase):
         node.save()
         self.assertEqual(todo_state, node.todo_state)
 
-    def test_edit_by_json(self):
-        """Tests changing the todo state of a node via JSON."""
-        node = Node.objects.get(title='Hello')
-        actionable = TodoState.objects.get(abbreviation='ACTN')
-        closed = TodoState.objects.get(abbreviation='DONE')
-        self.assertEqual(
-            actionable,
-            node.todo_state,
-            'Node does not start out actionable'
-            )
-        # Execute edit via AJAX
-        url = reverse('gtd.views.edit_node', kwargs={'node_id': node.pk})
-        data = {
-            'format': 'json',
-            'todo_id': closed.pk,
-            }
-        response = self.client.post(
-            url, data,
-            HTTP_X_REQUESTED_WITH='XMLHttpRequest',
-            )
-        self.assertEqual(
-            200,
-            response.status_code,
-            'getJSON call did not return HTTP 200'
-            )
-        jresponse = json.loads(response.content)
-        # Check response object
-        self.assertEqual(
-            node.pk,
-            jresponse['node_id'],
-            'JSON edit does not return correct node_id'
-            )
-        self.assertEqual(
-            'success',
-            jresponse['status'],
-            'JSON edit does not return success status: ' + jresponse['status']
-            )
-        self.assertEqual(
-            closed.pk,
-            jresponse['todo_id'],
-            'JSON edit does not return new todo_state.pk: ' + str(closed.pk) + '/' + str(jresponse['todo_id'])
-            )
-        # Make sure the node has been updated
-        node = Node.objects.get(pk=node.pk)
-        self.assertEqual(
-            closed,
-            node.todo_state,
-            'node.todo_state not set properly'
-            )
-        # Check about setting to no node
-        data = {
-            'format': 'json',
-            'todo_id': '0',
-            }
-        response = self.client.post(
-            url, data,
-            HTTP_X_REQUESTED_WITH='XMLHttpRequest',
-            )
-        self.assertEqual(
-            200,
-            response.status_code,
-            'getJSON call did not return HTTP 200: ' + str(response.status_code)
-            )
-        node = Node.objects.get(pk=node.pk)
-        self.assertEqual(
-            None,
-            node.todo_state,
-            'node.todo_state not unset when todo_id: 0 passed to edit node'
-            )
-
     def test_edit_autorepeat_by_json(self):
         """Tests changing a repeating node by JSON with auto_update off"""
         node = Node.objects.get(pk=6)
@@ -221,7 +156,7 @@ class EditNode(TestCase):
             'todo_id': new_state.pk,
             }
         self.client.post(
-            url, payload, 
+            url, payload,
             HTTP_X_REQUESTED_WITH='XMLHttpRequest',
             )
         node = Node.objects.get(pk=node.pk)
@@ -330,7 +265,7 @@ class EditNode(TestCase):
             '',
             node.text
             )
-        
+
     def test_archive_by_json(self):
         """Tests archiving/unarchived node by AJAX"""
         node = Node.objects.get(pk=1)
@@ -527,7 +462,7 @@ class NodeOrder(TestCase):
             node.parent,
             )
     def test_move_invalid_parent(self):
-        """Test what happens if the user tries to move a Node 
+        """Test what happens if the user tries to move a Node
         to a parent that doesn't exist"""
         node = Node.objects.get(pk=1)
         old_parent = node.parent
@@ -569,7 +504,7 @@ class MoveNodePage(TestCase):
                                                                 node.get_title()),
             )
         tree = node.get_root().get_descendants(include_self=True)
-        
+
         for child in tree:
             if child.is_descendant_of(node):
                 self.assertNotContains(
@@ -750,10 +685,15 @@ class RepeatingNodeTest(TestCase):
         new_date = dt.datetime(2013, 3, 28, tzinfo=get_current_timezone())
         self.assertEqual(new_date.date(), node.scheduled.date())
     def test_month_bug(self):
-        """Test for a bug that imporperly increments months and years if original_month + repeating_unit equals 12 and if repeating_unit = month"""
+        """Test for a bug that imporperly increments months and years
+        if original_month + repeating_unit equals 12 and if
+        repeating_unit = month.
+        """
         node = Node.objects.get(title='Buy cat food')
         closed = TodoState.objects.get(abbreviation='DONE')
-        node.scheduled = dt.datetime(2012, 11, 25, 0, 0, tzinfo=get_current_timezone())
+        node.scheduled = dt.datetime(
+            2012, 11, 25, 0, 0, tzinfo=get_current_timezone()
+        )
         node.repeating_unit = 'm'
         node.repeating_number = 1
         node.repeats_from_completion = False
@@ -762,8 +702,12 @@ class RepeatingNodeTest(TestCase):
         node.todo_state = closed
         node.auto_update = True
         node.save()
-        self.assertEqual(dt.datetime(2012, 12, 25, 0, 0, tzinfo=get_current_timezone()),
-                         node.scheduled)
+        self.assertEqual(
+            dt.datetime(
+                2012, 12, 25, 0, 0, tzinfo=get_current_timezone()
+            ),
+            node.scheduled
+        )
 
 class FormValidation(TestCase):
     fixtures = ['test-users.json', 'gtd-env.json']
@@ -818,13 +762,17 @@ class ContextFiltering(TestCase):
             self.client.login(username='test', password='secret')
             )
     def test_bad_context(self):
-        """Confirm that trying to set context that does not exist returns a 404"""
-        url = reverse('gtd.views.list_display', 
+        """Confirm that trying to set context that does not exist
+        returns a 404.
+        """
+        url = reverse('gtd.views.list_display',
                       kwargs={'url_string': '/context99'} )
         response = self.client.get(url)
         self.assertEqual(response.status_code, 404)
     def test_home_tag(self):
-        all_nodes_qs = Node.objects.filter(Q(tag_string=':work:')|Q(tag_string=':home:'))
+        all_nodes_qs = Node.objects.filter(
+            Q(tag_string=':work:')|Q(tag_string=':home:')
+        )
         work = Context.objects.get(name='Work')
         home = Context.objects.get(name='Home')
         work_nodes = Node.objects.filter(Q(pk=7)|Q(pk=18))
@@ -837,7 +785,9 @@ class ContextFiltering(TestCase):
             list(home.apply(all_nodes_qs))
             )
     def test_context_session_variables(self):
-        """Test if the active GTD context is saved and stored properly in session variables"""
+        """Test if the active GTD context is saved and stored properly
+        in session variables.
+        """
         url = reverse('gtd.views.list_display')
         response = self.client.get(url);
         self.assertEqual(response.status_code, 200)
@@ -859,8 +809,8 @@ class ContextFiltering(TestCase):
                             kwargs={'url_string': '/context1'} )
         self.assertRedirects(response, redir_url)
         response = self.client.get(base_url, follow=True)
-        self.assertContains(response, 
-                            'Actions (Work)', 
+        self.assertContains(response,
+                            'Actions (Work)',
                             )
         link_url = reverse('gtd.views.list_display',
                            kwargs={'url_string': '/next/context1'} )
@@ -887,7 +837,8 @@ class ContextFiltering(TestCase):
         self.assertEqual(
             1,
             result.count(),
-            'Filtering person context returns {0} nodes instead of 1'.format(result.count())
+            'Filtering person context returns {0} nodes instead of 1'.format(
+                result.count())
         )
 
 class ProjectSublist(TestCase):
@@ -903,7 +854,8 @@ class ProjectSublist(TestCase):
         self.assertEqual(
             200,
             response.status_code,
-            'Getting a project sublist does not return status code 200. Got {0}'.format(response.status_code)
+            'Getting a project sublist does not return status code 200.' +
+            'Got {0}'.format(response.status_code)
             )
     def test_bad_url(self):
         # Parent does not exist
@@ -913,8 +865,9 @@ class ProjectSublist(TestCase):
         self.assertEqual(
             404,
             response.status_code,
-            'Getting a list for a non-existent project does not return status code 404. Got {0}'.format(response.status_code)
-            )        
+            'Getting a list for a non-existent project does not return ' +
+            'status code 404. Got {0}'.format(response.status_code)
+        )
 
 class Shortcuts(TestCase):
     fixtures = ['test-users.json', 'gtd-test.json', 'gtd-env.json']
@@ -1102,20 +1055,20 @@ class Shortcuts(TestCase):
             str('energy'): node.energy,
             str('repeating_number'): node.repeating_number,
             str('users'): node.users.all().values_list('pk', flat=True),
-            'is_leaf_node': node.is_leaf_node(), 
+            'is_leaf_node': node.is_leaf_node(),
             'todo_html': '{0} - {1}'.format(
                 node.todo_state.as_html(),
                 node.todo_state.display_text
-                ), 
+                ),
             'todo_abbr': node.todo_state.as_html(),
-            str('repeating_unit'): node.repeating_unit, 
+            str('repeating_unit'): node.repeating_unit,
             'scheduled_date': node.scheduled.strftime('%Y-%m-%d'),
-            'pk': node.pk, 
+            'pk': node.pk,
             str('related_projects'): node.related_projects.all().values_list(
                 'pk', flat=True),
-            str('scheduled_time_specific'): node.scheduled_time_specific, 
-            str('repeats_from_completion'): node.repeats_from_completion, 
-            str('deadline_time_specific'): node.deadline_time_specific, 
+            str('scheduled_time_specific'): node.scheduled_time_specific,
+            str('repeats_from_completion'): node.repeats_from_completion,
+            str('deadline_time_specific'): node.deadline_time_specific,
             str('repeats'): node.repeats,
             }
         nodes = Node.objects.all()
@@ -1245,7 +1198,8 @@ class OverdueFilter(TestCase):
     prettier "in 1 day" strings, etc."""
     def test_filter_exists(self):
         self.assertEqual(overdue.__class__.__name__, 'function')
-        self.assertEqual(overdue(dt.datetime.now()).__class__.__name__, 'SafeBytes')
+        self.assertEqual(overdue(dt.datetime.now()).__class__.__name__,
+                         'SafeBytes')
     def test_simple_dt(self):
         yesterday = dt.datetime.now() + dt.timedelta(-1)
         self.assertEqual(overdue(yesterday, future=True), '1 day ago')
@@ -1253,7 +1207,7 @@ class OverdueFilter(TestCase):
         self.assertEqual(overdue(yesterday, future=True), '2 days ago')
     def test_future_dt(self):
         tomorrow = dt.datetime.now() + dt.timedelta(1)
-        self.assertEqual(overdue(tomorrow, future=True), 'in 1 day') 
+        self.assertEqual(overdue(tomorrow, future=True), 'in 1 day')
         tomorrow = tomorrow + dt.timedelta(1)
         self.assertEqual(overdue(tomorrow, future=True), 'in 2 days')
 
@@ -1332,7 +1286,9 @@ class UrlGenerate(TestCase):
             )
 
 class TodoStateRetrieval(TestCase):
-    """Tests the methods of TodoState that retrieves the list of "in play" todo states"""
+    """Tests the methods of TodoState that retrieves the list of "in play"
+    todo states.
+    """
     fixtures = ['test-users.json', 'gtd-test.json', 'gtd-env.json']
     def test_as_json(self):
         self.assertEqual(
@@ -1351,8 +1307,9 @@ class TodoStateRetrieval(TestCase):
             len(TodoState.get_visible())+1,
             len(result),
             'TodoState.as_json() does not find all TodoState objects\n' +
-            'Expected: ' + str(len(TodoState.get_visible())+1) + '\nGot: ' + str(len(result))
-            )
+            'Expected: ' + str(len(TodoState.get_visible())+1) + '\nGot: ' +
+            str(len(result))
+        )
     def test_get_visible(self):
         user = User.objects.get(pk=1)
         expected = TodoState.objects.filter(Q(owner=user) | Q(owner=None))
@@ -1499,7 +1456,8 @@ class MultiUser(TestCase):
             )
     def test_get_descendants_json(self):
         ancestor = Node.objects.get(pk=8)
-        url = reverse('gtd.views.get_descendants', kwargs={'ancestor_pk': ancestor.pk})
+        url = reverse('gtd.views.get_descendants',
+                      kwargs={'ancestor_pk': ancestor.pk})
         payload = {'offset': 2}
         response = self.client.get(url, payload)
         self.assertEqual(
@@ -1534,12 +1492,14 @@ class MultiUser(TestCase):
         expected = []
         for node in nodes:
             expected.append(repr(Node.objects.get(pk=node['pk'])))
-        queryset = Node.objects.mine(self.user2, get_archived=True).filter(level=1)
+        queryset = Node.objects.mine(
+            self.user2, get_archived=True
+        ).filter(level=1)
         self.assertQuerysetEqual(
             queryset,
             expected,
             ordered=False,
-            )
+        )
 
     def test_get_unauthorized_node(self):
         """Trying to access another person's node by URL
@@ -1549,11 +1509,11 @@ class MultiUser(TestCase):
         self.assertEqual(
             302,
             response.status_code,
-            )
+        )
         self.assertEqual(
             'http://testserver/accounts/login/?next=/gtd/node/9/',
             response['Location']
-            )
+        )
 
 class HTMLEscape(TestCase):
     """Test the ability of node text to be converted using
@@ -1618,7 +1578,7 @@ class DescendantsAPI(TestCase):
     fixtures = ['test-users.json', 'gtd-test.json', 'gtd-env.json']
     def setUp(self):
         self.node = Node.objects.get(pk=1)
-        self.url = reverse('node_descendants', 
+        self.url = reverse('node_descendants',
                            kwargs={'ancestor_pk': self.node.pk})
         self.assertTrue(
             self.client.login(username='test', password='secret')
@@ -1658,4 +1618,95 @@ class DescendantsAPI(TestCase):
         self.assertEqual(
             json_target,
             response
+        )
+
+class NodeAPI(TestCase):
+    """Check the /gtd/node/<node_pk>/ functionality.
+    API exchanges objects from django.core.serializers
+    in json with following keys:
+    - obj['pk'] -> Node.id
+    - obj['model'] -> django model reference, eg. 'gtd.node'
+    - obj['fields'] -> object (dict) of model fields"""
+    fixtures = ['test-users.json', 'gtd-test.json', 'gtd-env.json']
+    # fixtures = ['gtd-test.json', 'gtd-env.json']
+    def setUp(self):
+        self.node = Node.objects.get(pk=1)
+        self.slug = slugify(self.node.title)
+        self.url = reverse(
+            'node_object',
+            kwargs={'pk': self.node.pk}
+        )
+        self.url_slug = reverse(
+            'node_object',
+            kwargs={'pk': self.node.pk,
+                    'slug': self.node.slug}
+        )
+        self.assertTrue(
+            self.client.login(username='test', password='secret')
+        )
+    def test_url_slug(self):
+        """Check if using /<pk>/<slug>/operates as expected"""
+        response = self.client.get(
+            self.url_slug,
+        )
+        self.assertEqual(
+            200,
+            response.status_code,
+            'Slugged response doesn\'t return 200 ({0})'.format(
+                response.status_code)
+        )
+        response = self.client.get(
+            self.url
+        )
+        self.assertEqual(
+            302,
+            response.status_code,
+            'Non-slugged response returns 302'
+        )
+    def test_html_get(self):
+        assert False, 'Write test_html_get tests'
+    def test_json_put(self):
+        """Check if setting attributes by ajax works as expected"""
+        self.assertNotEqual(
+            1,
+            self.node.todo_state.pk,
+            'node statrts out with todo_state 2 (next test will fail)'
+        )
+        post_data = {
+            'todo_state': 1,
+            'archived': 'true',
+        }
+        response = self.client.post(
+            self.url_slug,
+            post_data,
+            HTTP_X_REQUESTED_WITH='XMLHttpRequest',
+        )
+        self.assertEqual(
+            200,
+            response.status_code,
+            'changing todo state doesn\' return 200 {0}'.format(
+                response.status_code)
+        )
+        self.node = Node.objects.get(pk=self.node.pk)
+        self.assertEqual(
+            1,
+            self.node.todo_state.pk,
+            'todo_state not updated after ajax POST'
+        )
+        self.assertTrue(
+            self.node.archived,
+            'node not archived after ajax POST'
+        )
+        post_data = {
+            'archived': 'false'
+        }
+        response = self.client.post(
+            self.url_slug,
+            post_data,
+            HTTP_X_REQUESTED_WITH='XMLHttpRequest',
+        )
+        self.node = Node.objects.get(pk=self.node.pk)
+        self.assertTrue(
+            not self.node.archived,
+            'node not un-archived after ajax POST'
         )
