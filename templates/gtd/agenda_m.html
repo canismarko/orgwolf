@@ -13,7 +13,7 @@
   <li data-role="list-divider">Day Specific<span class="ui-li-count">{{ day_specific_nodes|length }}</span></li>
   {% for node in day_specific_nodes %}
   <li>
-    <a href="{% url 'gtd.views.display_node' node_id=node.id %}" title="{{ node.hierarchy }}"{% if node.overdue %} class="overdue"{% endif %}>
+    <a href="{% url 'node_object' pk=node.id %}" title="{{ node.hierarchy }}"{% if node.overdue %} class="overdue"{% endif %}>
       <h3>{{ node.title }}</h3>
       <p>{{ node.todo_state.as_html }}{% if node.overdue %}<strong> [{{ node.overdue }}]</strong>{% endif %}</p>
       <p><emph>{{ node.hierarchy }}</emph></p>
@@ -28,7 +28,7 @@
   <li data-role="list-divider">Time Specific<span class="ui-li-count">{{ time_specific_nodes|length }}</span></li>
   {% for node in time_specific_nodes %}
   <li>
-    <a href="{% url 'gtd.views.display_node' node_id=node.id %}" title="{{ node.hierarchy }}"{% if node.overdue %} class="overdue"{% endif %}>
+    <a href="{% url 'node_object' pk=node.id %}" title="{{ node.hierarchy }}"{% if node.overdue %} class="overdue"{% endif %}>
       <h3>{{ node.scheduled|date:"G:i" }} {{ node.title }}</h3>
       <p>{{ node.todo_state.as_html }}{% if node.overdue %}<strong> [{{ node.overdue }}]</strong>{% endif %}</p>
       <p><emph>{{ node.hierarchy }}</emph></p>
@@ -40,10 +40,13 @@
 
 
   {% if deadline_nodes %}
-  <li data-role="list-divider">Upcoming Deadlines<span class="ui-li-count">{{ deadline_nodes|length }}</span></li>
+  <li data-role="list-divider">
+    Upcoming Deadlines
+    <span class="ui-li-count">{{ deadline_nodes|length }}</span>
+  </li>
   {% for node in deadline_nodes %}
   <li>
-    <a href="{% url 'gtd.views.display_node' node_id=node.id %}" 
+    <a href="{% url 'node_object' pk=node.id %}"
        title="{{ node.hierarchy }}">
       <h3>{{ node.title }}</h3>
       <p>{% if node.todo_state %}{{ node.todo_state.as_html }} - {% endif %}

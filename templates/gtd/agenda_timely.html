@@ -4,16 +4,17 @@
   {% for node in time_specific_nodes %}
   <tr{% if node.overdue %} class="error"{% endif %}>
     <td>
-      <a href="{% url 'gtd.views.display_node' node_id=node.id %}" title="{{ node.hierarchy }}">{{ node.overdue }}</a>
+      <a href="{% url 'node_object' pk=node.id %}"
+	 title="{{ node.hierarchy }}">{{ node.overdue }}</a>
     </td>
     <td>
-      <a href="{% url 'gtd.views.display_node' node_id=node.id %}" title="{{ node.hierarchy }}">{{ node.scheduled|date:"G:i" }}</a>
+      <a href="{% url 'node_object' pk=node.id %}" title="{{ node.hierarchy }}">{{ node.scheduled|date:"G:i" }}</a>
     </td>
     <td class="todo-state" todo_id="{{ node.todo_state.pk }}">
-      <a href="{% url 'gtd.views.display_node' node_id=node.id %}" title="{{ node.hierarchy }}">{{ node.todo_state.as_html }}</a>
+      <a href="{% url 'node_object' pk=node.id %}" title="{{ node.hierarchy }}">{{ node.todo_state.as_html }}</a>
     </td>
     <td>
-      <a href="{% url 'gtd.views.display_node' node_id=node.id %}" title="{{ node.hierarchy }}">{{ node.title }}</a>
+      <a href="{% url 'node_object' pk=node.id %}" title="{{ node.hierarchy }}">{{ node.title }}</a>
     </td>
   </tr>
   {% endfor %}

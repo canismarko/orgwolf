@@ -9,7 +9,7 @@
 <ul data-role="listview">
   {% for node in nodes_found %}
   <li>
-    <a href="{% url 'gtd.views.display_node' node_id=node.pk %}" title="{{ node.get_hierarchy_as_string }}">
+    <a href="{% url 'node_object' pk=node.pk %}" title="{{ node.get_hierarchy_as_string }}">
       <h3>{{ node.title }}</h3>
       <p>
 	{{ node.todo_state.as_html }}
@@ -32,4 +32,3 @@ Sorry, your search did not match any results.
 {% endif %}
 
 {% endblock %}
-

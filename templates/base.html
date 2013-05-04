@@ -30,15 +30,15 @@
     {% else %}
       <link rel="icon"
 	    type="image/png"
-	    href="{{ STATIC_URL }}orgwolf-icon.ico" />	    
+	    href="{{ STATIC_URL }}orgwolf-icon.ico" />
     {% endif %}
     {% if enable_css %}
       {% block all_style %}
 
 	{% if local_net %}
-	  <link rel="stylesheet" type="text/css" 
+	  <link rel="stylesheet" type="text/css"
 		href="{{ STATIC_URL }}bootstrap/css/bootstrap.css" />
-	  <link rel="stylesheet" type="text/css" 
+	  <link rel="stylesheet" type="text/css"
 		href="{{ STATIC_URL }}aloha/css/aloha.css" />
 	{% else %}
 	  <link rel="stylesheet" type="text/css" href="//netdna.bootstrapcdn.com/twitter-bootstrap/2.3.1/css/bootstrap-combined.min.css" />
@@ -104,14 +104,14 @@
     $(document).ready(function() {
 	{% if request.user.is_authenticated %}
 	// Convert utility links to dropdown menu
-	$('.util-dropdown').wrapAll('<ul class="dropdown-menu" role="menu"' + 
+	$('.util-dropdown').wrapAll('<ul class="dropdown-menu" role="menu"' +
 				    ' aria_labeledby="lblAccounts" />');
 	$('.util-dropdown').parent().wrap('<li class="dropdown" />');
 	$('.util-dropdown').parent().before(
 	    '<a class="dropdown-toggle"' +
-		' id="lblAccounts"' + 
+		' id="lblAccounts"' +
 		' role="button"' +
-		' data-toggle="dropdown"' + 
+		' data-toggle="dropdown"' +
 		' href="#">' +
 		'{{ request.user.get_display }}' +
 		'</div>'
@@ -121,7 +121,7 @@
 	{% endif %}
 	// Tweak document for context filtering
 	$('#nav-actions').append('<b id="btn-actions" class="caret"></b>');
-	$('#lblContext').hide();
+	// $('#lblContext').hide();
 	$('#nav-actions').bind('click', function(e) {
 	    console.log(e.target.className);
 	    if ( e.target.className !== 'caret' ) {
@@ -193,7 +193,6 @@
 	  </li>
 	  <li><a href="{% url 'wolfmail.views.display_label' %}">Inbox</a></li>
 	  <li{% if 'node' in request.get_full_path %} class="active"{% endif %}>
-	    {#<a href="{% url 'gtd.views.display_node' %}">Projects</a>#}
 	    <a href="{% url 'node_object' %}">Projects</a>
 	  </li>
 	</ul>

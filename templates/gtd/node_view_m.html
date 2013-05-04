@@ -24,13 +24,20 @@
       {% if parent_node %}
       <li data-icon="arrow-u"><a href="{{ base_url }}">Projects List</a></li>
       {% if parent_node.parent %}
-      <li data-icon="arrow-l"><a href="{{ base_url }}{{ parent_node.parent.pk }}">Up to "{{ parent_node.parent }}"</a></li>
+      <li data-icon="arrow-l">
+	<a href="{{ base_url }}{{ parent_node.parent.pk }}">
+	  Up to "{{ parent_node.parent }}"
+	  </a>
+      </li>
       {% endif %}
       {% endif %}
     </ul>
     <h2>{{ parent_node.title }}</h2>
     {% if parent_node %}
-    <a href="{% url 'gtd.views.display_node' parent_node.pk %}edit/" data-role="button" data-rel="dialog">Edit</a>
+    <a href="{% url 'node_object' pk=parent_node.pk %}edit/"
+       data-role="button" data-rel="dialog">
+       Edit
+    </a>
     {% endif %}
     <dl>
       {% include "gtd/node_detail.html" %}
@@ -38,7 +45,7 @@
       <dt>Text</dt>
       <dd>{{ parent_node.text|escape_html }}</dd>
       {% endif %}
-      
+
       <dt>Children</dt>
       <dd>
 	<ul name="children" data-role="listview" data-inset="true">

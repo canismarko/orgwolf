@@ -8,7 +8,7 @@
 <ul data-role="listview">
   {% for node in nodes %}
   <li>
-    <a href="{% url 'gtd.views.display_node' node_id=node.id %}" title="{{ node.get_hierarchy_as_string }}">
+    <a href="{% url 'node_object' pk=node.id %}" title="{{ node.get_hierarchy_as_string }}">
       <h3>{{ node.title }}</h3>
       <p>
 	{{ node.todo_state.as_html }}{% if node.deadline %} Due {{ node.deadline|upcoming }}{% endif %}

@@ -89,13 +89,14 @@ $('document').ready(function() {
 
 <div id="node-detail">
   {# Breadcrumb trail #}
-  {% for node in breadcrumb_list %}{% if forloop.first %}&nbsp;{% else %}&gt;{% endif %}
-  {% if forloop.last %}
-  <span class="update" data-field="title">{{ node.get_title }}</span>
-  {% else %}
-  <a href="{{ base_url }}{{node.pk}}/{{ node.slug }}/">{{ node.get_title }}</a>
-  {% endif %}
-  {% endfor %}
+  {{ breadcrumb_list|breadcrumbs:base_url }}
+  <!-- {% for node in breadcrumb_list %}{% if forloop.first %}&nbsp;{% else %}&gt;{% endif %} -->
+  <!-- {% if forloop.last %} -->
+  <!-- <span class="update" data-field="title">{{ node.get_title }}</span> -->
+  <!-- {% else %} -->
+  <!-- <a href="{{ base_url }}{{node.pk}}/{{ node.slug }}/">{{ node.get_title }}</a> -->
+  <!-- {% endif %} -->
+  <!-- {% endfor %} -->
 
   <h3 class="update" data-field="title">{{ parent_node.get_title }}</h3>
 

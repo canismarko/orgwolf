@@ -36,7 +36,7 @@ class OrgWolfUser(AbstractUser):
         else:
             display = self.username
         return display
-        
+
 
 class Color:
     """

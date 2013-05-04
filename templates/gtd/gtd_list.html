@@ -51,14 +51,18 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 {% block content %}
 
+{# Hierarchy, breadcrumb trail #}
+  {{ breadcrumb_list|breadcrumbs:base_url }}
+
 {# Scope tabs #}
 {% include "gtd/scope_tabs.html" %}
 {# Filters #}
 <form action="" method="POST" class="form-inline">
-  <input type="hidden" name="scope" value="{% if scope %}{{ scope.pk }}{% else %}0{% endif %}" />
+  <input type="hidden" name="scope"
+	 value="{% if scope %}{{ scope.pk }}{% else %}0{% endif %}"/>
   <label id="lblContext">
     Context:
-    <select name="context">
+    <select name="context" class="input-small">
     <option value="0"
 	    {% if current_context = None %}selected="selected"{% endif %}>
       None
@@ -70,18 +74,20 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
     </option>
     {% endfor %}
   </select>
-</label>
+  </label>
   {% for todo_state in all_todo_states_query %}
-  <label for="todo{{ todo_state.id }}" class="checkbox inline">
-  <input type="checkbox" 
-	 id="todo{{ todo_state.id }}" 
-	 name="todo{{ todo_state.id }}" 
-	 value="Yes"  
-	 {% if todo_state in todo_states_query %}checked="checked" {% endif %}/>
-{{ todo_state.as_html }}</label>
+  <label for="todo{{ todo_state.id }}" class="checkbox">
+  <input type="checkbox"
+	 id="todo{{ todo_state.id }}"
+	 name="todo{{ todo_state.id }}"
+	 value="Yes"
+	 {% if todo_state in todo_states_query %}checked="checked"{% endif %}
+	 >
+	 </input>
+	 {{ todo_state.as_html }}</label>
   {% endfor %}
   {% if parent %}
-  <input type="hidden" name="parent_id" 
+  <input type="hidden" name="parent_id"
 	 value="{{ parent.pk }}">
   {% endif %}
   <input type="submit" value="Filter" class="btn" />
