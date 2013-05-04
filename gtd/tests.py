@@ -45,7 +45,7 @@ from gtd.forms import NodeForm
 from gtd.models import Node, TodoState, node_repeat, Location
 from gtd.models import Tool, Context, Scope, Contact
 from gtd.shortcuts import parse_url, generate_url, get_todo_abbrevs
-from gtd.shortcuts import order_nodes, qs_to_dicts
+from gtd.shortcuts import order_nodes
 from gtd.templatetags.gtd_extras import overdue, upcoming, escape_html
 from gtd.templatetags.gtd_extras import add_scope
 from gtd.views import Descendants
@@ -72,15 +72,15 @@ class EditNode(TestCase):
                      'deadline': '',
                      'todo_state': closed_todo.id}
         if node: # existing node
-            url = reverse('gtd.views.edit_node', kwargs={'node_id': node.pk})
+            url = reverse('node_object', kwargs={'pk': node.pk})
             post_data['title'] = node.title
         else: # new node
             url = reverse('gtd.views.new_node', kwargs={'node_id': 5})
-            redir_url = reverse('gtd.views.display_node', kwargs={'node_id': 5})
+            redir_url = reverse('node_object', kwargs={'pk': 5})
             post_data['title'] = 'new node 1'
         response = client.post(url, post_data, follow=True)
         self.assertEqual(200, response.status_code)
-        redir_url = reverse('gtd.views.display_node')
+        redir_url = reverse('node_object')
         redirect = re.match(
             'http://testserver{base_url}(\d+)/'.format(base_url=redir_url),
             response.redirect_chain[0][0]
@@ -103,7 +103,7 @@ class EditNode(TestCase):
         # Make sure it's not closed first
         self.assertFalse(node.is_closed())
         # Edit the node through the client
-        self.close_node_through_client(client, node)
+        self.close_node_through_client(self.client, node)
         # Refresh the node
         new_node = Node.objects.get(title='Buy cat food')
         # Make sure the node is closed
@@ -116,7 +116,7 @@ class EditNode(TestCase):
         node.save()
         self.assertEqual(None, node.todo_state)
         # Now run the request
-        self.close_node_through_client(client, node)
+        self.close_node_through_client(self.client, node)
         # Refresh the node
         new_node = Node.objects.get(title='Buy cat food')
         # Make sure the node is closed
@@ -124,7 +124,7 @@ class EditNode(TestCase):
         self.assertEqual(now.date(), new_node.closed.date())
 
         # Test that closed is set for new nodes
-        new_node_id = self.close_node_through_client(client)
+        new_node_id = self.close_node_through_client(self.client)
         new_node = Node.objects.get(id=new_node_id)
         # Make sure the node is closed
         self.assertTrue(new_node.is_closed())
@@ -334,6 +334,7 @@ class EditNode(TestCase):
         data['repeating_number'] = ''
         data['scheduled'] = ''
         data['deadline'] = ''
+        data['scope'] = ['1']
         data['todo_state'] = 0
         response = self.client.post(
             url, data,
@@ -342,6 +343,18 @@ class EditNode(TestCase):
         self.assertEqual(
             200,
             response.status_code)
+        response = json.loads(json.loads(response.content))[0]
+        new_node = Node.objects.get(pk=response['pk'])
+        self.assertEqual(
+            1,
+            new_node.scope.all().count(),
+            'No scopes set when adding node through JSON'
+        )
+        self.assertEqual(
+            Scope.objects.get(pk=1),
+            new_node.scope.all()[0],
+            'Scope not set when adding node through json'
+        )
 
 class NodeOrder(TestCase):
     """Holds tests for accessing and modifying the order of nodes"""
@@ -722,7 +735,7 @@ class FormValidation(TestCase):
             }
         url = reverse('gtd.views.new_node')
         response = self.client.post(url, data)
-        redir_url = reverse('gtd.views.display_node')
+        redir_url = reverse('node_object')
         self.assertRedirects(response, redir_url)
         data = {
             'title': 'woah',
@@ -1030,60 +1043,61 @@ class Shortcuts(TestCase):
             node.is_leaf_node(),
             response_dict['is_leaf_node']
             )
-    def test_qs_to_dicts(self):
-        """Testing for the helper function that converts a queryset of Node
-        objects to a list of dictionary objects."""
-        self.maxDiff = None
-        node = Node.objects.get(pk=1)
-        node_expected = {
-            str('text'): node.text,
-            str('tag_string'): node.tag_string,
-            str('assigned'): node.assigned,
-            'deadline_date': node.deadline.strftime('%Y-%m-%d'),
-            str('owner'): node.owner.pk,
-            'scheduled_time': node.scheduled.strftime('%H:%M:%S'),
-            str('archived'): node.archived,
-            'deadline_time': node.deadline.strftime('%H:%M:%S'),
-            str('title'): node.title,
-            'title_html': node.get_title(),
-            str('time_needed'): node.time_needed,
-            str('priority'): node.priority,
-            'parent_id': getattr(node.parent, 'pk', 0),
-            str('closed'): node.closed.strftime('%a %b %d %H:%M:%S %Y'),
-            str('todo_state'): node.todo_state.pk,
-            str('scope'): node.scope.all().values_list('pk', flat=True),
-            str('energy'): node.energy,
-            str('repeating_number'): node.repeating_number,
-            str('users'): node.users.all().values_list('pk', flat=True),
-            'is_leaf_node': node.is_leaf_node(),
-            'todo_html': '{0} - {1}'.format(
-                node.todo_state.as_html(),
-                node.todo_state.display_text
-                ),
-            'todo_abbr': node.todo_state.as_html(),
-            str('repeating_unit'): node.repeating_unit,
-            'scheduled_date': node.scheduled.strftime('%Y-%m-%d'),
-            'pk': node.pk,
-            str('related_projects'): node.related_projects.all().values_list(
-                'pk', flat=True),
-            str('scheduled_time_specific'): node.scheduled_time_specific,
-            str('repeats_from_completion'): node.repeats_from_completion,
-            str('deadline_time_specific'): node.deadline_time_specific,
-            str('repeats'): node.repeats,
-            }
-        nodes = Node.objects.all()
-        # Should run 1 query to evaluate nodes and one for each M2M field
-        self.assertNumQueries(2, qs_to_dicts, nodes)
-        node_dict = qs_to_dicts(nodes)[0]
-        # check values of the returned dictionary
-        for key in node_expected.keys():
-            self.assertEqual(
-                str(node_expected[key]),
-                str(node_dict[key]),
-                '{0} not returned correctly. Expected {1}, got {2}'.format(
-                    key, node_expected[key], node_dict[key]
-                    )
-                )
+    # Deprecated
+    # def test_qs_to_dicts(self):
+    #     """Testing for the helper function that converts a queryset of Node
+    #     objects to a list of dictionary objects."""
+    #     self.maxDiff = None
+    #     node = Node.objects.get(pk=1)
+    #     node_expected = {
+    #         str('text'): node.text,
+    #         str('tag_string'): node.tag_string,
+    #         str('assigned'): node.assigned,
+    #         'deadline_date': node.deadline.strftime('%Y-%m-%d'),
+    #         str('owner'): node.owner.pk,
+    #         'scheduled_time': node.scheduled.strftime('%H:%M:%S'),
+    #         str('archived'): node.archived,
+    #         'deadline_time': node.deadline.strftime('%H:%M:%S'),
+    #         str('title'): node.title,
+    #         'title_html': node.get_title(),
+    #         str('time_needed'): node.time_needed,
+    #         str('priority'): node.priority,
+    #         'parent_id': getattr(node.parent, 'pk', 0),
+    #         str('closed'): node.closed.strftime('%a %b %d %H:%M:%S %Y'),
+    #         str('todo_state'): node.todo_state.pk,
+    #         str('scope'): node.scope.all().values_list('pk', flat=True),
+    #         str('energy'): node.energy,
+    #         str('repeating_number'): node.repeating_number,
+    #         str('users'): node.users.all().values_list('pk', flat=True),
+    #         'is_leaf_node': node.is_leaf_node(),
+    #         'todo_html': '{0} - {1}'.format(
+    #             node.todo_state.as_html(),
+    #             node.todo_state.display_text
+    #             ),
+    #         'todo_abbr': node.todo_state.as_html(),
+    #         str('repeating_unit'): node.repeating_unit,
+    #         'scheduled_date': node.scheduled.strftime('%Y-%m-%d'),
+    #         'pk': node.pk,
+    #         str('related_projects'): node.related_projects.all().values_list(
+    #             'pk', flat=True),
+    #         str('scheduled_time_specific'): node.scheduled_time_specific,
+    #         str('repeats_from_completion'): node.repeats_from_completion,
+    #         str('deadline_time_specific'): node.deadline_time_specific,
+    #         str('repeats'): node.repeats,
+    #         }
+    #     nodes = Node.objects.all()
+    #     # Should run 1 query to evaluate nodes and one for each M2M field
+    #     self.assertNumQueries(2, qs_to_dicts, nodes)
+    #     node_dict = qs_to_dicts(nodes)[0]
+    #     # check values of the returned dictionary
+    #     for key in node_expected.keys():
+    #         self.assertEqual(
+    #             str(node_expected[key]),
+    #             str(node_dict[key]),
+    #             '{0} not returned correctly. Expected {1}, got {2}'.format(
+    #                 key, node_expected[key], node_dict[key]
+    #                 )
+    #             )
     def test_root_node_as_json(self):
         """Make sure that a root node returns a parent_id of 0
         instead of null"""
@@ -1325,13 +1339,13 @@ class MultiUser(TestCase):
         self.factory = RequestFactory()
         self.user1 = User.objects.get(pk=1)
         self.user2 = User.objects.get(pk=2)
-        self.client.login(username='ryan', password='secret')
+        self.client.login(username='test', password='secret')
     def test_get_nodes(self):
         self.assertEqual(
             'instancemethod',
             Node.objects.owned.__class__.__name__
             )
-        url = reverse('gtd.views.display_node')
+        url = reverse('node_object')
         request = self.factory.get(url)
         request.user = self.user2
         self.assertEqual(
@@ -1367,6 +1381,7 @@ class MultiUser(TestCase):
             Node.objects.mine.__class__.__name__
             )
         results = Node.objects.mine(self.user2)
+        contact = self.user2.contact_set.all()
         self.assertEqual(
             'QuerySet',
             results.__class__.__name__
@@ -1374,10 +1389,10 @@ class MultiUser(TestCase):
         self.assertTrue(
             len(results) > 0,
             )
-        # Should match nodes where user2 is in owner or users
+        # Should match nodes where user2 is in owner, users or assigned
         for node in results:
             self.assertTrue(
-                node.owner == self.user2 or self.user2 in node.users.all(),
+                node.owner == self.user2 or self.user2 in node.users.all() or node.assigned in contact,
                 'Node {0} not related to {1}'.format(
                     node, self.user2)
                 )
@@ -1388,13 +1403,13 @@ class MultiUser(TestCase):
     def test_assigned_in_responses(self):
         """Make sure that Nodes to which the user is assigned show up in the
         right places."""
-        ryan = self.user2.contact_set.all()[0]
-        assigned = ryan.assigned_node_set.all()[0]
+        contact = self.user1.contact_set.all()[0]
+        assigned = contact.assigned_node_set.all()[0]
         if assigned.parent:
-            kwargs={'node_id': assigned.parent.pk}
+            kwargs={'pk': assigned.parent.pk}
         else:
             kwargs={}
-        new_url = reverse('gtd.views.display_node', kwargs=kwargs)
+        new_url = reverse('node_object', kwargs=kwargs)
         response = self.client.get(new_url)
         self.assertContains(
             response,
@@ -1406,12 +1421,22 @@ class MultiUser(TestCase):
         response = self.client.get(url)
         self.assertContains(
             response,
-            'Ryan node',
+            'Test user assigned node',
+            status_code=200
+            )
+        self.assertContains(
+            response,
+            'Test user others node',
+            status_code=200
+            )
+        self.assertContains(
+            response,
+            'Test user owned node',
             status_code=200
             )
         self.assertNotContains(
             response,
-            'test-users node',
+            'not test-users node',
             status_code=200,
             msg_prefix='Agenda view',
             )
@@ -1420,15 +1445,20 @@ class MultiUser(TestCase):
         response = self.client.get(url)
         self.assertContains(
             response,
-            'Ryan node',
+            'Test user owned node',
+            status_code=200
+            )
+        self.assertContains(
+            response,
+            'Test user assigned node',
             status_code=200
             )
         self.assertNotContains(
             response,
-            'test-users node',
-            status_code=200,
-            msg_prefix='List view',
+            'Test user others node',
+            status_code=200
             )
+
     def test_bad_list_view(self):
         """User 'test' does not have access to this todo_state"""
         self.assertTrue(
@@ -1441,11 +1471,11 @@ class MultiUser(TestCase):
             response.status_code
             )
     def test_node_view(self):
-        url = reverse('gtd.views.display_node')
+        url = reverse('node_object')
         response = self.client.get(url)
         self.assertContains(
             response,
-            'Ryan node',
+            'Test user owned node',
             status_code=200
             )
         self.assertNotContains(
@@ -1454,57 +1484,60 @@ class MultiUser(TestCase):
             status_code=200,
             msg_prefix='node view',
             )
-    def test_get_descendants_json(self):
-        ancestor = Node.objects.get(pk=8)
-        url = reverse('gtd.views.get_descendants',
-                      kwargs={'ancestor_pk': ancestor.pk})
-        payload = {'offset': 2}
-        response = self.client.get(url, payload)
-        self.assertEqual(
-            200,
-            response.status_code
-            )
-        response_dict = json.loads(response.content)
-        nodes = response_dict['nodes']
-        self.assertEqual(
-            1,
-            len(nodes),
-            )
-        self.assertEqual(
-            Node.objects.get(pk=nodes[0]['pk']).title,
-            'ryan\'s movies'
-            )
-        self.assertEqual(
-            [1],
-            nodes[0]['scope'],
-        )
+    # Deprecated: Moved to API testing
+    # def test_get_descendants_json(self):
+    #     ancestor = Node.objects.get(pk=8)
+    #     url = reverse('node_descendants',
+    #                   kwargs={'ancestor_pk': ancestor.pk})
+    #     payload = {'offset': 2}
+    #     response = self.client.get(url, payload)
+    #     self.assertEqual(
+    #         200,
+    #         response.status_code
+    #         )
+    #     response_dict = json.loads(response.content)
+    #     nodes = response_dict['nodes']
+    #     self.assertEqual(
+    #         1,
+    #         len(nodes),
+    #         )
+    #     self.assertEqual(
+    #         Node.objects.get(pk=nodes[0]['pk']).title,
+    #         'ryan\'s movies'
+    #         )
+    #     self.assertEqual(
+    #         [1],
+    #         nodes[0]['scope'],
+    #     )
 
-    def test_get_root_descendants_json(self):
-        url = reverse('gtd.views.get_descendants', kwargs={'ancestor_pk': '0'})
-        payload = {'offset': 2}
-        response = self.client.get(url, payload)
-        self.assertEqual(
-            200,
-            response.status_code
-            )
-        response_dict = json.loads(response.content)
-        nodes = response_dict['nodes']
-        expected = []
-        for node in nodes:
-            expected.append(repr(Node.objects.get(pk=node['pk'])))
-        queryset = Node.objects.mine(
-            self.user2, get_archived=True
-        ).filter(level=1)
-        self.assertQuerysetEqual(
-            queryset,
-            expected,
-            ordered=False,
-        )
+    # def test_get_root_descendants_json(self):
+    #     url = reverse('node_descendants', kwargs={'ancestor_pk': '0'})
+    #     payload = {'offset': 2}
+    #     response = self.client.get(url, payload)
+    #     self.assertEqual(
+    #         200,
+    #         response.status_code
+    #         )
+    #     response_dict = json.loads(response.content)
+    #     nodes = response_dict['nodes']
+    #     expected = []
+    #     for node in nodes:
+    #         expected.append(repr(Node.objects.get(pk=node['pk'])))
+    #     queryset = Node.objects.mine(
+    #         self.user2, get_archived=True
+    #     ).filter(level=1)
+    #     self.assertQuerysetEqual(
+    #         queryset,
+    #         expected,
+    #         ordered=False,
+    #     )
 
     def test_get_unauthorized_node(self):
         """Trying to access another person's node by URL
         should redirect the user to the login screen"""
-        url = reverse('gtd.views.display_node', kwargs={'node_id': 9})
+        node = Node.objects.get(pk=9)
+        url = reverse('node_object', kwargs={'pk': node.pk,
+                                             'slug': node.slug})
         response = self.client.get(url)
         self.assertEqual(
             302,
@@ -1554,7 +1587,7 @@ class DBOptimization(TestCase):
             reverse('gtd.views.list_display')
         )
         self.assertNumQueries(
-            6,
+            7,
             self.client.get,
             reverse('gtd.views.list_display'),
         )
@@ -1567,7 +1600,7 @@ class DBOptimization(TestCase):
             )
     def test_node_view(self):
         self.assertNumQueries(
-            9,
+            10,
             self.client.get,
             '/gtd/lists/next/',
         )
@@ -1663,8 +1696,6 @@ class NodeAPI(TestCase):
             response.status_code,
             'Non-slugged response returns 302'
         )
-    def test_html_get(self):
-        assert False, 'Write test_html_get tests'
     def test_json_put(self):
         """Check if setting attributes by ajax works as expected"""
         self.assertNotEqual(

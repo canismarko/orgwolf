@@ -40,7 +40,6 @@ def home(request):
             template = 'home_m.html'
         else:
             template = 'home.html'
-        # return redirect(reverse('gtd.views.agenda_display'))
         return render_to_response(template,
                                   locals(),
                                   RequestContext(request))
@@ -63,7 +62,7 @@ def new_user(request):
         data = request.POST.copy()
         data['last_login'] = data.get('last_login', datetime.now())
         data['date_joined'] = data.get('date_joined', datetime.now())
-        data['home'] = data.get('home', 'gtd.views.display_node')
+        data['home'] = data.get('home', 'node_object')
         new_user_form = RegistrationForm(data)
         if new_user_form.is_valid():
             # Create the new user and log her in
@@ -89,7 +88,7 @@ def new_user(request):
 
 @login_required
 def feedback(request):
-    """Allows the user to quickly provide feedback about 
+    """Allows the user to quickly provide feedback about
     the operation of the site."""
     next_page = request.GET['next']
     if request.method == "POST":

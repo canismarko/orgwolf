@@ -159,15 +159,15 @@ def generate_url(**kwargs):
         new_url += 'context{0}/'.format(context.pk)
     return new_url
 
-def qs_to_dicts(qs):
-    """Convert a queryset of Node objects to a list of dict objects suitable
-    for JSON serialization. Some field modification also takes place as needed.
-    NB: This function evaluates the queryset."""
-    out = []
-    qs = qs.select_related('todo_state', 'owner')
-    for node in qs:
-        out.append(node.as_pre_json())
-    return out
+# def qs_to_dicts(qs):
+#     """Convert a queryset of Node objects to a list of dict objects suitable
+#     for JSON serialization. Some field modification also takes place as needed.
+#     NB: This function evaluates the queryset."""
+#     out = []
+#     qs = qs.select_related('todo_state', 'owner')
+#     for node in qs:
+#         out.append(node.as_pre_json())
+#     return out
 
 def reset_env(commit=False):
     """Delete large portions of the database. Since this is irrevesible,

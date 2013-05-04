@@ -41,7 +41,7 @@ from django.utils.timezone import get_current_timezone
 from mptt.exceptions import InvalidMove
 from gtd.models import TodoState, Node, Context, Scope
 from gtd.shortcuts import parse_url, generate_url, get_todo_abbrevs
-from gtd.shortcuts import order_nodes, qs_to_dicts
+from gtd.shortcuts import order_nodes
 from gtd.templatetags.gtd_extras import escape_html
 from wolfmail.models import MailItem, Label
 from gtd.forms import NodeForm
@@ -135,14 +135,13 @@ def list_display(request, url_string=""):
         todo_string += '{0}/'.format(todo_state.abbreviation.lower())
         final_Q = final_Q | Q(todo_state=todo_state)
     scope_url_data['states'] = todo_string
-    nodes = Node.objects.owned(request.user).select_related(
+    nodes = Node.objects.assigned(request.user).select_related(
         'context', 'todo_state', 'root'
     )
     nodes = nodes.filter(final_Q)
     root_nodes = Node.objects.mine(
         request.user, get_archived=True
-    )
-    root_nodes = root_nodes.filter(level=0)
+    ).filter(level=0)
     # Now apply the context
     if current_context:
         scope_url_data['context'] = 'context{0}/'.format(
@@ -166,6 +165,7 @@ def list_display(request, url_string=""):
     if parent:
         nodes = nodes & parent.get_descendants(include_self=True)
         scope_url_data['parent'] = 'parent{0}/'.format(parent.pk)
+        breadcrumb_list = parent.get_ancestors(include_self=True)
     else:
         scope_url_data['parent'] = ''
     # Put nodes with deadlines first
@@ -189,9 +189,10 @@ def list_display(request, url_string=""):
         parent = 'parent{0}/'
     )
     # Prepare an array of root node data
-    root_list = list(root_nodes)
+    # root_list = list(root_nodes)
     # Add a field for the root node
     for node in nodes:
+        # (uses lists in case of bad unit tests)
         root_node = [n for n in root_nodes if n.tree_id == node.tree_id]
         if len(root_node) > 0:
             node.root_url = parent_url.format(root_node[0].pk)
@@ -218,7 +219,8 @@ def agenda_display(request, date=None):
             new_url = "/gtd/agenda/" + request.POST['date']
             return redirect(new_url)
     deadline_period = 7 # In days # TODO: pull deadline period from user
-    all_nodes_qs = Node.objects.owned(request.user).select_related('todo_state')
+    all_nodes_qs = Node.objects.mine(request.user).select_related('todo_state')
+    # all_nodes_qs = Node.objects.owned(request.user).select_related('todo_state')
     final_Q = Q()
     if date:
         try:
@@ -504,7 +506,7 @@ def move_node(request, node_id, scope_id):
             node.save()
         except InvalidMove:
             return HttpResponseBadRequest('A node may not be made a child of any of its descendents')
-        url_kwargs['node_id'] = node.pk
+        url_kwargs['pk'] = node.pk
         redir_url = reverse('node_object', kwargs=url_kwargs)
         return redirect(redir_url)
     # No action, so prompt the user for the new parent
@@ -566,13 +568,7 @@ def new_node(request, node_id, scope_id):
                 new_node.owner = request.user
                 new_node.parent = node
                 new_node.save()
-                # Prepare the response
-                # node_data = new_node.as_pre_json()
-                # data = {
-                #     'status': 'success',
-                #     'node_id': new_node.pk,
-                #     'node_data': node_data,
-                #     }
+                form.save_m2m()
                 data = serializers.serialize('json', [new_node])
             else:
                 return HttpResponseBadRequest(str(form.errors))
@@ -591,7 +587,7 @@ def new_node(request, node_id, scope_id):
                     form.scope.add(Scope.objects.get(pk=new_scope_id))
             form.save()
             if hasattr(form.parent, 'pk'):
-                url_kwargs['node_id'] = form.parent.pk
+                url_kwargs['pk'] = form.parent.pk
             if 'add-another' in request.POST:
                 redirect_url = reverse('gtd.views.new_node', kwargs=url_kwargs)
             else:
@@ -844,6 +840,9 @@ def node_search(request):
         query = request.GET['q']
         page = int(request.GET.get('page', 1))
         count = int(request.GET.get('count', 50))
+        root_nodes = Node.objects.mine(
+            request.user, get_archived=True
+        ).filter(level=0)
         results = Node.search(
             query,
             request.user,
@@ -894,10 +893,15 @@ def node_search(request):
                          'icon': 'arrow-r',
                          'iconpos': 'right'}
                 pages.append(nextt)
+        # Add a field for the root node
+        for node in nodes_found:
+            # (uses lists in case of bad unit tests)
+            root_node = [n for n in root_nodes if n.tree_id == node.tree_id]
+            if len(root_node) > 0:
+                node.root_title = root_node[0].title
     else:
         query = ''
     base_url = reverse('node_object')
-
     if request.is_mobile:
         template = 'gtd/node_search_m.html'
     else:

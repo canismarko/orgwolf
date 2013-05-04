@@ -58,11 +58,11 @@ class TodoState(models.Model):
         green = (self._color_rgb & Color.GREEN_MASK) >> Color.GREEN_OFFSET
         blue = (self._color_rgb & Color.BLUE_MASK) >> Color.BLUE_OFFSET
         new_color = Color(red, green, blue, self._color_alpha)
-        return new_color 
+        return new_color
     def __str__(self):
         return mark_safe(
-            conditional_escape(self.as_html()) + 
-            ' - ' + 
+            conditional_escape(self.as_html()) +
+            ' - ' +
             conditional_escape(self.display_text)
             )
     class Meta():
@@ -132,6 +132,8 @@ class Contact(Tag):
             return '{0} {1}'.format(self.f_name, self.l_name)
         else:
             return self.user.__str__()
+    def __repr__(self):
+        return '<Contact: {0}>'.format(self.__str__())
 
 # Saving a new user creates a new contact
 @receiver(signals.post_save, sender=User)
@@ -228,8 +230,26 @@ class Scope(models.Model):
         return self.display
 
 class NodeManager(TreeManager):
+    def assigned(self, user, get_archived=False):
+        """Get all the objects that `user` is responsible for
+        """
+        if user.is_authenticated():
+            if get_archived:
+                qs_all = Node.objects.all()
+            else:
+                qs_all = Node.objects.filter(archived=False)
+            owned = qs_all.filter(assigned=None).filter(owner=user)
+            # Look for assigned nodes
+            contact = user.contact_set.all()
+            assigned = qs_all.filter(assigned__in=contact)
+            # qs = qs & qs_all.filter(owner__id__in=owned)
+            return assigned | owned
+        else:
+            raise RuntimeWarning('user not authenticated')
+            return Node.objects.none()
     def mine(self, user, get_archived=False):
-        """Get all the objects that have user as the owner or assigned."""
+        """Get all the objects that have `user` as the owner or assigned,
+        or have `user` in the related_users relationship."""
         if user.is_authenticated():
             if get_archived:
                 qs = Node.objects.all()
@@ -237,7 +257,10 @@ class NodeManager(TreeManager):
                 qs = Node.objects.filter(archived=False)
             owned = Q(owner=user)
             others = Q(users=user)
-            qs = qs.filter(owned | others)
+            # Look for assigned nodes
+            contact = user.contact_set.all()
+            assigned = Q(assigned__in=contact)
+            qs = qs.filter(owned | others | assigned)
             return qs
         else:
             raise RuntimeWarning('user not authenticated')
@@ -385,7 +408,7 @@ class Node(MPTTModel):
     def get_hierarchy_as_string(self):
         """Return a string showing the trail of ancestors
         leading up to this node"""
-        return "Coming soon"
+        # return "Coming soon"
         delimiter = '>'
         node_list = self.get_ancestors(include_self=True)
         string = ''
@@ -522,7 +545,10 @@ class Node(MPTTModel):
     def save(self, *args, **kwargs):
         if not self.id:
             # set slug field on newly created nodes
-            self.slug = slugify(self.title)
+            new_slug = slugify(self.title)
+            if len(new_slug) > 50:
+                new_slug = new_slug[0:49]
+            self.slug = slugify(new_slug)
         return super(Node, self).save(*args, **kwargs)
     def __str__(self):
         if hasattr(self.todo_state, "abbreviation"):
@@ -532,6 +558,8 @@ class Node(MPTTModel):
             )
         else:
             return self.get_title()
+    def __repr__(self):
+        return '<Node: {0}>'.format(self.title)
 
 # Signal handlers for the Node class
 @receiver(signals.pre_save, sender=Node)

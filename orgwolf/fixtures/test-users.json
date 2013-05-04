@@ -53,7 +53,7 @@
         "preferred_timezone": "", 
         "groups": [], 
         "user_permissions": [], 
-        "home": "gtd.views.display_node", 
+        "home": "node_object", 
 	"password": "pbkdf2_sha256$10000$B3bDh7q6eHO2$VPeNICNozfaE3TXikuRiC98sFU6emqkIESTRj6b8kNM=",
         "email": "test@example.com", 
         "date_joined": "2013-01-25T04:12:08.845Z"

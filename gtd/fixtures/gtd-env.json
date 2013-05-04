@@ -247,9 +247,9 @@
     "pk": 5, 
     "model": "gtd.contact", 
     "fields": {
-        "l_name": "", 
-        "f_name": "", 
-        "user": 4
+        "l_name": "Test", 
+        "f_name": "User", 
+        "user": 1
     }
 },
 {
@@ -258,7 +258,7 @@
     "fields": {
         "l_name": "Wolf", 
         "f_name": "Mark", 
-        "user": 1
+        "user": 2
     }
 },
 {
@@ -267,7 +267,7 @@
     "fields": {
         "l_name": "Burroughs", 
         "f_name": "Lou", 
-        "user": 1
+        "user": null
     }
 },
 {

@@ -433,6 +433,11 @@ $(document).ready(function(){
 				    settings.heading.set_fields(
 					response
 				    );
+				    // // Feedback if node repeats
+				    // if ( settings.heading.repeats ) {
+				    //   alert('Node scheduled for ' +
+				    //         settings.heading.scheduled);
+				    // }
 				    settings.heading.redraw();
 				} else {
 				    old = $todo.attr('todo_id');

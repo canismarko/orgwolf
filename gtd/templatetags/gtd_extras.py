@@ -73,12 +73,34 @@ def nodes_as_hierarchy_table(qs, base_url, autoescape=None):
         html += '<a href="{0}{1}">'.format(base_url, obj.id)
         html += obj.get_title()
         html += '</a><br />'
-        html += '<small>' + obj.get_hierarchy_as_string() + '</small>'
+        html += '<small>' + obj.root_title + '</small>'
         html += '</td>\n<td>'
         html += esc(obj.tag_string)
         html += '</td>\n</tr>\n'
     html += '</table>'
     return mark_safe(html)
+
+@register.filter()
+def breadcrumbs(qs, base_url):
+    """Returns a breadcrumb trail given a queryset of ancestors."""
+    first = True
+    cnt = len(qs)
+    h = ''
+    i = 1 # compare to cnt
+    for obj in qs:
+        h += '&gt; '
+        if i == cnt:
+            h += '<span class="update" data-fields="title">{0}</span>'.format(
+                obj.as_html())
+        else:
+            h += '<a href="{url}{pk}/{slug}/">{title}</a>'.format(
+                url=base_url,
+                pk=obj.pk,
+                slug=conditional_escape(obj.slug),
+                title=obj.as_html()
+            )
+        i += 1
+    return mark_safe(h)
 
 @register.filter()
 def add_scope(string, scope=None):
