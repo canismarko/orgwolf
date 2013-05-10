@@ -50,7 +50,8 @@
       <dd>
 	<ul name="children" data-role="listview" data-inset="true">
 	  {% for node in child_nodes_qs %}
-	  <li><a href="{{ base_url }}{{ node.id }}" data-prefetch>
+	  <li><a href="{{ base_url }}{{ node.id }}"
+		 {% if child_nodes_qs|length < 6 %} data-prefetch{% endif %}>
 	      {% if node.todo_state %}{{ node.todo_state.as_html }} {% endif %}
 	      {{ node.title }}
 	  </a></li>
@@ -58,7 +59,7 @@
 	</ul>
       </dd>
     </dl>
-      
+
     </div>
   </div>
 </div>

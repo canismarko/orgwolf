@@ -1,9 +1,11 @@
-from django import template
-from django.utils.html import conditional_escape
-from django.utils.safestring import mark_safe
+from __future__ import unicode_literals, absolute_import, print_function
 import datetime as dt
 import re
 from markdown import markdown
+
+from django import template
+from django.utils.html import conditional_escape
+from django.utils.safestring import mark_safe
 
 from orgwolf.models import HTMLEscaper
 
@@ -84,22 +86,15 @@ def nodes_as_hierarchy_table(qs, base_url, autoescape=None):
 def breadcrumbs(qs, base_url):
     """Returns a breadcrumb trail given a queryset of ancestors."""
     first = True
-    cnt = len(qs)
     h = ''
-    i = 1 # compare to cnt
     for obj in qs:
-        h += '&gt; '
-        if i == cnt:
-            h += '<span class="update" data-fields="title">{0}</span>'.format(
-                obj.as_html())
-        else:
-            h += '<a href="{url}{pk}/{slug}/">{title}</a>'.format(
-                url=base_url,
-                pk=obj.pk,
-                slug=conditional_escape(obj.slug),
-                title=obj.as_html()
-            )
-        i += 1
+        h += '&nbsp;&gt; '
+        h += '<a href="{url}{pk}/{slug}/">{title}</a>'.format(
+            url=base_url,
+            pk=obj.pk,
+            slug=conditional_escape(obj.slug),
+            title=obj.as_html()
+        )
     return mark_safe(h)
 
 @register.filter()

@@ -52,7 +52,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 {% block content %}
 
 {# Hierarchy, breadcrumb trail #}
-  {{ breadcrumb_list|breadcrumbs:base_url }}
+  {{ breadcrumb_list|breadcrumbs:base_node_url }}
 
 {# Scope tabs #}
 {% include "gtd/scope_tabs.html" %}

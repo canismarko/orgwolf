@@ -23,7 +23,7 @@ when you run "manage.py test".
 Replace this with more appropriate tests for your application.
 """
 
-from __future__ import unicode_literals
+from __future__ import unicode_literals, absolute_import, print_function
 import datetime as dt
 import json
 import re
@@ -47,7 +47,7 @@ from gtd.models import Tool, Context, Scope, Contact
 from gtd.shortcuts import parse_url, generate_url, get_todo_abbrevs
 from gtd.shortcuts import order_nodes
 from gtd.templatetags.gtd_extras import overdue, upcoming, escape_html
-from gtd.templatetags.gtd_extras import add_scope
+from gtd.templatetags.gtd_extras import add_scope, breadcrumbs
 from gtd.views import Descendants
 from orgwolf.preparation import translate_old_text
 from orgwolf.models import OrgWolfUser as User
@@ -55,8 +55,9 @@ from orgwolf.models import OrgWolfUser as User
 class EditNode(TestCase):
     fixtures = ['test-users.json', 'gtd-test.json', 'gtd-env.json']
     def setUp(self):
+        self.user = User.objects.get(username='test')
         self.assertTrue(
-            self.client.login(username='test', password='secret')
+            self.client.login(username=self.user.username, password='secret')
             )
     def close_node_through_client(self, client, node=None):
         """
@@ -355,6 +356,38 @@ class EditNode(TestCase):
             new_node.scope.all()[0],
             'Scope not set when adding node through json'
         )
+
+    def test_edit_form_states(self):
+        """Make sure edit node form has only the valid states for this user"""
+        node = Node.objects.get(pk=1)
+        edit_url = reverse('gtd.views.edit_node',
+                           kwargs={'node_id': node.pk,
+                                   'slug': node.slug}
+        )
+        response = self.client.get(edit_url)
+        good_states = TodoState.objects.filter(
+            Q(owner=None) | Q(owner=self.user)
+        )
+        bad_states = TodoState.objects.exclude(
+            owner=None).exclude(owner=self.user)
+        self.assertTrue(
+            len(good_states) > 0,
+            'No good states found to test for (bad fixtures)'
+        )
+        self.assertTrue(
+            len(bad_states) > 0,
+            'No bad states found to test for (bad fixtures)'
+        )
+        for state in good_states:
+            self.assertContains(
+                response,
+                state
+            )
+        for state in bad_states:
+            self.assertNotContains(
+                response,
+                state
+            )
 
 class NodeOrder(TestCase):
     """Holds tests for accessing and modifying the order of nodes"""
@@ -1043,61 +1076,7 @@ class Shortcuts(TestCase):
             node.is_leaf_node(),
             response_dict['is_leaf_node']
             )
-    # Deprecated
-    # def test_qs_to_dicts(self):
-    #     """Testing for the helper function that converts a queryset of Node
-    #     objects to a list of dictionary objects."""
-    #     self.maxDiff = None
-    #     node = Node.objects.get(pk=1)
-    #     node_expected = {
-    #         str('text'): node.text,
-    #         str('tag_string'): node.tag_string,
-    #         str('assigned'): node.assigned,
-    #         'deadline_date': node.deadline.strftime('%Y-%m-%d'),
-    #         str('owner'): node.owner.pk,
-    #         'scheduled_time': node.scheduled.strftime('%H:%M:%S'),
-    #         str('archived'): node.archived,
-    #         'deadline_time': node.deadline.strftime('%H:%M:%S'),
-    #         str('title'): node.title,
-    #         'title_html': node.get_title(),
-    #         str('time_needed'): node.time_needed,
-    #         str('priority'): node.priority,
-    #         'parent_id': getattr(node.parent, 'pk', 0),
-    #         str('closed'): node.closed.strftime('%a %b %d %H:%M:%S %Y'),
-    #         str('todo_state'): node.todo_state.pk,
-    #         str('scope'): node.scope.all().values_list('pk', flat=True),
-    #         str('energy'): node.energy,
-    #         str('repeating_number'): node.repeating_number,
-    #         str('users'): node.users.all().values_list('pk', flat=True),
-    #         'is_leaf_node': node.is_leaf_node(),
-    #         'todo_html': '{0} - {1}'.format(
-    #             node.todo_state.as_html(),
-    #             node.todo_state.display_text
-    #             ),
-    #         'todo_abbr': node.todo_state.as_html(),
-    #         str('repeating_unit'): node.repeating_unit,
-    #         'scheduled_date': node.scheduled.strftime('%Y-%m-%d'),
-    #         'pk': node.pk,
-    #         str('related_projects'): node.related_projects.all().values_list(
-    #             'pk', flat=True),
-    #         str('scheduled_time_specific'): node.scheduled_time_specific,
-    #         str('repeats_from_completion'): node.repeats_from_completion,
-    #         str('deadline_time_specific'): node.deadline_time_specific,
-    #         str('repeats'): node.repeats,
-    #         }
-    #     nodes = Node.objects.all()
-    #     # Should run 1 query to evaluate nodes and one for each M2M field
-    #     self.assertNumQueries(2, qs_to_dicts, nodes)
-    #     node_dict = qs_to_dicts(nodes)[0]
-    #     # check values of the returned dictionary
-    #     for key in node_expected.keys():
-    #         self.assertEqual(
-    #             str(node_expected[key]),
-    #             str(node_dict[key]),
-    #             '{0} not returned correctly. Expected {1}, got {2}'.format(
-    #                 key, node_expected[key], node_dict[key]
-    #                 )
-    #             )
+
     def test_root_node_as_json(self):
         """Make sure that a root node returns a parent_id of 0
         instead of null"""
@@ -1109,6 +1088,13 @@ class Shortcuts(TestCase):
             0,
             response_dict['parent_id']
             )
+
+    def test_breadcrumb_unicode(self):
+        """Make sure that the breadcrumbs template filter handles unicode
+        characters properly.
+        """
+        node = Node.objects.filter(pk=13)
+        breadcrumbs(node, '/')
 
 class NodePermissions(TestCase):
     fixtures = ['test-users.json', 'gtd-test.json', 'gtd-env.json']
@@ -1213,7 +1199,7 @@ class OverdueFilter(TestCase):
     def test_filter_exists(self):
         self.assertEqual(overdue.__class__.__name__, 'function')
         self.assertEqual(overdue(dt.datetime.now()).__class__.__name__,
-                         'SafeBytes')
+                         'SafeText')
     def test_simple_dt(self):
         yesterday = dt.datetime.now() + dt.timedelta(-1)
         self.assertEqual(overdue(yesterday, future=True), '1 day ago')
@@ -1484,53 +1470,6 @@ class MultiUser(TestCase):
             status_code=200,
             msg_prefix='node view',
             )
-    # Deprecated: Moved to API testing
-    # def test_get_descendants_json(self):
-    #     ancestor = Node.objects.get(pk=8)
-    #     url = reverse('node_descendants',
-    #                   kwargs={'ancestor_pk': ancestor.pk})
-    #     payload = {'offset': 2}
-    #     response = self.client.get(url, payload)
-    #     self.assertEqual(
-    #         200,
-    #         response.status_code
-    #         )
-    #     response_dict = json.loads(response.content)
-    #     nodes = response_dict['nodes']
-    #     self.assertEqual(
-    #         1,
-    #         len(nodes),
-    #         )
-    #     self.assertEqual(
-    #         Node.objects.get(pk=nodes[0]['pk']).title,
-    #         'ryan\'s movies'
-    #         )
-    #     self.assertEqual(
-    #         [1],
-    #         nodes[0]['scope'],
-    #     )
-
-    # def test_get_root_descendants_json(self):
-    #     url = reverse('node_descendants', kwargs={'ancestor_pk': '0'})
-    #     payload = {'offset': 2}
-    #     response = self.client.get(url, payload)
-    #     self.assertEqual(
-    #         200,
-    #         response.status_code
-    #         )
-    #     response_dict = json.loads(response.content)
-    #     nodes = response_dict['nodes']
-    #     expected = []
-    #     for node in nodes:
-    #         expected.append(repr(Node.objects.get(pk=node['pk'])))
-    #     queryset = Node.objects.mine(
-    #         self.user2, get_archived=True
-    #     ).filter(level=1)
-    #     self.assertQuerysetEqual(
-    #         queryset,
-    #         expected,
-    #         ordered=False,
-    #     )
 
     def test_get_unauthorized_node(self):
         """Trying to access another person's node by URL
@@ -1695,6 +1634,17 @@ class NodeAPI(TestCase):
             302,
             response.status_code,
             'Non-slugged response returns 302'
+        )
+    def test_json_get(self):
+        """Check if getting the node attributes by ajax works as expected"""
+        response = self.client.get(
+            self.url_slug,
+            HTTP_X_REQUESTED_WITH='XMLHttpRequest'
+        )
+        r = json.loads(response.content)
+        self.assertEqual(
+            self.node.pk,
+            r[0]['pk'],
         )
     def test_json_put(self):
         """Check if setting attributes by ajax works as expected"""

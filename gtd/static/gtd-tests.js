@@ -160,6 +160,11 @@ $.mockjax({
     ]
 });
 $.mockjax({
+    url: '/gtd/node/5/',
+    responseTime: ajax_timer,
+    responseText: '[{"pk": 5, "model": "gtd.node", "fields": {"rght": 17, "text": "", "tag_string": "", "assigned": null, "lft": 16, "deadline": "2011-05-13T08:00:00Z", "owner": 1, "archived": false, "opened": "2012-11-17T11:10:41.299Z", "title": "Buy cat food", "time_needed": null, "priority": "", "closed": "2011-05-14T00:56:00Z", "tree_id": 1, "todo_state": 2, "scope": [1], "energy": null, "repeating_number": 3, "scheduled": "2012-12-31T10:00:00Z", "users": [], "parent": 1, "repeating_unit": "d", "slug": "buy-cat-food", "related_projects": [], "level": 1, "scheduled_time_specific": false, "repeats_from_completion": false, "deadline_time_specific": false, "repeats": true}}]'
+});
+$.mockjax({
     url: '/gtd/node/new/',
     responseTime: ajax_timer,
     responseText: '<div class="modal hide fade" id="new-modal">\n  <div class="modal-header">\n    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>\n    <h3 class="header-title">\n      New Node\n      \n    </h3>\n  </div>\n  <form id="edit-form" action="/index.html" method="POST">\n    <div class="modal-body">\n      <table>\n<tr class="required"><th><label for="id_title">Title:</label></th><td><input autofocus="autofocus" data-validate="required" id="id_title" name="title" type="text" /></td></tr>\n<tr><th><label for="id_todo_state">Todo state:</label></th><td><select id="id_todo_state" name="todo_state">\n<option value="" selected="selected">---------</option>\n<option value="8"><strong>HARD</strong> - Hard Scheduled</option>\n<option value="9"><strong>SPED</strong> - Supersonic</option>\n<option value="10"><strong>BORE</strong> - Something boring to do</option>\n<option value="1"><strong>NEXT</strong> - Next Action</option>\n<option value="2"><strong>ACTN</strong> - Future Action</option>\n<option value="3">DONE - Completed</option>\n<option value="4"><strong>SMDY</strong> - Someday Maybe</option>\n<option value="5"><strong>DFRD</strong> - Deferred</option>\n<option value="6">WAIT - Waiting For</option>\n<option value="7"><span style="color: rgba(0, 51, 204, 1.0)">CNCL</span> - Cancelled</option>\n</select></td></tr>\n<tr><th><label for="id_scheduled_date">Scheduled date:</label></th><td><input class="datepicker" data-validate="date" id="id_scheduled_date" name="scheduled_date" type="text" /></td></tr>\n<tr><th><label for="id_scheduled_time">Scheduled time:</label></th><td><input class="timepicker" data-validate="time" id="id_scheduled_time" name="scheduled_time" type="text" /></td></tr>\n<tr><th><label for="id_scheduled_time_specific">Scheduled time specific:</label></th><td><input data-requires="#id_scheduled_date, #id_scheduled_time" id="id_scheduled_time_specific" name="scheduled_time_specific" toggles="scheduled_time" type="checkbox" /></td></tr>\n<tr><th><label for="id_deadline_date">Deadline date:</label></th><td><input class="datepicker" id="id_deadline_date" name="deadline_date" type="text" /></td></tr>\n<tr><th><label for="id_deadline_time">Deadline time:</label></th><td><input class="timepicker" id="id_deadline_time" name="deadline_time" type="text" /></td></tr>\n<tr><th><label for="id_deadline_time_specific">Deadline time specific:</label></th><td><input data-requires="#id_deadline_date, #id_deadline_time" id="id_deadline_time_specific" name="deadline_time_specific" toggles="deadline_time" type="checkbox" /></td></tr>\n<tr><th><label for="id_priority">Priority:</label></th><td><select id="id_priority" name="priority">\n<option value="" selected="selected">---------</option>\n<option value="A">A</option>\n<option value="B">B</option>\n<option value="C">C</option>\n</select></td></tr>\n<tr><th><label for="id_scope">Scope:</label></th><td><select multiple="multiple" id="id_scope" name="scope">\n<option value="1">joe_corp</option>\n<option value="2">Kalsec</option>\n</select><br /><span class="helptext"> Hold down "Control", or "Command" on a Mac, to select more than one.</span></td></tr>\n<tr><th><label for="id_repeats">Repeats:</label></th><td><input data-requires="#id_repeating_number, #id_repeating_unit" id="id_repeats" name="repeats" type="checkbox" /></td></tr>\n<tr><th><label for="id_repeating_number">Repeating number:</label></th><td><input data-validate="int" id="id_repeating_number" name="repeating_number" type="text" /></td></tr>\n<tr><th><label for="id_repeating_unit">Repeating unit:</label></th><td><select id="id_repeating_unit" name="repeating_unit">\n<option value="" selected="selected">---------</option>\n<option value="d">Days</option>\n<option value="w">Weeks</option>\n<option value="m">Months</option>\n<option value="y">Years</option>\n</select></td></tr>\n<tr><th><label for="id_repeats_from_completion">Repeats from completion:</label></th><td><select id="id_repeats_from_completion" name="repeats_from_completion">\n<option value="1">Unknown</option>\n<option value="2">Yes</option>\n<option value="3" selected="selected">No</option>\n</select></td></tr>\n<tr><th><label for="id_archived">Archived:</label></th><td><input id="id_archived" name="archived" type="checkbox" /></td></tr>\n<tr><th><label for="id_related_projects">Related projects:</label></th><td><select multiple="multiple" id="id_related_projects" name="related_projects">\n<option value="1">[<strong>NEXT</strong>] Errands</option>\n<option value="11">Hello</option>\n<option value="6">[<strong>NEXT</strong>] Home Node</option>\n<option value="12">Miscellaneous</option>\n<option value="28">Mischief</option>\n<option value="8">[<strong>ACTN</strong>] Ryan node</option>\n<option value="7">[<strong>NEXT</strong>] <span class="archived-text">Work Node</span></option>\n<option value="17">contxt parent</option>\n<option value="23">goodbye, world</option>\n<option value="22">hello, world</option>\n<option value="24">kjoweij</option>\n<option value="25">october</option>\n<option value="14">to the shows</option>\n</select></td></tr>\n<tr><th><label for="id_text">Text:</label></th><td><textarea cols="40" id="id_text" name="text" rows="10">\n</textarea></td></tr>\n<tr><th><label for="id_tag_string">Tag string:</label></th><td><textarea cols="40" id="id_tag_string" name="tag_string" rows="10">\n</textarea><input id="id_scheduled" name="scheduled" type="hidden" /><input id="id_deadline" name="deadline" type="hidden" /></td></tr>\n      </table>\n    </div>\n    <div class="modal-header">\n      <button type="submit" class="btn btn-primary">Save Changes</button>\n      <button class="btn" data-dismiss="modal" aria-hidden="true">Close</button>\n      <input type="hidden" name="form" value="modal"></input>\n    </div>\n  </form>\n</div>\n'
@@ -442,6 +447,25 @@ test('converts initial workspace', function() {
     );
 });
 
+asyncTest('Retrieve parent heading', function() {
+    var $workspace = $('#test_workspace');
+    $workspace.nodeOutline({simulate: true});
+    var workspace = $workspace.data('nodeOutline');
+    setTimeout(function() {
+	start();
+	equal(
+	    workspace.pk,
+	    5,
+	    'Correct primary key set on workspace'
+	)
+	equal(
+	    workspace.title,
+	    'Buy cat food',
+	    'Correct title key set on workspace'
+	);
+    }, ajax_timer);
+});
+
 test('MPTT move_to method (first-child)', function() {
     var $workspace = $('#test_workspace');
     $workspace.nodeOutline({simulate: true});
@@ -638,7 +662,6 @@ asyncTest('MPTT get_previous_sibling', function() {
 	// Check get_previous_sibling() of non-root node
 	var heading8 = workspace.headings.get({pk: 8});
 	var heading9 = workspace.headings.get({pk: 9});
-	console.log(workspace.headings);
 	heading1.rebuild();
 	equal(
 	    heading9.get_previous_sibling().pk,
@@ -1040,7 +1063,6 @@ test('heading.redraw() method', function() {
     var workspace = $workspace.data('nodeOutline');
     var heading = workspace.headings.get({pk: 1});
     var s = '.heading[node_id="' + heading.pk + '"]';
-    console.log(heading.todo_state);
     equal(
 	heading.$todo_state.html(),
 	heading.get_todo_state().display,
@@ -1085,7 +1107,6 @@ test('heading.redraw() method', function() {
 	'',
 	'Zero todo-state is redrawn with no display'
     );
-	
 });
 
 test('workspace.headings.add() method', function() {
@@ -1267,8 +1288,8 @@ asyncTest('nodeEdit dialogs', function() {
 	    'Edit button uses workspace $edit-modal'
 	);
 	equal(
-	    $edit.data('nodeEdit').edit_url,
-	    '/gtd/node/8/edit/',
+	    $edit.data('nodeEdit').node_url,
+	    '/gtd/node/8/',
 	    'Edit button uses correct editing url for existing node'
 	);
 	equal(
@@ -1281,7 +1302,6 @@ asyncTest('nodeEdit dialogs', function() {
 	    heading8.title,
 	    'Opening the modal sets the title correctly'
 	);
-	console.log(heading8);
 	equal(
 	    workspace.$edit_modal.find('.header-title').html(),
 	    'Edit "' + heading8.get_title() + '"',
@@ -1475,6 +1495,30 @@ asyncTest('nodeEdit dialogs', function() {
     }, ajax_timer);
 });
 
+asyncTest('nodeEdit dialog conflicts', function() {
+    var $workspace = $('#test_workspace');
+    $workspace.nodeOutline();
+    var workspace = $workspace.data('nodeOutline');
+    var new_url = '/gtd/node/5/new/';
+    setTimeout(function() {
+	var $modal = workspace.$edit_modal;
+	var data = workspace.$add.data('nodeEdit');
+	var modal = $modal.data('nodeEdit');
+	equal(
+	    data.node_url,
+	    new_url,
+	    'edit node defaults to new node'
+	);
+	start();
+	workspace.$add.click();
+	equal(
+	    modal.node_url,
+	    new_url,
+	    'node_url set in modal data object'
+	);
+    }, ajax_timer);
+});
+
 test('GtdHeading.has_scope() method', function() {
     var $workspace = $('#test_workspace');
     $workspace.nodeOutline({scopes: scopes});
@@ -1490,7 +1534,7 @@ test('GtdHeading.has_scope() method', function() {
 	heading.has_scope(1),
 	'has_scope() correctly identifies an active scope'
     );
-    strictEqual( 
+    strictEqual(
 	heading.has_scope(2),
 	false,
 	'has_scope() correctly rejects an inactive scope'

@@ -17,7 +17,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #######################################################################
 
-from __future__ import unicode_literals
+from __future__ import unicode_literals, absolute_import, print_function
 import math
 import re
 import datetime
@@ -392,7 +392,7 @@ def edit_node(request, node_id, scope_id, slug):
                     'node_data': node_data,
                     }
             else:
-                print form.errors
+                print(form.errors)
                 return HttpResponseBadRequest(form.errors)
         else: # if post.get('form') != 'modal':
             # Text
@@ -473,7 +473,7 @@ def edit_node(request, node_id, scope_id, slug):
             redirect_url = reverse('node_object', kwargs=url_kwargs)
             return redirect(redirect_url)
     else: # Blank form
-        form = NodeForm(instance=node)
+        form = NodeForm(instance=node, user=request.user)
     if request.is_mobile:
         template = 'gtd/node_edit_m.html'
     else:
@@ -607,6 +607,9 @@ class NodeView(DetailView):
     template_name = 'gtd/node_view.html'
     context_object_name = 'parent_node'
     def get(self, request, *args, **kwargs):
+        if request.is_ajax():
+            # AJAX request
+            return self.get_json(request, *args, **kwargs)
         # First unpack arguments
         node_id = kwargs.get('pk')
         scope_id = 0
@@ -676,6 +679,15 @@ class NodeView(DetailView):
         return render_to_response(template,
                                   locals(),
                                   RequestContext(request))
+
+    def get_json(self, request, *args, **kwargs):
+        """Returns the details of the node as a json encoded object"""
+        node_id = kwargs.get('pk')
+        node = get_object_or_404(Node, pk=node_id)
+        return HttpResponse(
+            serializers.serialize('json', [node])
+        )
+
     def post(self, request, *args, **kwargs):
         post = request.POST
         url_kwargs = {}
@@ -775,7 +787,7 @@ class NodeView(DetailView):
                 # Prepare the response
                 node_data = self.node.as_pre_json()
             else:
-                print form.errors
+                print(form.errors)
                 return HttpResponseBadRequest(form.errors)
         else: # if post.get('form') != 'modal':
             # Text

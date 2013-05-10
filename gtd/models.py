@@ -17,12 +17,13 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #######################################################################
 
-from __future__ import unicode_literals
+from __future__ import unicode_literals, absolute_import, print_function
 import re
 import math
 import operator
 import json
 from datetime import datetime, timedelta
+
 from django.core.exceptions import ValidationError
 from django.db import models, transaction
 from django.db.models import Q, signals
@@ -33,7 +34,6 @@ from django.utils.encoding import python_2_unicode_compatible
 from django.utils.html import conditional_escape
 from django.utils.safestring import mark_safe
 from django.utils.timezone import get_current_timezone
-
 
 from mptt.managers import TreeManager
 from mptt.models import MPTTModel, TreeForeignKey
@@ -65,6 +65,11 @@ class TodoState(models.Model):
             ' - ' +
             conditional_escape(self.display_text)
             )
+    def __repr__(self):
+        return '<TodoState: {0}-{1}>'.format(
+            self.abbreviation,
+            self.display_text
+        )
     class Meta():
         ordering = ['order']
     @staticmethod
@@ -391,7 +396,7 @@ class Node(MPTTModel):
         return mark_safe(title)
     def get_level(self):
         """Gets the node's level in the tree (1-indexed)."""
-        return self.level + 1 
+        return self.level + 1
     @staticmethod
     def get_all_projects():
         return Node.objects.filter(parent=None)
@@ -559,7 +564,8 @@ class Node(MPTTModel):
         else:
             return self.get_title()
     def __repr__(self):
-        return '<Node: {0}>'.format(self.title)
+        s = '<Node: {0}>'.format(self.title)
+        return s.encode('utf8')
 
 # Signal handlers for the Node class
 @receiver(signals.pre_save, sender=Node)
