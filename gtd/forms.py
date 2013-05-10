@@ -17,12 +17,15 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #######################################################################
 
+import datetime as dt
+
 from django.core.exceptions import ValidationError
 from django import forms
 from django.forms import widgets
 from django.utils import timezone
 from gtd.models import Node
-import datetime as dt
+
+from gtd.models import TodoState
 
 class NodeForm(forms.ModelForm):
     required_css_class = 'required'
@@ -40,17 +43,19 @@ class NodeForm(forms.ModelForm):
                                         'data-validate': 'date'}),
         )
     scheduled_time = forms.TimeField(
-        required=False, 
+        required=False,
         localize=True,
         widget=widgets.TextInput(attrs={'class': 'timepicker',
                                         'data-validate': 'time'}),
         )
     scheduled_time_specific = forms.BooleanField(
         required=False,
-        widget=widgets.CheckboxInput(attrs={'toggles': 'scheduled_time',
-                                            'data-requires': '#id_scheduled_date, #id_scheduled_time',
-                                            })
+        widget=widgets.CheckboxInput(
+            attrs={'toggles': 'scheduled_time',
+                   'data-requires': '#id_scheduled_date, #id_scheduled_time',
+               }
         )
+    )
     deadline = forms.DateTimeField(
         widget=widgets.HiddenInput,
         required=False,
@@ -61,30 +66,35 @@ class NodeForm(forms.ModelForm):
                                         'data-validate': 'date'}),
         )
     deadline_time = forms.TimeField(
-        required=False, 
+        required=False,
         localize=True,
         widget=widgets.TextInput(attrs={'class': 'timepicker',
                                         'data-validate': 'time'}),
         )
     deadline_time_specific = forms.BooleanField(
         required=False,
-        widget=widgets.CheckboxInput(attrs={'toggles': 'deadline_time',
-                                            'data-requires': '#id_deadline_date, #id_deadline_time',
-                                            })
+        widget=widgets.CheckboxInput(
+            attrs={'toggles': 'deadline_time',
+                   'data-requires': '#id_deadline_date, #id_deadline_time',
+               }
         )
+    )
     tag_string = forms.CharField(
-        required=False
+        required=False,
+        help_text='Example ":home:phone:"',
         )
     repeats = forms.BooleanField(
         required=False,
-        widget=widgets.CheckboxInput(attrs={'data-requires': '#id_repeating_number, #id_repeating_unit'}),
-        )
+        widget=widgets.CheckboxInput(
+            attrs={'data-requires': '#id_repeating_number, #id_repeating_unit'}
+        ),
+    )
     repeating_number = forms.IntegerField(
         required=False,
         widget=widgets.TextInput(attrs={'data-validate': 'int'}),
         );
     related_projects = forms.ModelMultipleChoiceField(
-        queryset=Node.get_all_projects().order_by('title'), 
+        queryset=Node.get_all_projects().order_by('title'),
         required=False,
         )
     class Meta:
@@ -114,26 +124,30 @@ class NodeForm(forms.ModelForm):
             'title': forms.TextInput(),
             }
     def __init__(self, *args, **kwargs):
-        if 'parent' in kwargs.keys():
-            parent = kwargs['parent']
-            del(kwargs['parent'])
-        else:
-            parent = None
+        parent = kwargs.pop('parent', None)
+        user = kwargs.pop('user', None)
         super(NodeForm, self).__init__(*args, **kwargs)
         # Set initial values if node already exists
         if self.instance.pk:
             local_tz = timezone.get_current_timezone()
             self.fields['related_projects'].initial = self.instance.related_projects.all()
             if self.instance.scheduled:
-                self.fields['scheduled_date'].initial = self.instance.scheduled.astimezone(local_tz).date()
-                self.fields['scheduled_time'].initial = self.instance.scheduled.astimezone(local_tz).time()
+                date = self.instance.scheduled.astimezone(local_tz).date()
+                self.fields['scheduled_date'].initial = date
+                time = self.instance.scheduled.astimezone(local_tz).time()
+                self.fields['scheduled_time'].initial = time
             if self.instance.deadline:
-                self.fields['deadline_date'].initial = self.instance.deadline.astimezone(local_tz).date()
-                self.fields['deadline_time'].initial = self.instance.deadline.astimezone(local_tz).time()
+                date = self.instance.deadline.astimezone(local_tz).date()
+                self.fields['deadline_date'].initial = date
+                time = self.instance.deadline.astimezone(local_tz).time()
+                self.fields['deadline_time'].initial = time
         # Set initial values if node does not exist
         if parent and not self.instance.pk: # A new node with a parent
-            self.fields['related_projects'].initial = parent.related_projects.all()
+            related = parent.related_projects.all()
+            self.fields['related_projects'].initial = related
             self.fields['scope'].initial = parent.scope.all()
+        # Limit todo states to those valid to the user
+        self.fields['todo_state'].queryset = TodoState.get_visible(user=user)
         # Remove the node's main project (if it exists) from possible values
         instance = dir(self.instance)
         primary_project = self.instance.get_primary_parent()
@@ -144,16 +158,21 @@ class NodeForm(forms.ModelForm):
                 pk=primary_project.pk
                 )
         self.fields['related_projects'].queryset = fixed_qs
-           
+
     def clean_related_projects(self):
         data = self.cleaned_data['related_projects']
         for project in data:
             # Make sure that all related_projects are root-level nodes
             if project.parent:
-                raise ValidationError('related_project [%s] is not a root-level node.' % project)
-            # Also make sure all related_projects are not this node's primary project
+                raise ValidationError(
+                    'related_project [%s] is not a root-level node.' % project)
+            # Also make sure all related_projects are not this
+            # node's primary project
             if project.pk == self.instance.get_primary_parent().pk:
-                raise ValidationError('related_project [%s] is already primary project for this Node.' % project)
+                raise ValidationError(
+                    'related_project [%s] is already primary project '.join(
+                        'for this Node.' % project)
+                )
         return data
     def clean_repeating_number(self):
         """Ensure the repeating number is positive."""
@@ -163,14 +182,16 @@ class NodeForm(forms.ModelForm):
         if num or num == 0 or num == '0':
             num = int(num)
             if num <= 0:
-                raise forms.ValidationError('Repeating number must be greater than zero')
+                raise forms.ValidationError(
+                    'Repeating number must be greater than zero')
         return num
     def clean(self):
         # Combine date and time fields for scheduled and deadline info
         local_tz = timezone.get_current_timezone()
         cleaned_data = super(NodeForm, self).clean()
         def get_new_datetime(new_date, new_time):
-            # Helper function to determine what to put in the new date or time field
+            # Helper function to determine what to put in the
+            # new date or time field
             if new_date:
                 if new_time:
                     naive_dt = dt.datetime(new_date.year,
@@ -202,6 +223,7 @@ class NodeForm(forms.ModelForm):
             if not (cleaned_data['repeating_number'] and
                     cleaned_data['repeating_unit']):
                 raise forms.ValidationError(
-                    "This Node repeats but the repeating value and unit have not been set properly."
-                    )
+                    'This Node repeats but the repeating value and unit '.join(
+                        'have not been set properly.')
+                )
         return cleaned_data
