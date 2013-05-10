@@ -162,29 +162,13 @@ attach_pickers = function( $target ) {
 	repeating_toggle('#id_repeats', $target);
     });
     repeating_toggle('#id_repeats', $target);
+    // Now apply datepicker/timepicker functionality
     if ( $.fn.datepicker ) {
-	// Set up timepicker/datepicker functionality
-	$target.find("input.datepicker").each(function(ct) {
-	    // Prepare a date field for the date picker widget
-	    $(this).wrap(
-		'<div class="date datepicker input-append" data-date></div>'
+	$target.find('input.datepicker').each(function() {
+	    $(this).datepicker(
+		{format: 'yyyy-mm-dd',
+		 viewMode: 'months'}
 	    );
-	    $(this).after(
-		'<span class="add-on">\n<i class="icon-calendar"></i>\n</span>'
-	    );
-	    btn_width = $(this).next('span.add-on').outerWidth();
-	    mod_width = $(this).width() - btn_width;
-	    // Shrink the field by the size of the button
-	    $(this).width(mod_width);
-	    // The parent <div> has the datepicker class now
-	    $(this).removeClass('datepicker');
-	});
-	// Now apply the actual datepicker functionality
-	$target.find('.datepicker').each(function() {
-	    $(this).datepicker({format: 'yyyy-mm-dd'})
-		.on('changeDate', function() {
-		    $(this).datepicker('hide');
-		});
 	});
 	$target.find("input.timepicker").each(function(ct) {
 	    // Prepare a time field for the time picker widget
@@ -1796,7 +1780,7 @@ GtdHeading.prototype.toggle = function( direction ) {
 		      function(response) {
 			  workspace.$element.append(response);
 			  workspace.$edit_modal = workspace.$element.children('#new-modal');
-			  // attach_pickers( workspace.$edit_modal );
+			  attach_pickers( workspace.$edit_modal );
 			  // Now attach the nodeEdit plugin
 			  // workspace.$add.on('click', function(e) {
 			  var $this = workspace.$add;

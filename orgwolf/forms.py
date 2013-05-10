@@ -18,7 +18,7 @@
 #######################################################################
 
 from django import forms
-
+from django.contrib.auth import forms as authforms
 from orgwolf.models import OrgWolfUser as User
 from wolfmail.models import MailItem
 
@@ -28,12 +28,12 @@ class FeedbackForm(forms.ModelForm):
         model = MailItem
         fields = ('subject', 'message_text')
 
-class PasswordForm(forms.ModelForm):
+class PasswordForm(authforms.AuthenticationForm):
     password = forms.CharField(
-        widget=forms.PasswordInput(), 
+        widget=forms.PasswordInput(),
         label="New Password")
     password_2 = forms.CharField(
-        widget=forms.PasswordInput(), 
+        widget=forms.PasswordInput(),
         label="Password Again")
     class Meta:
         model = User

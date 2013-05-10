@@ -36,6 +36,7 @@ from django.contrib.auth.decorators import login_required
 from django.http import HttpResponse, HttpResponseRedirect
 from django.http import Http404, HttpResponseBadRequest
 from django.db.models import Q
+from django.utils.decorators import method_decorator
 from django.utils.timezone import get_current_timezone
 
 from mptt.exceptions import InvalidMove
@@ -606,6 +607,10 @@ class NodeView(DetailView):
     model = Node
     template_name = 'gtd/node_view.html'
     context_object_name = 'parent_node'
+    @method_decorator(login_required)
+    def dispatch(self, *args, **kwargs):
+        return super(NodeView, self).dispatch(*args, **kwargs)
+
     def get(self, request, *args, **kwargs):
         if request.is_ajax():
             # AJAX request

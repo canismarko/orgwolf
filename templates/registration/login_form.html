@@ -1,7 +1,14 @@
 {% load accounts %}
 
-<table id="login" class="login">
-  <form action="{% url 'django.contrib.auth.views.login' %}" method="post">
+<table id="login">
+  <form action="{% url 'login' %}" method="post">
+    <tr>
+      <td></td>
+      <td>
+	<span class="login">
+	</span>
+      </td>
+    </tr>
     {{ form.as_table }}
     {% csrf_token %}
     <tr>
@@ -18,5 +25,5 @@
 	{% login_buttons 'Login using <b>{0}</b>' %}
       </td>
     </tr>
-  </form>    
+  </form>
 </table>
