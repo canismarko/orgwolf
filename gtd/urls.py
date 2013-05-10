@@ -35,14 +35,10 @@ urlpatterns = patterns(
 
     url(r'^toinbox/$', 'capture_to_inbox'),
 
-    # url(r'^node/(?:scope(?P<scope_id>\d+)/)?(?P<show_all>all/)?$',
-    #     'display_node'),
-    # url(r'^node/(?:scope(?P<scope_id>\d+)/)?(?P<show_all>all/)?(?P<node_id>\d+)/$',
-    # 'display_node'),
     url(r'^node/(?:scope(?P<scope_id>\d+)/)?(?P<node_id>\d+)/(?:(?P<slug>[-\w\d]+)/)?edit/',
         'edit_node',
     ),
-    url(r'^node/(?:scope(?P<scope_id>\d+)/)?(?P<node_id>\d+)/move/',
+    url(r'^node/(?:scope(?P<scope_id>\d+)/)?(?P<node_id>\d+)/(?:[A-Za-z0-4\-]+/)?move/',
         'move_node'),
     url(r'^node/(?:scope(?P<scope_id>\d+)/)?(?:(?P<node_id>\d+)/)?new/',
         'new_node'),

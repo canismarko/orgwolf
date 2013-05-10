@@ -21,10 +21,11 @@ from django.conf.urls import patterns, include, url
 from django.contrib.auth.views import login, logout
 from django.contrib.staticfiles.urls import staticfiles_urlpatterns
 
+from orgwolf.forms import RegistrationForm
+
 # Uncomment the next two lines to enable the admin:
 from django.contrib import admin
 admin.autodiscover()
-
 urlpatterns = patterns('',
                        url(r'^$', 'orgwolf.views.home', name='home'),
                        url(r'^feedback/$', 'orgwolf.views.feedback'),
@@ -33,21 +34,24 @@ urlpatterns = patterns('',
                        url(r'^wolfmail/', include('wolfmail.urls')),
                        # Authentication stuff
                        url(r'', include('social_auth.urls')),
-                       url(r'^accounts/login/$', login),
+                       url(r'^accounts/login/$',
+                           login,
+                           name='login',
+                       ),
                        url(r'^accounts/logout/', logout),
-                       url(r'^accounts/register/', 
+                       url(r'^accounts/register/',
                            'orgwolf.views.new_user'),
-                       url(r'^accounts/profile/', 
+                       url(r'^accounts/profile/',
                            'orgwolf.views.profile'),
-                       url(r'^accounts/password/', 
+                       url(r'^accounts/password/',
                            'orgwolf.views.change_password'),
-                       url(r'^accounts/login/persona/', 
+                       url(r'^accounts/login/persona/',
                            'orgwolf.views.persona_login'),
                        url(r'^acoounts/logout/persona/',
                            'orgwolf.views.persona_logout'),
 
                        #Uncomment the admin/doc line below to enable admin documentation
-                       url(r'^admin/doc/', 
+                       url(r'^admin/doc/',
                            include('django.contrib.admindocs.urls')),
                        # Uncomment the next line to enable the admin
                        url(r'^admin/',

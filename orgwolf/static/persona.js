@@ -4,16 +4,21 @@ $(document).ready(function() {
     // Rearrange to the login windows to show persona login
     var $login, $btn;
     $login = $('.login');
-    $login.after(
+    $login.before(
 	'<a href="#" class="persona-button"><span>Sign in with your Email</span></a>'
     );
-    $btn = $login.next('a.persona-button');
-    $login.remove();
+    $btn = $login.prev('a.persona-button');
+    if ( $login.hasClass('replace') ) {
+	$login.removeClass('row');
+	$login.html('<div><a href="/accounts/login/">Other login methods</a></div>');
+	$login.append('<div><a href="/accounts/register/">Other new user creation methods</a></div>');
+    }
     $btn.bind('click.persona', function(e) {
 	navigator.id.request();
 	$(this).attr('data-loading-text', 'Loading...');
     });
     $('#logout').bind('click.persona', function(e) {
+	console.log('logout');
 	navigator.id.logout();
     });
     navigator.id.watch({
@@ -23,16 +28,16 @@ $(document).ready(function() {
 	    // 1. Send the assertion to your backend for verification and to create a session.
 	    // 2. Update your UI.
 	    ow_waiting('spinner');
+	    console.log(assertion);
 	    $.ajax({
 		type: 'POST',
-		url: '/accounts/login/persona/',
+		url: '/accounts/login/persona/?next=/gtd/node/',
 		data: {assertion: assertion},
-		success: function(res, status, xhr) { 
+		success: function(res, status, xhr) {
 		    res = $.parseJSON(res);
 		    window.location.href = res.next;
 		},
 		error: function(xhr, status, err) {
-		    
 		    navigator.id.logout();
 		    alert("Login failure: " + err);
 		}

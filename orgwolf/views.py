@@ -17,17 +17,19 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #######################################################################
 
+from __future__ import unicode_literals, print_function, absolute_import
+from datetime import datetime
+import json
+import urllib
+
 from django.core.urlresolvers import reverse
 from django.shortcuts import render_to_response, redirect
 from django.template import RequestContext
 from django.contrib.auth import authenticate, login, logout
-from django.contrib.auth.forms import AuthenticationForm
+from django.contrib.auth.forms import AuthenticationForm, UserCreationForm
 from django.contrib.auth.hashers import is_password_usable
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponse
-from datetime import datetime
-import json
-import urllib
 
 from orgwolf import settings
 from orgwolf.models import OrgWolfUser as User
@@ -44,8 +46,8 @@ def home(request):
                                   locals(),
                                   RequestContext(request))
     else:
-        form = AuthenticationForm()
-        new_user_form = RegistrationForm()
+        login_form = AuthenticationForm()
+        new_user_form = UserCreationForm()
         new_user_form.fields['username'].help_text = ''
         if request.is_mobile:
             template = 'landing_m.html'
@@ -113,7 +115,7 @@ def feedback(request):
 def profile(request):
     """Shows the user a settings page"""
     post = request.POST
-    if request.method == "POST" and post.get('form') == 'profile': 
+    if request.method == "POST" and post.get('form') == 'profile':
         # User is modifying profile data
         profile_form = ProfileForm(post, instance=request.user)
         if profile_form.is_valid():
@@ -198,7 +200,12 @@ def persona_login(request):
             # Now login
             user.backend = 'django.contrib.auth.backends.ModelBackend'
             login(request, user)
-            r['next'] = reverse(user.home)
+            if request.GET.get('next'):
+                r['next'] = request.GET.get('next')
+                print(request.GET.get('next'))
+            else:
+                r['next'] = reverse(user.home)
+                print('no next found')
     response = HttpResponse(json.dumps(r))
     if r['status'] == 'failure':
         response.status_code = 400

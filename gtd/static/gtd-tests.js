@@ -1265,6 +1265,7 @@ asyncTest('nodeEdit dialogs', function() {
     var heading1 = workspace.headings.get({pk: 1});
     heading1.open();
     setTimeout(function() {
+	workspace.scope = [];
 	equal(
 	    workspace.$edit_modal.length,
 	    1,
@@ -2169,6 +2170,22 @@ asyncTest('Check basic functionality', function() {
 	    'data.(\'nodeEdit\').todo_id set correctly'
 	);
     }, (ajax_timer * 1.1) + 5);
+});
+
+asyncTest('time and date pickers', function() {
+    var $workspace = $('#test_workspace');
+    $workspace.nodeOutline();
+    var outline = $workspace.data('nodeOutline');
+    setTimeout( function() {
+	var $modal = $workspace.find('#new-modal');
+	start();
+	var $picker = $modal.find('input.datepicker').first();
+	equal(
+	    $picker.length,
+	    1,
+	    'At least one datepicker element found'
+	);
+    }, ajax_timer);
 });
 
 asyncTest('nodeEdit repeating box activation', function() {
