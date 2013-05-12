@@ -18,7 +18,7 @@
 #######################################################################
 
 from django import forms
-from django.contrib.auth import forms as authforms
+from django.contrib.auth import forms as authforms, authenticate
 from orgwolf.models import OrgWolfUser as User
 from wolfmail.models import MailItem
 
@@ -28,7 +28,7 @@ class FeedbackForm(forms.ModelForm):
         model = MailItem
         fields = ('subject', 'message_text')
 
-class PasswordForm(authforms.AuthenticationForm):
+class UserForm(forms.ModelForm):
     password = forms.CharField(
         widget=forms.PasswordInput(),
         label="New Password")
@@ -45,7 +45,22 @@ class PasswordForm(authforms.AuthenticationForm):
             raise forms.ValidationError('Passwords do not match')
         return self.cleaned_data
 
-class RegistrationForm(PasswordForm):
+class PasswordForm(UserForm):
+    old_password = forms.CharField(
+        widget=forms.PasswordInput(),
+        label="Old Password")
+    class Meta:
+        model = User
+        fields = ('old_password', 'password', 'password_2')
+    def clean_old_password(self):
+        """Make sure the old password is valid. Requires self.user to be set"""
+        old_pass = self.cleaned_data['old_password']
+        user = self.user
+        username = user.username
+        if not authenticate(username=username, password=old_pass):
+            raise forms.ValidationError('Incorrect password')
+
+class RegistrationForm(UserForm):
     class Meta:
         model = User
         fields = ('username', 'password')

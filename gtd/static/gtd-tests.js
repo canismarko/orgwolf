@@ -24,6 +24,19 @@ var full_dict = {
 	scope: [1, 2]
     }
 };
+var bad_parent_dict = {
+    pk: 1,
+    fields: {
+	title: 'test title',
+	text: 'here\'s some text that goes with it',
+	lft: 14,
+	rght: 15,
+	todo_state: '1',
+	parent: 1,
+	tag_string: ':comp:',
+	scope: [1, 2]
+    }
+};
 var archived_dict = {
     title: 'test_title',
     text: 'here\' some text that goes with it',
@@ -105,7 +118,7 @@ var node8 = {
     }
 };
 $.mockjax({
-    url: '/gtd/node/descendants/0/',
+    url: '/gtd/node/descendants/5/',
     responseTime: ajax_timer,
     responseText: []
 });
@@ -270,6 +283,48 @@ $.mockjax({
     responseTime: ajax_timer,
     responseText: '{"fields": {"todo_state": 1}}'
 });
+// Get all tree nodes
+$.mockjax({
+    url: '/gtd/tree/1/',
+    responseTime: ajax_timer,
+    responseText: JSON.stringify(
+	[
+	    {
+		pk: 1,
+		model: 'gtd.node',
+		fields: {
+    		    parent: 2,
+    		    tree_id: 1,
+    		    lft: 1,
+    		    rght: 8,
+    		    level: 0
+    		}
+    	    },
+    	    node8,
+    	    {
+    		pk: 9,
+    		fields: {
+    		    parent: 1,
+    		    tree_id: 1,
+    		    lft: 6,
+    		    rght: 7,
+    		    level: 1
+    		}
+    	    },
+    	    {
+    		pk: 10,
+    		fields: {
+    		    parent: 1,
+    		    tree_id: 1,
+    		    lft: 8,
+    		    rght: 9,
+    		    level: 1
+    		}
+    	    }
+	]
+    )
+});
+
 // For testing modal edit dialog
 var options = "";
 for ( var i = 0; i < todo_state_list.length; i++ ) {
@@ -302,13 +357,19 @@ $.mockjax({
 
 module('GtdHeading prototype');
 
-test('constructor defaults', function() {
+test('constructor', function() {
     // The constructor should set defaults if no fields are passed
     var heading = new GtdHeading();
     equal(
 	heading.pk,
 	0,
 	'Primary key defaults to zero'
+    );
+    throws(
+	function() {
+	    new GtdHeading(bad_parent_dict);
+	},
+	'Trying to create a node with itself as a parent fails'
     );
 });
 
@@ -675,6 +736,27 @@ asyncTest('MPTT get_previous_sibling', function() {
 	);
 	start();
     }, ajax_timer );
+});
+
+asyncTest('MPTT refresh_tree AJAX call', function() {
+    var $workspace = $('#test_workspace');
+    $workspace.nodeOutline({simulate: true});
+    var workspace = $workspace.data('nodeOutline')
+    var heading1 = workspace.headings.get({pk: 1});
+    equal(
+    	heading1.rght,
+    	4,
+    	'heading1 start out with rght = 4'
+    );
+    heading1.refresh_tree();
+    setTimeout(function() {
+	// equal(
+	//     heading1.rght,
+	//     8,
+	//     'heading1 gets rght updated when refresh_tree is called'
+	// );
+	start();
+    }, ajax_timer);
 });
 
 asyncTest('set expandability and has-children data', function() {
@@ -1247,6 +1329,25 @@ asyncTest('todoState integration', function() {
 	'selected',
 	'Heading 1 popover has current todo state selected'
     );
+    // Changing the heading todo_state sets the right selected option
+    heading1.$todo_state.click();
+    notEqual(
+	heading1.get_todo_state().pk,
+	2,
+	'Heading 1 does not start with todo_state 1'
+    );
+    heading1.todo_state = 2;
+    heading1.$todo_state.click();
+    ok(
+	$popover.find(
+	    '.todo-option[todo_id="'+heading1.todo_state+'"]'
+	).attr('selected'),
+	'Changing GtdHeading.todo_state changes selected option in popover'
+    );
+    heading1.$todo_state.click();
+    // Check setting selected option
+    heading1.todo_state = 1;
+    heading1.$todo_state.click();
     $popover.find('.todo-option[todo_id="2"]').click();
     setTimeout( function() {
 	equal(
