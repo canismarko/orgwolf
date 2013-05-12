@@ -598,7 +598,11 @@ def new_node(request, node_id, scope_id):
         initial_dict = {}
         projects = getattr(node, 'related_projects', None)
         form = NodeForm(parent=node)
-    return render_to_response('gtd/node_edit.html',
+    if request.is_mobile:
+        template = 'gtd/node_edit_m.html'
+    else:
+        template = 'gtd/node_edit.html'
+    return render_to_response(template,
                               locals(),
                               RequestContext(request))
 
@@ -612,7 +616,7 @@ class NodeView(DetailView):
         return super(NodeView, self).dispatch(*args, **kwargs)
 
     def get(self, request, *args, **kwargs):
-        if request.is_ajax():
+        if request.is_ajax() and not request.is_mobile:
             # AJAX request
             return self.get_json(request, *args, **kwargs)
         # First unpack arguments
@@ -801,6 +805,14 @@ class NodeView(DetailView):
             self.node = Node.objects.get(pk=self.node.pk)
         data = serializers.serialize('json', [self.node])
         return HttpResponse(json.dumps(data))
+
+
+class TreeView(View):
+    """Retrieves entire trees at once"""
+    def get(self, request, *args, **kwargs):
+        nodes = Node.objects.filter(tree_id=kwargs['tree_id'])
+        return HttpResponse(serializers.serialize('json', nodes))
+
 
 class Descendants(View):
     """Manages the retrieval of descendants of a given node"""

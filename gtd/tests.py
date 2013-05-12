@@ -1593,7 +1593,7 @@ class DescendantsAPI(TestCase):
         )
 
 class NodeAPI(TestCase):
-    """Check the /gtd/node/<node_pk>/ functionality.
+    """Check the /gtd/node/<node_pk>/<slug>/ functionality.
     API exchanges objects from django.core.serializers
     in json with following keys:
     - obj['pk'] -> Node.id
@@ -1690,4 +1690,30 @@ class NodeAPI(TestCase):
         self.assertTrue(
             not self.node.archived,
             'node not un-archived after ajax POST'
+        )
+
+class TreeAPI(TestCase):
+    """Check the /gtd/tree/<node_pk>/ functionality.
+    API exchanges list of objects in tree order
+    using django.core.serializers in json with
+    following keys:
+    - obj['pk'] -> Node.id
+    - obj['model'] -> django model reference, eg. 'gtd.node'
+    - obj['fields'] -> object (dict) of model fields"""
+    fixtures = ['test-users.json', 'gtd-test.json', 'gtd-env.json']
+    # fixtures = ['gtd-test.json', 'gtd-env.json']
+    def setUp(self):
+        self.node = Node.objects.get(pk=1)
+        self.url = reverse('tree_view',
+                           kwargs={'tree_id': self.node.tree_id})
+        self.assertTrue(
+            self.client.login(username='test', password='secret')
+        )
+    def test_json_get(self):
+        """Make sure the user can get a JSON list of nodes in this tree"""
+        response = self.client.get(self.url)
+        r = json.loads(response.content)
+        self.assertEqual(
+            Node.objects.filter(tree_id=self.node.tree_id).count(),
+            len(r)
         )

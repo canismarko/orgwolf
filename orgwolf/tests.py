@@ -1,5 +1,7 @@
 
 from __future__ import unicode_literals
+
+from django.core.urlresolvers import reverse
 from django.test import TestCase
 
 from gtd.models import Node, TodoState
@@ -113,7 +115,7 @@ class NewUser(TestCase):
         response = self.client.post(url, data, follow=True)
         self.assertTrue(
             User.objects.all().exists(),
-            'User object was created upon form submission'
+            'User object not was created upon form submission'
             )
         # User starts out authenticated
         self.assertEqual(
@@ -159,6 +161,31 @@ class NewUser(TestCase):
             response,
             'Passwords do not match'
             )
+
+class ChangePassword(TestCase):
+    fixtures = ['test-users.json']
+    def setUp(self):
+        self.url = reverse('change_password')
+        self.user = User.objects.get(username='test')
+        self.assertTrue(
+            self.client.login(username=self.user.username, password='secret')
+        )
+    def test_bad_old_password(self):
+        data = {
+            'old_password': 'gibberish',
+            'password': 'secret1',
+            'password_2': 'secret2'
+        }
+        response = self.client.post(self.url, data)
+        self.assertEqual(
+            200,
+            response.status_code
+        )
+        self.assertContains(
+            response,
+            'Incorrect password',
+            status_code=200
+        )
 
 class UserMutators(TestCase):
     def test_get_display(self):

@@ -23,7 +23,7 @@ from django.conf.urls import patterns, include, url
 from django.contrib import admin
 admin.autodiscover()
 
-from gtd.views import Descendants, NodeView
+from gtd.views import Descendants, NodeView, TreeView
 
 urlpatterns = patterns(
     'gtd.views',
@@ -41,7 +41,8 @@ urlpatterns = patterns(
     url(r'^node/(?:scope(?P<scope_id>\d+)/)?(?P<node_id>\d+)/(?:[A-Za-z0-4\-]+/)?move/',
         'move_node'),
     url(r'^node/(?:scope(?P<scope_id>\d+)/)?(?:(?P<node_id>\d+)/)?new/',
-        'new_node'),
+        'new_node',
+        name='new_node'),
     # url(r'^node/(?P<ancestor_pk>\d+)/descendants/$', 'get_descendants'),
     url(r'^node/search/', 'node_search'),
 
@@ -52,4 +53,7 @@ urlpatterns = patterns(
     url(r'^node/descendants/(?P<ancestor_pk>\d+)/$',
         Descendants.as_view(),
         name='node_descendants'),
+    url(r'^tree/(?P<tree_id>\d+)/$',
+        TreeView.as_view(),
+        name='tree_view'),
 )

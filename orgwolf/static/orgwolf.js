@@ -1,4 +1,4 @@
-/*globals $, jQuery, document, Aloha, window */
+/*globals $, jQuery, document, Aloha, window, alert */
 "use strict";
 var attach_pickers, validate_node, GtdHeading;
 
@@ -364,7 +364,7 @@ $(document).ready(function(){
 		    }
 		    // Connect the todo states click functionality
 		    $todo.bind('click', function(e) {
-			var new_left, top, height, new_middle, new_top;
+			var new_left, top, height, new_middle, new_top, opt_id;
 			e.stopPropagation();
 			$('.popover.todostate').hide(); // Hide all the other popovers
 			$todo = $(this);
@@ -377,6 +377,12 @@ $(document).ready(function(){
 			new_middle = top + (height/2);
 			new_top = new_middle - ($popover.height()/2);
 			$popover.css('top', new_top + 'px');
+			// ... set the selected option
+			if ( settings.heading ) {
+			    opt_id = settings.heading.todo_state;
+			    $popover.find('.todo-option').removeAttr('selected');
+			    $popover.find('.todo-option[todo_id="'+opt_id+'"]').attr('selected', 'selected');
+			}
 			show_popover();
 		    });
 		    // Connect the hover functionality
@@ -418,10 +424,10 @@ $(document).ready(function(){
 					response
 				    );
 				    // // Feedback if node repeats
-				    // if ( settings.heading.repeats ) {
-				    //   alert('Node scheduled for ' +
-				    //         settings.heading.scheduled);
-				    // }
+				    if ( settings.heading.repeats ) {
+				      alert('Node scheduled for ' +
+				            settings.heading.scheduled);
+				    }
 				    settings.heading.redraw();
 				} else {
 				    old = $todo.attr('todo_id');
@@ -621,7 +627,7 @@ $(document).ready(function(){
 
 // Begin implementation of hierarchical expanding project list
 GtdHeading = function ( args ) {
-    var parent, $body;
+    var parent, $body, sane;
     if ( ! args ) {
 	args = {};
     }
@@ -643,11 +649,7 @@ GtdHeading = function ( args ) {
     this.icon_width = Number($body.find('#7783452').css('width').slice(0,-2));
     $('#7783452').remove();
     // Now update the fields with passed values
-    if ( args.model === 'gtd.node' ) {
-	this.import_node_fields( args );
-    } else {
-	this.set_fields( args );
-    }
+    this.set_fields( args );
     // determine rank if possible
     if ( this.workspace && parent ) {
 	parent = this.get_parent();
@@ -658,13 +660,8 @@ GtdHeading = function ( args ) {
 }; // end of GtdHeading constructor
 
 // Methods for GtdHeading...
-GtdHeading.prototype.set_fields = function( fields ) {
-    // Deprecated, actually import_node_fields should be renamed
-    //   to set_fields and this method removed.
-    return this.import_node_fields( fields );
-};
 
-GtdHeading.prototype.import_node_fields = function( node ) {
+GtdHeading.prototype.set_fields = function( node ) {
     // Updates properties based on a JSON serliazed Node object
     var field, d, date_re, pk;
     pk = this.pk;
@@ -675,6 +672,18 @@ GtdHeading.prototype.import_node_fields = function( node ) {
     if ( typeof node.workspace !== 'undefined' ) {
 	this.workspace = node.workspace;
     }
+    // Sanity checks
+    try {
+	if ( node.fields.parent === this.pk ) {
+	    throw 'bad parent';
+	}
+    } catch(err) {
+	if ( err === 'bad parent' ) {
+	    console.error('Cannot create node as a child of itself');
+	    throw err;
+	}
+    }
+    // Set fields
     for ( field in node.fields ) {
 	if ( node.fields.hasOwnProperty(field) ) {
 	    // Check for datestring
@@ -901,6 +910,7 @@ GtdHeading.prototype.create_div = function( $target ) {
 		    node.workspace = heading.workspace;
 		    new_heading = new GtdHeading( node );
 		    heading.workspace.headings.add(new_heading);
+		    heading.refresh_tree();
 		    parent = new_heading.get_parent();
 		    parent.redraw();
 		    parent.open();
@@ -989,6 +999,22 @@ GtdHeading.prototype.get_children = function() {
 	    .order_by('lft');
     }
     return children;
+};
+
+GtdHeading.prototype.refresh_tree = function() {
+    // Reach out to the server API and get new node data for this heading's tree
+    var url, i, heading, new_heading;
+    url = '/gtd/tree/' + this.tree_id + '/';
+    heading = this;
+    $.get(url, function (r) {
+	while ( typeof r === 'string' ) {
+	    r = $.parseJSON(r);
+	}
+	for ( i=0; i < r.length; i += 1 ) {
+	    new_heading = new GtdHeading(r[i]);
+	    heading.workspace.headings.add(new_heading);
+	}
+    });
 };
 
 GtdHeading.prototype.is_leaf_node = function() {
@@ -1560,8 +1586,9 @@ GtdHeading.prototype.toggle = function( direction ) {
 	    }; // end of order_by method
 	    Array.prototype.add = function(new_heading) {
 		// Add or replace a heading based on pk
-		var key, other_heading;
+		var key, other_heading, valid;
 		other_heading = this.get({pk: new_heading.pk});
+		valid = ['pk', 'populated', 'text', 'todo_state', 'archived', 'rank', 'scope', 'related_projects', 'parent'];
 		if ( other_heading ) {
 		    // Heading already exists so just update it
 		    // First preserve some data

@@ -26,7 +26,7 @@ from django.core.urlresolvers import reverse
 from django.shortcuts import render_to_response, redirect
 from django.template import RequestContext
 from django.contrib.auth import authenticate, login, logout
-from django.contrib.auth.forms import AuthenticationForm, UserCreationForm
+from django.contrib.auth import forms as authforms
 from django.contrib.auth.hashers import is_password_usable
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponse
@@ -46,8 +46,8 @@ def home(request):
                                   locals(),
                                   RequestContext(request))
     else:
-        login_form = AuthenticationForm()
-        new_user_form = UserCreationForm()
+        form = authforms.AuthenticationForm()
+        new_user_form = RegistrationForm()
         new_user_form.fields['username'].help_text = ''
         if request.is_mobile:
             template = 'landing_m.html'
@@ -61,6 +61,7 @@ def new_user(request):
     """New user registration"""
     if request.method == 'POST':
         # Validate and create new user
+        # data = request.POST.copy()
         data = request.POST.copy()
         data['last_login'] = data.get('last_login', datetime.now())
         data['date_joined'] = data.get('date_joined', datetime.now())
@@ -158,13 +159,14 @@ def change_password(request):
     submitted form."""
     if request.method == 'POST':
         form = PasswordForm(request.POST)
+        form.user = request.user
         if form.is_valid():
             request.user.set_password(form.cleaned_data['password'])
             request.user.save()
-        return redirect(reverse('orgwolf.views.profile'))
+            return redirect(reverse('orgwolf.views.profile'))
     else:
         form = PasswordForm()
-        return render_to_response('registration/password.html',
+    return render_to_response('registration/password.html',
                                   locals(),
                                   RequestContext(request))
 
