@@ -16,11 +16,11 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #######################################################################
-"""
-This file demonstrates writing tests using the unittest module. These will pass
-when you run "manage.py test".
 
-Replace this with more appropriate tests for your application.
+"""
+Test the various parts of the Getting Things Done modules. Run with
+    `manage.py test gtd`
+from the command line.
 """
 
 from __future__ import unicode_literals, absolute_import, print_function
@@ -38,7 +38,7 @@ from django.template.defaultfilters import slugify
 from django.test import TestCase
 from django.test.client import Client, RequestFactory
 from django.utils.html import conditional_escape
-from django.utils.timezone import get_current_timezone
+from django.utils.timezone import get_current_timezone, utc
 from django.views.generic import View
 
 from gtd.forms import NodeForm
@@ -46,7 +46,7 @@ from gtd.models import Node, TodoState, node_repeat, Location
 from gtd.models import Tool, Context, Scope, Contact
 from gtd.shortcuts import parse_url, generate_url, get_todo_abbrevs
 from gtd.shortcuts import order_nodes
-from gtd.templatetags.gtd_extras import overdue, upcoming, escape_html
+from gtd.templatetags.gtd_extras import escape_html
 from gtd.templatetags.gtd_extras import add_scope, breadcrumbs
 from gtd.views import Descendants
 from orgwolf.preparation import translate_old_text
@@ -1194,22 +1194,51 @@ class ScopeFilter(TestCase):
             )
 
 class OverdueFilter(TestCase):
-    """Tests the `overdue` template filter that makes deadlines into
+    """Tests the `overdue` node method that makes dates into
     prettier "in 1 day" strings, etc."""
+    fixtures = ['gtd-test.json']
+    def setUp(self):
+        self.tz = get_current_timezone()
+        self.node = Node.objects.get(pk=1)
     def test_filter_exists(self):
-        self.assertEqual(overdue.__class__.__name__, 'function')
-        self.assertEqual(overdue(dt.datetime.now()).__class__.__name__,
-                         'SafeText')
+        self.assertEqual(
+            self.node.overdue.__class__.__name__,
+            'instancemethod')
+        self.node.test_date = dt.datetime.now(self.tz)
+        self.assertEqual(
+            self.node.overdue('test_date').__class__.__name__,
+            'unicode')
     def test_simple_dt(self):
-        yesterday = dt.datetime.now() + dt.timedelta(-1)
-        self.assertEqual(overdue(yesterday, future=True), '1 day ago')
-        yesterday = yesterday + dt.timedelta(-1)
-        self.assertEqual(overdue(yesterday, future=True), '2 days ago')
+        self.node.yesterday = dt.datetime.now(self.tz) + dt.timedelta(-1)
+        self.assertEqual(
+            self.node.overdue(
+                'yesterday', future=True),
+            '1 day ago')
+        self.node.yesterday = self.node.yesterday + dt.timedelta(-1)
+        self.assertEqual(
+            self.node.overdue('yesterday', future=True),
+            '2 days ago')
     def test_future_dt(self):
-        tomorrow = dt.datetime.now() + dt.timedelta(1)
-        self.assertEqual(overdue(tomorrow, future=True), 'in 1 day')
-        tomorrow = tomorrow + dt.timedelta(1)
-        self.assertEqual(overdue(tomorrow, future=True), 'in 2 days')
+        self.node.tomorrow = dt.datetime.now(self.tz) + dt.timedelta(1)
+        self.assertEqual(
+            self.node.overdue('tomorrow', future=True),
+            'in 1 day')
+        self.node.tomorrow = self.node.tomorrow + dt.timedelta(1)
+        self.assertEqual(
+            self.node.overdue('tomorrow', future=True),
+            'in 2 days')
+    def test_timezones(self):
+        tomorrow = dt.datetime(2013, 1, 17,
+                               23, 21, 56, 987000,
+                               tzinfo=utc)
+        self.node.dt = dt.datetime(2013, 1, 17,
+                              3, 0,
+                              tzinfo=utc)
+        tz = get_current_timezone()
+        self.assertEqual(
+            self.node.overdue('dt', tzinfo=tz, agenda_dt=tomorrow),
+            '1 day ago'
+        )
 
 class UrlGenerate(TestCase):
     """Tests for the gtd url_generator that returns a URL string based
@@ -1513,6 +1542,38 @@ class HTMLEscape(TestCase):
             self.f('<h1>')
             )
 
+class TimeZones(TestCase):
+    """Define various aspects of datetime objects, specifically
+    as the reltate to timezone support"""
+    fixtures = ['test-users.json', 'gtd-env.json', 'gtd-test.json']
+    def setUp(self):
+        self.node = Node.objects.get(pk=15)
+        self.user = User.objects.get(username='test')
+        self.assertTrue(
+            self.client.login(username=self.user.username,
+                              password='secret')
+        )
+    def test_agenda_timezone(self):
+        datestring = '2013-01-17'
+        agenda_url = reverse(
+            'agenda_display',
+            kwargs={'date': datestring}
+        )
+        response = self.client.get(agenda_url)
+        self.assertContains(
+            response,
+            self.node.title,
+            status_code=200,
+            msg_prefix='Agenda does not have time specific node on the right day',
+        )
+        self.assertContains(
+            response,
+            '<input type="text" name="date" value="{0}" class="input-medium datepicker" placeholder="Change date..."></input>'.format(datestring),
+            status_code=200,
+            msg_prefix='Incorrect date set in input date changer'
+        )
+            
+
 class DBOptimization(TestCase):
     """Define and test the optimal database plan for different views"""
     fixtures = ['test-users.json', 'gtd-test.json', 'gtd-env.json']
@@ -1569,7 +1630,10 @@ class DescendantsAPI(TestCase):
         )
     def test_return_offset1(self):
         self.maxDiff = None
-        response_text = self.client.get(self.url).content
+        response = self.client.get(
+            self.url,
+            HTTP_X_REQUESTED_WITH='XMLHttpRequest')
+        response_text = response.content
         response = json.loads(response_text)
         self.assertTrue(
             isinstance(response, list),
@@ -1600,7 +1664,6 @@ class NodeAPI(TestCase):
     - obj['model'] -> django model reference, eg. 'gtd.node'
     - obj['fields'] -> object (dict) of model fields"""
     fixtures = ['test-users.json', 'gtd-test.json', 'gtd-env.json']
-    # fixtures = ['gtd-test.json', 'gtd-env.json']
     def setUp(self):
         self.node = Node.objects.get(pk=1)
         self.slug = slugify(self.node.title)
@@ -1701,7 +1764,6 @@ class TreeAPI(TestCase):
     - obj['model'] -> django model reference, eg. 'gtd.node'
     - obj['fields'] -> object (dict) of model fields"""
     fixtures = ['test-users.json', 'gtd-test.json', 'gtd-env.json']
-    # fixtures = ['gtd-test.json', 'gtd-env.json']
     def setUp(self):
         self.node = Node.objects.get(pk=1)
         self.url = reverse('tree_view',

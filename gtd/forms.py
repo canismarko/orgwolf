@@ -30,8 +30,9 @@ from gtd.models import TodoState
 class NodeForm(forms.ModelForm):
     required_css_class = 'required'
     title = forms.CharField(
-        widget=widgets.TextInput(attrs={'autofocus': 'autofocus',
-                                        'data-validate': 'required'}),
+        widget=widgets.TextInput(
+            attrs={'autofocus': 'autofocus',
+                   'data-validate': 'required'}),
         )
     scheduled = forms.DateTimeField(
         widget=widgets.HiddenInput,
@@ -39,14 +40,16 @@ class NodeForm(forms.ModelForm):
         )
     scheduled_date = forms.DateField(
         required=False,
-        widget=widgets.TextInput(attrs={'class': 'datepicker',
-                                        'data-validate': 'date'}),
+        widget=widgets.TextInput(
+            attrs={'class': 'datepicker',
+                   'data-validate': 'date'}),
         )
     scheduled_time = forms.TimeField(
         required=False,
         localize=True,
-        widget=widgets.TextInput(attrs={'class': 'timepicker',
-                                        'data-validate': 'time'}),
+        widget=widgets.TextInput(
+            attrs={'class': 'timepicker',
+                   'data-validate': 'time'}),
         )
     scheduled_time_specific = forms.BooleanField(
         required=False,
@@ -62,14 +65,16 @@ class NodeForm(forms.ModelForm):
         )
     deadline_date = forms.DateField(
         required=False,
-        widget=widgets.TextInput(attrs={'class': 'datepicker',
-                                        'data-validate': 'date'}),
+        widget=widgets.TextInput(
+            attrs={'class': 'datepicker',
+                   'data-validate': 'date'}),
         )
     deadline_time = forms.TimeField(
         required=False,
         localize=True,
-        widget=widgets.TextInput(attrs={'class': 'timepicker',
-                                        'data-validate': 'time'}),
+        widget=widgets.TextInput(
+            attrs={'class': 'timepicker',
+                   'data-validate': 'time'}),
         )
     deadline_time_specific = forms.BooleanField(
         required=False,
@@ -91,7 +96,8 @@ class NodeForm(forms.ModelForm):
     )
     repeating_number = forms.IntegerField(
         required=False,
-        widget=widgets.TextInput(attrs={'data-validate': 'int'}),
+        widget=widgets.TextInput(
+            attrs={'data-validate': 'int'}),
         );
     related_projects = forms.ModelMultipleChoiceField(
         queryset=Node.get_all_projects().order_by('title'),
@@ -130,7 +136,8 @@ class NodeForm(forms.ModelForm):
         # Set initial values if node already exists
         if self.instance.pk:
             local_tz = timezone.get_current_timezone()
-            self.fields['related_projects'].initial = self.instance.related_projects.all()
+            projects = self.instance.related_projects.all()
+            self.fields['related_projects'].initial = projects
             if self.instance.scheduled:
                 date = self.instance.scheduled.astimezone(local_tz).date()
                 self.fields['scheduled_date'].initial = date
@@ -195,18 +202,18 @@ class NodeForm(forms.ModelForm):
             if new_date:
                 if new_time:
                     naive_dt = dt.datetime(new_date.year,
-                                         new_date.month,
-                                         new_date.day,
-                                         new_time.hour,
-                                         new_time.minute,
-                                         new_time.second)
+                                           new_date.month,
+                                           new_date.day,
+                                           new_time.hour,
+                                           new_time.minute,
+                                           new_time.second)
                 else:
                     naive_dt = dt.datetime(new_date.year,
-                                         new_date.month,
-                                         new_date.day,
-                                         0,
-                                         0,
-                                         0)
+                                           new_date.month,
+                                           new_date.day,
+                                           0,
+                                           0,
+                                           0)
                 return local_tz.localize(naive_dt)
             else:
                 return None

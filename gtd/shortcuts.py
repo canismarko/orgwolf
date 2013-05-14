@@ -17,7 +17,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #######################################################################
 
-from __future__ import unicode_literals
+from __future__ import unicode_literals, absolute_import, print_function
 import re
 
 from django.db import DatabaseError
@@ -133,6 +133,7 @@ def parse_url(raw_url, request=None, todo_states=None):
                 data['context'] = get_object_or_404(Context, pk=context_id)
     return data
 
+
 def generate_url(**kwargs):
     """Takes selection criteria and generates a url.
     todo: either a TodoState object or a QuerySet of
@@ -159,15 +160,6 @@ def generate_url(**kwargs):
         new_url += 'context{0}/'.format(context.pk)
     return new_url
 
-# def qs_to_dicts(qs):
-#     """Convert a queryset of Node objects to a list of dict objects suitable
-#     for JSON serialization. Some field modification also takes place as needed.
-#     NB: This function evaluates the queryset."""
-#     out = []
-#     qs = qs.select_related('todo_state', 'owner')
-#     for node in qs:
-#         out.append(node.as_pre_json())
-#     return out
 
 def reset_env(commit=False):
     """Delete large portions of the database. Since this is irrevesible,

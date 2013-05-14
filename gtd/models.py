@@ -17,7 +17,8 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #######################################################################
 
-from __future__ import unicode_literals, absolute_import, print_function
+from __future__ import unicode_literals, absolute_import
+from __future__ import print_function
 import re
 import math
 import operator
@@ -33,7 +34,7 @@ from django.template.defaultfilters import slugify
 from django.utils.encoding import python_2_unicode_compatible
 from django.utils.html import conditional_escape
 from django.utils.safestring import mark_safe
-from django.utils.timezone import get_current_timezone
+from django.utils.timezone import get_current_timezone, utc
 
 from mptt.managers import TreeManager
 from mptt.models import MPTTModel, TreeForeignKey
@@ -48,15 +49,23 @@ class TodoState(models.Model):
     actionable = models.BooleanField(default=True)
     closed = models.BooleanField(default=False)
     # No owner means system default
-    owner = models.ForeignKey(settings.AUTH_USER_MODEL, blank=True, null=True)
+    owner = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        blank=True, null=True)
     order = models.IntegerField(default=50)
     _color_rgb = models.IntegerField(default=0x000000)
     _color_alpha = models.FloatField(default=0)
     def color(self):
         """Returns a Color object built from _color_rgba field."""
-        red = (self._color_rgb & Color.RED_MASK) >> Color.RED_OFFSET
-        green = (self._color_rgb & Color.GREEN_MASK) >> Color.GREEN_OFFSET
-        blue = (self._color_rgb & Color.BLUE_MASK) >> Color.BLUE_OFFSET
+        red = (
+            self._color_rgb & Color.RED_MASK
+        ) >> Color.RED_OFFSET
+        green = (
+            self._color_rgb & Color.GREEN_MASK
+        ) >> Color.GREEN_OFFSET
+        blue = (
+            self._color_rgb & Color.BLUE_MASK
+        ) >> Color.BLUE_OFFSET
         new_color = Color(red, green, blue, self._color_alpha)
         return new_color
     def __str__(self):
@@ -163,15 +172,25 @@ def contact_post_save(sender, **kwargs):
 class Context(models.Model):
     """A context is a [Location], with [Tool]s and/or [Contact]s available"""
     name = models.CharField(max_length=100)
-    owner = models.ForeignKey(settings.AUTH_USER_MODEL, blank=True, null=True)
+    owner = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        blank=True, null=True)
     tools_available = models.ManyToManyField(
-        'Tool', related_name='including_contexts_set', blank=True)
+        'Tool',
+        blank=True,
+        related_name='including_contexts_set')
     locations_available = models.ManyToManyField(
-        'Location', related_name='including_contexts_set', blank=True)
+        'Location',
+        blank=True,
+        related_name='including_contexts_set')
     people_required = models.ManyToManyField(
-        'Contact', related_name='including_contexts_set', blank=True)
+        'Contact',
+        blank=True,
+        related_name='including_contexts_set')
+    
     def __str__(self):
         return self.name
+
     def apply(self, queryset="blank"):
         """
         Filter a query set for this context.
@@ -213,6 +232,7 @@ class Context(models.Model):
         final_queryset = final_queryset.filter(new_Q)
         # Now return the resulting queryset
         return final_queryset
+
     @staticmethod
     def get_visible(user):
         """Return all the Context objects visible to this user"""
@@ -221,20 +241,29 @@ class Context(models.Model):
         else:
             return Context.objects.filter(Q(owner=None))
 
+
 class Priority(models.Model):
     priority_value = models.IntegerField(default=50)
     owner = models.ForeignKey(settings.AUTH_USER_MODEL)
 
+
 @python_2_unicode_compatible
 class Scope(models.Model):
-    owner = models.ForeignKey(settings.AUTH_USER_MODEL, blank=True, null=True) # no owner means built-in tag
+    """High-level area of focus.
+    For example: work, family, health
+    """
+    # (no owner means built-in tag)
+    owner = models.ForeignKey(
+        settings.AUTH_USER_MODEL, blank=True, null=True) 
     public = models.BooleanField(default=False)
     display = models.CharField(max_length=50)
     name = models.CharField(max_length=50)
     def __str__(self):
         return self.display
 
+
 class NodeManager(TreeManager):
+    """Object manager for for retrieving nodes."""
     def assigned(self, user, get_archived=False):
         """Get all the objects that `user` is responsible for
         """
@@ -247,11 +276,11 @@ class NodeManager(TreeManager):
             # Look for assigned nodes
             contact = user.contact_set.all()
             assigned = qs_all.filter(assigned__in=contact)
-            # qs = qs & qs_all.filter(owner__id__in=owned)
             return assigned | owned
         else:
             raise RuntimeWarning('user not authenticated')
             return Node.objects.none()
+
     def mine(self, user, get_archived=False):
         """Get all the objects that have `user` as the owner or assigned,
         or have `user` in the related_users relationship."""
@@ -270,6 +299,7 @@ class NodeManager(TreeManager):
         else:
             raise RuntimeWarning('user not authenticated')
             return Node.objects.none()
+
     def owned(self, user, get_archived=False):
         """Get all the objects owned by the user with some optional
         filters applied"""
@@ -283,6 +313,7 @@ class NodeManager(TreeManager):
             qs = Node.objects.none()
         return qs
 
+
 @python_2_unicode_compatible
 class Node(MPTTModel):
     """
@@ -293,25 +324,30 @@ class Node(MPTTModel):
     auto_update = False
     auto_close = True
     objects = NodeManager()
-    owner = models.ForeignKey(settings.AUTH_USER_MODEL,
-                              related_name="owned_node_set")
+    owner = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        related_name="owned_node_set")
     users = models.ManyToManyField(settings.AUTH_USER_MODEL, blank=True)
-    assigned = models.ForeignKey('Contact',
-                                 blank=True, null=True,
-                                 related_name="assigned_node_set")
+    assigned = models.ForeignKey(
+        'Contact',
+        blank=True, null=True,
+        related_name="assigned_node_set")
     title = models.TextField(blank=True)
     slug = models.SlugField()
-    todo_state = models.ForeignKey('TodoState',
-                                   blank=True, null=True)
+    todo_state = models.ForeignKey(
+        'TodoState',
+        blank=True, null=True)
     archived = models.BooleanField(default=False)
     text = models.TextField(blank=True)
     # Determine where this heading is
-    parent = TreeForeignKey('self',
-                            blank=True, null=True,
-                            related_name='children')
-    related_projects = models.ManyToManyField('Node',
-                                              blank=True,
-                                              related_name='project_set')
+    parent = TreeForeignKey(
+        'self',
+        blank=True, null=True,
+        related_name='children')
+    related_projects = models.ManyToManyField(
+        'Node',
+        blank=True,
+        related_name='project_set')
     # Scheduling details
     scheduled = models.DateTimeField(blank=True, null=True)
     scheduled_time_specific = models.BooleanField()
@@ -321,61 +357,80 @@ class Node(MPTTModel):
     closed = models.DateTimeField(blank=True, null=True)
     repeats = models.BooleanField(default=False)
     repeating_number = models.IntegerField(blank=True, null=True)
-    repeating_unit = models.CharField(max_length=1, blank=True, null=True,
-                                      choices=(('d', 'Days'),
-                                               ('w', 'Weeks'),
-                                               ('m', 'Months'),
-                                               ('y', 'Years')))
+    repeating_unit = models.CharField(
+        max_length=1, blank=True, null=True,
+        choices=(('d', 'Days'),
+                 ('w', 'Weeks'),
+                 ('m', 'Months'),
+                 ('y', 'Years')))
     # If repeats_from_completions is True, then when the system
     # repeats this node, it will schedule it from the current
     # time rather than the original scheduled time.
     repeats_from_completion = models.BooleanField(default=False)
     # Selection criteria
-    priority = models.CharField(max_length=1, blank=True,
-                                choices=(('A', 'A'),
-                                         ('B', 'B'),
-                                         ('C', 'C')))
+    priority = models.CharField(
+        max_length=1, blank=True,
+        choices=(('A', 'A'),
+                 ('B', 'B'),
+                 ('C', 'C')))
     # Org-mode style string (eg ":comp:home:RN:")
     tag_string = models.TextField(blank=True)
-    energy = models.CharField(max_length=2, blank=True, null=True,
-                              choices=(('High', 'HI'),
-                                       ('Low', 'LO'))
-                              )
-    time_needed = models.CharField(max_length=4, blank=True, null=True,
-                                   choices=(('High', 'HI'),
-                                            ('Low', 'LO'))
-                                   )
+    energy = models.CharField(
+        max_length=2, blank=True, null=True,
+        choices=(('High', 'HI'),
+                 ('Low', 'LO')))
+    time_needed = models.CharField(
+        max_length=4, blank=True, null=True,
+        choices=(('High', 'HI'),
+                 ('Low', 'LO')))
     scope = models.ManyToManyField('Scope', blank=True)
+
     # Info methods
     def is_todo(self):
         if self.todo_state:
             return True
         else:
             return False
+
     def is_actionable(self):
         if self.todo_state:
             return todo_state.actionable
         else:
             return False
+
     def is_closed(self):
         return getattr(self.todo_state, 'closed', False)
-    def overdue(self, target_date, agenda_dt=None, future=False):
-        """Returns a string representing how many days ago the target_date was scheduled. Method will ignore future dates unless the future parameter is True."""
-        if agenda_dt:
-            today = agenda_dt.date()
-        else:
-            today = datetime.now(get_current_timezone()).date()
-        difference = (target_date.date() - today).days
-        if abs(difference) == 1:
-            pluralized = ''
-        else:
-            pluralized = 's'
-        if difference < 0:
-            return '%d day%s ago' % (abs(difference), pluralized)
-        elif difference > 0 and future:
-            return 'in %d day%s' % (abs(difference), pluralized)
-        else:
-            return ''
+
+    def overdue(self, field, tzinfo=None,
+                agenda_dt=None, future=False):
+        """Returns a string representing how many days ago
+        the target_date was scheduled. Method will ignore
+        future dates unless the future parameter is True.
+        """
+        target_dt = getattr(self, field)
+        response = ''
+        if tzinfo is None:
+            tzinfo = get_current_timezone()
+        if isinstance(target_dt, datetime):
+            target_date = target_dt.astimezone(tzinfo).date()
+            if agenda_dt is None:
+                # Default to today
+                today = datetime.now(tzinfo).date()
+            else:
+                today = agenda_dt.astimezone(tzinfo).date()
+            difference = (target_date - today).days
+            if abs(difference) == 1:
+                pluralized = ''
+            else:
+                pluralized = 's'
+            if difference < 0:
+                response = '%d day%s ago' % (abs(difference), pluralized)
+            elif difference > 0 and future:
+                response = 'in %d day%s' % (abs(difference), pluralized)
+            else:
+                response = 'today'
+        return response
+
     def access_level(self, user):
         """Determines what level of access the give user has:
         - None
@@ -386,6 +441,7 @@ class Node(MPTTModel):
         if self.owner == user:
             access = 'write'
         return access
+
     def get_title(self):
         if self.title.strip(' ').strip('\t'):
             title = conditional_escape(self.title)
@@ -394,12 +450,15 @@ class Node(MPTTModel):
         if self.archived:
             title = '<span class="archived-text">{0}</span>'.format(title)
         return mark_safe(title)
+
     def get_level(self):
         """Gets the node's level in the tree (1-indexed)."""
         return self.level + 1
+
     @staticmethod
     def get_all_projects():
         return Node.objects.filter(parent=None)
+
     def get_primary_parent(self):
         """Return the root-level node corresponding to this node."""
         # Recursively step up through the parents
@@ -410,10 +469,10 @@ class Node(MPTTModel):
             else:
                 return child
         return find_immediate_parent(self)
+
     def get_hierarchy_as_string(self):
         """Return a string showing the trail of ancestors
         leading up to this node"""
-        # return "Coming soon"
         delimiter = '>'
         node_list = self.get_ancestors(include_self=True)
         string = ''
@@ -422,6 +481,7 @@ class Node(MPTTModel):
                                        node.get_title() )
             delimiter = ' >'
         return string
+
     def as_html(self):
         """Return a string representing the todo state and title of this node,
         properly html escaped."""
@@ -430,6 +490,7 @@ class Node(MPTTModel):
             string += self.todo_state.as_html() + ' '
         string += self.get_title()
         return mark_safe(string)
+
     def as_pre_json(self):
         """Processes the instance into a dictionary that can be
         converted to a JSON string. Output contains a few extra
@@ -473,11 +534,13 @@ class Node(MPTTModel):
         # Include is_leaf_node()
         new_dict['is_leaf_node'] = self.is_leaf_node()
         return new_dict
+
     def as_json(self):
         """Process the instance into a json string. Output contains
         a few extra attributes for AJAX processing."""
         # Return dictionary as json
         return json.dumps(self.as_pre_json())
+
     def get_tags(self):
         tag_strings = self.tag_string.split(":")
         # Get rid of the empty first and last elements
@@ -525,6 +588,7 @@ class Node(MPTTModel):
         if count:
             qs = qs[page*count:(page+1)*count]
         return (qs, total)
+
     def set_fields(self, fields):
         """Accepts a dictionary of fields and updates them on the object.
         Does not alter the database.
@@ -546,7 +610,8 @@ class Node(MPTTModel):
             else:
                 # Set other things
                 setattr(self, key, fields[key])
-    # Override superclass methods
+
+    # Override superclass save methods
     def save(self, *args, **kwargs):
         if not self.id:
             # set slug field on newly created nodes
@@ -555,6 +620,7 @@ class Node(MPTTModel):
                 new_slug = new_slug[0:49]
             self.slug = slugify(new_slug)
         return super(Node, self).save(*args, **kwargs)
+
     def __str__(self):
         if hasattr(self.todo_state, "abbreviation"):
             return mark_safe(
@@ -563,9 +629,11 @@ class Node(MPTTModel):
             )
         else:
             return self.get_title()
+
     def __repr__(self):
         s = '<Node: {0}>'.format(self.title)
         return s.encode('utf8')
+
 
 # Signal handlers for the Node class
 @receiver(signals.pre_save, sender=Node)
@@ -648,36 +716,46 @@ def node_repeat(sender, **kwargs):
                             original = datetime.now(get_current_timezone())
                         else:
                             original = instance.scheduled
-                        instance.scheduled = _get_new_time(original,
-                                                           instance.repeating_number,
-                                                           instance.repeating_unit)
+                        instance.scheduled = _get_new_time(
+                            original,
+                            instance.repeating_number,
+                            instance.repeating_unit)
                     if instance.deadline: # Adjust Node.deadline
                         if instance.repeats_from_completion:
                             original = datetime.now(get_current_timezone())
                         else:
                             original = instance.deadline
-                        instance.deadline = _get_new_time(original,
-                                                          instance.repeating_number,
-                                                          instance.repeating_unit)
+                        instance.deadline = _get_new_time(
+                            original,
+                            instance.repeating_number,
+                            instance.repeating_unit)
                     # Make a record of what we just did
                     new_repetition = NodeRepetition()
                     new_repetition.node=instance
                     new_repetition.original_todo_state = old_node.todo_state
                     new_repetition.new_todo_state = instance.todo_state
-                    new_repetition.timestamp = datetime.now(get_current_timezone())
+                    new_repetition.timestamp = datetime.now(
+                        get_current_timezone())
                     new_repetition.save()
                     # Set the actual todo_state back to its original value
                     instance.todo_state = old_node.todo_state
+
 
 @receiver(signals.pre_save, sender=Node)
 def auto_archive(sender, **kwargs):
     """pre_save receiver that archives the node if it's being closed"""
     if not kwargs['raw']:
         instance = kwargs['instance']
-        if instance.pk and getattr(instance.todo_state, 'closed', False) and instance.auto_update:
+        status = (
+            instance.pk and
+            getattr(instance.todo_state, 'closed', False) and
+            instance.auto_update
+        )
+        if status:
             old_node = Node.objects.get(pk=instance.pk)
             if not getattr(old_node.todo_state, 'closed', False):
                 instance.archived = True
+
 
 @python_2_unicode_compatible
 class NodeRepetition(models.Model):
@@ -687,8 +765,14 @@ class NodeRepetition(models.Model):
     this class when their state is changed.
     """
     node = models.ForeignKey('Node')
-    original_todo_state = models.ForeignKey('TodoState', related_name='repetitions_original_set', blank=True, null=True)
-    new_todo_state = models.ForeignKey('TodoState', related_name='repetitions_new_set', blank=True, null=True)
+    original_todo_state = models.ForeignKey(
+        'TodoState',
+        related_name='repetitions_original_set',
+        blank=True,
+        null=True)
+    new_todo_state = models.ForeignKey(
+        'TodoState', related_name='repetitions_new_set',
+        blank=True, null=True)
     timestamp = models.DateTimeField()
     def __str__(self):
         string = ''

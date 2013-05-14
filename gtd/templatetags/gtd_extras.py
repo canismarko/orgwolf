@@ -1,3 +1,28 @@
+#######################################################################
+# Copyright 2012 Mark Wolf
+#
+# This file is part of OrgWolf.
+#
+# OrgWolf is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+#######################################################################
+
+"""
+Describe the data related to the Getting Things Done portion of this project.
+The main model is described by the Node class. The remaining classes describe
+other attributes.
+"""
+
 from __future__ import unicode_literals, absolute_import, print_function
 import datetime as dt
 import re
@@ -6,6 +31,7 @@ from markdown import markdown
 from django import template
 from django.utils.html import conditional_escape
 from django.utils.safestring import mark_safe
+from django.utils.timezone import get_current_timezone
 
 from orgwolf.models import HTMLEscaper
 
@@ -109,44 +135,37 @@ def add_scope(string, scope=None):
     else:
         return re.sub('{scope}/?', '', string)
 
-@register.filter(expects_localtime=True)
-def overdue(item_dt, agenda_dt=None, future=False):
-    """Returns a string describing the datetime in a prettier format.
-    It returns things like "in 1 day". If future=True then it will
-    also process dates in the future otherwise it will just return
-    blank strings."""
-    if item_dt == None:
-        # Item has no deadline/scheduled/etc
-        return mark_safe('&nbsp;')
-    if agenda_dt:
-        today = agenda_dt.date()
-    else:
-        today = dt.datetime.now().date()
-    item_date = item_dt.date()
-    string = '&nbsp;'
-    diff = (item_date - today).days
-    # Pluralized
-    if abs(diff) != 1:
-        plural = 's'
-    else:
-        plural = ''
-    # Process dates
-    if diff == 0:
-        string = 'today'
-    elif diff > 0 and future == True:
-        # Process future dates
-        string = 'in ' + str(diff) + ' day' + plural
-    elif diff < 0:
-        # Process past dates
-        string = str(abs(diff)) + ' day' + plural + ' ago'
-    return mark_safe(string)
+@register.filter()
+def upcoming_deadline(node, agenda_dt=None):
+    """Pretty prints how many days until the deadline comes up"""
+    return node.overdue('deadline',
+                         agenda_dt=agenda_dt,
+                         future=True)
 
-@register.filter(expects_localtime=True)
-def upcoming(item_dt, agenda_dt=None):
-    """Wrapper for overdue()."""
-    return overdue(item_dt, agenda_dt, future=True)
+@register.filter()
+def overdue_deadline(node, agenda_dt=None):
+    """Pretty prints how many days overdue the deadline is"""
+    return node.overdue('deadline',
+                         agenda_dt=agenda_dt,
+                         future=False)
 
-@register.filter
+@register.filter()
+def upcoming_deadline(node, agenda_dt=None):
+    """Pretty prints how many days until the
+    scheduled date comes up.
+    """
+    return node.overdue('scheduled',
+                         agenda_dt=agenda_dt,
+                         future=True)
+
+@register.filter()
+def overdue_deadline(node, agenda_dt=None):
+    """Pretty prints how many days overdue the scheduled date is"""
+    return node.overdue('scheduled',
+                         agenda_dt=agenda_dt,
+                         future=False)
+
+@register.filter()
 def escape_html(raw_text):
     parser = HTMLEscaper()
     new_html = parser.clean(raw_text)
