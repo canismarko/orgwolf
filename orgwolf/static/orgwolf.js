@@ -1910,9 +1910,9 @@ GtdHeading.prototype.toggle = function( direction ) {
 		    $agenda.find('.deadlines').html(
 			response.deadlines_html);
 		    date_string = '';
-		    months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-				  'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-		    date_string += months[data.date.getMonth()] + '. ';
+		    months = ['Jan.', 'Feb.', 'Mar.', 'Apr.', 'May', 'Jun.',
+			      'Jul.', 'Aug.', 'Sep.', 'Oct.', 'Nov.', 'Dec.'];
+		    date_string += months[data.date.getMonth()] + ' ';
 		    date_string += data.date.getDate() + ', ';
 		    date_string += data.date.getFullYear();
 		    $agenda.children('.date:header').html(date_string);

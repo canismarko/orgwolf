@@ -59,17 +59,20 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 {# Filters #}
 <form action="" method="POST" class="form-inline">
   <input type="hidden" name="scope"
-	 value="{% if scope %}{{ scope.pk }}{% else %}0{% endif %}"/>
+	 value="{% if scope %}{{ scope.pk }}{% else %}0{% endif %}"
+	 />
   <label id="lblContext">
     Context:
     <select name="context" class="input-small">
     <option value="0"
-	    {% if current_context = None %}selected="selected"{% endif %}>
+	    {% if current_context = None %}
+	    selected="selected"{% endif %}>
       None
     </option>
     {% for context in contexts %}
     <option value="{{context.id}}"
-	    {% if current_context.id = context.id %}selected="selected"{% endif %}>
+	    {% if current_context.id = context.id %}
+	    selected="selected"{% endif %}>
       {{context.name}}
     </option>
     {% endfor %}
@@ -81,7 +84,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 	 id="todo{{ todo_state.id }}"
 	 name="todo{{ todo_state.id }}"
 	 value="Yes"
-	 {% if todo_state in todo_states_query %}checked="checked"{% endif %}
+	 {% if todo_state in todo_states_query %}
+	 checked="checked"{% endif %}
 	 >
 	 </input>
 	 {{ todo_state.as_html }}</label>
@@ -106,28 +110,35 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
   <tr class="list-node" node_id="{{ node.pk }}">
     <!-- Column for node todo state -->
     <td class="todo-col">
-      <div class="todo-state" todo_id="{{ node.todo_state_id }}">
-	<a href="{{ base_node_url }}{{ node.pk }}" title="{#{{ node.get_hierarchy_as_string }}#}">
+      <div class="todo-state"
+	   todo_id="{{ node.todo_state_id }}">
+	<a href="{{ base_node_url }}{{ node.pk }}"
+	   title="{#{{ node.get_hierarchy_as_string }}#}">
 	  {{ node.todo_state.as_html }}
 	</a>
       </div>
     </td>
     <!-- Column for node description -->
     <td>
-      <a href="{{ base_node_url }}{{ node.pk }}" title="{#{ node.get_hierarchy_as_string }#}">
+      <a href="{{ base_node_url }}{{ node.pk }}"
+	 title="{#{ node.get_hierarchy_as_string }#}">
 	{{ node.get_title }}
       </a>
-      {% if node.deadline %}Due {{ node.deadline|upcoming }}{% endif %}
+      {% if node.deadline %}
+      Due {{ node.deadline_str }}
+      {% endif %}
     </td>
     <!-- Column for root level project -->
     <td>
-      <a href="{{ node.root_url }}" title="Project: {{ node.root_title }}">
+      <a href="{{ node.root_url }}"
+	 title="Project: {{ node.root_title }}">
 	{{ node.root_title }}
       </a>
     </td>
     <!-- Column for Node.tag_string -->
     <td>
-      <a href="{{ base_node_url }}{{ node.pk }}" title="{#{ node.get_hierarchy_as_string }#}">
+      <a href="{{ base_node_url }}{{ node.pk }}"
+	 title="{#{ node.get_hierarchy_as_string }#}">
 	{{ node.tag_string }}
       </a>
     </td>

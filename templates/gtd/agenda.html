@@ -42,13 +42,13 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 <div id="agenda-container">
 <h3 class="date">{{ agenda_dt.date }}</h3>
 <form action="" method="post" class="date form-horizontal">
-  <input type="text" name="date" value="{{ agenda_dt|date:"Y-m-d" }}" class="input-medium datepicker" placeholder="Change date..."></input>
+  <input type="text" name="date" value="{{ agenda_dt_str }}" class="input-medium datepicker" placeholder="Change date..."></input>
     {% csrf_token %}
   <input type="submit" value="Update" class="btn" />
 </form>
 <h4>Day Specific</h4>
 <table class="daily table table-condensed">
-  {% include "gtd/agenda_daily.html" %}
+  {% include 'gtd/agenda_daily.html' %}
 </table>
 <h4>Time Specific</h4>
 <table class="timely table table-condensed">

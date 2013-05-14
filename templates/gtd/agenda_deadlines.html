@@ -4,12 +4,14 @@
   {% for node in deadline_nodes %}
   <tr>
     <td>
-      <a href="{% url 'node_object' pk=node.id %}" title="{{ node.hierarchy }}">
-	{{ node.overdue }}
+      <a href="{% url 'node_object' pk=node.id %}"
+	 title="{{ node.hierarchy }}">
+	{{ node.overdue_str }}
       </a>
     </td>
     <td>
-      <a href="{% url 'node_object' pk=node.id %}" title="{{ node.hierarchy }}">
+      <a href="{% url 'node_object' pk=node.id %}"
+	 title="{{ node.hierarchy }}">
 	{{ node.deadline|date:"D d M Y" }}
       </a>
     </td>

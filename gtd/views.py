@@ -24,30 +24,30 @@ import datetime
 import json
 from itertools import chain
 
+from django.contrib.auth.decorators import login_required
 from django.core import serializers
 from django.core.urlresolvers import reverse
+from django.db.models import Q
 from django.forms.models import model_to_dict
+from django.http import (
+    HttpResponse, HttpResponseRedirect, Http404, HttpResponseBadRequest)
 from django.shortcuts import render_to_response, redirect, get_object_or_404
 from django.template import RequestContext
 from django.template.loader import render_to_string
-from django.views.generic import View
-from django.views.generic.detail import DetailView
-from django.contrib.auth.decorators import login_required
-from django.http import HttpResponse, HttpResponseRedirect
-from django.http import Http404, HttpResponseBadRequest
-from django.db.models import Q
 from django.utils.decorators import method_decorator
 from django.utils.timezone import get_current_timezone
+from django.views.generic import View
+from django.views.generic.detail import DetailView
 
-from mptt.exceptions import InvalidMove
-from gtd.models import TodoState, Node, Context, Scope
-from gtd.shortcuts import parse_url, generate_url, get_todo_abbrevs
-from gtd.shortcuts import order_nodes
-from gtd.templatetags.gtd_extras import escape_html
-from wolfmail.models import MailItem, Label
 from gtd.forms import NodeForm
+from gtd.models import TodoState, Node, Context, Scope
+from gtd.shortcuts import (
+    parse_url, generate_url, get_todo_abbrevs, order_nodes)
+from gtd.templatetags.gtd_extras import escape_html
+from mptt.exceptions import InvalidMove
 from orgwolf.models import OrgWolfUser as User
 from orgwolf import settings
+from wolfmail.models import MailItem, Label
 
 def home(request):
     pass # Todo GTD/home view
@@ -68,6 +68,7 @@ def list_display(request, url_string=""):
     list_url = base_url
     list_url += '{parent}{states}{scope}{context}'
     scope_url_data = {}
+    tz = get_current_timezone()
     # scope_url = base_url # for urls of scope tabs
     if url_string == None:
         url_string = ""
@@ -171,7 +172,7 @@ def list_display(request, url_string=""):
         scope_url_data['parent'] = ''
     # Put nodes with deadlines first
     nodes = order_nodes(nodes, field='deadline', context=current_context)
-    # -------------------- Queryset evaluated --------------------
+    # -------------------- Queryset evaluated -------------------- #
     # Prepare the URLs for use in the scope and parent links tabs
     scope_url = list_url.format(
         context = scope_url_data['context'],
@@ -189,15 +190,15 @@ def list_display(request, url_string=""):
         states = scope_url_data['states'],
         parent = 'parent{0}/'
     )
-    # Prepare an array of root node data
-    # root_list = list(root_nodes)
-    # Add a field for the root node
+    # Add a field for the root node and deadline
     for node in nodes:
         # (uses lists in case of bad unit tests)
         root_node = [n for n in root_nodes if n.tree_id == node.tree_id]
         if len(root_node) > 0:
             node.root_url = parent_url.format(root_node[0].pk)
             node.root_title = root_node[0].title
+        node.deadline_str = node.overdue('deadline', tzinfo=tz)
+                                         
     # And serve response
     if request.is_mobile:
         template = 'gtd/gtd_list_m.html'
@@ -221,7 +222,7 @@ def agenda_display(request, date=None):
             return redirect(new_url)
     deadline_period = 7 # In days # TODO: pull deadline period from user
     all_nodes_qs = Node.objects.mine(request.user).select_related('todo_state')
-    # all_nodes_qs = Node.objects.owned(request.user).select_related('todo_state')
+    tz = get_current_timezone()
     final_Q = Q()
     if date:
         try:
@@ -230,7 +231,15 @@ def agenda_display(request, date=None):
             raise Http404
     else:
         agenda_date = datetime.date.today()
-    agenda_dt = datetime.datetime(year=agenda_date.year, month=agenda_date.month, day=agenda_date.day, hour=12, minute=0, second=0, tzinfo=get_current_timezone())
+    agenda_dt = datetime.datetime(
+        year=agenda_date.year,
+        month=agenda_date.month,
+        day=agenda_date.day,
+        hour=23, minute=59,
+        second=59,
+        tzinfo=tz
+    ).astimezone(tz)
+    agenda_dt_str = agenda_dt.strftime('%Y-%m-%d')
     one_day = datetime.timedelta(days=1)
     tomorrow = agenda_date + one_day
     yesterday = agenda_date - one_day
@@ -241,10 +250,12 @@ def agenda_display(request, date=None):
     todo_states = TodoState.get_visible(request.user)
     hard_Q = Q(todo_state = todo_states.get(abbreviation="HARD"))
     dfrd_Q = Q(todo_state = todo_states.get(abbreviation="DFRD"))
-    day_specific_nodes = all_nodes_qs.filter((hard_Q | dfrd_Q), date_Q, time_specific_Q)
+    day_specific_nodes = all_nodes_qs.filter(
+        (hard_Q | dfrd_Q), date_Q, time_specific_Q)
     day_specific_nodes = day_specific_nodes.order_by('scheduled')
     time_specific_Q = Q(scheduled_time_specific=True)
-    time_specific_nodes = all_nodes_qs.filter((hard_Q | dfrd_Q), date_Q, time_specific_Q)
+    time_specific_nodes = all_nodes_qs.filter(
+        (hard_Q | dfrd_Q), date_Q, time_specific_Q)
     time_specific_nodes = time_specific_nodes.order_by('scheduled')
     # Determine query filters for "Upcoming Deadlines" section
     undone_Q = Q(todo_state__closed = False) | Q(todo_state = None)
@@ -252,44 +263,20 @@ def agenda_display(request, date=None):
     upcoming_deadline_Q = Q(deadline__lte = deadline) # TODO: fix this
     deadline_nodes = all_nodes_qs.filter(undone_Q, upcoming_deadline_Q)
     deadline_nodes = deadline_nodes.order_by("deadline")
-    # Force database hits and then process results into list of dictionaries
-    day_specific_nodes_qs = list(day_specific_nodes)
-    day_specific_nodes = []
-    time_specific_nodes_qs = list(time_specific_nodes)
-    time_specific_nodes = []
-    deadline_nodes_qs = list(deadline_nodes)
-    deadline_nodes = []
-    for node in day_specific_nodes_qs:
-        new_dict = {}
-        new_dict['overdue'] = node.overdue(node.scheduled, agenda_dt)
-        new_dict['id'] = node.id
-        new_dict['todo_state'] = node.todo_state
-        new_dict['title'] = node.title
-        new_dict['repeats'] = node.repeats
-        new_dict['hierarchy'] = node.get_hierarchy_as_string()
-        new_dict['tag_string'] = node.tag_string
-        day_specific_nodes.append(new_dict)
-    for node in time_specific_nodes_qs:
-        new_dict = {}
-        new_dict['overdue'] = node.overdue(node.scheduled, agenda_dt)
-        new_dict['id'] = node.id
-        new_dict['scheduled'] = node.scheduled
-        new_dict['todo_state'] = node.todo_state
-        new_dict['title'] = node.title
-        new_dict['repeats'] = node.repeats
-        new_dict['hierarchy'] = node.get_hierarchy_as_string()
-        time_specific_nodes.append(new_dict)
-    for node in deadline_nodes_qs:
-        new_dict = {}
-        new_dict['overdue'] = node.overdue(node.deadline, agenda_dt, future=True)
-        new_dict['id'] = node.id
-        new_dict['deadline'] = node.deadline
-        new_dict['deadline_time_specific'] = node.deadline_time_specific
-        new_dict['title'] = node.title
-        new_dict['todo_state'] = node.todo_state
-        new_dict['repeats'] = node.repeats
-        new_dict['hierarchy'] = node.get_hierarchy_as_string()
-        deadline_nodes.append(new_dict)
+    # Force database hits and then add overdue data
+    day_specific_nodes = list(day_specific_nodes)
+    time_specific_nodes = list(time_specific_nodes)
+    deadline_nodes = list(deadline_nodes)
+    for node in day_specific_nodes:
+        node.overdue_str = node.overdue(
+            'scheduled', tzinfo=tz, agenda_dt=agenda_dt)
+    for node in time_specific_nodes:
+        node.overdue_str = node.overdue(
+            'scheduled', tzinfo=tz, agenda_dt=agenda_dt)
+    for node in deadline_nodes:
+        node.overdue_str = node.overdue(
+            'deadline', tzinfo=tz, agenda_dt=agenda_dt, future=True)
+    # Create some data for javascript plugins
     all_todo_states_json = TodoState.as_json(queryset=todo_states, 
                                              user=request.user)
     if request.GET.get('format') == 'json':
@@ -626,7 +613,6 @@ class NodeView(DetailView):
         slug = kwargs.get('slug')
         # Some setup work
         all_nodes_qs = Node.objects.mine(request.user, get_archived=show_all)
-        # all_nodes_qs = Node.objects.mine(request.user, get_archived=False)
         all_todo_states_qs = TodoState.get_visible(user=request.user)
         child_nodes_qs = all_nodes_qs
         all_scope_qs = Scope.objects.all()
@@ -835,6 +821,7 @@ class Descendants(View):
             )
         else:
             serializers.serialize('json', nodes_qs)
+            # Non-ajax returns the base template to show django-debug-toolbar
             return render_to_response('base.html',
                                       locals(),
                                       RequestContext(request))

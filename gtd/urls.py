@@ -31,7 +31,8 @@ urlpatterns = patterns(
 
     url(r'^lists(?P<url_string>/[\w/]+)?/$', 'list_display'),
 
-    url(r'^agenda(?:/(?P<date>\d{4}-\d{1,2}-\d{1,2}))?/$', 'agenda_display'),
+    url(r'^agenda(?:/(?P<date>\d{4}-\d{1,2}-\d{1,2}))?/$',
+        'agenda_display', name='agenda_display'),
 
     url(r'^toinbox/$', 'capture_to_inbox'),
 
