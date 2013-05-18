@@ -187,7 +187,7 @@ class Context(models.Model):
         'Contact',
         blank=True,
         related_name='including_contexts_set')
-    
+
     def __str__(self):
         return self.name
 

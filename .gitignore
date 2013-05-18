@@ -5,3 +5,5 @@
 local_settings.py
 LICENSE-HEADING
 work.org
+gtd/fixtures/production-data.json
+orgwolf/static/aloha/

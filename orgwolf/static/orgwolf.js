@@ -402,7 +402,6 @@ $(document).ready(function(){
 			new_id = Number($(this).attr('todo_id'));
 			$popover = $(this).parent().parent();
 			heading = $popover.parent().parent().data('nodeOutline');
-			// url = '/gtd/node/' + settings.node_id + '/edit/';
 			url = '/gtd/node/' + settings.node_id + '/';
 			payload = {
 			    todo_state: new_id,
@@ -423,11 +422,6 @@ $(document).ready(function(){
 				    settings.heading.set_fields(
 					response
 				    );
-				    // // Feedback if node repeats
-				    if ( settings.heading.repeats ) {
-				      alert('Node scheduled for ' +
-				            settings.heading.scheduled);
-				    }
 				    settings.heading.redraw();
 				} else {
 				    old = $todo.attr('todo_id');
@@ -442,6 +436,11 @@ $(document).ready(function(){
 				s = '.todo-option[todo_id="';
 				s += response.todo_id + '"]';
 				$inner.children(s).attr('selected', '');
+				// Feedback if node repeats
+				if ( response.fields.repeats ) {
+				    alert('Node scheduled for ' +
+					  response.fields.scheduled.slice(0, 10));
+				}
 				// Run the user submitted callback
 				settings.click(response);
 				// Kludge to avoid stale css
@@ -1938,6 +1937,7 @@ GtdHeading.prototype.toggle = function( direction ) {
 	add_todo_plugin = function() {
 	    $agenda.find('.todo-state').each(function() {
 		var node_id = $(this).parent().attr('node_id');
+		console.log(node_id);
 		$(this).todoState({
 		    states: data.states,
 		    node_id: node_id,
