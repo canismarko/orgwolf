@@ -1347,6 +1347,34 @@ class TodoStateRetrieval(TestCase):
             list(TodoState.get_visible(user))
             )
 
+
+class AgendaNodes(TestCase):
+    """Make sure the correct nodes show up in the agenda view"""
+    fixtures = ['test-users.json', 'gtd-env.json', 'gtd-test.json']
+    def setUp(self):
+        self.user = User.objects.get(username='test')
+        self.assertTrue(
+            self.client.login(
+                username='test', password='secret')
+        )
+        self.datestring = '2013-05-14'
+        self.url = reverse(
+            'agenda_display',
+            kwargs={'date': self.datestring})
+
+    def test_future_nodes(self):
+        """Test if nodes scheduled for the future are not shown in
+        today's agenda"""
+        future_node = Node.objects.get(pk=16)
+        response = self.client.get(self.url)
+        self.assertNotContains(
+            response,
+            future_node.title,
+            status_code=200,
+            msg_prefix='Future node found in today\'s agenda'
+        )
+
+
 class MultiUser(TestCase):
     """Tests for multi-user support in the gtd app"""
     fixtures = ['test-users.json', 'gtd-env.json', 'gtd-test.json']
@@ -1354,7 +1382,11 @@ class MultiUser(TestCase):
         self.factory = RequestFactory()
         self.user1 = User.objects.get(pk=1)
         self.user2 = User.objects.get(pk=2)
-        self.client.login(username='test', password='secret')
+        self.assertTrue(
+            self.client.login(
+                username='test', password='secret')
+        )
+
     def test_get_nodes(self):
         self.assertEqual(
             'instancemethod',
@@ -1378,6 +1410,7 @@ class MultiUser(TestCase):
             list(Node.objects.none()),
             list(Node.objects.owned(request.user))
             )
+
     def test_auto_contact(self):
         """Determine if adding a user automatically creates a contact"""
         user = User()
@@ -1387,6 +1420,7 @@ class MultiUser(TestCase):
             1,
             'Creating a new user does not create a new Contact'
             )
+
     def test_get_mine(self):
         """Test the Node.get_mine() method. It returns a queryset of all
         Node objects that require the current users attention.
@@ -1415,6 +1449,7 @@ class MultiUser(TestCase):
                 node.archived,
                 'Node {0} is archived'.format(node)
                 )
+
     def test_assigned_in_responses(self):
         """Make sure that Nodes to which the user is assigned show up in the
         right places."""
@@ -1572,7 +1607,7 @@ class TimeZones(TestCase):
             status_code=200,
             msg_prefix='Incorrect date set in input date changer'
         )
-            
+
 
 class DBOptimization(TestCase):
     """Define and test the optimal database plan for different views"""

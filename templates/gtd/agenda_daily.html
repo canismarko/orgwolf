@@ -2,7 +2,7 @@
 {% load gtd_extras %}
 <tbody>
   {% for node in day_specific_nodes %}
-  <tr{% if node.overdue_str %} class="error"{% endif %} node_id="{{ node.id }}">
+  <tr{% if node.overdue_str %} class="error"{% endif %} node_id="{{ node.pk }}">
     <td>
       <a href="{% url 'node_object' pk=node.id %}" title="{{ node.hierarchy }}">{{ node.overdue_str }}</a>
     </td>

@@ -2,7 +2,7 @@
 {# Lists all the time-specific nodes for agenda display (possibly as JSON) #}
 <tbody>
   {% for node in time_specific_nodes %}
-  <tr{% if node.overdue_str %} class="error"{% endif %}>
+  <tr{% if node.overdue_str %} class="error"{% endif %} node_id="{{ node.pk }}">
     <td>
       <a href="{% url 'node_object' pk=node.id %}"
 	 title="{{ node.hierarchy }}">{{ node.overdue_str }}</a>

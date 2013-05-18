@@ -232,7 +232,9 @@ TWITTER_CONSUMER_SECRET = 'SLir3qh8IFzuFe6VI58kHpBnzAnAohpWzqjhdmXKqQ'
 # See http://docs.djangoproject.com/en/dev/topics/logging for
 # more details on how to customize your logging configuration.
 
-LOGFILE = '/dev/null'
+LOGFILE = None
+SQL_LOGFILE = None
+DEBUG_LOGFILE = None
 
 try:
     from local_settings import *
@@ -248,27 +250,74 @@ LOGGING = {
             '()': 'django.utils.log.RequireDebugFalse'
         }
     },
+    'formatters': {
+        'query_entry': {
+            'format': '%(duration)s, \'%(sql)s\', \'%(pathname)s\', %(lineno)s'
+        },
+        'view_debug': {
+            'format': '[%(asctime)s] %(message)s'
+        },
+    },
     'handlers': {
-        'file': {
-            'class': 'logging.handlers.RotatingFileHandler',
-            'filename': LOGFILE,
-            'maxBytes': 1024,
-            'backupCount': 3
-            },
         'mail_admins': {
             'level': 'ERROR',
             'filters': ['require_debug_false'],
             'class': 'django.utils.log.AdminEmailHandler'
-        }
+        },
     },
     'loggers': {
         'django.request': {
-            'handlers': ['mail_admins', 'file'],
+            'handlers': ['mail_admins'],
             'level': 'ERROR',
             'propagate': True,
         },
+        'gtd.views': {
+            'handlers': ['debug_messages'],
+            'level': 'DEBUG',
+            'propogate': True,
+        },
     }
 }
+
+if LOGFILE is not None:
+    # Standard error logging
+    LOGGING['handlers']['logfile'] = {
+        'class': 'logging.handlers.RotatingFileHandler',
+        'filename': LOGFILE,
+        'maxBytes': 1024,
+        'backupCount': 3
+    }
+    LOGGING['loggers']['django.request']['handlers'].append('logfile')
+
+if SQL_LOGFILE is not None:
+    # Attach a logger for database performance if set in local_settings.py
+    LOGGING['handlers']['db_performance'] = {
+        'class': 'logging.handlers.RotatingFileHandler',
+        'filename': SQL_LOGFILE,
+        'formatter': 'query_entry',
+    }
+    LOGGING['loggers']['django.db.backends'] = {
+        'handlers': ['db_performance'],
+        'level': 'DEBUG',
+        'propogate': True,
+    }
+
+if DEBUG_LOGFILE is not None:
+    # Low level debugging
+    LOGGING['handlers']['debug_messages'] = {
+        'class': 'logging.handlers.RotatingFileHandler',
+        'filename': DEBUG_LOGFILE,
+        'formatter': 'view_debug',
+        # 'formatter': 'debug_message',
+        # 'formatter': 'query_entry',
+    }
+else:
+    # Dummy handler if debugging is disabled
+    LOGGING['handlers']['debug_messages'] = {
+        'class': 'logging.NullHandler',
+    }
+
+# ...End of logging
 
 # django-debug-toolbar initialization
 if DEBUG and DEBUG_BAR:

@@ -18,10 +18,11 @@
 #######################################################################
 
 from __future__ import unicode_literals, absolute_import, print_function
-import math
-import re
 import datetime
 import json
+import logging
+import math
+import re
 from itertools import chain
 
 from django.contrib.auth.decorators import login_required
@@ -41,13 +42,16 @@ from django.views.generic.detail import DetailView
 
 from gtd.forms import NodeForm
 from gtd.models import TodoState, Node, Context, Scope
-from gtd.shortcuts import (
-    parse_url, generate_url, get_todo_abbrevs, order_nodes)
+from gtd.shortcuts import (parse_url, generate_url, get_todo_abbrevs,
+                           order_nodes)
 from gtd.templatetags.gtd_extras import escape_html
 from mptt.exceptions import InvalidMove
-from orgwolf.models import OrgWolfUser as User
 from orgwolf import settings
+from orgwolf.models import OrgWolfUser as User
 from wolfmail.models import MailItem, Label
+
+# Prepare logger
+logger = logging.getLogger('gtd.views')
 
 def home(request):
     pass # Todo GTD/home view
@@ -198,7 +202,6 @@ def list_display(request, url_string=""):
             node.root_url = parent_url.format(root_node[0].pk)
             node.root_title = root_node[0].title
         node.deadline_str = node.overdue('deadline', tzinfo=tz)
-                                         
     # And serve response
     if request.is_mobile:
         template = 'gtd/gtd_list_m.html'
@@ -210,6 +213,7 @@ def list_display(request, url_string=""):
 
 @login_required
 def agenda_display(request, date=None):
+    logger.debug('agenda_display() view called')
     format_string = "%Y-%m-%d"
     if request.method == "POST":
         # Check and process the new date
@@ -239,6 +243,12 @@ def agenda_display(request, date=None):
         second=59,
         tzinfo=tz
     ).astimezone(tz)
+    logger.debug(
+        'agenda_date = {0} | agenda_dt = {1}'.format(
+            agenda_date,
+            agenda_dt,
+        )
+    )
     agenda_dt_str = agenda_dt.strftime('%Y-%m-%d')
     one_day = datetime.timedelta(days=1)
     tomorrow = agenda_date + one_day
@@ -277,20 +287,23 @@ def agenda_display(request, date=None):
         node.overdue_str = node.overdue(
             'deadline', tzinfo=tz, agenda_dt=agenda_dt, future=True)
     # Create some data for javascript plugins
-    all_todo_states_json = TodoState.as_json(queryset=todo_states, 
+    all_todo_states_json = TodoState.as_json(queryset=todo_states,
                                              user=request.user)
     if request.GET.get('format') == 'json':
         # Render just the table rows for AJAX functionality
         json_data = {'status': 'success'}
-        json_data['daily_html'] = render_to_string('gtd/agenda_daily.html',
-                                                locals(),
-                                                RequestContext(request));
-        json_data['timely_html'] = render_to_string('gtd/agenda_timely.html',
-                                      locals(),
-                                      RequestContext(request));
-        json_data['deadlines_html'] = render_to_string('gtd/agenda_deadlines.html',
-                                      locals(),
-                                      RequestContext(request));
+        json_data['daily_html'] = render_to_string(
+            'gtd/agenda_daily.html',
+            locals(),
+            RequestContext(request))
+        json_data['timely_html'] = render_to_string(
+            'gtd/agenda_timely.html',
+            locals(),
+            RequestContext(request))
+        json_data['deadlines_html'] = render_to_string(
+            'gtd/agenda_deadlines.html',
+            locals(),
+            RequestContext(request))
         return HttpResponse(json.dumps(json_data))
     if request.is_mobile:
         template = 'gtd/agenda_m.html'
@@ -396,7 +409,8 @@ def edit_node(request, node_id, scope_id, slug):
                 try:
                     node.todo_state = TodoState.objects.get(pk=new_todo_id)
                 except TodoState.DoesNotExist:
-                    return HttpResponseBadRequest('Invalid todo_id: %s' % new_todo_id)
+                    return HttpResponseBadRequest(
+                        'Invalid todo_id: %s' % new_todo_id)
             # auto_repeat
             if post.get('auto_update') == 'false':
                 node.auto_update = False
@@ -439,7 +453,8 @@ def edit_node(request, node_id, scope_id, slug):
             url_kwargs['pk'] = node.parent.pk
         redirect_url = reverse('node_object', kwargs=url_kwargs)
         return redirect(redirect_url)
-    elif request.method == 'POST' and request.POST.get('function') == 'change_todo_state':
+    elif (request.method == 'POST' and
+          request.POST.get('function') == 'change_todo_state'):
         # User has asked to change TodoState
         new_todo_id = request.POST['new_todo']
         if new_todo_id == '0':
@@ -488,12 +503,16 @@ def move_node(request, node_id, scope_id):
             try:
                 target = Node.objects.get(pk=post.get('target_id'))
             except Node.DoesNotExist:
-                return HttpResponseBadRequest('Please post a valid value for \'target_id\'. Received \'{0}\''.format(post.get('target_id') ) )
+
+                return HttpResponseBadRequest(
+                    'Please post a valid value for \'target_id\'. '.join(
+                        'Received \'{0}\''.format(target_id) ))
         node.parent = target
         try:
             node.save()
         except InvalidMove:
-            return HttpResponseBadRequest('A node may not be made a child of any of its descendents')
+            return HttpResponseBadRequest(
+                'A node may not be made a child of any of its descendents')
         url_kwargs['pk'] = node.pk
         redir_url = reverse('node_object', kwargs=url_kwargs)
         return redirect(redir_url)
@@ -826,6 +845,7 @@ class Descendants(View):
                                       locals(),
                                       RequestContext(request))
 
+
 @login_required
 def get_descendants(request, ancestor_pk):
     """Looks up the descendants of the given parent. Optionally
@@ -848,6 +868,7 @@ def get_descendants(request, ancestor_pk):
         return render_to_response('base.html',
                                   locals(),
                                   RequestContext(request))
+
 
 @login_required
 def node_search(request):

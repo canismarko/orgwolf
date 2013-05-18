@@ -45,10 +45,6 @@ $('document').ready(function() {
     // Hide non-JS elements
     $('#add-node').remove();
     $('#todo-buttons').remove();
-    // Aloha text editor
-    Aloha.ready(function() {
-    	$('#parent-text').alohaText();
-    });
     {% autoescape off %}
     // Project outline applicance
     $('#outline-workspace').nodeOutline( {
@@ -57,12 +53,20 @@ $('document').ready(function() {
     });
     {% endautoescape %}
     {% if parent_node %}
-    var heading = new GtdHeading({% autoescape off %}{{parent_json}}[0]{% endautoescape %});
+    var heading = new GtdHeading(
+	{% autoescape off %}{{parent_json}}[0]{% endautoescape %}
+    );
+    // Aloha text editor
+    Aloha.ready(function() {
+    	$('#parent-text').alohaText({
+	    heading: heading});
+    });
+    // todoState chooser for the parent's todo_state
     var update_todo = function ( todo_state ) {
 	$('#parent-todo').todoState('update', { todo_state: todo_state });
-	$('#edit-button').nodeEdit('update', { todo_id: todo_state });
+	heading.todo_state = todo_state;
+	// $('#edit-button').nodeEdit('update', { todo_id: todo_state });
     };
-    // todoState chooser for the parent's todo_state
     $('#parent-todo').todoState({
     	node_id: {{ parent_node.pk }},
     	states: {% autoescape off %}{{ all_todo_states_json_full }}{% endautoescape %},
