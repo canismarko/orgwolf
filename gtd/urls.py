@@ -44,11 +44,10 @@ urlpatterns = patterns(
     url(r'^node/(?:scope(?P<scope_id>\d+)/)?(?:(?P<node_id>\d+)/)?new/',
         'new_node',
         name='new_node'),
-    # url(r'^node/(?P<ancestor_pk>\d+)/descendants/$', 'get_descendants'),
     url(r'^node/search/', 'node_search'),
 
     # New API urls below
-    url(r'^node/(?:(?P<pk>\d+)/)?(?:(?P<slug>[-\w\d]+)/)?(?P<show_all>all/)?$',
+    url(r'^node/(?:(?P<pk>\d+)/)?(?:(?P<slug>[-\w\d]*)/)?(?P<show_all>all/)?$',
         NodeView.as_view(),
         name='node_object'),
     url(r'^node/descendants/(?P<ancestor_pk>\d+)/$',

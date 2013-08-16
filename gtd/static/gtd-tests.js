@@ -524,6 +524,22 @@ asyncTest('Retrieve parent heading', function() {
 	    'Buy cat food',
 	    'Correct title key set on workspace'
 	);
+	var heading1 = workspace.headings.get({pk: 1});
+	heading1.parent = null;
+	workspace.pk = 0;
+	deepEqual(
+	    heading1.get_parent(),
+	    workspace,
+	    'If heading.parent is null and workspace.pk = 0 then get_parent returns workspace'
+	);
+	var heading0 = new GtdHeading(full_dict);
+	heading0.pk = 0;
+	workspace.headings.add(heading0);
+	deepEqual(
+	    heading1.get_parent(),
+	    heading0,
+	    'If heading.parent is null then get_parent returns heading pk=0'
+	)
     }, ajax_timer);
 });
 
@@ -810,7 +826,7 @@ asyncTest('set expandability and has-children data', function() {
 	heading4.is_expandable(),
 	'Heading 4 is_expandable() true before populating'
     );
-    // Check heading four when show_all is set
+    // Check heading for when show_all is set
     workspace.show_all = true;
     workspace.redraw();
     ok(
@@ -1191,6 +1207,143 @@ test('heading.redraw() method', function() {
     );
 });
 
+asyncTest('heading visibility', function() {
+    var $workspace = $('#test_workspace');
+    $workspace.nodeOutline({todo_states: todo_state_list});
+    var workspace = $workspace.data('nodeOutline');
+    ok(
+	workspace.is_visible(),
+	'workspace has visible set to true'
+    );
+    var heading1 = workspace.headings.get({pk: 1});
+    heading1.populate_children();
+    equal(
+	heading1.is_visible(),
+	true,
+	'Rank 1 heading starts out visible'
+    );
+    setTimeout(function() {
+	var archived_child = heading1.get_children()[0];
+	var heading1_child = heading1.get_children()[1];
+	equal(
+	    heading1_child.is_visible(),
+	    false,
+	    'Rank 2 heading starts out not visible'
+	);
+	start();
+	heading1_child.redraw();
+	equal(
+	    heading1_child.$element,
+	    undefined,
+	    'non-visible heading not created on redraw'
+	);
+	// Make sure opening a node creates its children if necessary
+	heading1.open();
+	ok(
+	    heading1_child.is_visible(),
+	    'non-visible heading becomes visible if parent opened'
+	);
+	ok(
+	    ! archived_child.is_visible(),
+	    'archived child stays non-visible if parent opened'
+	);
+	notEqual(
+	    heading1_child.$element,
+	    undefined,
+	    'non-visible heading gets created if parent opened'
+	);
+	console.log('===');
+	workspace.show_all = true;
+	ok(
+	    archived_child.is_visible(),
+	    'archived child is visible if workspace has show_all set to true'
+	);
+	workspace.show_all = false;
+	console.log('---');
+	// Make sure closing a node sets its children invisible
+	heading1.close();
+	ok(
+	    ! heading1_child.is_visible(),
+	    'visible child becomes non-visible if parent is closed'
+	);
+    }, ajax_timer);
+});
+
+asyncTest('heading visibility when autopopulated', function() {
+    var $workspace = $('#test_workspace');
+    $workspace.nodeOutline({todo_states: todo_state_list});
+    var workspace = $workspace.data('nodeOutline');
+    ok(
+	workspace.is_visible(),
+	'workspace has visible set to true'
+    );
+    var heading1 = workspace.headings.get({pk: 1});
+    heading1.open(); // Triggers populate children
+    equal(
+	heading1.is_visible(),
+	true,
+	'Rank 1 heading starts out visible'
+    );
+    setTimeout(function() {
+	var heading1_child = heading1.get_children()[1];
+	ok(
+	    heading1_child.is_visible(),
+	    'Rank 2 heading starts out visible when parent is open'
+	);
+	start();
+    }, ajax_timer);
+});
+
+asyncTest('heading visibility of children at init', function() {
+    var $workspace = $('#test_workspace');
+    $workspace.nodeOutline({todo_states: todo_state_list});
+    var workspace = $workspace.data('nodeOutline');
+    ok(
+	workspace.is_visible(),
+	'workspace has visible set to true'
+    );
+    var heading1 = workspace.headings.get({pk: 1});
+    equal(
+	heading1.is_visible(),
+	true,
+	'Rank 1 heading starts out visible'
+    );
+    setTimeout(function() {
+	equal(
+	    heading1.is_visible(),
+	    true,
+	    'Rank 1 heading stays visible after workspace init loading'
+	);
+	var heading1_child = heading1.get_children()[0];
+	start();
+    }, ajax_timer);
+});
+
+asyncTest('show_all button', function() {
+    var $workspace = $('#test_workspace');
+    $workspace.nodeOutline({todo_states: todo_state_list});
+    var workspace = $workspace.data('nodeOutline');
+    var heading1 = workspace.headings.get({pk: 1});
+    heading1.open();
+    setTimeout(function() {
+	var archived_child = heading1.get_children().filter_by(
+	    {archived: true}
+	)[0];
+	ok(
+	    ! archived_child.$element.is(':visible'),
+	    'Archived child starts out not visible'
+	);
+	console.log('---');
+	// Click workspace "Show all" button and test node again
+	workspace.$showall.click();
+	ok(
+	    archived_child.$element.is(':visible'),
+	    'Archived child becomes visible after show all button clicked'
+	);
+	start();
+    }, ajax_timer);
+});
+
 test('workspace.headings.add() method', function() {
     var $workspace = $('#test_workspace');
     $workspace.nodeOutline({simulate: true});
@@ -1226,11 +1379,17 @@ asyncTest('Clicking a heading populates it\'s children', function() {
     var heading1 = workspace.headings.get({pk: 1});
     heading1.toggle();
     setTimeout(function() {
-	var $heading8 = $workspace.find('.heading[node_id="8"]');
-	ok(
-	    $heading8.length>0,
-	    'Heading 8 element found'
+	var heading8 = workspace.headings.filter_by({pk: 8});
+	equal(
+	    heading8.length,
+	    1,
+	    'A GtdHeading object found for first child'
 	);
+	// var $heading8 = $workspace.find('.heading[node_id="8"]');
+	// ok(
+	//     $heading8.length>0,
+	//     'Heading 8 element found'
+	// );
 	ok(
 	    heading1.populated,
 	    'heading 1 has populated attribute set'

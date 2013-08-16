@@ -651,6 +651,7 @@ class NodeView(DetailView):
             breadcrumb_list = parent_node.get_ancestors(include_self=True)
             # Redirect in case of incorrect slug
             if slug != parent_node.slug:
+                print(parent_node.slug + "*")
                 return redirect(
                     reverse(
                         'node_object',

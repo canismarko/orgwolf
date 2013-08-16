@@ -47,10 +47,13 @@ $('document').ready(function() {
     $('#todo-buttons').remove();
     {% autoescape off %}
     // Project outline applicance
-    $('#outline-workspace').nodeOutline( {
-	todo_states: {{ all_todo_states_json }},
-	scopes: {{ all_scope_json }}
-    });
+    start_outline = function() {
+	$('#outline-workspace').nodeOutline( {
+	    todo_states: {{ all_todo_states_json }},
+	    scopes: {{ all_scope_json }}
+	});
+    };
+    start_outline();
     {% endautoescape %}
     {% if parent_node %}
     var heading = new GtdHeading(
@@ -157,7 +160,7 @@ $('document').ready(function() {
 </div><!-- /div id="node-detail"-->
 <br />
 
-<div id="outline-workspace" data-node_id="{{ node_id }}">
+<div id="outline-workspace" class="outline" data-node_id="{{ node_id }}">
 {% include 'gtd/scope_tabs.html' %}
   <strong>
     {% if parent_node %}

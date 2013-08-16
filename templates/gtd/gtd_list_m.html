@@ -11,7 +11,7 @@
     <a href="{% url 'node_object' pk=node.id %}" title="{{ node.get_hierarchy_as_string }}">
       <h3>{{ node.title }}</h3>
       <p>
-	{{ node.todo_state.as_html }}{% if node.deadline %} Due {{ node.deadline|upcoming }}{% endif %}
+	{{ node.todo_state.as_html }}{% if node.deadline %} Due {{ node|upcoming_deadline }}{% endif %}
       </p>
       <p>{% for step in node.get_hierarchy %}&gt; {{ step.display }} {% endfor %}</p>
     </a>
@@ -53,7 +53,8 @@
 		    {% if current_context = None %}selected="selected"{% endif %}>
 	      None
 	    </option>
-	    {% for context in all_contexts %}
+	    {#% for context in all_contexts %#}
+	    {% for context in contexts %}
 	    <option value="{{ context.id }}"
 		    {% if current_context.id = context.id %}selected="selected"{% endif %}>
 	      {{ context.name }}
