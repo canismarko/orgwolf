@@ -1872,7 +1872,7 @@ GtdHeading.prototype.toggle = function( direction ) {
 			//     console.log('nope');
 			// };
 			if ( workspace.show_all ) {
-			    
+
 			}
 			workspace.redraw( {callback: function() {
 			    ow_waiting('clear');
@@ -1923,15 +1923,15 @@ GtdHeading.prototype.toggle = function( direction ) {
     };
     // Method selection magic
     $.fn.nodeOutline = function( method ) {
-	var response;
-	if ( methods[method] ) {
-	    response = methods[method].apply( this, Array.prototype.slice.call( arguments, 1));
-	} else if ( typeof method === 'object' || !method ) {
-	    response = methods.init.apply( this, arguments );
-	} else {
-	    $.error( 'Method ' + method + ' does not exist on jQuery.todoState' );
-	}
-	return response;
+    	var response;
+    	if ( methods[method] ) {
+    	    response = methods[method].apply( this, Array.prototype.slice.call( arguments, 1));
+    	} else if ( typeof method === 'object' || !method ) {
+    	    response = methods.init.apply( this, arguments );
+    	} else {
+    	    $.error( 'Method ' + method + ' does not exist on jQuery.todoState' );
+    	}
+    	return response;
     };
 }(jQuery)); // end of nodeOutline plugin
 

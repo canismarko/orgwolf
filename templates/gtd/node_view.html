@@ -40,6 +40,10 @@ dl
 {% block script %}
 <!-- Node view script block -->
 {{ block.super }}
+
+<script type="text/javascript" src="{{ STATIC_URL }}gtd-models.js"></script>
+<script type="text/javascript" src="{{ STATIC_URL }}gtd-plugins.js"></script>
+
 <script>
 $('document').ready(function() {
     // Hide non-JS elements
@@ -47,13 +51,15 @@ $('document').ready(function() {
     $('#todo-buttons').remove();
     {% autoescape off %}
     // Project outline applicance
-    start_outline = function() {
-	$('#outline-workspace').nodeOutline( {
-	    todo_states: {{ all_todo_states_json }},
-	    scopes: {{ all_scope_json }}
-	});
-    };
-    start_outline();
+    // start_outline = function() {
+    // 	$('#outline-workspace').nodeOutline( {
+    // 	    todo_states: {{ all_todo_states_json }},
+    // 	    scopes: {{ all_scope_json }}
+    // 	});
+    // };
+    // start_outline();
+    $('#outline-workspace').nodeOutlineApp( {
+    });
     {% endautoescape %}
     {% if parent_node %}
     var heading = new GtdHeading(
@@ -219,5 +225,7 @@ $('document').ready(function() {
     {% endfor %}
   </table>
 </div><!-- /div id="outline-workspace" -->
+
+
 
 {% endblock %}
