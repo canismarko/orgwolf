@@ -50,9 +50,7 @@ $('document').ready(function() {
     // Hide non-JS elements
     $('#add-node').remove();
     $('#todo-buttons').remove();
-    {% autoescape off %}
-    // Project outline applicance
-    {% endautoescape %}
+
     {% if parent_node %}
     var heading = new GtdHeading(
 	{% autoescape off %}{{parent_json}}[0]{% endautoescape %}
@@ -365,5 +363,7 @@ $('document').ready(function() {
     </table>
   </div><!-- /div id="outline-workspace" -->
 </noscript>
+
+
 
 {% endblock %}
