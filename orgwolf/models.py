@@ -81,7 +81,7 @@ class Color:
         """Returns a (red, green, blue, alpha) string. Suitable for use in CSS."""
         # Calls rgb_string and adds alpha
         string = "rgba("
-        string += self.rgb_string()[4:-1] + ", " 
+        string += self.rgb_string()[4:-1] + ", "
         string += str(float(self._alpha)/100) + ")"
         return string
     def rgb_hex(self):

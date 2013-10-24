@@ -388,6 +388,27 @@ test('set_fields() method', function() {
     );
 });
 
+test('update() method', function() {
+    // Test ability to self-update template properties
+    var heading = new GtdHeading(sparse_dict);
+    // See if populating the object induces updating the expandable property
+    heading.populated = true;
+    heading.update();
+    equal(
+	heading.expandable,
+	'no',
+	'Populated heading with no children or text is not expandable'
+    );
+    // Check the expandable property if the heading has text
+    heading = new GtdHeading(full_dict);
+    heading.update();
+    equal(
+	heading.expandable,
+	'yes',
+	'Heading with text is expandable'
+    );
+});
+
 test('MPTT: is_leaf_node', function() {
     // Test various methods related to hierarchical configuration.
     // Uses mptt principles

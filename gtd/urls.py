@@ -23,7 +23,7 @@ from django.conf.urls import patterns, include, url
 from django.contrib import admin
 admin.autodiscover()
 
-from gtd.views import Descendants, NodeView, TreeView
+from gtd.views import Descendants, NodeView, TreeView, TodoStateView
 
 urlpatterns = patterns(
     'gtd.views',
@@ -49,11 +49,18 @@ urlpatterns = patterns(
     # New API urls below
     url(r'^node/(?:(?P<pk>\d+)/)?(?:(?P<slug>[-\w\d]*)/)?(?P<show_all>all/)?$',
         NodeView.as_view(),
-        name='node_object'),
+        name='node_object'
+    ),
     url(r'^node/descendants/(?P<ancestor_pk>\d+)/$',
         Descendants.as_view(),
-        name='node_descendants'),
+        name='node_descendants'
+    ),
     url(r'^tree/(?P<tree_id>\d+)/$',
         TreeView.as_view(),
-        name='tree_view'),
+        name='tree_view'
+    ),
+    url(r'^todostate/(?:(?P<pk>\d+)/)?$',
+        TodoStateView.as_view(),
+        name='todo_state'
+    ),
 )

@@ -40,6 +40,11 @@ dl
 {% block script %}
 <!-- Node view script block -->
 {{ block.super }}
+<script src="http://code.angularjs.org/1.2.0-rc.3/angular.min.js"></script>
+<script src="http://code.angularjs.org/1.2.0-rc.3/angular-animate.min.js"></script>
+<script src="http://code.angularjs.org/1.2.0-rc.3/angular-resource.js"></script>
+<script type="text/javascript" src="{{ STATIC_URL }}gtd-models.js"></script>
+<script type="text/javascript" src="{{ STATIC_URL }}gtd-ctrl.js"></script>
 <script>
 $('document').ready(function() {
     // Hide non-JS elements
@@ -47,13 +52,6 @@ $('document').ready(function() {
     $('#todo-buttons').remove();
     {% autoescape off %}
     // Project outline applicance
-    start_outline = function() {
-	$('#outline-workspace').nodeOutline( {
-	    todo_states: {{ all_todo_states_json }},
-	    scopes: {{ all_scope_json }}
-	});
-    };
-    start_outline();
     {% endautoescape %}
     {% if parent_node %}
     var heading = new GtdHeading(
@@ -160,64 +158,212 @@ $('document').ready(function() {
 </div><!-- /div id="node-detail"-->
 <br />
 
-<div id="outline-workspace" class="outline" data-node_id="{{ node_id }}">
-{% include 'gtd/scope_tabs.html' %}
-  <strong>
-    {% if parent_node %}
-    Children:
+<!-- AngularJS app for child nodes outline -->
+{% verbatim %}
+
+<!-- Inline dialog to allow heading edits -->
+<script type="text/ng-template" id="editable">
+  <div class="editable info" ng-if="heading.editable" ow-editable>
+    <div class="header">
+      <i class="twisty icon-chevron-down" expandable="disabled"></i>
+      <span class="edit-title">{{heading.title}}</span>
+      <button class="btn btn-mini btn-primary" ng-click="edit_save($event)">
+	Save
+      </button>
+      <button class="btn btn-mini" ng-click="edit_cancel($event)">
+	Don't Save
+      </button>
+    </div>
+    <div class="body">
+      <form>
+	<label for="todo_state">Todo State:</label>
+	<select id="todo_state" field="todo_state">
+	  <option ng-repeat="state in todo_states" value="{{ state.pk }}"
+		  style="{{ state | style }}" class="todo-state"
+		  archived="{{ state.fields.closed }}">
+	    {{ state.fields.abbreviation }} ++ {{ state.fields.display_text }}
+	  </option>
+	</select>
+	<label for="priority">Priority:</label>
+	<select id="priority" field="priority">
+	  <option value="A">A</option>
+	  <option value="B" selected>B</option>
+	  <option value="C">C</option>
+	</select>
+	<label for="tag_string">Tag String:</label>
+	<input type="text" id="tag_string" field="tag_string" placeholder="eg. :home:"></input>
+	<label for="deadline_date">Deadline:</label>
+	<input type="text" id="deadline_date" placeholder="YYYY-MM-DD"></input>
+	<input type="text" id="deadline_time" placeholder="HH:MM"></input>
+	<label for="scheduled_date">Scheduled:</label>
+	<input type="text" id="scheduled_date" placeholder="YYYY-MM-DD"></input>
+	<input type="text" id="scheduled_time" placeholder="HH:MM"></input>
+	<label for="repeats" class="checkbox">
+	  Repeats...
+	  <input type="checkbox" id="repeats" field="repeats"></input>
+	</label>
+	<label for="repeating_number">...every...
+	  <input type="text" id="repeating_number" field="repeating_number"
+		 placeholder="number..."
+		 class="input-small">
+		 </input>
+		 <select id="repeating_unit" field="repeating_unit">
+		 <option>days</option>
+		 <option selected>weeks</option>
+		 <option>months</option>
+		 <option>years</option>
+		 </select>
+	</label>
+	<label for="repeat_from_completion" class="checkbox">
+	       ...from completion date.
+	       <input type="checkbox" id="repeat_from_completion"
+		      field="repeats_from_completion"></input>
+		      </label>
+	<label class="checkbox">
+	  <input type="checkbox" id="archived" field="archived"></input>
+	  Archived
+	</label>
+	<label>Scope:</label>
+	<select id="scope" multiple field="scope">
+	</select>
+	<label>Related Projects:</label>
+	<select id="related_projects" multiple field="related_projects">
+	</select>
+	<label>Addition information:</label>
+	<div class="edit-text">{{heading.text}}</div>
+      </form>
+    </div>
+  </div>
+</script>
+
+<!-- Recursive function for tree of Tasks -->
+<script type="text/ng-template" id="outline-tree">
+  <div class="heading {{heading.state}}" node_id="{{heading.pk}}"
+       >
+    <div class="ow-hoverable" ng-click="toggle_node($event)"
+	 ng-show="!heading.editable">
+      <i class="twisty icon-chevron-right"
+	 expandable="{{heading.expandable}}"></i>
+      <span class="todo-state update" data-field="todo_abbr">
+	{{heading.get_todo_state}}
+      </span>
+      <div class="clickable ow-title" archived="{{heading.archived}}">
+	{{heading.title}}
+      </div>
+      <div class="ow-buttons">
+	<i class="icon-pencil edit-btn" title="Edit"></i>
+	<i class="icon-th-list list-btn"
+	   title="View As List">
+	</i>
+	<i class="icon-arrow-right detail-btn"
+	   title="Detail view">
+	</i>
+	<i class="icon-folder-close archive-btn"
+	   title="Archive"
+	   ng-hide="heading.archived">
+	</i>
+	<i class="icon-folder-open archive-btn"
+	   title="Archive"
+	   ng-show="heading.archived">
+	</i>
+	<i class="icon-plus new-btn"
+	   title="New subheading">
+	</i>
+      </div>
+    </div>
+    <div ng-include="'editable'"></div>
+    <div class="details ow-text"
+	 ng-show="heading.state == 'open' && !heading.editable">
+	 {{heading.text}}
+    </div>
+    <div ng-show="heading.state.lazy == 'lazy' && heading.parent_obj.state == 'open'">
+      Loading...
+    </div>
+    <div class="children"
+	 ng-repeat="heading in heading.children"
+	 ng-show="(show_arx || !(heading.archived)) && heading.parent_obj.state == 'open'"
+	 ng-include="'outline-tree'">
+    </div>
+  </div>
+</script>
+
+<!-- Initiate recursion for node tree -->
+<div ng-controller="nodeOutline" id="outline-appliance">
+  <div id="add-heading" class="btn"
+       ng-click="show_all($event)">
+    <i class="icon-folder-close"></i>
+    Show Archived
+    </div>
+  <div class="outline">
+    <div ng-repeat="heading in rank1_headings" class="children"
+	 ng-show="(show_arx || !(heading.archived))">
+      <div ng-include="'outline-tree'"></div>
+    </div>
+  </div>
+</div>
+{% endverbatim %}
+
+<!-- List of child nodes displayed only as graceful fallback -->
+<noscript>
+  <div id="outline-workspace" class="outline" data-node_id="{{ node_id }}">
+    {% include 'gtd/scope_tabs.html' %}
+    <strong>
+      {% if parent_node %}
+	Children:
+      {% else %}
+	Projects:
+      {% endif %}
+    </strong>
+    {% if show_all %}
+      <a href="{{ node_url }}" class="btn">Hide archived</a>
     {% else %}
-    Projects:
+      <a href="{{ node_url }}?archived=True" class="btn">
+	Show archived
+      </a>
     {% endif %}
-  </strong>
-  {% if show_all %}
-  <a href="{{ node_url }}" class="btn">Hide archived</a>
-  {% else %}
-  <a href="{{ node_url }}?archived=True" class="btn">
-    Show archived
-  </a>
-  {% endif %}
-  <table class="table" id="non-js-table" node_id="{{ node_id }}">
-    <tr>
-      <th>State</th>
-      <th>Description</th>
-      <th>Tags</th>
-      <th>Actions</th>
-    </tr>
-    {% for node in child_nodes_qs %}
-    <tr class="ow-heading"
-	data-node_id="{{ node.id }}"
-	data-title="{{ node.title|escape }}"
-	data-todo_id="{{ node.todo_state.pk }}"
-	data-text="{{ node.text|escape }}"
-	data-lft="{{ node.lft }}"
-	data-rght="{{ node.rght }}"
-	data-tree-id="{{ node.tree_id }}"
-	data-level="{{ node.level }}"
-	>
-      <td class="ow-todo">{{ node.todo_state.as_html }}</td>
-      <td class="ow-title">
-        <a href="{{ base_url }}{{ node.pk }}/{{ node.slug }}/">
-	  {{ node.get_title }}
-	  </a>
-      </td>
-      <td class="ow-tags">{{ node.tag_string }}</td>
-      <td class="ow-move">
-	  <form action="{{ base_url }}{{ node.pk }}/edit/" method="POST">
-	  <div class="btn-group">
-	    <button class="btn" type="submit" name="move_up">
-	      <i class="icon-arrow-up"></i><span class="alt">Up</span>
-	    </button>
-	    <button class="btn" type="submit" name="move_down">
-	      <i class="icon-arrow-down"></i><span class="alt">Down</span>
-	    </button>
-	  </div>
-	  <input type="hidden" name="function" value="reorder"></input>
-	  {% csrf_token %}
-	</form>
-      </td>
-    </tr>
-    {% endfor %}
-  </table>
-</div><!-- /div id="outline-workspace" -->
+    <table class="table" id="non-js-table" node_id="{{ node_id }}">
+      <tr>
+	<th>State</th>
+	<th>Description</th>
+	<th>Tags</th>
+	<th>Actions</th>
+      </tr>
+      {% for node in child_nodes_qs %}
+	<tr class="ow-heading"
+	    data-node_id="{{ node.id }}"
+	    data-title="{{ node.title|escape }}"
+	    data-todo_id="{{ node.todo_state.pk }}"
+	    data-text="{{ node.text|escape }}"
+	    data-lft="{{ node.lft }}"
+	    data-rght="{{ node.rght }}"
+	    data-tree-id="{{ node.tree_id }}"
+	    data-level="{{ node.level }}"
+	    >
+	    <td class="ow-todo">{{ node.todo_state.as_html }}</td>
+	    <td class="ow-title">
+              <a href="{{ base_url }}{{ node.pk }}/{{ node.slug }}/">
+		{{ node.get_title }}
+	      </a>
+	    </td>
+	    <td class="ow-tags">{{ node.tag_string }}</td>
+	    <td class="ow-move">
+	      <form action="{{ base_url }}{{ node.pk }}/edit/" method="POST">
+		<div class="btn-group">
+		  <button class="btn" type="submit" name="move_up">
+		    <i class="icon-arrow-up"></i><span class="alt">Up</span>
+		  </button>
+		  <button class="btn" type="submit" name="move_down">
+		    <i class="icon-arrow-down"></i><span class="alt">Down</span>
+		  </button>
+		</div>
+		<input type="hidden" name="function" value="reorder"></input>
+		{% csrf_token %}
+	      </form>
+	    </td>
+	</tr>
+      {% endfor %}
+    </table>
+  </div><!-- /div id="outline-workspace" -->
+</noscript>
 
 {% endblock %}

@@ -599,13 +599,13 @@ $(document).ready(function(){
 
 /*************************************************
 * jQuery nodeList plugin
-* 
+*
 * Implements javascript for a next-actions style
 * list.
-* 
+*
 * Process the following elements:
 * - $(this) is the element that holds the text
-* 
+*
 * Options:
 * - states: list of all todo state to be included
 *   in the list.

@@ -846,6 +846,20 @@ class Descendants(View):
                                       locals(),
                                       RequestContext(request))
 
+class TodoStateView(View):
+    """Handles RESTful retrieval of TodoState objects"""
+    def get(self, request, *args, **kwargs):
+        todo_states = TodoState.get_visible(user=request.user)
+        if request.is_ajax() or not settings.DEBUG_BAR:
+            return HttpResponse(
+                serializers.serialize('json', todo_states)
+            )
+        else:
+            serializers.serialize('json', todo_states)
+            # Non-ajax returns the base template to show django-debug-toolbar
+            return render_to_response('base.html',
+                                      locals(),
+                                      RequestContext(request))
 
 @login_required
 def get_descendants(request, ancestor_pk):

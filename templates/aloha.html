@@ -8,19 +8,33 @@
 {% endif %}
           data-aloha-plugins="common/ui,
                               common/format,
+                              common/highlighteditables,
                               common/list,
                               common/link,
 			      common/block,
 			      common/table,
 			      common/undo">
   </script>
- 
+
   <script>
     // Turn off Aloha sidebar
     Aloha.settings.sidebar = {disabled: true};
     Aloha.settings.plugins = {
 	format: {
 	    config: ['b', 'i', 'del', 'sub', 'sup', 'p', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'pre', 'removeFormat'],
+	    editables: {
+		'.edit-title': []
+	    }
+	},
+	link: {
+	    editables: {
+		'.edit-title': []
+	    }
+	},
+	list: {
+	    editables: {
+		'.edit-title': []
+	    }
 	}
     };
   </script>

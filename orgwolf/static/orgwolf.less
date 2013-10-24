@@ -4,7 +4,7 @@
 @primary-dark: rgb(13, 1, 53);
 @primary-light: rgb(127, 100, 214);
 @primary-pale: rgb(155, 136, 214);
-
+@text-color: rgb(88, 0, 176);
 
 /* Navar */
 #logo.brand
@@ -182,11 +182,6 @@ dd.todo
 {
     display: inline-block;
 }
-.archived-text
-{
-    font-style: italic;
-    .opacify(80);
-}
 /* For moving node */
 .tree
 {
@@ -194,13 +189,15 @@ dd.todo
     padding: 0px;
 }
 /* Javascript outline appliance */
-@anim-speed: 300ms;
+@anim-speed: 500ms;
+@anim-easing: cubic-bezier(0.680, -0.550, 0.265, 1.550);
 .opacify (@opacity) { /* 0 to 100 */
     opacity: (@opacity/100);
     filter:alpha(opacity=@opacity);
 }
 .outline
 {
+    margin-top: 20px;
     margin-bottom: 50px;
 }
 .pointer, .ow-buttons, .add-heading, .todo-state, .todo-option
@@ -214,10 +211,6 @@ dd.todo
 #show-all-label
 {
     margin-left: 4px;
-}
-.ow-hoverable > i
-{
-    .opacify(0);
 }
 .ow-hoverable
 {
@@ -235,28 +228,43 @@ dd.todo
 {
     cursor: pointer;
 }
-.expandable > .ow-hoverable > i
-{
-    .opacify(100)
-}
-.lazy-expandable > .ow-hoverable > i
-{
+/* Twisty icon for outline nodes */
+.twisty[expandable='lazy'] {
     .opacify(75);
 }
-.arch-expandable > .ow-hoverable > i
-{
-    .opacify(30);
+.twisty[expandable='yes'] {
+    .opacify(100);
 }
+.twisty[expandable='disabled'] {
+    .opacify(25);
+}
+.twisty[expandable='no'] {
+    .opacify(0);
+}
+
+/* .expandable > .ow-hoverable > i */
+/* { */
+/*     .opacify(100) */
+/* } */
+/* .lazy-expandable > .ow-hoverable > i */
+/* { */
+/*     .opacify(75); */
+/* } */
+/* .arch-expandable > .ow-hoverable > i */
+/* { */
+/*     .opacify(30); */
+/* } */
 .heading
 {
     overflow: hidden;
+    color: @text-color;
 }
 .heading i.twisty, .heading div.details, .heading div.loading, .heading
 {
-    transition: opacity @anim-speed, transform @anim-speed;
-    -webkit-transition: opacity @anim-speed, -webkit-transform @anim-speed;
-    -moz-transition: opacity @anim-speed, -moz-transform @anim-speed;
-    -o-transition: opacity @anim-speed, -o-transform @anim-speed;
+    transition: opacity @anim-speed, transform @anim-speed, padding-top @anim-speed;
+    -webkit-transition: opacity @anim-speed, -webkit-transform @anim-speed, padding-top @anim-speed;
+    -moz-transition: opacity @anim-speed, -moz-transform @anim-speed, padding-top @anim-speed;
+    -o-transition: opacity @anim-speed, -o-transform @anim-speed, padding-top @anim-speed;
 }
 .rotate (@angle) {
     -moz-transform: rotate(@angle);
@@ -264,28 +272,92 @@ dd.todo
     -o-transform: rotate(@angle);
     transform: rotate(@angle);
 }
+/* Transitions to uncover details, children and edit-box */
+.testing,.children,.heading,.editable,.details {
+    &.ng-hide-remove,&.ng-hide-add {
+	-webkit-transition: all @anim-easing @anim-speed;
+	-moz-transition: all @anim-easing @anim-speed;
+	-ms-transition: all @anim-easing @anim-speed;
+	-o-transition: all @anim-easing @anim-speed;
+	transition: all @anim-easing @anim-speed;
+	display: block !important;
+	position: relative;
+	overflow: hidden;
+	text-overflow: clip;
+	white-space: nowrap;
+    }
+    &.ng-hide-remove,
+    &.ng-hide-add-active.ng-hide-add,
+    &.ng-enter {
+	.opacify(0);
+	height: 0px;
+    }
+    &.ng-hide-add,
+    &.ng-hide-remove-active.ng-hide-remove,
+    &.ng-enter-active.ng-enter
+    {
+	.opacify(100);
+	height: 20px;
+    }
+}
+
 .hidden {
     height: 0px;
 }
 .heading {
-    > .ow-hoverable > i {
-	/* .rotate(0deg); */
+    padding-left: 14px;
+    > .details {
+	color: black;
     }
     > .details {
-	.opacify(0);
+	margin-left: 14px;
     }
 }
 .heading.open {
+    padding-top: 3px;
     > .ow-hoverable > i {
     	.rotate(90deg);
     }
-    > .details {
-	.opacify(100);
+}
+/* Text styles for various statuses */
+.ow-title,.todo-state {
+    &[archived="true"] {
+	font-style: italic;
+	.opacify(80);
+    }
+}
+.todo-state {
+    &[actionable="true"] {
+	font-weight: bold;
     }
 }
 div.ow-hoverable, div.clickable, div.ow-buttons
 {
     display: inline-block;
+    cursor: pointer;
+}
+.editable {
+    position: relative;
+    left: -5px;
+    top: -3px;
+    padding-bottom: 10px;
+    .edit-title {
+	margin-right: 5px;
+    }
+    .body {
+	color: black;
+	background: pink;
+	border-bottom-left-radius: 10px;
+	border-bottom-right-radius: 10px;
+    }
+    .body,.header {
+	padding: 3px 5px 3px 5px;
+    }
+    .header {
+	background: rgb(192, 192, 192);
+	border-top-left-radius: 10px;
+	border-top-right-radius: 10px;
+    }
 }
 .popover
 {
