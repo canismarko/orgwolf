@@ -122,6 +122,7 @@ MIDDLEWARE_CLASSES = [
     'django.contrib.messages.middleware.MessageMiddleware',
     # Uncomment the next line for simple clickjacking protection:
     # 'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'orgwolf.middleware.AjaxMiddleware',
     'orgwolf.middleware.MobileDetectionMiddleware',
 ]
 
@@ -133,7 +134,6 @@ TEMPLATE_CONTEXT_PROCESSORS += (
     'orgwolf.context_processors.scope_context',
     'django.core.context_processors.request',
     )
-    
 
 ROOT_URLCONF = 'orgwolf.urls'
 

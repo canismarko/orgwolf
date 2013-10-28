@@ -21,7 +21,9 @@ var full_dict = {
 	rght: 15,
 	todo_state: '1',
 	tag_string: ':comp:',
-	scope: [1, 2]
+	scope: [1, 2],
+	archived: false,
+	related_projects: [],
     }
 };
 var bad_parent_dict = {
@@ -382,9 +384,14 @@ test('set_fields() method', function() {
 	'sets primary key'
     );
     equal(
-	heading.scope,
+	heading.fields.scope,
 	full_dict.fields.scope,
 	'Scope set'
+    );
+    deepEqual(
+	heading.fields,
+	full_dict.fields,
+	'Fields objects set'
     );
 });
 
@@ -415,12 +422,12 @@ test('MPTT: is_leaf_node', function() {
     var heading = new GtdHeading();
     heading.set_fields(full_dict);
     equal(
-	heading.lft,
+	heading.fields.lft,
 	full_dict.fields.lft,
 	'GtdHeading.lft set correctly'
     );
     equal(
-	heading.rght,
+	heading.fields.rght,
 	full_dict.fields.rght,
 	'GtdHeading.rght set correctly'
     );
@@ -430,14 +437,14 @@ test('MPTT: is_leaf_node', function() {
 	'GtdHeading.is_leaf_node() returns true if lft/rght indicate no child'
     )
     // Pretend there's a child and check again
-    heading.rght = heading.rght+2;
+    heading.fields.rght = heading.fields.rght+2;
     strictEqual(
 	heading.is_leaf_node(),
 	false,
 	'GtdHeading.is_leaf_node() returns false if lft/rght indicate a child'
     );
     // Delete heading.rght and chack again
-    delete heading.rght;
+    delete heading.fields.rght;
     equal(
 	heading.is_leaf_node(),
 	undefined,
@@ -450,7 +457,8 @@ test('MPTT: is_leaf_node', function() {
 module('nodeOutline jQuery plugin');
 
 test('creates initial heading objects', function() {
-    // See if the function finds the existing workspace and sets the right number of children with the right attributes and data
+    // See if the function finds the existing workspace and sets the
+    // right number of children with the right attributes and data
     var $workspace = $('#test_workspace');
     $workspace.nodeOutline();
     var outline = $workspace.data('nodeOutline');

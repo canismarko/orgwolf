@@ -113,7 +113,8 @@ class HTMLEscaper(HTMLParser):
         HTMLParser.reset(self)
         self._cleaned = unicode('')
     def clean(self, data):
-        self.feed(data)        
+        if data is not None:
+            self.feed(data)
         return self._cleaned
     def handle_starttag(self, tag, attrs):
         self.found = True

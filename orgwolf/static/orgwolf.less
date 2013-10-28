@@ -190,7 +190,8 @@ dd.todo
 }
 /* Javascript outline appliance */
 @anim-speed: 500ms;
-@anim-easing: cubic-bezier(0.680, -0.550, 0.265, 1.550);
+/* @anim-easing: cubic-bezier(0.68, -0.55, 0.27, 1.55); */
+@anim-easing: cubic-bezier(0.68, 0, 0.27, 1);
 .opacify (@opacity) { /* 0 to 100 */
     opacity: (@opacity/100);
     filter:alpha(opacity=@opacity);
@@ -261,10 +262,10 @@ dd.todo
 }
 .heading i.twisty, .heading div.details, .heading div.loading, .heading
 {
-    transition: opacity @anim-speed, transform @anim-speed, padding-top @anim-speed;
     -webkit-transition: opacity @anim-speed, -webkit-transform @anim-speed, padding-top @anim-speed;
     -moz-transition: opacity @anim-speed, -moz-transform @anim-speed, padding-top @anim-speed;
     -o-transition: opacity @anim-speed, -o-transform @anim-speed, padding-top @anim-speed;
+    transition: opacity @anim-speed, transform @anim-speed, padding-top @anim-speed;
 }
 .rotate (@angle) {
     -moz-transform: rotate(@angle);
@@ -273,8 +274,8 @@ dd.todo
     transform: rotate(@angle);
 }
 /* Transitions to uncover details, children and edit-box */
-.testing,.children,.heading,.editable,.details {
-    &.ng-hide-remove,&.ng-hide-add {
+.testing,.children,.heading,.editable,.details,.ow-hoverable {
+    &.ng-hide-remove,&.ng-hide-add,&.ng-enter,&.ng-leave {
 	-webkit-transition: all @anim-easing @anim-speed;
 	-moz-transition: all @anim-easing @anim-speed;
 	-ms-transition: all @anim-easing @anim-speed;
@@ -288,16 +289,27 @@ dd.todo
     }
     &.ng-hide-remove,
     &.ng-hide-add-active.ng-hide-add,
-    &.ng-enter {
+    {
 	.opacify(0);
 	height: 0px;
     }
     &.ng-hide-add,
     &.ng-hide-remove-active.ng-hide-remove,
-    &.ng-enter-active.ng-enter
     {
 	.opacify(100);
 	height: 20px;
+    }
+    &.ng-enter,
+    &.ng-leave.ng-leave-active
+    {
+	.opacify(0);
+	height: 0px;
+    }
+    &.ng-leave,
+    &.ng-enter-active.ng-enter
+    {
+	.opacify(100);
+	height: 672px;
     }
 }
 
@@ -306,6 +318,7 @@ dd.todo
 }
 .heading {
     padding-left: 14px;
+    padding-right: 8px;
     > .details {
 	color: black;
     }
@@ -320,13 +333,13 @@ dd.todo
     }
 }
 /* Text styles for various statuses */
-.ow-title,.todo-state {
+.ow-hoverable,.todo-state {
     &[archived="true"] {
 	font-style: italic;
 	.opacify(80);
     }
 }
-.todo-state {
+.ow-hoverable,.todo-state {
     &[actionable="true"] {
 	font-weight: bold;
     }

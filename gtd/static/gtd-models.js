@@ -13,17 +13,21 @@ GtdHeading = function ( args ) {
     // Set defaults in the constructor
     //   Setting specific field values occurs in the set_fields() method
     //   which is called at the end of the constructor
+    this.fields = {
+	archived: false,
+	todo_state: null,
+	text: '',
+	scope: [],
+	related_projects: [],
+    };
     this.pk = 0;
-    this.populated = false;
-    this.text = '';
-    this.expandable = 'lazy';
-    this.todo_state = 0;
     this.archived = false;
+    this.populated = false;
+    this.expandable = 'lazy';
     this.rank = 1;
     this.state = 'closed';
     this.visible = false;
-    this.scope = [];
-    this.related_projects = [];
+    this.fields.scope = [];
     this.children = new HeadingManager(args.workspace);
     // Now update the fields with passed values
     this.set_fields( args );
@@ -65,16 +69,17 @@ GtdHeading.prototype.set_fields = function( node ) {
 	}
     }
     // Set fields
-    for ( field in node.fields ) {
-	if ( node.fields.hasOwnProperty(field) ) {
-	    // Check for datestring
-	    if (date_re.exec(node.fields[field])) {
-		this[field] = new Date( node.fields[field] );
-	    } else {
-		this[field] = node.fields[field];
-	    }
-	}
-    }
+    jQuery.extend(this.fields, node.fields);
+    // for ( field in node.fields ) {
+    // 	if ( node.fields.hasOwnProperty(field) ) {
+    // 	    // Check for datestring
+    // 	    if (date_re.exec(node.fields[field])) {
+    // 		this[field] = new Date( node.fields[field] );
+    // 	    } else {
+    // 		this[field] = node.fields[field];
+    // 	    }
+    // 	}
+    // };
 };
 
 GtdHeading.prototype.get_todo_state = function() {
@@ -174,12 +179,12 @@ GtdHeading.prototype.get_previous_sibling = function() {
 GtdHeading.prototype.get_parent = function() {
     var parent;
     if ( this.rank > 0 && this.workspace ) {
-	if ( this.parent === null ) {
+	if ( this.fields.parent === null ) {
 	    // null parent attribute means return heading pk=0
 	    parent = this.workspace.headings.get({pk: 0});
 	    parent = parent ? parent : this.workspace;
 	} else {
-	    parent = this.workspace.headings.get({pk: this.parent});
+	    parent = this.workspace.headings.get({pk: this.fields.parent});
 	}
     } else {
 	parent = null;
@@ -217,9 +222,10 @@ GtdHeading.prototype.refresh_tree = function() {
 
 GtdHeading.prototype.is_leaf_node = function() {
     var status;
-    if (this.rght-this.lft === 1) {
+    console.log(this.fields);
+    if (this.fields.rght-this.fields.lft === 1) {
 	status = true;
-    } else if (this.rght-this.lft > 1) {
+    } else if (this.fields.rght-this.fields.lft > 1) {
 	status = false;
     } else {
 	status = undefined;
@@ -286,8 +292,10 @@ GtdHeading.prototype.update = function() {
     // Should be called after significant changes are made
     // to the heading's properties. Should also update ancestors
     // if necessary.
+
+    // First update expandability
     re = /\S+/;
-    if ( re.test(this.text) ) {
+    if ( re.test(this.fields.text) ) {
 	this.expandable = 'yes';
     } else if (this.populated) {
 	// Inspect the number of descendants for correct tree structure
@@ -297,11 +305,34 @@ GtdHeading.prototype.update = function() {
 	    this.expandable = 'no';
 	}
     }
+    // Now update todostate
+    this.todo_state = this.workspace.todo_states.get({pk: this.fields.todo_state});
 };
 
 GtdHeading.prototype.save = function() {
     // Method sends changes back to the server
-    woijef;
+    var url, method, data;
+    url = '/gtd/node/';
+    data = {pk: this.pk, model: this.model, fields: this.fields}
+    if ( this.pk > 0 ) {
+	// Existing Node instance
+	url += this.pk + '/';
+	method = 'PUT';
+    } else {
+	// New Node instance
+	method = 'POST';
+    }
+    jQuery.ajax(url, {
+	type: method,
+	data: JSON.stringify(data),
+	contentType: 'application/json',
+	success: function(data, status, jqXHR) {
+	},
+	error: function(data, status, jqXHR) {
+	    alert('Not saved');
+	    console.error(data.responseText);
+	},
+    });
 }
 
 GtdHeading.prototype.move_to = function(target, options) {
@@ -563,7 +594,9 @@ GtdHeading.prototype.toggle = function( direction ) {
     // Populate children if not already done
     this.populate_children();
     // Show or hide the children div based on present state
-    if(this.state === 'open') {
+    if ( typeof direction !== 'undefined' ) {
+	this.state = direction
+    } else if(this.state === 'open') {
 	this.state = 'closed';
     } else if (this.state === 'closed') {
 	this.state = 'open';

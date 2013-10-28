@@ -599,7 +599,14 @@ class Node(MPTTModel):
                 # Set foreign keys
                 if isinstance(fields[key], list):
                     fields[key] = fields[key][0]
-                self.todo_state = TodoState.objects.get(pk=fields[key])
+                if isinstance(fields[key], (int, long)):
+                    self.todo_state = TodoState.objects.get(pk=fields[key])
+                else:
+                    self.todo_state = None
+            elif key == 'owner' and isinstance(fields[key], (int, long)):
+                self.owner = User.objects.get(pk=fields[key])
+            elif key == 'parent' and isinstance(fields[key], (int, long)):
+                self.parent = Node.objects.get(pk=fields[key])
             elif key in boolean_fields:
                 if isinstance(fields[key], list):
                     fields[key] = fields[key][0]
@@ -613,7 +620,7 @@ class Node(MPTTModel):
 
     # Override superclass save methods
     def save(self, *args, **kwargs):
-        if not self.id:
+        if self.slug is None:
             # set slug field on newly created nodes
             new_slug = slugify(self.title)
             if len(new_slug) > 50:

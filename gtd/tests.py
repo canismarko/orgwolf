@@ -388,6 +388,18 @@ class EditNode(TestCase):
                 response,
                 state
             )
+    def test_set_fields(self):
+        """Test the ability of a node to set its own fields given a dict"""
+        node = Node.objects.get(pk=2)
+        self.assertEqual(
+            len(node.related_projects.all()),
+            0
+        )
+        node.set_fields({'related_projects': [1]})
+        self.assertEqual(
+            node.related_projects.all()[0].pk,
+            1
+        )
 
 class NodeOrder(TestCase):
     """Holds tests for accessing and modifying the order of nodes"""

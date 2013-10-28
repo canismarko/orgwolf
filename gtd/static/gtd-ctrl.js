@@ -3,6 +3,43 @@
 *
 /*************************************************/
 var gtd_module = angular.module('orgWolf', ['ngAnimate', 'ngResource']);
+gtd_module.config(function($httpProvider) {
+    // Add custom headers to $http objects
+    $httpProvider.defaults.headers.common['X-Request-With'] = 'XMLHttpRequest';
+    // Add django CSRF token to all jQuery.ajax() requests
+    function getCookie(name) {
+	var cookieValue, cookies, i, cookie;
+	cookieValue = null;
+	if (document.cookie && document.cookie !== '') {
+            cookies = document.cookie.split(';');
+            for (i = 0; i < cookies.length; i += 1) {
+		cookie = jQuery.trim(cookies[i]);
+		// Does this cookie string begin with the name we want?
+		if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+		}
+            }
+	}
+	return cookieValue;
+    }
+    var csrftoken = getCookie('csrftoken');
+    $.ajaxSetup({
+	beforeSend: function(xhr) {
+	    xhr.setRequestHeader('X-CSRFToken', csrftoken);
+	}
+    });
+});
+
+/*************************************************
+* Factory creates GtdHeading objects
+*
+/*************************************************/
+gtd_module.factory('Heading', function() {
+    return function(data) {
+	return new GtdHeading(data);
+    }
+});
 
 /*************************************************
 * Filter that determines TodoState color
@@ -12,7 +49,9 @@ gtd_module.filter('style', function() {
     return function(obj) {
 	var style, c;
 	style = '';
-	if ( obj.model === 'gtd.todostate' ) {
+	if (obj === null || obj === undefined) {
+	    style = null;
+	} else if ( obj.model === 'gtd.todostate' ) {
 	    // First decode color into rgb
 	    c = {}
 	    c.RED_OFFSET = 16 // in bits
@@ -37,49 +76,90 @@ gtd_module.filter('style', function() {
 /*************************************************/
 gtd_module.directive('owEditable', function() {
     // Directive creates the pieces that allow the user to edit a heading
-    return function(scope, element, attrs) {
-	var $title = element.find('.edit-title');
-	var $text = element.find('.edit-text');
-	Aloha.ready( function () {
-	    Aloha.jQuery($title).aloha();
-	    Aloha.jQuery($text).aloha();
-	});
+    function link(scope, element, attrs) {
+	var $text, heading;
+	scope.fields = jQuery.extend(true, {}, scope.heading.fields);
+	scope.priorities = ['A', 'B', 'C'];
+	scope.time_units = [
+	    {value: 'd', label: 'Days'},
+	    {value: 'w', label: 'Weeks'},
+	    {value: 'm', label: 'Months'},
+	    {value: 'y', label: 'Years'},
+	];
+	$text = element.find('.edit-text');
+	$save = element.find('#edit-save');
 	// Scroll so element is in view
-	$('body').animate({scrollTop: element.offset().top-14}, '500');
-    };
+	$('body').animate({scrollTop: element.offset().top - 27}, '500');
+	// Event handlers for the editable dialog
+	scope.save = function(e) {
+	    // Tasks for when the user saves the edited heading
+	    scope.heading.fields = scope.fields;
+	    scope.heading.update();
+	    scope.heading.editable = false;
+	    scope.heading.save();
+	};
+    }
+    return {
+	link: link
+    }
+});
+
+/*************************************************
+* Directive that lets a user edit a node
+*
+/*************************************************/
+gtd_module.directive('owTodo', function() {
+    // Directive creates the pieces that allow the user to edit a heading
+    function link(scope, element, attrs) {
+	var $span, $popover;
+	if (scope.heading.todo_state) {
+	    element.tooltip({
+		delay: {show:1000, hide: 100},
+		title: scope.heading.todo_state.fields.display_text,
+		placement: 'right'
+	    });
+	}
+	$span = element.children('span');
+	$popover = element.children('.popover');
+	$span.on('click', function(e) {
+	    alert('todostate not yet implemented');
+	    // $popover.show();
+	});
+    }
+    return {
+	link: link,
+	templateUrl: 'todo-state-selector',
+    }
 });
 
 /*************************************************
 * Angular project ouline appliance controller
 *
 /*************************************************/
-gtd_module.controller('nodeOutline', ['$scope', '$http', '$resource', function($scope, $http, $resource) {
-    var TodoState
+gtd_module.controller('nodeOutline', function($scope, $http, $resource, Heading, $element) {
+    var TodoState, url;
     // modified array to hold all the tasks
     $scope.headings = new HeadingManager($scope);
     $scope.children = new HeadingManager($scope);
+    // Get id of parent heading
+    $scope.parent_id = $element.attr('parent_id');
+    if ($scope.parent_id === '') {
+	$scope.parent_id = 0;
+    } else {
+	$scope.parent_id = parseInt($scope.parent_id);
+    }
     $scope.show_arx = false;
     $scope.state = 'open';
     $scope.rank = 0;
-    // Example of adding HTTP headers for django Request.is_ajax()
-    var Node = $resource('/gtd/node/1/', {}, {
-    	get: {
-    	    method: "GET",
-    	    headers: {
-    		'X-Requested-With': 'XMLHttpRequest'
-    	    }
-    	}
-    });
-    // console.log(Node.get());
     // Get all TodoState's for later use
-    TodoState = $resource('/gtd/todostate/')
-    $scope.todo_states = TodoState.query({isArray: true});
-    Children = $resource('/gtd/node/descendants/0/')
-    // $scope.headings.add(Children.query());
-    $http({method: 'GET', url: '/gtd/node/descendants/0/'}).
+    TodoState = $resource('/gtd/todostate/');
+    $scope.todo_states = TodoState.query();
+    // Children = $resource('/gtd/node/descendants/0/');
+    url = '/gtd/node/descendants/' + $scope.parent_id + '/';
+    $http({method: 'GET', url: url}).
     	success(function(data, status, headers, config) {
     	    for ( var i=0; i<data.length; i++ ) {
-    		data[i].fields.workspace = $scope;
+    		data[i].workspace = $scope;
     	    }
     	    $scope.headings.add(data);
     	    $scope.rank1_headings = $scope.headings.filter_by({rank: 1});
@@ -106,14 +186,25 @@ gtd_module.controller('nodeOutline', ['$scope', '$http', '$resource', function($
 	    heading.populate_children();
 	    heading.state = 'open';
 	    heading.editable = true;
-	    $scope.edit_title = heading.title;
+	} else if ( $target.hasClass('todo-state') ) {
+
 	} else if ( $target.hasClass('archive-btn') ) {
-	    if ( heading.archived ) {
-		heading.archived = false;
+	    if ( heading.fields.archived ) {
+		heading.fields.archived = false;
 	    } else {
-		heading.archived = true;
+		heading.fields.archived = true;
 	    }
 	    heading.save();
+	} else if ( $target.hasClass('new-btn') ) {
+	    new_heading = Heading({workspace: heading.workspace,
+				   fields: {
+				       title: 'New Heading',
+				       parent: heading.pk
+				   }});
+	    new_heading.editable = true;
+	    new_heading.save();
+	    heading.children.add(new_heading);
+	    heading.toggle('open');
 	} else {
 	    // Default action: opening the heading
 	    heading.toggle();
@@ -133,23 +224,4 @@ gtd_module.controller('nodeOutline', ['$scope', '$http', '$resource', function($
 	heading = get_heading(e);
 	heading.editable = false;
     };
-    $scope.edit_save = function(e) {
-	// If edited nodes is saved
-	var heading, data, $fields, $editable;
-	data = {};
-	data.fields = {};
-	$heading = $(e.delegateTarget).closest('.heading');
-	node_id = Number($heading.attr('node_id'))
-	$editable = $(e.target).closest('.editable');
-	// Sort through the fields and process
-	$fields = $editable.find('[field]');
-	data.pk = node_id;
-	data.model = 'gtd.node';
-	$fields.each( function(i) {
-	    var $this = $(this);
-	    data.fields[$this.attr('field')] = $this.val();
-	});
-	// Create new model from fields
-	heading = new GtdHeading(data);
-    }
-}]);
+});

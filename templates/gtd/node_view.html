@@ -167,35 +167,33 @@ $('document').ready(function() {
 
 <!-- Inline dialog to allow heading edits -->
 <script type="text/ng-template" id="editable">
-  <div class="editable info" ng-if="heading.editable" ow-editable>
+  <div class="editable info" ng-if="heading.editable" ow-editable node-id="{{heading.pk}}">
     <div class="header">
       <i class="twisty icon-chevron-down" expandable="disabled"></i>
-      <span class="edit-title">{{heading.title}}</span>
-      <button class="btn btn-mini btn-primary" ng-click="edit_save($event)">
+      <span>{{heading.fields.title}}</span>
+      <button class="btn btn-mini btn-primary" ng-click="save($event)">
 	Save
       </button>
-      <button class="btn btn-mini" ng-click="edit_cancel($event)">
+      <button class="btn btn-mini" ng-click="heading.editable = false;">
 	Don't Save
       </button>
     </div>
     <div class="body">
       <form>
+	<label for="title">Title:</label>
+	<input type="text" ng-model="fields.title"></input>
 	<label for="todo_state">Todo State:</label>
-	<select id="todo_state" field="todo_state">
-	  <option ng-repeat="state in todo_states" value="{{ state.pk }}"
-		  style="{{ state | style }}" class="todo-state"
-		  archived="{{ state.fields.closed }}">
-	    {{ state.fields.abbreviation }} ++ {{ state.fields.display_text }}
-	  </option>
+	<select id="todo_state" ng-model="fields.todo_state"
+		ng-options="state.pk as (state.fields.abbreviation + ' - ' + state.fields.display_text) for state in todo_states">
+	  <option value="">----------</option>
 	</select>
 	<label for="priority">Priority:</label>
-	<select id="priority" field="priority">
-	  <option value="A">A</option>
-	  <option value="B" selected>B</option>
-	  <option value="C">C</option>
+	<select id="priority" ng-model="fields.priority"
+		ng-options="x for x in priorities">
 	</select>
 	<label for="tag_string">Tag String:</label>
-	<input type="text" id="tag_string" field="tag_string" placeholder="eg. :home:"></input>
+	<input type="text" id="tag_string" placeholder="eg. :home:"
+	       ng-model="fields.tag_string"></input>
 	<label for="deadline_date">Deadline:</label>
 	<input type="text" id="deadline_date" placeholder="YYYY-MM-DD"></input>
 	<input type="text" id="deadline_time" placeholder="HH:MM"></input>
@@ -204,40 +202,52 @@ $('document').ready(function() {
 	<input type="text" id="scheduled_time" placeholder="HH:MM"></input>
 	<label for="repeats" class="checkbox">
 	  Repeats...
-	  <input type="checkbox" id="repeats" field="repeats"></input>
+	  <input type="checkbox" id="repeats" ng-model="fields.repeats"></input>
 	</label>
 	<label for="repeating_number">...every...
-	  <input type="text" id="repeating_number" field="repeating_number"
-		 placeholder="number..."
+	  <input type="text" id="repeating_number" placeholder="number..."
+		 ng-model="fields.repeating_number"
 		 class="input-small">
 		 </input>
-		 <select id="repeating_unit" field="repeating_unit">
-		 <option>days</option>
-		 <option selected>weeks</option>
-		 <option>months</option>
-		 <option>years</option>
+		 <select id="repeating_unit"
+			 ng-model="fields.repeating_unit"
+			 ng-options="unit.value as unit.label for unit in time_units">
 		 </select>
 	</label>
 	<label for="repeat_from_completion" class="checkbox">
 	       ...from completion date.
 	       <input type="checkbox" id="repeat_from_completion"
-		      field="repeats_from_completion"></input>
+		      ng-model="fields.repeats_from_completion"></input>
 		      </label>
 	<label class="checkbox">
-	  <input type="checkbox" id="archived" field="archived"></input>
+	  <input type="checkbox" id="archived"
+		 ng-model="fields.archived">
+		 </input>
 	  Archived
 	</label>
 	<label>Scope:</label>
-	<select id="scope" multiple field="scope">
-	</select>
-	<label>Related Projects:</label>
-	<select id="related_projects" multiple field="related_projects">
+	<select id="scope" multiple ng-model="fields.scope"
+		ng-options="a for a in ['A', 'B']">
 	</select>
 	<label>Addition information:</label>
-	<div class="edit-text">{{heading.text}}</div>
+	<div class="edit-text">{{heading.fields.text}}</div>
       </form>
     </div>
   </div>
+</script>
+
+<script type="text/ng-template" id="todo-state-selector">
+  <span class="todo-state" style="{{heading.todo_state | style }}"
+	ng-click="console.log('hello')">
+    {{ heading.todo_state.fields.abbreviation }}
+	</span>
+  <div class="popover right todostate">
+  <div class="arrow"></div>
+  <div class="popover-title">Todo State</div>
+  <div class="popover-inner">
+  </div>
+</div>
+
 </script>
 
 <!-- Recursive function for tree of Tasks -->
@@ -245,30 +255,30 @@ $('document').ready(function() {
   <div class="heading {{heading.state}}" node_id="{{heading.pk}}"
        >
     <div class="ow-hoverable" ng-click="toggle_node($event)"
-	 ng-show="!heading.editable">
+	 ng-show="!heading.editable"
+	 archived="{{heading.fields.archived}}"
+	 actionable="{{ heading.todo_state.fields.actionable }}">
       <i class="twisty icon-chevron-right"
 	 expandable="{{heading.expandable}}"></i>
-      <span class="todo-state update" data-field="todo_abbr">
-	{{heading.get_todo_state}}
+      <span class="todo-state" ow-todo>
       </span>
-      <div class="clickable ow-title" archived="{{heading.archived}}">
-	{{heading.title}}
+      <div class="clickable ow-title">
+	{{heading.fields.title}}
       </div>
       <div class="ow-buttons">
 	<i class="icon-pencil edit-btn" title="Edit"></i>
-	<i class="icon-th-list list-btn"
-	   title="View As List">
-	</i>
-	<i class="icon-arrow-right detail-btn"
-	   title="Detail view">
-	</i>
+	<a href="/gtd/lists/parent{{ heading.pk }}/next/">
+	  <i class="icon-th-list list-btn"
+	     title="View As List">
+	     </i>
+	</a>
 	<i class="icon-folder-close archive-btn"
 	   title="Archive"
-	   ng-hide="heading.archived">
+	   ng-hide="heading.fields.archived">
 	</i>
 	<i class="icon-folder-open archive-btn"
 	   title="Archive"
-	   ng-show="heading.archived">
+	   ng-show="heading.fields.archived">
 	</i>
 	<i class="icon-plus new-btn"
 	   title="New subheading">
@@ -278,21 +288,24 @@ $('document').ready(function() {
     <div ng-include="'editable'"></div>
     <div class="details ow-text"
 	 ng-show="heading.state == 'open' && !heading.editable">
-	 {{heading.text}}
+	 {{heading.fields.text}}
     </div>
     <div ng-show="heading.state.lazy == 'lazy' && heading.parent_obj.state == 'open'">
       Loading...
     </div>
     <div class="children"
 	 ng-repeat="heading in heading.children"
-	 ng-show="(show_arx || !(heading.archived)) && heading.parent_obj.state == 'open'"
+	 ng-show="(show_arx || !(heading.fields.archived)) && heading.parent_obj.state == 'open'"
 	 ng-include="'outline-tree'">
     </div>
   </div>
 </script>
 
 <!-- Initiate recursion for node tree -->
-<div ng-controller="nodeOutline" id="outline-appliance">
+{% endverbatim %}
+<div ng-controller="nodeOutline" id="outline-appliance"
+     parent_id="{{ parent_node.pk }}">
+{% verbatim %}
   <div id="add-heading" class="btn"
        ng-click="show_all($event)">
     <i class="icon-folder-close"></i>
@@ -300,7 +313,7 @@ $('document').ready(function() {
     </div>
   <div class="outline">
     <div ng-repeat="heading in rank1_headings" class="children"
-	 ng-show="(show_arx || !(heading.archived))">
+	 ng-show="(show_arx || !(heading.fields.archived))">
       <div ng-include="'outline-tree'"></div>
     </div>
   </div>

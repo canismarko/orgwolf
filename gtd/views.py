@@ -30,8 +30,8 @@ from django.core import serializers
 from django.core.urlresolvers import reverse
 from django.db.models import Q
 from django.forms.models import model_to_dict
-from django.http import (
-    HttpResponse, HttpResponseRedirect, Http404, HttpResponseBadRequest)
+from django.http import (HttpResponse, HttpResponseRedirect, Http404,
+                         HttpResponseBadRequest, HttpResponseNotAllowed)
 from django.shortcuts import render_to_response, redirect, get_object_or_404
 from django.template import RequestContext
 from django.template.loader import render_to_string
@@ -704,6 +704,8 @@ class NodeView(DetailView):
         )
 
     def post(self, request, *args, **kwargs):
+        if request.is_ajax():
+            return self.ajax_post(request, *args, **kwargs)
         post = request.POST
         url_kwargs = {}
         new = "No"
@@ -725,9 +727,7 @@ class NodeView(DetailView):
             new_url = reverse('django.contrib.auth.views.login')
             new_url += '?next=' + base_url + node_id + '/'
             return redirect(new_url)
-        if request.is_ajax():
-            return self.ajax_post(request, *args, **kwargs)
-        elif (request.method == "POST" and
+        if (request.method == "POST" and
               request.POST.get('function') == 'reorder'):
             # User is trying to move the node up or down
             if 'move_up' in request.POST:
@@ -786,32 +786,38 @@ class NodeView(DetailView):
 
         Returns: JSON object of all node fields, with changes.
         """
-        # Unpack arguments
-        node_id = kwargs['pk']
         post = request.POST
-        if post.get('form') == 'modal':
-            # Form posted from the modal javascript dialog
-            if post.get('todo_state') == '0':
-                post.pop('todo_state')
-            form = NodeForm(post, instance=self.node)
-            if form.is_valid():
-                if post.get('auto_update') == 'false':
-                    form.auto_update = False
-                form.save()
-                self.node = Node.objects.get(pk=self.node.pk)
-                # Prepare the response
-                node_data = self.node.as_pre_json()
-            else:
-                print(form.errors)
-                return HttpResponseBadRequest(form.errors)
-        else: # if post.get('form') != 'modal':
-            # Text
-            self.node.set_fields(post)
+        if post['pk'] == 0:
+            # New node is being created
+            self.node = Node()
+            self.node.owner = request.user
             self.node.save()
-            self.node = Node.objects.get(pk=self.node.pk)
+        self.node.set_fields(post['fields'])
+        self.node.save()
+        self.node = Node.objects.get(pk=self.node.pk)
         data = serializers.serialize('json', [self.node])
         return HttpResponse(json.dumps(data))
-
+    def put(self, request, *args, **kwargs):
+        """Handles updating existing nodes"""
+        if kwargs['pk'] is None:
+            # Throw error response if user is trying to
+            # PUT without specifying a pk
+            return HttpResponseNotAllowed(['GET', 'POST'])
+        # Unpack arguments
+        node_id = kwargs['pk']
+        put = request.PUT
+        print(put)
+        try:
+            self.node = Node.objects.mine(request.user,
+                                  get_archived=True).get(pk=node_id)
+        except Node.DoesNotExist:
+            # If the node is not accessible return a 404
+            raise Http404()
+        self.node.set_fields(put['fields'])
+        self.node.save()
+        self.node = Node.objects.get(pk=self.node.pk)
+        data = serializers.serialize('json', [self.node])
+        return HttpResponse(json.dumps(data))
 
 class TreeView(View):
     """Retrieves entire trees at once"""
