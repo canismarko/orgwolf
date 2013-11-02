@@ -651,7 +651,6 @@ class NodeView(DetailView):
             breadcrumb_list = parent_node.get_ancestors(include_self=True)
             # Redirect in case of incorrect slug
             if slug != parent_node.slug:
-                print(parent_node.slug + "*")
                 return redirect(
                     reverse(
                         'node_object',
@@ -787,7 +786,7 @@ class NodeView(DetailView):
         Returns: JSON object of all node fields, with changes.
         """
         post = request.POST
-        if post['pk'] == 0:
+        if (post['pk'] == 0) or (post['pk'] == None):
             # New node is being created
             self.node = Node()
             self.node.owner = request.user
@@ -795,8 +794,8 @@ class NodeView(DetailView):
         self.node.set_fields(post['fields'])
         self.node.save()
         self.node = Node.objects.get(pk=self.node.pk)
-        data = serializers.serialize('json', [self.node])
-        return HttpResponse(json.dumps(data))
+        # data = serializers.serialize('json', [self.node])
+        return HttpResponse(self.node.as_json())
     def put(self, request, *args, **kwargs):
         """Handles updating existing nodes"""
         if kwargs['pk'] is None:
@@ -806,7 +805,6 @@ class NodeView(DetailView):
         # Unpack arguments
         node_id = kwargs['pk']
         put = request.PUT
-        print(put)
         try:
             self.node = Node.objects.mine(request.user,
                                   get_archived=True).get(pk=node_id)
@@ -816,8 +814,7 @@ class NodeView(DetailView):
         self.node.set_fields(put['fields'])
         self.node.save()
         self.node = Node.objects.get(pk=self.node.pk)
-        data = serializers.serialize('json', [self.node])
-        return HttpResponse(json.dumps(data))
+        return HttpResponse(self.node.as_json())
 
 class TreeView(View):
     """Retrieves entire trees at once"""

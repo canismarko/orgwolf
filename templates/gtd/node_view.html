@@ -44,9 +44,11 @@ dl
 <script src="{{ STATIC_URL }}angular/angular.js"></script>
 <script src="{{ STATIC_URL }}angular/angular-animate.js"></script>
 <script src="{{ STATIC_URL }}angular/angular-resource.js"></script>
+<script src="{{ STATIC_URL }}angular/angular-sanitize.js"></script>
 {% else %}
 <script src="http://code.angularjs.org/1.2.0-rc.3/angular.min.js"></script>
 <script src="http://code.angularjs.org/1.2.0-rc.3/angular-animate.min.js"></script>
+<script src="http://code.angularjs.org/1.2.0-rc.3/angular-sanitize.min.js"></script>
 <script src="http://code.angularjs.org/1.2.0-rc.3/angular-resource.js"></script>
 {% endif %}
 <script type="text/javascript" src="{{ STATIC_URL }}gtd-models.js"></script>
@@ -127,14 +129,14 @@ $('document').ready(function() {
     <input type="hidden" name="function" value="change_todo_state" />
     {% csrf_token %}
   </form>
-  <a href="edit/" class="btn" id="edit-button"><i class="icon-pencil"></i> Edit</a>
-  <a href="move/" class="btn" id="move-button"><i class="icon-move"></i> Move</a>
-  <a href="{% url 'gtd.views.list_display' %}parent{{ parent_node.pk }}/" class="btn">
-    <i class="icon-th-list"></i> As List
+  <a href="edit/" class="btn btn-default" id="edit-button"><i class="glyphicon glyphicon-pencil"></i> Edit</a>
+  <a href="move/" class="btn btn-default" id="move-button"><i class="glyphicon glyphicon-move"></i> Move</a>
+  <a href="{% url 'gtd.views.list_display' %}parent{{ parent_node.pk }}/" class="btn btn-default">
+    <i class="glyphicon glyphicon-th-list"></i> As List
   </a>
   {% else %}
-  <a href="{% url 'gtd.views.list_display' %}" class="btn">
-    <i class="icon-th-list"></i> As List
+  <a href="{% url 'gtd.views.list_display' %}" class="btn btn-default">
+    <i class="glyphicon glyphicon-th-list"></i> As List
   </a>
   {% endif %}{# if parent_node #}
 
@@ -150,12 +152,12 @@ $('document').ready(function() {
 	</div>
       </dd>
     </dl>
-    <a href="new/" class="btn" id="add-node">
-      <i class="icon-plus"></i>&nbsp;New Node
+    <a href="new/" class="btn-default" id="add-node">
+      <i class="glyphicon glyphicon-plus"></i>&nbsp;New Node
     </a>
     {% else %}
-    <a href="new/" class="btn" id="add-node">
-      <i class="icon-plus"></i>&nbsp;New Project
+    <a href="new/" class="btn-default" id="add-node">
+      <i class="glyphicon glyphicon-plus"></i>&nbsp;New Project
     </a>
     {% endif %}{# if parent_node #}
     </span>
@@ -168,85 +170,138 @@ $('document').ready(function() {
 <!-- Inline dialog to allow heading edits -->
 <script type="text/ng-template" id="editable">
   <div class="editable info" ng-if="heading.editable" ow-editable node-id="{{heading.pk}}">
+    <form novalidate class="heading-form" name="form">
     <div class="header">
-      <i class="twisty icon-chevron-down" expandable="disabled"></i>
-      <span>{{heading.fields.title}}</span>
-      <button class="btn btn-mini btn-primary" ng-click="save($event)">
+      <i class="twisty glyphicon glyphicon-chevron-down" expandable="disabled"></i>
+      <span ng-if="heading.fields.title">{{heading.fields.title}}</span>
+      <span ng-if="!heading.fields.title">New Heading</span>
+      <button class="btn btn-primary btn-xs" ng-click="save($event)"
+      	      ng-disabled="form.$invalid">
 	Save
       </button>
-      <button class="btn btn-mini" ng-click="heading.editable = false;">
+      <button class="btn btn-default btn-xs" ng-click="heading.editable = false">
 	Don't Save
       </button>
     </div>
     <div class="body">
-      <form>
-	<label for="title">Title:</label>
-	<input type="text" ng-model="fields.title"></input>
-	<label for="todo_state">Todo State:</label>
-	<select id="todo_state" ng-model="fields.todo_state"
-		ng-options="state.pk as (state.fields.abbreviation + ' - ' + state.fields.display_text) for state in todo_states">
-	  <option value="">----------</option>
-	</select>
-	<label for="priority">Priority:</label>
-	<select id="priority" ng-model="fields.priority"
-		ng-options="x for x in priorities">
-	</select>
-	<label for="tag_string">Tag String:</label>
-	<input type="text" id="tag_string" placeholder="eg. :home:"
-	       ng-model="fields.tag_string"></input>
-	<label for="deadline_date">Deadline:</label>
-	<input type="text" id="deadline_date" placeholder="YYYY-MM-DD"></input>
-	<input type="text" id="deadline_time" placeholder="HH:MM"></input>
-	<label for="scheduled_date">Scheduled:</label>
-	<input type="text" id="scheduled_date" placeholder="YYYY-MM-DD"></input>
-	<input type="text" id="scheduled_time" placeholder="HH:MM"></input>
-	<label for="repeats" class="checkbox">
-	  Repeats...
-	  <input type="checkbox" id="repeats" ng-model="fields.repeats"></input>
-	</label>
-	<label for="repeating_number">...every...
-	  <input type="text" id="repeating_number" placeholder="number..."
-		 ng-model="fields.repeating_number"
-		 class="input-small">
-		 </input>
-		 <select id="repeating_unit"
-			 ng-model="fields.repeating_unit"
-			 ng-options="unit.value as unit.label for unit in time_units">
-		 </select>
-	</label>
-	<label for="repeat_from_completion" class="checkbox">
-	       ...from completion date.
-	       <input type="checkbox" id="repeat_from_completion"
-		      ng-model="fields.repeats_from_completion"></input>
-		      </label>
-	<label class="checkbox">
-	  <input type="checkbox" id="archived"
-		 ng-model="fields.archived">
-		 </input>
-	  Archived
-	</label>
-	<label>Scope:</label>
-	<select id="scope" multiple ng-model="fields.scope"
-		ng-options="a for a in ['A', 'B']">
-	</select>
-	<label>Addition information:</label>
-	<div class="edit-text">{{heading.fields.text}}</div>
-      </form>
-    </div>
+	<div class="row">
+	  <div class="col-md-3">
+	    <label for="title">Title:</label>
+	    <input type="text" ng-model="fields.title"
+		   id="title" class="form-control" required></input>
+		   </div>
+	  <div class="col-md-3">
+	    <label for="todo_state">Todo State:</label>
+	    <select id="todo_state" ng-model="fields.todo_state"
+		    class="form-control"
+		    ng-options="state.pk as (state.fields.abbreviation + ' - ' + state.fields.display_text) for state in todo_states">
+		    <option value="">----------</option>
+	    </select>
+	  </div>
+	  <div class="col-md-2">
+	    <label for="priority">Priority:</label>
+	    <select id="priority" ng-model="fields.priority"
+		    class="form-control"
+		    ng-options="x.sym as x.display for x in priorities">
+	    </select>
+	  </div>
+	  <div class="col-md-2">
+	    <label for="tag_string">Tag String:</label>
+	    <input type="text" id="tag_string" placeholder="eg. :home:"
+		   ng-model="fields.tag_string" class="form-control"></input>
+	  </div>
+	  <div class="col-md-1">
+	    <label for="archived">Archived:
+	    </label>
+	    <div class="make-switch" data-on-label="Yes" data-off-label="No">
+	      <input type="checkbox" id="archived"
+		     ng-model="fields.archived">
+		     </input>
+	    </div>
+	  </div>
+	</div>
+	<div class="row">
+	  <div class="col-md-3">
+	    <label for="deadline_date">Deadline:</label>
+	    <div class="row">
+	      <div class="col-md-6">
+		<input type="text" id="deadline_date" class="form-control" placeholder="YYYY-MM-DD"></input>
+	      </div>
+	      <div class="col-md-6">
+		<input type="text" id="deadline_time" class="form-control" placeholder="HH:MM"></input>
+	      </div>
+	    </div>
+	  </div>
+	  <div class="col-md-3">
+	    <label for="scheduled_date">Scheduled:</label>
+	    <div class="row">
+	      <div class="col-md-6">
+		<input type="text" id="scheduled_date" placeholder="YYYY-MM-DD" class="form-control"></input>
+	      </div>
+	      <div class="col-md-6">
+		<input type="text" id="scheduled_time" placeholder="HH:MM" class="form-control"></input>
+	      </div>
+	    </div>
+	  </div>
+	  <div class="col-md-2">
+	    <label>Scope:</label>
+	    <select id="scope" multiple ng-model="fields.scope"
+		    ng-options="a for a in ['A', 'B']" class="form-control">
+		    </select>
+	  </div>
+	  <div class="col-md-1">
+	    <label for="repeats">
+	      Repeats...
+	    </label>
+	    <div class="make-switch">
+	      <input type="checkbox" ng-model="fields.repeats" id="repeats" />
+	    </div>
+	  </div>
+	  <div class="col-md-1">
+	    <label for="repeating_number">...every...
+	    </label>
+	    <input type="text" id="repeating_number" placeholder="number..."
+		     ng-model="fields.repeating_number"
+		     class="input-small form-control">
+		   </input>
+	    <select id="repeating_unit" class="form-control"
+		    ng-model="fields.repeating_unit"
+		    ng-options="unit.value as unit.label for unit in time_units">
+		    </select>
+	  </div>
+	  <div class="col-md-2">
+	    <label for="repeat_from_completion">
+	      ...from...
+	    </label>
+	    <select id="repeat_from_completion" class="form-control"
+		    ng-model="fields.repeats_from_completion"
+		    ng-options="x.value as x.label for x in repeat_schemes">
+	    </select>
+	      <!-- <input type="checkbox" id="repeat_from_completion" -->
+	      <!-- 	     ng-model="fields.repeats_from_completion"></input> -->
+	  </div>
+	</div>
+	<div class="row">
+	  <div class="col-md-12">
+	    <label>Addition information:</label>
+	    <div class="edit-text" ng-bind-html="fields.text | asHtml"></div>
+	  </div>
+	</div>
+    </form>
   </div>
 </script>
 
 <script type="text/ng-template" id="todo-state-selector">
   <span class="todo-state" style="{{heading.todo_state | style }}"
-	ng-click="console.log('hello')">
-    {{ heading.todo_state.fields.abbreviation }}
+	rel="popover">
+	{{ heading.todo_state.fields.abbreviation }}
 	</span>
-  <div class="popover right todostate">
-  <div class="arrow"></div>
-  <div class="popover-title">Todo State</div>
-  <div class="popover-inner">
-  </div>
-</div>
+  <!-- <div class="popover right todostate" ng-if="heading.todo_popover"> -->
+  <!--   <div class="arrow"></div> -->
+  <!--   <div class="popover-title">Todo State</div> -->
+  <!--   <div class="popover-inner"> -->
+  <!--   </div> -->
+  <!-- </div> -->
 
 </script>
 
@@ -255,40 +310,41 @@ $('document').ready(function() {
   <div class="heading {{heading.state}}" node_id="{{heading.pk}}"
        >
     <div class="ow-hoverable" ng-click="toggle_node($event)"
-	 ng-show="!heading.editable"
+	 ng-show="!heading.editable" style="{{ heading | style }}"
 	 archived="{{heading.fields.archived}}"
 	 actionable="{{ heading.todo_state.fields.actionable }}">
-      <i class="twisty icon-chevron-right"
+      <i class="twisty glyphicon glyphicon-chevron-right"
 	 expandable="{{heading.expandable}}"></i>
-      <span class="todo-state" ow-todo>
+      <span ow-todo>
       </span>
       <div class="clickable ow-title">
 	{{heading.fields.title}}
       </div>
       <div class="ow-buttons">
-	<i class="icon-pencil edit-btn" title="Edit"></i>
+	<i class="glyphicon glyphicon-pencil edit-btn" title="Edit"></i>
 	<a href="/gtd/lists/parent{{ heading.pk }}/next/">
-	  <i class="icon-th-list list-btn"
+	  <i class="glyphicon glyphicon-th-list list-btn"
 	     title="View As List">
 	     </i>
 	</a>
-	<i class="icon-folder-close archive-btn"
+	<i class="glyphicon glyphicon-folder-close archive-btn"
 	   title="Archive"
 	   ng-hide="heading.fields.archived">
 	</i>
-	<i class="icon-folder-open archive-btn"
-	   title="Archive"
+	<i class="glyphicon glyphicon-folder-open archive-btn"
+	   title="Un-archive"
 	   ng-show="heading.fields.archived">
 	</i>
-	<i class="icon-plus new-btn"
+	<i class="glyphicon glyphicon-plus new-btn"
 	   title="New subheading">
 	</i>
       </div>
     </div>
     <div ng-include="'editable'"></div>
     <div class="details ow-text"
-	 ng-show="heading.state == 'open' && !heading.editable">
-	 {{heading.fields.text}}
+	 ng-show="heading.state == 'open' && !heading.editable"
+	 ng-if="heading.fields.text"
+	 ng-bind-html="heading.fields.text | asHtml">
     </div>
     <div ng-show="heading.state.lazy == 'lazy' && heading.parent_obj.state == 'open'">
       Loading...
@@ -306,9 +362,9 @@ $('document').ready(function() {
 <div ng-controller="nodeOutline" id="outline-appliance"
      parent_id="{{ parent_node.pk }}">
 {% verbatim %}
-  <div id="add-heading" class="btn"
+  <div id="add-heading" class="btn btn-default"
        ng-click="show_all($event)">
-    <i class="icon-folder-close"></i>
+    <i class="glyphicon glyphicon-folder-close"></i>
     Show Archived
     </div>
   <div class="outline">
@@ -367,10 +423,10 @@ $('document').ready(function() {
 	      <form action="{{ base_url }}{{ node.pk }}/edit/" method="POST">
 		<div class="btn-group">
 		  <button class="btn" type="submit" name="move_up">
-		    <i class="icon-arrow-up"></i><span class="alt">Up</span>
+		    <i class="glyphicon glyphicon-arrow-up"></i><span class="alt">Up</span>
 		  </button>
 		  <button class="btn" type="submit" name="move_down">
-		    <i class="icon-arrow-down"></i><span class="alt">Down</span>
+		    <i class="glyphicon glyphicon-arrow-down"></i><span class="alt">Down</span>
 		  </button>
 		</div>
 		<input type="hidden" name="function" value="reorder"></input>

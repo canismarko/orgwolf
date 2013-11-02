@@ -1,3 +1,7 @@
+/*globals $, jQuery, document, Aloha, window, alert */
+"use strict";
+var GtdHeading, HeadingManager;
+
 /*************************************************
 * GtdHeading object. Represents a Node object
 * in the server side.
@@ -5,9 +9,9 @@
 *************************************************/
 
 // Constructor
-GtdHeading = function ( args ) {
+GtdHeading = function (args) {
     var parent, $body, sane;
-    if ( ! args ) {
+    if (!args) {
 	args = {};
     }
     // Set defaults in the constructor
@@ -19,7 +23,9 @@ GtdHeading = function ( args ) {
 	text: '',
 	scope: [],
 	related_projects: [],
+	tree_id: 3,
     };
+    this.fields.tree_id = 4;
     this.pk = 0;
     this.archived = false;
     this.populated = false;
@@ -57,6 +63,7 @@ GtdHeading.prototype.set_fields = function( node ) {
     if ( typeof node.workspace !== 'undefined' ) {
 	this.workspace = node.workspace;
     }
+    this.model = node.model;
     // Sanity checks
     try {
 	if ( node.fields.parent === this.pk ) {
@@ -70,16 +77,6 @@ GtdHeading.prototype.set_fields = function( node ) {
     }
     // Set fields
     jQuery.extend(this.fields, node.fields);
-    // for ( field in node.fields ) {
-    // 	if ( node.fields.hasOwnProperty(field) ) {
-    // 	    // Check for datestring
-    // 	    if (date_re.exec(node.fields[field])) {
-    // 		this[field] = new Date( node.fields[field] );
-    // 	    } else {
-    // 		this[field] = node.fields[field];
-    // 	    }
-    // 	}
-    // };
 };
 
 GtdHeading.prototype.get_todo_state = function() {
@@ -114,27 +111,6 @@ GtdHeading.prototype.get_title = function() {
     return title;
 };
 
-GtdHeading.prototype.set_selectors = function() {
-    // Determine how to find each piece of the heading
-    $workspace = $(this.workspace.$parent);
-    if ( this.rank > 0 ) {
-	var new_selector = '.heading';
-	new_selector += '[node_id="' + this.pk + '"]';
-	// Set selectors
-	this.$element = $workspace.find(new_selector);
-	this.$hoverable = this.$element.children('.ow-hoverable');
-	this.$details = this.$element.children('.details');
-	this.$children = this.$element.children('.children');
-	this.$loading = this.$details.children('.loading');
-	this.$clickable = this.$hoverable.children('.clickable');
-	this.$todo_state = this.$hoverable.children('.todo-state');
-	this.$icon = this.$hoverable.children('i');
-	this.$text = this.$details.children('.ow-text');
-	this.$buttons = this.$hoverable.children('.ow-buttons');
-	this.$title = this.$hoverable.children('.ow-title');
-    }
-};
-
 // Tree-related methods
 GtdHeading.prototype.get_previous_sibling = function() {
     // Find the previous sibling.
@@ -148,7 +124,7 @@ GtdHeading.prototype.get_previous_sibling = function() {
     found = null;
     if ( this.level === 0 ) {
 	// For root level nodes find by tree_id
-	curr_tree = this.tree_id;
+	curr_tree = this.fields.tree_id;
 	while( curr_tree > 1 && found === null ) {
 	    curr_tree = curr_tree - 1;
 	    found = this.workspace.headings.get(
@@ -160,15 +136,14 @@ GtdHeading.prototype.get_previous_sibling = function() {
 	}
     } else {
 	// For non-root nodes find by MPTT edges
-	curr_lft = this.lft;
+	curr_lft = this.fields.lft;
+	curr_lft = curr_lft - 2;
 	while( curr_lft > 1 && found === null ) {
-	    curr_lft = curr_lft - 2;
 	    found = this.workspace.headings.get(
 		{
-		    tree_id: this.tree_id,
-		    level: this.level,
-		    parent: this.parent,
-		    lft: curr_lft
+		    tree_id: this.fields.tree_id,
+		    parent: this.fields.parent,
+		    lft: curr_lft,
 		}
 	    );
 	}
@@ -182,7 +157,7 @@ GtdHeading.prototype.get_parent = function() {
 	if ( this.fields.parent === null ) {
 	    // null parent attribute means return heading pk=0
 	    parent = this.workspace.headings.get({pk: 0});
-	    parent = parent ? parent : this.workspace;
+	    parent = parent || this.workspace;
 	} else {
 	    parent = this.workspace.headings.get({pk: this.fields.parent});
 	}
@@ -207,7 +182,7 @@ GtdHeading.prototype.get_children = function() {
 GtdHeading.prototype.refresh_tree = function() {
     // Reach out to the server API and get new node data for this heading's tree
     var url, i, heading, new_heading;
-    url = '/gtd/tree/' + this.tree_id + '/';
+    url = '/gtd/tree/' + this.fields.tree_id + '/';
     heading = this;
     $.get(url, function (r) {
 	while ( typeof r === 'string' ) {
@@ -222,7 +197,6 @@ GtdHeading.prototype.refresh_tree = function() {
 
 GtdHeading.prototype.is_leaf_node = function() {
     var status;
-    console.log(this.fields);
     if (this.fields.rght-this.fields.lft === 1) {
 	status = true;
     } else if (this.fields.rght-this.fields.lft > 1) {
@@ -288,6 +262,7 @@ GtdHeading.prototype.is_visible = function() {
 };
 
 GtdHeading.prototype.update = function() {
+    var re;
     // Helper method updates template properties before $dispatch is called.
     // Should be called after significant changes are made
     // to the heading's properties. Should also update ancestors
@@ -307,16 +282,28 @@ GtdHeading.prototype.update = function() {
     }
     // Now update todostate
     this.todo_state = this.workspace.todo_states.get({pk: this.fields.todo_state});
+    // Update children
+    this.children = this.workspace.headings.filter_by({parent: this.pk});
 };
 
-GtdHeading.prototype.save = function() {
+GtdHeading.prototype.save = function(args) {
     // Method sends changes back to the server
-    var url, method, data;
+    var url, method, data, auto_update, heading;
+    heading = this;
+    if ( args === undefined ) {
+	args = {};
+    }
+    auto_update = args.auto ? true : false;
     url = '/gtd/node/';
-    data = {pk: this.pk, model: this.model, fields: this.fields}
-    if ( this.pk > 0 ) {
+    heading.fields.auto_update = auto_update;
+    data = {
+	pk: heading.pk,
+	model: heading.model,
+	fields: heading.fields,
+    };
+    if ( heading.pk > 0 ) {
 	// Existing Node instance
-	url += this.pk + '/';
+	url += heading.pk + '/';
 	method = 'PUT';
     } else {
 	// New Node instance
@@ -327,13 +314,19 @@ GtdHeading.prototype.save = function() {
 	data: JSON.stringify(data),
 	contentType: 'application/json',
 	success: function(data, status, jqXHR) {
+	    heading.workspace.$apply(function() {
+		var new_heading;
+		new_heading = jQuery.parseJSON(data);
+		heading.fields = new_heading.fields;
+		heading.update();
+	    });
 	},
 	error: function(data, status, jqXHR) {
 	    alert('Not saved');
 	    console.error(data.responseText);
 	},
     });
-}
+};
 
 GtdHeading.prototype.move_to = function(target, options) {
     var heading, positions, status, is_valid_move, arrange_as_child, arrange_as_sibling;
@@ -355,14 +348,15 @@ GtdHeading.prototype.move_to = function(target, options) {
     // Helper functions
     is_valid_move = function () {
 	var success = true;
-	if ( heading.tree_id === target.tree_id ) {
+	if ( heading.fields.tree_id === target.fields.tree_id ) {
 	    if ( heading === target ) {
 		// Becoming its own parent is illogical
 		console.error(
 		    'GtdHeading refusing to move relative to itself'
 		);
 		success = false;
-	    } else if ( target.lft > heading.lft && target.rght < heading.rght ) {
+	    } else if ( target.fields.lft > heading.fields.lft &&
+			target.fields.rght < heading.fields.rght ) {
 		// Moving relative to a child would break traversability
 		console.error(
 		    'GtdHeading refusing to move relative to its own child'
@@ -375,8 +369,8 @@ GtdHeading.prototype.move_to = function(target, options) {
     arrange_as_child = function() {
 	var valid = is_valid_move();
 	if ( valid === true ) {
-	    heading.parent = target.pk;
-	    heading.tree_id = target.tree_id;
+	    heading.fields.parent = target.pk;
+	    heading.fields.tree_id = target.fields.tree_id;
 	    heading.level = target.level + 1;
 	    heading.rank = target.rank + 1;
 	}
@@ -385,8 +379,8 @@ GtdHeading.prototype.move_to = function(target, options) {
     arrange_as_sibling = function() {
 	var valid = is_valid_move();
 	if ( valid === true ) {
-	    heading.parent = target.parent;
-	    heading.tree_id = target.tree_id;
+	    heading.fields.parent = target.fields.parent;
+	    heading.fields.tree_id = target.fields.tree_id;
 	    heading.level = target.level;
 	    heading.rank = target.rank;
 	}
@@ -399,7 +393,7 @@ GtdHeading.prototype.move_to = function(target, options) {
 	    // Put the child at the beginning of the first child
 	    var valid = arrange_as_child();
 	    if ( valid === true ) {
-		heading.lft = -1;
+		heading.fields.lft = -1;
 	    }
 	    return valid;
 	},
@@ -409,7 +403,7 @@ GtdHeading.prototype.move_to = function(target, options) {
 	    valid = arrange_as_child();
 	    if ( valid === true ) {
 		children = target.get_children();
-		heading.lft = children[children.length-1].lft + 1;
+		heading.fields.lft = children[children.length-1].fields.lft + 1;
 	    }
 	    return valid;
 	},
@@ -417,7 +411,7 @@ GtdHeading.prototype.move_to = function(target, options) {
 	    // Put the new heading to the left of the target
 	    var valid = arrange_as_sibling();
 	    if ( valid === true ) {
-		heading.lft = target.lft - 1;
+		heading.fields.lft = target.fields.lft - 1;
 	    }
 	    return valid;
 	},
@@ -425,7 +419,7 @@ GtdHeading.prototype.move_to = function(target, options) {
 	    // Put the new heading to the right of the target
 	    var valid = arrange_as_sibling();
 	    if ( valid === true ) {
-		heading.lft = target.lft + 1;
+		heading.fields.lft = target.fields.lft + 1;
 	    }
 	    return valid;
 	}
@@ -437,6 +431,7 @@ GtdHeading.prototype.move_to = function(target, options) {
 	status = false;
     }
     if ( status === true ) {
+	target.update();
 	heading.rebuild();
     }
     return status;
@@ -444,34 +439,34 @@ GtdHeading.prototype.move_to = function(target, options) {
 
 GtdHeading.prototype.rebuild = function() {
     // Recursively walks through a tree and sets lft and rght
-    // Currently this method assumes root_node.lft is set properly
+    // Currently this method assumes root_node.fields.lft is set properly
     // In the future, some AJAX magic may verify this with the server
     var root, set_edges;
     root = this.workspace.headings.get(
 	{
-	    tree_id: this.tree_id,
+	    tree_id: this.fields.tree_id,
 	    rank: 1
 	}
     );
     set_edges = function( heading, new_lft ) {
 	// Recursive function that sets a node and its children
-	// returns new heading.rght
+	// returns new heading.fields.rght
 	var children, new_rght, i;
-	heading.lft = new_lft;
+	heading.fields.lft = new_lft;
 	children = heading.get_children();
 	new_rght = new_lft + 1;
 	for ( i = 0; i < children.length; i += 1 ) {
 	    new_rght = set_edges( children[i], new_rght ) + 1;
 	}
-	heading.rght = new_rght;
+	heading.fields.rght = new_rght;
 	return new_rght;
     };
     // Set root.lft if it's no defined
-    if ( root.lft === undefined ) {
-	root.lft = 1;
+    if ( root.fields.lft === undefined ) {
+	root.fields.lft = 1;
     }
     // Start the sinful recursion loop
-    set_edges( root, root.lft );
+    set_edges( root, root.fields.lft );
 };
 
 GtdHeading.prototype.has_scope = function(pk) {
@@ -528,18 +523,8 @@ GtdHeading.prototype.populate_children = function(options) {
 			    parent.children.add(heading);
 			    // Check visibility
 			    if ( parent.state === 'open' ) {
-			    	heading.visible = true;
+				heading.visible = true;
 			    }
-			    // Remove the loading... indicator
-			    // if ( (!parent.populated) && parent.$details) {
-			    // 	if ( options.offset === 1 ) {
-			    // 	    parent.$loading.slideUp(
-			    // 		parent.workspace.ANIM_SPEED
-			    // 	    );
-			    // 	} else {
-			    // 	    parent.$loading.hide();
-			    // 	}
-			    // }
 			}
 		    }
 		    // Used to make sure ow_waiting works right during page load
@@ -551,10 +536,10 @@ GtdHeading.prototype.populate_children = function(options) {
 			ancestor.populated = true;
 			ancestor.update();
 		    } else if ( options.offset === 2) {
-		    	for (var i=0; i<ancestor.children.length; i++) {
-		    	    ancestor.children[i].populated = true;
+			for (i=0; i<ancestor.children.length; i+=1) {
+			    ancestor.children[i].populated = true;
 			    ancestor.children[i].update();
-		    	}
+			}
 		    }
 		    // If a callback is passed, call it now
 		    if ( options.callback ) {
@@ -595,7 +580,7 @@ GtdHeading.prototype.toggle = function( direction ) {
     this.populate_children();
     // Show or hide the children div based on present state
     if ( typeof direction !== 'undefined' ) {
-	this.state = direction
+	this.state = direction;
     } else if(this.state === 'open') {
 	this.state = 'closed';
     } else if (this.state === 'closed') {
@@ -638,7 +623,7 @@ Array.prototype.get = function(query) {
 Array.prototype.filter_by = function(criteria) {
     // Step through the list and filter by any
     // properties listed in criteria object
-    var filtered, i, heading, passed, key;
+    var filtered, i, heading, passed, key, obj;
     filtered = [];
     for ( i = 0; i < this.length; i += 1 ) {
 	heading = this[i];
@@ -650,19 +635,29 @@ Array.prototype.filter_by = function(criteria) {
 	}
 	for ( key in criteria ) {
 	    if ( criteria.hasOwnProperty(key) ) {
+		// Determine whether key is in fields or heading object
+		if ( typeof heading.fields !== 'undefined') {
+		    if ( Object.keys(heading.fields).indexOf(key) > -1 ) {
+			obj = heading.fields;
+		    } else {
+			obj = heading;
+		    }
+		} else {
+		    obj = heading;
+		}
 		// check each criterion, reject if it fails
-		if ( heading[key] instanceof Array ) {
+		if ( obj[key] instanceof Array ) {
 		    if ( criteria[key] instanceof Array ) {
 			if (! (($(heading.scope).not([]).length === 0 && $([]).not(heading.scope).length === 0) && typeof heading.scope !== 'undefined')) {
 			    passed = false;
 			}
 		    } else {
-			if ( jQuery.inArray( criteria[key], heading[key] ) < 0 ) {
+			if ( jQuery.inArray( criteria[key], obj[key] ) < 0 ) {
 			    passed = false;
 			}
 		    }
 		} else {
-		    if ( heading[key] !== criteria[key] ) {
+		    if ( obj[key] !== criteria[key] ) {
 			passed = false;
 
 		    }
@@ -679,13 +674,19 @@ Array.prototype.order_by = function(field) {
     // Accepts a string and orders according to
     // the field represented by that string.
     // '-field' reverses the order.
-    var fields, sorted, compare;
+    var fields, sorted, compare, key;
     fields = /^(-)?(\S*)$/.exec(field);
+    key = fields[2];
     sorted = this.slice(0);
     compare = function( a, b ) {
+	// Test whether key is in heading.fields
+	if ( key in a.fields && key in b.fields ) {
+	    a = a.fields;
+	    b = b.fields;
+	}
 	var num_a, num_b, response;
-	num_a = Number(a[fields[2]]);
-	num_b = Number(b[fields[2]]);
+	num_a = Number(a[key]);
+	num_b = Number(b[key]);
 	if ( num_a && num_b ) {
 	    // Sorting by number
 	    response = num_a - num_b;
@@ -710,11 +711,11 @@ Array.prototype.order_by = function(field) {
 Array.prototype.add = function(headings) {
     // Add or replace a heading based on pk
     // Returns the authoritative object
-    var that, key, other_heading, valid, real_heading, insert, new_heading;
+    var that, other_heading, valid, real_heading, insert, new_heading, i;
     that = this;
     valid = ['pk', 'populated', 'text', 'todo_state', 'archived', 'rank', 'scope', 'related_projects', 'parent'];
     insert = function(new_heading) {
-	var new_heading;
+	var key;
 	other_heading = that.get({pk: new_heading.pk});
 	if ( other_heading ) {
 	    // Heading already exists so just update it
@@ -728,7 +729,6 @@ Array.prototype.add = function(headings) {
 	    real_heading = other_heading;
 	} else {
 	    // Heading doesn't exist so push it to the stack
-	    // new_heading.workspace = that.workspace;
 	    that.push(new_heading);
 	    real_heading = new_heading;
 	}
@@ -737,8 +737,8 @@ Array.prototype.add = function(headings) {
     };
     // Determine if one object or array-like
     if ( headings.length > 1 ) {
-	for ( i=0; i<headings.length; i++ ) {
-	    var new_heading = new GtdHeading(headings[i]);
+	for ( i=0; i<headings.length; i+=1 ) {
+	    new_heading = new GtdHeading(headings[i]);
 	    insert(new_heading);
 	}
     } else {

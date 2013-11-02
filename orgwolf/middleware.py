@@ -85,7 +85,6 @@ class AjaxMiddleware():
     """Modifies request/response as a gateway between views and REST API"""
     def parse_json(self, data):
         new_dict = json.loads(data)
-        print(new_dict)
         return new_dict
     def parse_url_encoded_form(self, s):
         """Accepts a URL_encoded string and parses into a dictionary"""

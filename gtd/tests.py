@@ -53,6 +53,10 @@ from orgwolf.preparation import translate_old_text
 from orgwolf.models import OrgWolfUser as User
 
 class EditNode(TestCase):
+    """
+    Test case for editing a node by *non-AJAX* methods only. AJAX functions
+    should be in NodeAPI test case.
+    """
     fixtures = ['test-users.json', 'gtd-test.json', 'gtd-env.json']
     def setUp(self):
         self.user = User.objects.get(username='test')
@@ -138,225 +142,6 @@ class EditNode(TestCase):
         node.save()
         self.assertEqual(todo_state, node.todo_state)
 
-    def test_edit_autorepeat_by_json(self):
-        """Tests changing a repeating node by JSON with auto_update off"""
-        node = Node.objects.get(pk=6)
-        old_state = node.todo_state
-        new_state = TodoState.objects.get(pk=3)
-        self.assertTrue(
-            old_state.actionable,
-            'Initial todoState is actionable'
-            )
-        self.assertTrue(
-            new_state.closed
-            )
-        url = reverse('gtd.views.edit_node', kwargs={'node_id': node.pk})
-        payload = {
-            'format': 'json',
-            'auto_update': 'false',
-            'todo_id': new_state.pk,
-            }
-        self.client.post(
-            url, payload,
-            HTTP_X_REQUESTED_WITH='XMLHttpRequest',
-            )
-        node = Node.objects.get(pk=node.pk)
-        self.assertEqual(
-            new_state,
-            node.todo_state
-            )
-
-    def test_edit_repeating_by_json(self):
-        """If a repeating node has it's todo state changed by JSON,
-        if requires special handling."""
-        node = Node.objects.get(pk=7)
-        actionable = TodoState.objects.get(abbreviation='NEXT')
-        closed = TodoState.objects.get(abbreviation='DONE')
-        self.assertEqual(
-            actionable,
-            node.todo_state,
-            'Node does not start out actionable'
-            )
-        self.assertTrue(
-            node.repeats,
-            'Node does not start out repeating'
-            )
-        # Execute edit via AJAX
-        url = reverse('gtd.views.edit_node', kwargs={'node_id': node.pk})
-        data = {
-            'format': 'json',
-            'todo_id': closed.pk,
-            }
-        response = self.client.post(
-            url, data,
-            HTTP_X_REQUESTED_WITH='XMLHttpRequest',
-            )
-        self.assertEqual(
-            200,
-            response.status_code,
-            'getJSON call did not return HTTP 200'
-            )
-        node = Node.objects.get(pk=node.pk)
-        self.assertEqual(
-            actionable,
-            node.todo_state
-            )
-        jresponse = json.loads(response.content)
-        self.assertEqual(
-            actionable.pk,
-            jresponse['todo_id'],
-            )
-
-    def test_text_through_json(self):
-        """Check JSON editing (ie using Aloha editor)"""
-        node = Node.objects.get(pk=1)
-        self.assertEqual(
-            '',
-            node.text
-            )
-        url = reverse('gtd.views.edit_node', kwargs={'node_id': node.pk})
-        text = '<strong>evilness</strong>'
-        data = {'format': 'json',
-                'text': text}
-        response = self.client.post(
-            url, data,
-            HTTP_X_REQUESTED_WITH='XMLHttpRequest',
-            )
-        self.assertEqual(
-            200,
-            response.status_code
-            )
-        node = Node.objects.get(pk = node.pk)
-        self.assertEqual(
-            conditional_escape(text),
-            node.text
-            )
-        # Check that it allows <b> and other whitelist elements
-        text = '<b>evilness</b>'
-        data = {'format': 'json',
-                'text': text}
-        response = self.client.post(
-            url, data,
-            HTTP_X_REQUESTED_WITH='XMLHttpRequest',
-            )
-        self.assertEqual(
-            200,
-            response.status_code
-            )
-        node = Node.objects.get(pk = node.pk)
-        self.assertEqual(
-            text,
-            node.text
-            )
-        # Check that it handles a blank text element properly
-        url = reverse('gtd.views.edit_node', kwargs={'node_id': node.pk})
-        text = '\n<br>'
-        data = {'format': 'json',
-                'text': text}
-        response = self.client.post(
-            url, data,
-            HTTP_X_REQUESTED_WITH='XMLHttpRequest',
-            )
-        self.assertEqual(
-            200,
-            response.status_code
-            )
-        node = Node.objects.get(pk = node.pk)
-        self.assertEqual(
-            '',
-            node.text
-            )
-
-    def test_archive_by_json(self):
-        """Tests archiving/unarchived node by AJAX"""
-        node = Node.objects.get(pk=1)
-        self.assertTrue(
-            not node.archived,
-            'Node starts out archived'
-        )
-        url = reverse('gtd.views.edit_node', kwargs={'node_id': node.pk})
-        data = {'format': 'json',
-                'archived': 'true'}
-        response = self.client.post(
-            url, data,
-            HTTP_X_REQUESTED_WITH='XMLHttpRequest',
-            )
-        self.assertEqual(
-            200,
-            response.status_code
-            )
-        node = Node.objects.get(pk = node.pk)
-        self.assertTrue(
-            node.archived,
-            'Node does not become archived after changing via AJAX'
-        )
-
-    def test_edit_node_through_json(self):
-        """Tests AJAX editing of entire node at once via form-like submission"""
-        node = Node.objects.get(pk=1)
-        node.todo_state = TodoState.objects.get(pk=1)
-        node.save()
-        self.assertEqual(
-            1,
-            node.todo_state.pk
-            )
-        url = reverse('gtd.views.edit_node', kwargs={'node_id': node.pk})
-        data = model_to_dict(node)
-        data['form'] = 'modal'
-        data['format'] = 'json'
-        data['repeating_unit'] = ''
-        data['repeating_number'] = ''
-        data['scheduled'] = ''
-        data['deadline'] = ''
-        data['todo_state'] = 0
-        del data['related_projects']
-        response = self.client.post(
-            url, data,
-            HTTP_X_REQUESTED_WITH='XMLHttpRequest',
-            )
-        self.assertEqual(
-            200,
-            response.status_code)
-        node = Node.objects.get(pk=1)
-        self.assertEqual(
-            None,
-            node.todo_state
-            )
-    def test_add_node_through_json(self):
-        """Add a new node by submitting the whole form through AJAX"""
-        node = Node()
-        url = reverse('gtd.views.new_node', kwargs={'node_id': 6})
-        data = model_to_dict(node)
-        data['title'] = 'new node'
-        data['form'] = 'modal'
-        data['format'] = 'json'
-        data['repeats'] = ''
-        data['repeating_unit'] = ''
-        data['repeating_number'] = ''
-        data['scheduled'] = ''
-        data['deadline'] = ''
-        data['scope'] = ['1']
-        data['todo_state'] = 0
-        response = self.client.post(
-            url, data,
-            HTTP_X_REQUESTED_WITH='XMLHttpRequest',
-            )
-        self.assertEqual(
-            200,
-            response.status_code)
-        response = json.loads(json.loads(response.content))[0]
-        new_node = Node.objects.get(pk=response['pk'])
-        self.assertEqual(
-            1,
-            new_node.scope.all().count(),
-            'No scopes set when adding node through JSON'
-        )
-        self.assertEqual(
-            Scope.objects.get(pk=1),
-            new_node.scope.all()[0],
-            'Scope not set when adding node through json'
-        )
-
     def test_edit_form_states(self):
         """Make sure edit node form has only the valid states for this user"""
         node = Node.objects.get(pk=1)
@@ -399,6 +184,13 @@ class EditNode(TestCase):
         self.assertEqual(
             node.related_projects.all()[0].pk,
             1
+        )
+        # Datetime object
+        node.set_fields({'scheduled': '2012-12-31T05:00:00Z'})
+        self.assertEqual(
+            'datetime',
+            node.scheduled.__class__.__name__,
+            'set_fields processes datetime strings into datetime objects'
         )
 
 class NodeOrder(TestCase):
@@ -996,85 +788,67 @@ class Shortcuts(TestCase):
         response_dict = json.loads(response)
         self.assertEqual(
             node.title,
-            response_dict['title']
-            )
-        self.assertEqual(
-            node.get_title(),
-            response_dict['title_html']
-            )
-        self.assertEqual(
-            '{0} - {1}'.format(
-                node.todo_state.as_html(),
-                node.todo_state.display_text),
-            response_dict['todo_html'],
+            response_dict['fields']['title']
             )
         self.assertEqual(
             node.todo_state.pk,
-            response_dict['todo_state']
+            response_dict['fields']['todo_state']
             )
-        self.assertEqual(
-            node.scheduled.date().isoformat(),
-            response_dict['scheduled_date']
-            )
-        self.assertEqual(
-            node.scheduled.time().isoformat(),
-            response_dict['scheduled_time']
-            )
-        self.assertEqual(
-            node.scheduled_time_specific,
-            response_dict['scheduled_time_specific']
-            )
-        self.assertEqual(
-            node.deadline.date().isoformat(),
-            response_dict['deadline_date']
-            )
-        self.assertEqual(
-            node.deadline.time().isoformat(),
-            response_dict['deadline_time']
-            )
-        self.assertEqual(
-            node.deadline_time_specific,
-            response_dict['deadline_time_specific']
-            )
+        # self.assertEqual(
+        #     node.scheduled.date().isoformat(),
+        #     response_dict['fields']['scheduled_date']
+        #     )
+        # self.assertEqual(
+        #     node.scheduled.time().isoformat(),
+        #     response_dict['fields']['scheduled_time']
+        #     )
+        # self.assertEqual(
+        #     node.deadline.date().isoformat(),
+        #     response_dict['fields']['deadline_date']
+        #     )
+        # self.assertEqual(
+        #     node.deadline.time().isoformat(),
+        #     response_dict['fields']['deadline_time']
+        #     )
         self.assertEqual(
             node.priority,
-            response_dict['priority']
+            response_dict['fields']['priority']
             )
         self.assertEqual(
             list(node.scope.values_list('pk', flat=True)),
-            response_dict['scope']
+            response_dict['fields']['scope']
             )
         self.assertEqual(
             node.repeats,
-            response_dict['repeats']
+            response_dict['fields']['repeats']
             )
         self.assertEqual(
             node.repeating_number,
-            response_dict['repeating_number']
+            response_dict['fields']['repeating_number']
             )
         self.assertEqual(
             node.repeating_unit,
-            response_dict['repeating_unit']
+            response_dict['fields']['repeating_unit']
             )
         self.assertEqual(
             node.repeats_from_completion,
-            response_dict['repeats_from_completion']
+            response_dict['fields']['repeats_from_completion']
             )
         self.assertEqual(
             node.archived,
-            response_dict['archived']
+            response_dict['fields']['archived']
             )
         self.assertEqual(
             list(node.related_projects.values_list('pk', flat=True)),
-            response_dict['related_projects']
+            response_dict['fields']['related_projects']
             )
         self.assertEqual(
             node.text,
-            response_dict['text']
+            response_dict['fields']['text']
             )
         self.assertEqual(
             node.tag_string,
-            response_dict['tag_string']
+            response_dict['fields']['tag_string']
             )
         self.assertEqual(
             node.pk,
@@ -1082,23 +856,7 @@ class Shortcuts(TestCase):
             )
         self.assertEqual(
             node.parent.pk,
-            response_dict['parent_id']
-            )
-        self.assertEqual(
-            node.is_leaf_node(),
-            response_dict['is_leaf_node']
-            )
-
-    def test_root_node_as_json(self):
-        """Make sure that a root node returns a parent_id of 0
-        instead of null"""
-        node = Node.objects.filter(parent=None)[0]
-        node.archived = True
-        response = node.as_json()
-        response_dict = json.loads(response)
-        self.assertEqual(
-            0,
-            response_dict['parent_id']
+            response_dict['fields']['parent']
             )
 
     def test_breadcrumb_unicode(self):
@@ -1107,6 +865,7 @@ class Shortcuts(TestCase):
         """
         node = Node.objects.filter(pk=13)
         breadcrumbs(node, '/')
+
 
 class NodePermissions(TestCase):
     fixtures = ['test-users.json', 'gtd-test.json', 'gtd-env.json']
@@ -1121,6 +880,7 @@ class NodePermissions(TestCase):
             'write',
             node.access_level(self.user)
             )
+
 
 class UrlParse(TestCase):
     """Tests for the gtd url_parser that extracts context and scope information
@@ -1713,16 +1473,24 @@ class NodeAPI(TestCase):
     fixtures = ['test-users.json', 'gtd-test.json', 'gtd-env.json']
     def setUp(self):
         self.node = Node.objects.get(pk=1)
-        self.slug = slugify(self.node.title)
+        self.new_url = reverse('node_object')
         self.url = reverse(
             'node_object',
             kwargs={'pk': self.node.pk}
         )
+        self.repeating_node = Node.objects.get(pk=7)
+        self.repeating_url = reverse(
+            'node_object',
+            kwargs={'pk': self.repeating_node.pk}
+        )
+        self.slug = slugify(self.node.title)
         self.url_slug = reverse(
             'node_object',
             kwargs={'pk': self.node.pk,
                     'slug': self.node.slug}
         )
+        self.actionable = TodoState.objects.get(abbreviation='NEXT')
+        self.closed = TodoState.objects.get(abbreviation='DONE')
         self.assertTrue(
             self.client.login(username='test', password='secret')
         )
@@ -1763,19 +1531,30 @@ class NodeAPI(TestCase):
             self.node.todo_state.pk,
             'node statrts out with todo_state 2 (next test will fail)'
         )
-        post_data = {
-            'todo_state': 1,
-            'archived': 'true',
-        }
-        response = self.client.post(
+        put_data = json.dumps({
+            'pk': self.node.pk,
+            'model': 'gtd.node',
+            'fields': {
+                'todo_state': 1,
+                'archived': 'true',
+            }
+        })
+        response = self.client.put(
             self.url_slug,
-            post_data,
+            put_data,
             HTTP_X_REQUESTED_WITH='XMLHttpRequest',
+            content_type='application/json',
+        )
+        json_response = json.loads(response.content)
+        self.assertEqual(
+            1,
+            json_response['pk'],
+            'AJAX doesn\'t return correct json object'
         )
         self.assertEqual(
             200,
             response.status_code,
-            'changing todo state doesn\' return 200 {0}'.format(
+            'changing todo state doesn\'t return 200 {0}'.format(
                 response.status_code)
         )
         self.node = Node.objects.get(pk=self.node.pk)
@@ -1788,19 +1567,187 @@ class NodeAPI(TestCase):
             self.node.archived,
             'node not archived after ajax POST'
         )
-        post_data = {
-            'archived': 'false'
-        }
-        response = self.client.post(
+        put_data = json.dumps({
+            'fields': {
+                'archived': 'false'
+            }
+        })
+        response = self.client.put(
             self.url_slug,
-            post_data,
+            put_data,
             HTTP_X_REQUESTED_WITH='XMLHttpRequest',
+            content_type='application/json',
         )
         self.node = Node.objects.get(pk=self.node.pk)
         self.assertTrue(
             not self.node.archived,
             'node not un-archived after ajax POST'
         )
+
+    def test_archive_by_json(self):
+        """Tests archiving/unarchived node by AJAX"""
+        self.assertTrue(
+            not self.node.archived,
+            'Node starts out archived'
+        )
+        self.node.archived = True
+        data = self.node.as_json()
+        response = self.client.put(
+            self.url, data,
+            HTTP_X_REQUESTED_WITH='XMLHttpRequest',
+            content_type='application/json'
+            )
+        self.assertEqual(
+            200,
+            response.status_code
+            )
+        node = Node.objects.get(pk = self.node.pk)
+        self.assertTrue(
+            node.archived,
+            'Node does not become archived after changing via AJAX'
+        )
+
+    def test_text_through_json(self):
+        """Check JSON editing (ie using Aloha editor)"""
+        self.assertEqual(
+            '',
+            self.node.text
+            )
+        text = '<strong>evilness</strong>'
+        self.node.text = text
+        data = self.node.as_json()
+        response = self.client.put(
+            self.url, data,
+            HTTP_X_REQUESTED_WITH='XMLHttpRequest',
+            content_type='application/json',
+            )
+        self.assertEqual(
+            200,
+            response.status_code
+            )
+        node = Node.objects.get(pk = self.node.pk)
+        self.assertEqual(
+            conditional_escape(text),
+            node.text
+            )
+        # Check that it allows <b> and other whitelist elements
+        text = '<b>evilness</b>'
+        self.node.text = text
+        data = self.node.as_json()
+        response = self.client.put(
+            self.url, data,
+            HTTP_X_REQUESTED_WITH='XMLHttpRequest',
+            content_type='application/json'
+            )
+        self.assertEqual(
+            200,
+            response.status_code
+            )
+        node = Node.objects.get(pk = self.node.pk)
+        self.assertEqual(
+            text,
+            node.text
+            )
+
+    def test_edit_autoupdate_off_by_json(self):
+        """Tests changing a repeating node by JSON with auto_update off"""
+        # old_state = node.todo_state
+        # new_state = TodoState.objects.get(pk=3)
+        self.assertTrue(
+            self.repeating_node.todo_state.actionable,
+            'Initial todoState is actionable'
+            )
+        self.repeating_node.todo_state = self.closed
+        data = self.repeating_node.as_json()
+        self.client.put(
+            self.repeating_url, data,
+            HTTP_X_REQUESTED_WITH='XMLHttpRequest',
+            content_type='application/json'
+            )
+        node = Node.objects.get(pk=self.repeating_node.pk)
+        self.assertEqual(
+            self.closed,
+            node.todo_state
+            )
+
+    def test_edit_autoupdate_by_json(self):
+        """If a repeating node has it's todo state changed by JSON,
+        it requires special handling with auto_update on."""
+        self.assertEqual(
+            self.actionable,
+            self.repeating_node.todo_state,
+            'Node does not start out actionable'
+        )
+        self.assertTrue(
+            self.repeating_node.repeats,
+            'Node does not start out repeating'
+        )
+        # Execute edit via AJAX
+        self.repeating_node.todo_state = self.closed
+        data = self.repeating_node.as_json()
+        # Add the auto-repeat field
+        data = '{0}, "auto_update": true{1}'.format(data[:-2], data[-2:])
+        response = self.client.put(
+            self.repeating_url, data,
+            HTTP_X_REQUESTED_WITH='XMLHttpRequest',
+            content_type='application/json'
+            )
+        self.assertEqual(
+            200,
+            response.status_code,
+            'getJSON call did not return HTTP 200'
+            )
+        node = Node.objects.get(pk=self.repeating_node.pk)
+        self.assertEqual(
+            self.actionable,
+            node.todo_state
+            )
+        jresponse = json.loads(response.content)
+        self.assertEqual(
+            self.actionable.pk,
+            jresponse['fields']['todo_state'],
+            )
+
+    def test_add_node_through_json(self):
+        """Add a new node by submitting the whole form through AJAX"""
+        node = Node()
+        data = model_to_dict(node)
+        node.title = 'new node'
+        node.repeats = False
+        node.owner = User.objects.get(pk=1)
+        node.repeating_unit = None
+        node.repeating_number = None
+        node.scheduled = None
+        node.deadline = None
+        node.todo_state = None
+        node.save()
+        node.scope.add(Scope.objects.get(pk=1))
+        data = node.as_json()
+        data = json.loads(data)
+        data['pk'] = None
+        data = json.dumps(data)
+        node.scope = Scope.objects.filter(pk=1)
+        response = self.client.post(
+            self.new_url, data,
+            HTTP_X_REQUESTED_WITH='XMLHttpRequest',
+            content_type='application/json'
+            )
+        self.assertEqual(
+            200,
+            response.status_code)
+        response = json.loads(response.content)
+        new_node = Node.objects.get(pk=response['pk'])
+        self.assertEqual(
+            1,
+            new_node.scope.all().count(),
+            'No scopes set when adding node through JSON'
+        )
+        self.assertEqual(
+            Scope.objects.get(pk=1),
+            new_node.scope.all()[0],
+            'Scope not set when adding node through json'
+        )
+
 
 class TreeAPI(TestCase):
     """Check the /gtd/tree/<node_pk>/ functionality.

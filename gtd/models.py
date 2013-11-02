@@ -24,7 +24,9 @@ import math
 import operator
 import json
 from datetime import datetime, timedelta
+import dateutil.parser
 
+from django.core import serializers
 from django.core.exceptions import ValidationError
 from django.db import models, transaction
 from django.db.models import Q, signals
@@ -539,7 +541,10 @@ class Node(MPTTModel):
         """Process the instance into a json string. Output contains
         a few extra attributes for AJAX processing."""
         # Return dictionary as json
-        return json.dumps(self.as_pre_json())
+        s = serializers.serialize('json', [self])
+        # Remove list brackets
+        s = s[1:-1]
+        return s
 
     def get_tags(self):
         tag_strings = self.tag_string.split(":")
@@ -594,6 +599,7 @@ class Node(MPTTModel):
         Does not alter the database.
         """
         boolean_fields = ['archived', 'auto_update']
+        datetime_fields = ['scheduled', 'deadline', 'opened', 'closed']
         for key in fields.keys():
             if key == 'todo_state':
                 # Set foreign keys
@@ -612,8 +618,13 @@ class Node(MPTTModel):
                     fields[key] = fields[key][0]
                 if fields[key] == 'true':
                     setattr(self, key, True)
-                else:
+                elif fields[key] == 'false':
                     setattr(self, key, False)
+                else:
+                    setattr(self, key, fields[key])
+            elif key in datetime_fields and fields[key] is not None:
+                # Convert to datetime object
+                setattr(self, key, dateutil.parser.parse(fields[key]))
             else:
                 # Set other things
                 setattr(self, key, fields[key])
@@ -767,8 +778,8 @@ def auto_archive(sender, **kwargs):
 @python_2_unicode_compatible
 class NodeRepetition(models.Model):
     """
-    Describes an occurance of a repeating Node being toggled. 
-    The handlers for the Node class will create instances of 
+    Describes an occurance of a repeating Node being toggled.
+    The handlers for the Node class will create instances of
     this class when their state is changed.
     """
     node = models.ForeignKey('Node')

@@ -37,12 +37,17 @@
 
 	{% if local_net %}
 	  <link rel="stylesheet" type="text/css"
-		href="{{ STATIC_URL }}bootstrap/css/bootstrap.css" />
+		href="{{ STATIC_URL }}bootstrap/css/bootstrap.min.css" />
+	  <link rel="stylesheet" type="text/css"
+		href="{{ STATIC_URL }}bootstrap-switch.css" />
 	  <link rel="stylesheet" type="text/css"
 		href="{{ STATIC_URL }}aloha/css/aloha.css" />
 	{% else %}
-	  <link rel="stylesheet" type="text/css" href="//netdna.bootstrapcdn.com/twitter-bootstrap/2.3.1/css/bootstrap-combined.min.css" />
+	  <link rel="stylesheet" type="text/css" href="//cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.0.0/css/bootstrap.min.css" />
 	  <link rel="stylesheet" type="text/css" href="http://cdn.aloha-editor.org/latest/css/aloha.css" />
+	  <link rel="stylesheet" type="text/css" href="//cdnjs.cloudflare.com/ajax/libs/bootstrap-switch/1.8/css/bootstrap-switch.css" />
+
+
 	{% endif %}
 
     {% if debug %}
@@ -74,12 +79,12 @@
 
     {% if local_net %}
     <script src="{{ STATIC_URL }}jquery-1.8.3.min.js"></script>
-    <script src="{{ STATIC_URL }}bootstrap/js/bootstrap.js"></script>
+    <script src="{{ STATIC_URL }}bootstrap/js/bootstrap.min.js"></script>
+    <script src="{{ STATIC_URL }}bootstrap-switch.min.js"></script>
     {% else %}
     <script src="http://code.jquery.com/jquery-1.9.1.min.js"></script>
-    <script src="//netdna.bootstrapcdn.com/twitter-bootstrap/2.3.1/js/bootstrap.min.js"></script>
-    <script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/underscore.js/1.5.2/underscore-min.js"></script>
-    <script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/backbone.js/1.0.0/backbone-min.js"></script>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.0.0/js/bootstrap.min.js"></script>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/bootstrap-switch/1.8/js/bootstrap-switch.min.js"></script>
     {% endif %}
 
     <script src="https://login.persona.org/include.js"></script>
@@ -143,16 +148,26 @@
   </head>
   <body>
     {% block nav %}
-    <div class="navbar">
-      <div class="navbar-inner">
-	<a class="brand" id="logo" href="/">
+    <nav class="navbar navbar-default" role="navigation">
+      <div class="navbar-header">
+	<button type="button" class="navbar-toggle"
+		data-toggle="collapse" data-target=".navbar-ex1-collapse">
+	  <span class="sr-only">Toggle Navigation</span>
+	  <span class="icon-bar"></span>
+	  <span class="icon-bar"></span>
+	  <span class="icon-bar"></span>
+	</button>
+	<a class="navbar-brand" id="logo" href="/">
 	  {% if debug %}
 	  <img src="{{ STATIC_URL }}orgwolf-logo-debug.png" />
 	  {% else %}
 	  <img src="{{ STATIC_URL }}orgwolf-logo.jpg" />
 	  {% endif %}
 	</a>
-	<ul class="nav">
+      </div>
+
+      <div class="collapse navbar-collapse navbar-ex1-collapse">
+	<ul class="nav navbar-nav">
 	  <li{% if 'agenda' in request.get_full_path %} class="active"{% endif %}>
 	    <a href="{% url 'gtd.views.agenda_display' %}">
 	      Today's Agenda
@@ -200,16 +215,19 @@
 	</ul>
 
 	{% block inbox_widget %}
-	<form class="navbar-form pull-left" method="POST" action="/gtd/toinbox/?next={{request.get_full_path}}" id="new_inbox_form">
-	  <div class="input-append">
-	    <input type="text" name="new_inbox_item" id="new_inbox_item" class="input-small" placeholder="To inbox..." />
-	    <input type="submit" value="Save" class="btn" />
+	<form class="navbar-form navbar-left" method="POST" id="new_inbox_form"
+	      action="/gtd/toinbox/?next={{request.get_full_path}}">
+	  <div class="form-group">
+	    <input type="text" name="new_inbox_item" id="new_inbox_item"
+		   class="form-control" placeholder="To inbox...">
+		   </input>
 	  </div>
+	  <input type="submit" value="Save" class="btn btn-default" />
 	  {% csrf_token %}
 	</form>
 	{% endblock %}
 
-	<ul class="nav pull-right">
+	<ul class="nav navbar-nav navbar-right">
 	  <li class="pull-right"><a href="https://github.com/m3wolf/OrgWolf/issues/new">Feedback</a></li>
 	  {#<li><a href="/feedback/?next={{request.get_full_path}}">Feedback</a></li>#}
 	  {% if request.user.is_authenticated %}
@@ -231,7 +249,7 @@
 	  {% endif %}
 	</ul>
       </div>
-    </div><!-- </div class="navbar"> -->
+    </nav><!-- </nav class="navbar"> -->
 
     {% endblock %}{# end of nav #}
 

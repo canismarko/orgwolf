@@ -6,11 +6,14 @@
 @primary-pale: rgb(155, 136, 214);
 @text-color: rgb(88, 0, 176);
 
-/* Navar */
-#logo.brand
+/* Navbar */
+#logo.navbar-brand
 {
-    padding-bottom: 8px;
-    padding-top: 8px;
+    padding-bottom: 13px;
+    padding-top: 13px;
+    margin-left: auto;
+    margin-right: auto;
+    width: auto;
 }
 #new_inbox_form .input-append
 {
@@ -104,11 +107,6 @@ ul.social-auth
     margin-left: 0px;
     list-style-type: none;
 }
-/* Actions list */
-:not(.todo-option) > .todo-none {
-    .opacify(30);
-    font-style: italic;
-}
 /* Node form */
 .required label:before {
     content: "*"
@@ -121,13 +119,6 @@ form table input[type="checkbox"],label
 {
     margin-top: 2px;
     margin-bottom: 2px;
-}
-#logo
-{
-    margin-left: auto;
-    margin-right: auto;
-    width: auto;
-    padding-left: 0px;
 }
 .datepicker
 {
@@ -171,7 +162,7 @@ span.alt
 }
 .even-heading
 {
-    background-color: white; 
+    background-color: white;
    /* Todo: figure out how to do this using background: transparent */
 }
 .ow-move form
@@ -189,12 +180,24 @@ dd.todo
     padding: 0px;
 }
 /* Javascript outline appliance */
-@anim-speed: 500ms;
+@anim-speed: 350ms;
 /* @anim-easing: cubic-bezier(0.68, -0.55, 0.27, 1.55); */
 @anim-easing: cubic-bezier(0.68, 0, 0.27, 1);
 .opacify (@opacity) { /* 0 to 100 */
     opacity: (@opacity/100);
     filter:alpha(opacity=@opacity);
+}
+.animate () {
+    -webkit-transition: all @anim-easing @anim-speed;
+    -moz-transition: all @anim-easing @anim-speed;
+    -ms-transition: all @anim-easing @anim-speed;
+    -o-transition: all @anim-easing @anim-speed;
+    transition: all @anim-easing @anim-speed;
+    display: block !important;
+    position: relative;
+    overflow: hidden;
+    text-overflow: clip;
+    white-space: nowrap;
 }
 .outline
 {
@@ -216,14 +219,16 @@ dd.todo
 .ow-hoverable
 {
     cursor: default;
-}
-.ow-hoverable > .ow-buttons
-{
-    visibility: hidden;
-}
-.ow-hoverable:hover > .ow-buttons
-{
-    visibility: visible;
+    > .ow-buttons {
+	visibility: hidden;
+	a {
+	    text-decoration: none;
+	    color: inherit;
+	}
+    }
+    &:hover > .ow-buttons {
+	visibility: visible;
+    }
 }
 .expandable > .ow-hoverable,.lazy-expandable > .ow-hoverable
 {
@@ -255,11 +260,6 @@ dd.todo
 /* { */
 /*     .opacify(30); */
 /* } */
-.heading
-{
-    overflow: hidden;
-    color: @text-color;
-}
 .heading i.twisty, .heading div.details, .heading div.loading, .heading
 {
     -webkit-transition: opacity @anim-speed, -webkit-transform @anim-speed, padding-top @anim-speed;
@@ -274,42 +274,57 @@ dd.todo
     transform: rotate(@angle);
 }
 /* Transitions to uncover details, children and edit-box */
-.testing,.children,.heading,.editable,.details,.ow-hoverable {
-    &.ng-hide-remove,&.ng-hide-add,&.ng-enter,&.ng-leave {
-	-webkit-transition: all @anim-easing @anim-speed;
-	-moz-transition: all @anim-easing @anim-speed;
-	-ms-transition: all @anim-easing @anim-speed;
-	-o-transition: all @anim-easing @anim-speed;
-	transition: all @anim-easing @anim-speed;
-	display: block !important;
-	position: relative;
-	overflow: hidden;
-	text-overflow: clip;
-	white-space: nowrap;
+.children,.heading,.details,.ow-hoverable {
+    &.ng-hide-remove,&.ng-hide-add {
+	.animate();
     }
-    &.ng-hide-remove,
-    &.ng-hide-add-active.ng-hide-add,
-    {
+}
+.editable,.heading {
+    &.ng-enter,&.ng-leave {
+	.animate();
+    }
+}
+/* Hidden transition state */
+.ng-hide-remove,
+.ng-hide-add-active.ng-hide-add {
+    &.heading,&.children,&.ow-hoverable,&.details {
 	.opacify(0);
 	height: 0px;
     }
-    &.ng-hide-add,
-    &.ng-hide-remove-active.ng-hide-remove,
-    {
+}
+/* Uncreated transition state */
+.ng-enter,
+.ng-leave.ng-leave-active {
+    &.heading {
+	.opacify(0);
+	height: 0px;
+    }
+    &.ow-text,&.editable {
+	.opacify(0);
+	height: 0px;
+	padding-bottom: 0px;
+    }
+}
+/* Visible transition state */
+.ng-hide-add,
+.ng-hide-remove-active.ng-hide-remove {
+    &.heading,&.children,&.ow-hoverable,&.details {
 	.opacify(100);
 	height: 20px;
     }
-    &.ng-enter,
-    &.ng-leave.ng-leave-active
-    {
-	.opacify(0);
-	height: 0px;
-    }
-    &.ng-leave,
-    &.ng-enter-active.ng-enter
-    {
+}
+/* Existent transition state */
+.ng-leave,
+.ng-enter-active.ng-enter
+{
+    &.heading {
 	.opacify(100);
-	height: 672px;
+	height: 20px;
+    }
+    &.ow-text,&.editable {
+	.opacify(100);
+	height: 261px;
+	padding-bottom: 10px;
     }
 }
 
@@ -319,6 +334,7 @@ dd.todo
 .heading {
     padding-left: 14px;
     padding-right: 8px;
+    overflow: hidden;
     > .details {
 	color: black;
     }
@@ -352,7 +368,6 @@ div.ow-hoverable, div.clickable, div.ow-buttons
 .editable {
     position: relative;
     left: -5px;
-    top: -3px;
     padding-bottom: 10px;
     .edit-title {
 	margin-right: 5px;
@@ -372,38 +387,57 @@ div.ow-hoverable, div.clickable, div.ow-buttons
 	border-top-right-radius: 10px;
     }
 }
-.popover
-{
-    width: auto;
+
+/* Heading editing form and controls */
+.heading-form {
+    input.ng-invalid.ng-dirty {
+        background-color: #FA787E;
+    }
+    input.ng-invalid.ng-invalid-required {
+	border-color: red;
+    }
 }
+
+/* Popover todo-state picker */
 .todo-option
 {
     margin: 3px;
+    width: auto;
+    &:not([selected]):hover {
+	background-color: #DFF0D8;
+    }
+    &[selected] {
+	cursor: default;
+	.opacify(50);
+	font-style: italic;
+    }
 }
-.todo-option[selected]
-{
-    cursor: auto;
+
+/* Text associated with a node */
+.ow-text {
+    background: rgb(240, 240, 240);
+    padding: 5px;
+    display: inline-block;
+    border-radius: 10px;
 }
-.ow-hover
+.ow-text,.edit-text
 {
-    background-color: #DFF0D8;
-}
-.todo-option[selected]
-{
-    .opacify(50);
-}
-.markdown h1, h2
-{
-    margin-bottom: 2px;
-    margin-top: 20px;
-    line-height: 120%;
-}
-#id_text
-{
-    height: 200px;
-}
-/* Aloha text editor */
-.ow-text p
-{
-    margin-bottom: 0;
+    h1 {
+	font-size: 24px;
+    }
+    h2 {
+	font-size: 22px;
+    }
+    h3 {
+	font-size: 20px;
+    }
+    h4 {
+	font-size: 18px;
+    }
+    h5 {
+	font-size: 14px;
+    }
+    h6 {
+	font-size: 12px;
+    }
 }

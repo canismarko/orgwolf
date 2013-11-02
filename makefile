@@ -1,4 +1,4 @@
-# Builds CSS from LESS files and 
+# Builds CSS from LESS files and
 # minifies and combines javascript files
 
 STATIC = orgwolf/static/
@@ -6,12 +6,14 @@ ORGWOLF_CSS = $(STATIC)orgwolf.css
 MOBILE_CSS = $(STATIC)orgwolf_m.css
 MIN_JS = $(STATIC)orgwolf-min.js
 OW_JS = $(STATIC)orgwolf.js
+GTD_MODELS = gtd/static/gtd-models.js
+GTD_CTRL = gtd/static/gtd-ctrl.js
 MOBILE_OW_JS = $(STATIC)orgwolf_m.js
 MOBILE_MIN_JS = $(STATIC)orgwolf_m.min.js
 LESS = lessc --yui-compress
 DIVIDER = @echo "========================="
 YUI = yuicompressor
-JSLINT = jslint --color --white
+JSLINT = jslint --color --white --terse
 bold = `tput bold`
 normal = `tput sgr0`
 
@@ -33,20 +35,24 @@ $(MOBILE_CSS): $(STATIC)orgwolf_m.less $(STATIC)social/auth-buttons.css $(STATIC
 	$(LESS) $(STATIC)orgwolf_m.less >> $(MOBILE_CSS)
 	$(DIVIDER)
 
-$(MIN_JS): $(OW_JS) $(STATIC)jquery.cookie.js $(STATIC)datepicker/bootstrap-datepicker.js $(STATIC)timepicker/bootstrap-timepicker.js
+$(MIN_JS): $(OW_JS) $(GTD_MODELS) $(GTD_CTRL) $(STATIC)jquery.cookie.js $(STATIC)datepicker/bootstrap-datepicker.js $(STATIC)timepicker/bootstrap-timepicker.js
 	@echo "$(bold)Preparing javascript files...$(normal)"
 	$(YUI) $(STATIC)jquery.cookie.js > $(MIN_JS)
 	$(YUI) $(STATIC)datepicker/bootstrap-datepicker.js >> $(MIN_JS)
 	$(YUI) $(STATIC)timepicker/bootstrap-timepicker.js >> $(MIN_JS)
-	$(JSLINT) $(OW_JS)
-	$(YUI) $(OW_JS) >> $(MIN_JS)
+	# $(JSLINT) $(OW_JS)
+	# $(YUI) $(OW_JS) >> $(MIN_JS)
+	$(JSLINT) $(GTD_MODELS)
+	$(YUI) $(GTD_MODELS) >> $(MIN_JS)
+	$(JSLINT) $(GTD_CTRL)
+	$(YUI) $(GTD_CTRL) >> $(MIN_JS)
 	$(JSLINT) $(STATIC)persona.js
 	$(YUI) $(STATIC)persona.js >> $(MIN_JS)
 	$(DIVIDER)
 
-$(MOBILE_MIN_JS): $(MOBILE_OW_JS) $(STATIC)jquery.cookie.js 
+$(MOBILE_MIN_JS): $(MOBILE_OW_JS) $(STATIC)jquery.cookie.js
 	@echo "$(bold)Preparing mobile javascript files...$(normal)"
-	$(YUI) $(STATIC)jquery.cookie.js > $(MOBILE_MIN_JS)	
+	$(YUI) $(STATIC)jquery.cookie.js > $(MOBILE_MIN_JS)
 	$(JSLINT) $(MOBILE_OW_JS)
 	$(YUI) $(MOBILE_OW_JS) >> $(MOBILE_MIN_JS)
 	$(DIVIDER)
