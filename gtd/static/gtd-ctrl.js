@@ -1,5 +1,6 @@
 /*globals document, $, jQuery, document, Aloha, window, alert, GtdHeading, HeadingManager, angular*/
 "use strict";
+var test_headings;
 
 /*************************************************
 * Angular module for all GTD components
@@ -41,10 +42,33 @@ gtd_module.config(function($httpProvider) {
 * Factory creates GtdHeading objects
 *
 **************************************************/
-gtd_module.factory('Heading', function() {
+gtd_module.factory('Heading', function($resource, $http) {
     return function(data) {
-	return new GtdHeading(data);
-    };
+        return new GtdHeading(data);
+    }
+});
+gtd_module.factory('$heading', function($resource, $http) {
+    var res = $resource(
+    	'/gtd/node/:pk/:slug/',
+    	{id: '@id', slug: '@fields.slug'},
+    	{
+    	    'query': {
+    		method: 'GET',
+    		transformResponse: $http.defaults.transformResponse.push(
+    		    function (data, headersGetter) {
+    			var i, new_heading;
+    			for ( i=0; i<data.length; i+=1 ) {
+    			    new_heading = new GtdHeading(data[i]);
+    			    jQuery.extend(data[i], new_heading);
+    			}
+    			return data;
+    		    }
+    		),
+    	    },
+    	    isArray: true
+    	}
+    );
+    return res;
 });
 
 /*************************************************
@@ -82,7 +106,8 @@ gtd_module.filter('style', function() {
 	    // Determine color based on node.rank
 	    colors = ['rgb(88, 0, 176)', 'rgb(80, 0, 0)', 'rgb(0, 44, 19)',
 		      'teal', 'slateblue', 'brown'];
-	    color_i = (obj.rank - 1) % colors.length;
+
+	    color_i = (obj.fields.level) % colors.length;
 	    style += 'color: ' + colors[color_i] + '; ';
 	}
 	return style;
@@ -97,6 +122,16 @@ gtd_module.filter('asHtml', function($sce) {
     return function(obj) {
 	var s = $sce.trustAsHtml(obj);
 	return s;
+    };
+});
+
+/*************************************************
+* Filter that orders top level headings
+*
+**************************************************/
+gtd_module.filter('order', function($sce) {
+    return function(obj, criterion) {
+	return obj.order_by(criterion);
     };
 });
 
@@ -142,9 +177,20 @@ gtd_module.directive('owEditable', function() {
 	    field = $(e.target).find('input').attr('ng-model').split('.')[1];
 	    scope.fields[field] = data.value;
 	});
-	// Attach aloha editor
-	Aloha.ready( function() {
-	    Aloha.jQuery(element.find('.edit-text')).aloha();
+	// Attach datepicker and timepicker
+	element.find('.datepicker').datepicker({
+	    format: 'yyyy-mm-dd',
+	});
+	element.find('.timepicker').timepicker({
+	    showMeridian: false,
+	    showSeconds: true,
+	});
+	// Kludge fix for date/time pickers not updateing angular model
+	element.find('.timepicker,.datepicker').on('change', function(e) {
+	    var $target, field;
+	    $target = $(e.target);
+	    field = $target.attr('ng-model').split('.')[1];
+	    scope.fields[field] = $target.val();
 	});
 	// Event handlers for the editable dialog
 	scope.save = function(e) {
@@ -155,14 +201,49 @@ gtd_module.directive('owEditable', function() {
 	    scope.heading.editable = false;
 	    scope.heading.save();
 	};
-	scope.cancel = function(e) {
+	scope.cancel_edit = function(e) {
 	    scope.heading.editable = false;
-	};
-	console.log(scope.heading);
+	    if ( scope.heading.pk === 0 ) {
+		// Heading is not in the database so remove from views
+		scope.headings.delete(scope.heading);
+		if ( this.fields.parent ) {
+		    scope.heading.get_parent().children.delete(scope.heading);
+		} else {
+		    scope.children.delete(scope.heading);
+		}
+	    }
+	}
+	// Attach aloha editor
+	Aloha.ready( function() {
+	    Aloha.jQuery(element.find('.edit-text')).aloha();
+	});
     }
     return {
 	link: link
     };
+});
+
+/*************************************************
+* Directive that shows a list of Scopes tabs
+*
+**************************************************/
+gtd_module.directive('owScopeTabs', function() {
+    // Directive creates the pieces that allow the user to edit a heading
+    function link(scope, element, attrs) {
+	// Set initial active scope tab
+	element.find('[scope_id="'+scope.active_scope+'"]').addClass('active');
+	scope.active_scope
+	scope.change_scope = function(e) {
+	    var new_scope;
+	    // User has requested a different scope
+	    element.find('[scope_id="'+scope.active_scope+'"]').removeClass('active');
+	    scope.active_scope = parseInt($(e.currentTarget).attr('scope_id'), 10);
+	    element.find('[scope_id="'+scope.active_scope+'"]').addClass('active');
+	}
+    }
+    return {
+	link: link
+    }
 });
 
 /*************************************************
@@ -250,12 +331,20 @@ gtd_module.directive('owTodo', function($filter) {
 *
 **************************************************/
 gtd_module.controller('nodeOutline', function($scope, $http, $resource, Heading, $element) {
-    var TodoState, url, get_heading;
+    var TodoState, Scope, url, get_heading, Parent, Tree;
     // modified array to hold all the tasks
+    // $scope.children = Heading.query({'parent_id': 0});
     $scope.headings = new HeadingManager($scope);
     $scope.children = new HeadingManager($scope);
+    $scope.active_scope = 0;
+    $scope.sort_field = 'title';
+    $scope.sort_fields = [
+	{key: 'title', display: 'Title'},
+	{key: '-title', display: 'Title (reverse)'},
+    ];
     // Get id of parent heading
     $scope.parent_id = $element.attr('parent_id');
+    $scope.parent_tree_id = $element.attr('parent_tree');
     if ($scope.parent_id === '') {
 	$scope.parent_id = 0;
     } else {
@@ -264,23 +353,32 @@ gtd_module.controller('nodeOutline', function($scope, $http, $resource, Heading,
     $scope.show_arx = false;
     $scope.state = 'open';
     $scope.rank = 0;
+    // If a parent node was passed
+    // if ( $scope.parent_id ) {
+    // 	Tree = $resource('/gtd/tree/:tree_id/');
+    // 	$scope.headings.add(
+    // 	    Tree.query({tree_id: $scope.parent_tree_id})
+    // 	);
+    // }
     // Get all TodoState's for later use
     TodoState = $resource('/gtd/todostate/');
     $scope.todo_states = TodoState.query();
-    // Children = $resource('/gtd/node/descendants/0/');
-    url = '/gtd/node/descendants/' + $scope.parent_id + '/';
+    test_headings = $scope.todo_states;
+    // Get Scope objects
+    Scope = $resource('/gtd/scope/');
+    $scope.scopes = Scope.query();
+    url = '/gtd/node/descendants/0/';
     $http({method: 'GET', url: url}).
-	success(function(data, status, headers, config) {
-	    var i;
-	    for ( i=0; i<data.length; i+=1 ) {
-		data[i].workspace = $scope;
-	    }
-	    $scope.headings.add(data);
-	    $scope.rank1_headings = $scope.headings.filter_by({rank: 1});
-	}).
-	error( function(data, status, headers, config) {
-	    console.error('fail!');
-	});
+    	success(function(data, status, headers, config) {
+    	    var i;
+    	    for ( i=0; i<data.length; i+=1 ) {
+    		data[i].workspace = $scope;
+    	    }
+    	    $scope.headings.add(data);
+    	}).
+    	error( function(data, status, headers, config) {
+    	    console.error('fail!');
+    	});
     get_heading = function(e) {
 	var $heading, heading, node_id;
 	// Helper function that returns the heading object for a given event
@@ -309,13 +407,17 @@ gtd_module.controller('nodeOutline', function($scope, $http, $resource, Heading,
 	    }
 	    heading.save();
 	} else if ( $target.hasClass('new-btn') ) {
-	    new_heading = new Heading({workspace: heading.workspace,
+	    new_heading = new Heading({pk: 0,
+				       workspace: heading.workspace,
+				       model: 'gtd.node',
 				       fields: {
 					   title: '',
-					   parent: heading.pk
+					   parent: heading.pk,
+					   level: heading.fields.level + 1,
 				       }});
 	    new_heading.editable = true;
 	    heading.children.add(new_heading);
+	    $scope.headings.add(new_heading);
 	    heading.toggle('open');
 	} else {
 	    // Default action: opening the heading
@@ -330,10 +432,19 @@ gtd_module.controller('nodeOutline', function($scope, $http, $resource, Heading,
 	    $scope.show_arx = true;
 	}
     };
-    $scope.edit_cancel = function(e) {
-	var heading;
-	// If editing is cancelled
-	heading = get_heading(e);
-	heading.editable = false;
+    // Handler for adding a new node
+    $scope.add_heading = function(e) {
+	var new_heading;
+	new_heading = new Heading({pk: 0,
+				   workspace: $scope,
+				   model: 'gtd.node',
+				   fields: {
+				       title: 'marvelous',
+				       parent: null,
+				       level: 0,
+				   }});
+	new_heading.editable = true;
+	$scope.headings.add(new_heading);
+	$scope.children.add(new_heading);
     };
 });

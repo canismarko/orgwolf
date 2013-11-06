@@ -124,7 +124,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 	 title="{#{ node.get_hierarchy_as_string }#}">
 	{{ node.get_title }}
       </a>
-      {% if node.deadline %}
+      {% if node.deadline_date %}
       Due {{ node.deadline_str }}
       {% endif %}
     </td>

@@ -550,6 +550,7 @@ GtdHeading.prototype.populate_children = function(options) {
 	});
     };
     if ( ! this.populated ) {
+	console.log(this);
 	// Not yet populated, so get children by ajax
 	if ( this.rank > 0 && this.$children ) {
 	    this.$children.hide();
@@ -681,17 +682,22 @@ Array.prototype.order_by = function(field) {
     compare = function( a, b ) {
 	// Test whether key is in heading.fields
 	if ( key in a.fields && key in b.fields ) {
-	    a = a.fields;
-	    b = b.fields;
+	    a = a.fields[key];
+	    b = b.fields[key];
+	} else {
+	    a = a[key];
+	    b = b[key];
 	}
 	var num_a, num_b, response;
-	num_a = Number(a[key]);
-	num_b = Number(b[key]);
+	num_a = Number(a);
+	num_b = Number(b);
 	if ( num_a && num_b ) {
 	    // Sorting by number
 	    response = num_a - num_b;
 	} else {
 	    // Sorting by alphabet
+	    a = a.toUpperCase();
+	    b = b.toUpperCase();
 	    if ( a < b ) {
 		response = -1;
 	    } else if ( a > b ) {
@@ -736,8 +742,11 @@ Array.prototype.add = function(headings) {
 	return real_heading;
     };
     // Determine if one object or array-like
-    if ( headings.length > 1 ) {
+    if ( headings instanceof Array ) {
 	for ( i=0; i<headings.length; i+=1 ) {
+	    if ( headings[i].pk === 2 ) {
+		console.log('hi');
+	    }
 	    new_heading = new GtdHeading(headings[i]);
 	    insert(new_heading);
 	}
@@ -747,4 +756,14 @@ Array.prototype.add = function(headings) {
 
     return real_heading;
 };
+Array.prototype.delete = function(heading) {
+    var idx, status;
+    status = false;
+    idx = this.indexOf(heading);
+    if ( idx > -1 ) {
+	this.splice(idx, 1);
+	status = true;
+    }
+    return status;
+}
 // end definition of HeadingManager()

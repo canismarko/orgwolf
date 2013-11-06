@@ -34,56 +34,6 @@ class NodeForm(forms.ModelForm):
             attrs={'autofocus': 'autofocus',
                    'data-validate': 'required'}),
         )
-    scheduled = forms.DateTimeField(
-        widget=widgets.HiddenInput,
-        required=False,
-        )
-    scheduled_date = forms.DateField(
-        required=False,
-        widget=widgets.TextInput(
-            attrs={'class': 'datepicker',
-                   'data-validate': 'date'}),
-        )
-    scheduled_time = forms.TimeField(
-        required=False,
-        localize=True,
-        widget=widgets.TextInput(
-            attrs={'class': 'timepicker',
-                   'data-validate': 'time'}),
-        )
-    scheduled_time_specific = forms.BooleanField(
-        required=False,
-        widget=widgets.CheckboxInput(
-            attrs={'toggles': 'scheduled_time',
-                   'data-requires': '#id_scheduled_date, #id_scheduled_time',
-               }
-        )
-    )
-    deadline = forms.DateTimeField(
-        widget=widgets.HiddenInput,
-        required=False,
-        )
-    deadline_date = forms.DateField(
-        required=False,
-        widget=widgets.TextInput(
-            attrs={'class': 'datepicker',
-                   'data-validate': 'date'}),
-        )
-    deadline_time = forms.TimeField(
-        required=False,
-        localize=True,
-        widget=widgets.TextInput(
-            attrs={'class': 'timepicker',
-                   'data-validate': 'time'}),
-        )
-    deadline_time_specific = forms.BooleanField(
-        required=False,
-        widget=widgets.CheckboxInput(
-            attrs={'toggles': 'deadline_time',
-                   'data-requires': '#id_deadline_date, #id_deadline_time',
-               }
-        )
-    )
     tag_string = forms.CharField(
         required=False,
         help_text='Example ":home:phone:"',
@@ -107,14 +57,10 @@ class NodeForm(forms.ModelForm):
         fields = ('title',
                   'todo_state',
                   'tag_string',
-                  'scheduled',
                   'scheduled_date',
                   'scheduled_time',
-                  'scheduled_time_specific',
-                  'deadline',
                   'deadline_date',
                   'deadline_time',
-                  'deadline_time_specific',
                   'priority',
                   'scope',
                   'repeats',
@@ -138,16 +84,6 @@ class NodeForm(forms.ModelForm):
             local_tz = timezone.get_current_timezone()
             projects = self.instance.related_projects.all()
             self.fields['related_projects'].initial = projects
-            if self.instance.scheduled:
-                date = self.instance.scheduled.astimezone(local_tz).date()
-                self.fields['scheduled_date'].initial = date
-                time = self.instance.scheduled.astimezone(local_tz).time()
-                self.fields['scheduled_time'].initial = time
-            if self.instance.deadline:
-                date = self.instance.deadline.astimezone(local_tz).date()
-                self.fields['deadline_date'].initial = date
-                time = self.instance.deadline.astimezone(local_tz).time()
-                self.fields['deadline_time'].initial = time
         # Set initial values if node does not exist
         if parent and not self.instance.pk: # A new node with a parent
             related = parent.related_projects.all()
@@ -196,34 +132,6 @@ class NodeForm(forms.ModelForm):
         # Combine date and time fields for scheduled and deadline info
         local_tz = timezone.get_current_timezone()
         cleaned_data = super(NodeForm, self).clean()
-        def get_new_datetime(new_date, new_time):
-            # Helper function to determine what to put in the
-            # new date or time field
-            if new_date:
-                if new_time:
-                    naive_dt = dt.datetime(new_date.year,
-                                           new_date.month,
-                                           new_date.day,
-                                           new_time.hour,
-                                           new_time.minute,
-                                           new_time.second)
-                else:
-                    naive_dt = dt.datetime(new_date.year,
-                                           new_date.month,
-                                           new_date.day,
-                                           0,
-                                           0,
-                                           0)
-                return local_tz.localize(naive_dt)
-            else:
-                return None
-        # Process the deadline and scheduled fields
-        cleaned_data['scheduled'] = get_new_datetime(
-            cleaned_data['scheduled_date'],
-            cleaned_data['scheduled_time'])
-        cleaned_data['deadline'] = get_new_datetime(
-            cleaned_data['deadline_date'],
-            cleaned_data['deadline_time'])
         # Make sure that if this Node repeats then the repeating
         #   information is included.
         if cleaned_data['repeats']:

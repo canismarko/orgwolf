@@ -40,11 +40,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 {% endblock %}
 {% block content %}
 <div id="agenda-container">
-<h3 class="date">{{ agenda_dt.date }}</h3>
+<h3 class="date">{{ agenda_date }}</h3>
 <form action="" method="post" class="date form-horizontal">
-  <input type="text" name="date" value="{{ agenda_dt_str }}" class="input-medium datepicker" placeholder="Change date..."></input>
+  <input type="text" name="date" value="{{ agenda_dt_str }}" class="input-medium datepicker form-control" placeholder="Change date..."></input>
     {% csrf_token %}
-  <input type="submit" value="Update" class="btn" />
+  <input type="submit" value="Update" class="btn btn-default" />
 </form>
 <h4>Day Specific</h4>
 <table class="daily table table-condensed">

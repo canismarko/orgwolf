@@ -175,7 +175,7 @@ def list_display(request, url_string=""):
     else:
         scope_url_data['parent'] = ''
     # Put nodes with deadlines first
-    nodes = order_nodes(nodes, field='deadline', context=current_context)
+    nodes = order_nodes(nodes, field='deadline_date', context=current_context)
     # -------------------- Queryset evaluated -------------------- #
     # Prepare the URLs for use in the scope and parent links tabs
     scope_url = list_url.format(
@@ -201,7 +201,7 @@ def list_display(request, url_string=""):
         if len(root_node) > 0:
             node.root_url = parent_url.format(root_node[0].pk)
             node.root_title = root_node[0].title
-        node.deadline_str = node.overdue('deadline', tzinfo=tz)
+        node.deadline_str = node.overdue('deadline_date')
     # And serve response
     if request.is_mobile:
         template = 'gtd/gtd_list_m.html'
@@ -235,57 +235,55 @@ def agenda_display(request, date=None):
             raise Http404
     else:
         agenda_date = datetime.date.today()
-    agenda_dt = datetime.datetime(
-        year=agenda_date.year,
-        month=agenda_date.month,
-        day=agenda_date.day,
-        hour=23, minute=59,
-        second=59,
-        tzinfo=tz
-    ).astimezone(tz)
+    # agenda_dt = datetime.datetime(
+    #     year=agenda_date.year,
+    #     month=agenda_date.month,
+    #     day=agenda_date.day,
+    #     hour=23, minute=59,
+    #     second=59,
+    #     tzinfo=tz
+    # ).astimezone(tz)
     logger.debug(
-        'agenda_date = {0} | agenda_dt = {1}'.format(
+        'agenda_date = {0}'.format(
             agenda_date,
-            agenda_dt,
         )
     )
-    agenda_dt_str = agenda_dt.strftime('%Y-%m-%d')
+    agenda_dt_str = agenda_date.strftime('%Y-%m-%d')
     one_day = datetime.timedelta(days=1)
     tomorrow = agenda_date + one_day
     yesterday = agenda_date - one_day
     # Determine query filters for "Today" section
-    date_Q = Q(scheduled__lte=agenda_dt)
-    time_specific_Q = Q(scheduled_time_specific=False)
+    date_Q = Q(scheduled_date__lte=agenda_date)
+    time_specific_Q = Q(scheduled_time=None)
     # TODO: allow user to set todo states
     todo_states = TodoState.get_visible(request.user)
     hard_Q = Q(todo_state = todo_states.get(abbreviation="HARD"))
     dfrd_Q = Q(todo_state = todo_states.get(abbreviation="DFRD"))
     day_specific_nodes = all_nodes_qs.filter(
         (hard_Q | dfrd_Q), date_Q, time_specific_Q)
-    day_specific_nodes = day_specific_nodes.order_by('scheduled')
-    time_specific_Q = Q(scheduled_time_specific=True)
+    day_specific_nodes = day_specific_nodes.order_by('scheduled_date')
     time_specific_nodes = all_nodes_qs.filter(
-        (hard_Q | dfrd_Q), date_Q, time_specific_Q)
-    time_specific_nodes = time_specific_nodes.order_by('scheduled')
+        (hard_Q | dfrd_Q), date_Q).exclude(time_specific_Q)
+    time_specific_nodes = time_specific_nodes.order_by('scheduled_date')
     # Determine query filters for "Upcoming Deadlines" section
     undone_Q = Q(todo_state__closed = False) | Q(todo_state = None)
-    deadline = agenda_dt + datetime.timedelta(days=deadline_period)
-    upcoming_deadline_Q = Q(deadline__lte = deadline) # TODO: fix this
+    deadline = agenda_date + datetime.timedelta(days=deadline_period)
+    upcoming_deadline_Q = Q(deadline_date__lte = deadline) # TODO: fix this
     deadline_nodes = all_nodes_qs.filter(undone_Q, upcoming_deadline_Q)
-    deadline_nodes = deadline_nodes.order_by("deadline")
+    deadline_nodes = deadline_nodes.order_by("deadline_date")
     # Force database hits and then add overdue data
     day_specific_nodes = list(day_specific_nodes)
     time_specific_nodes = list(time_specific_nodes)
     deadline_nodes = list(deadline_nodes)
     for node in day_specific_nodes:
         node.overdue_str = node.overdue(
-            'scheduled', tzinfo=tz, agenda_dt=agenda_dt)
+            'scheduled_date', agenda_date=agenda_date)
     for node in time_specific_nodes:
         node.overdue_str = node.overdue(
-            'scheduled', tzinfo=tz, agenda_dt=agenda_dt)
+            'scheduled_date', agenda_date=agenda_date)
     for node in deadline_nodes:
         node.overdue_str = node.overdue(
-            'deadline', tzinfo=tz, agenda_dt=agenda_dt, future=True)
+            'deadline_date', agenda_date=agenda_date, future=True)
     # Create some data for javascript plugins
     all_todo_states_json = TodoState.as_json(queryset=todo_states,
                                              user=request.user)
@@ -622,7 +620,7 @@ class NodeView(DetailView):
         return super(NodeView, self).dispatch(*args, **kwargs)
 
     def get(self, request, *args, **kwargs):
-        if request.is_ajax() and not request.is_mobile:
+        if (request.is_ajax() or request.is_json) and not request.is_mobile:
             # AJAX request
             return self.get_json(request, *args, **kwargs)
         # First unpack arguments
@@ -696,11 +694,24 @@ class NodeView(DetailView):
 
     def get_json(self, request, *args, **kwargs):
         """Returns the details of the node as a json encoded object"""
+        get_dict = request.GET.copy()
         node_id = kwargs.get('pk')
-        node = get_object_or_404(Node, pk=node_id)
-        return HttpResponse(
-            serializers.serialize('json', [node])
-        )
+        parent_id = get_dict.get('parent_id', None)
+        if parent_id == '0':
+            get_dict['parent_id'] = None
+        if node_id is None:
+            # All nodes
+            nodes = Node.objects.mine(request.user)
+            # Apply each criterion to the queryset
+            for param, value in get_dict.iteritems():
+                query = {param: value}
+                nodes = nodes.filter(**query)
+            json = serializers.serialize('json', nodes)
+            response = HttpResponse(json)
+        else:
+            node = get_object_or_404(Node, pk=node_id)
+            response = HttpResponse(node.as_json())
+        return response
 
     def post(self, request, *args, **kwargs):
         if request.is_ajax():
@@ -863,6 +874,15 @@ class TodoStateView(View):
             return render_to_response('base.html',
                                       locals(),
                                       RequestContext(request))
+
+
+class ScopeView(View):
+    """RESTful interaction with the gtd.Scope object"""
+    def get(self, request, *args, **kwargs):
+        scopes = Scope.get_visible(request.user)
+        data = serializers.serialize('json', scopes)
+        return HttpResponse(data)
+
 
 @login_required
 def get_descendants(request, ancestor_pk):

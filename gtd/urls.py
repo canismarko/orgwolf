@@ -23,7 +23,7 @@ from django.conf.urls import patterns, include, url
 from django.contrib import admin
 admin.autodiscover()
 
-from gtd.views import Descendants, NodeView, TreeView, TodoStateView
+from gtd.views import Descendants, NodeView, TreeView, TodoStateView, ScopeView
 
 urlpatterns = patterns(
     'gtd.views',
@@ -62,5 +62,9 @@ urlpatterns = patterns(
     url(r'^todostate/(?:(?P<pk>\d+)/)?$',
         TodoStateView.as_view(),
         name='todo_state'
+    ),
+    url(r'^scope/$',
+        ScopeView.as_view(),
+        name='scope_api',
     ),
 )

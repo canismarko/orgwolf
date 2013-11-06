@@ -23,6 +23,7 @@ import re
 import math
 import operator
 import json
+import datetime as dt
 from datetime import datetime, timedelta
 import dateutil.parser
 
@@ -256,10 +257,16 @@ class Scope(models.Model):
     """
     # (no owner means built-in tag)
     owner = models.ForeignKey(
-        settings.AUTH_USER_MODEL, blank=True, null=True) 
+        settings.AUTH_USER_MODEL, blank=True, null=True)
     public = models.BooleanField(default=False)
     display = models.CharField(max_length=50)
     name = models.CharField(max_length=50)
+    @staticmethod
+    def get_visible(user=None):
+        """Return a queryset of scopes that the user can subscribe to"""
+        public = Scope.objects.filter(public=True)
+        scopes = Scope.objects.filter(owner=user)
+        return scopes | public
     def __str__(self):
         return self.display
 
@@ -351,10 +358,10 @@ class Node(MPTTModel):
         blank=True,
         related_name='project_set')
     # Scheduling details
-    scheduled = models.DateTimeField(blank=True, null=True)
-    scheduled_time_specific = models.BooleanField()
-    deadline = models.DateTimeField(blank=True, null=True)
-    deadline_time_specific = models.BooleanField()
+    scheduled_time = models.TimeField(blank=True, null=True)
+    scheduled_date = models.DateField(blank=True, null=True)
+    deadline_time = models.TimeField(blank=True, null=True)
+    deadline_date = models.DateField(blank=True, null=True)
     opened = models.DateTimeField(auto_now_add=True, blank=True, null=True)
     closed = models.DateTimeField(blank=True, null=True)
     repeats = models.BooleanField(default=False)
@@ -403,24 +410,18 @@ class Node(MPTTModel):
     def is_closed(self):
         return getattr(self.todo_state, 'closed', False)
 
-    def overdue(self, field, tzinfo=None,
-                agenda_dt=None, future=False):
+    def overdue(self, field, agenda_date=None, future=False):
         """Returns a string representing how many days ago
         the target_date was scheduled. Method will ignore
         future dates unless the future parameter is True.
         """
-        target_dt = getattr(self, field)
+        if agenda_date is None:
+            # Default to today
+            agenda_date = datetime.now().date()
+        target_date = getattr(self, field)
         response = ''
-        if tzinfo is None:
-            tzinfo = get_current_timezone()
-        if isinstance(target_dt, datetime):
-            target_date = target_dt.astimezone(tzinfo).date()
-            if agenda_dt is None:
-                # Default to today
-                today = datetime.now(tzinfo).date()
-            else:
-                today = agenda_dt.astimezone(tzinfo).date()
-            difference = (target_date - today).days
+        if target_date is not None:
+            difference = (target_date - agenda_date).days
             if abs(difference) == 1:
                 pluralized = ''
             else:
@@ -493,50 +494,6 @@ class Node(MPTTModel):
         string += self.get_title()
         return mark_safe(string)
 
-    def as_pre_json(self):
-        """Processes the instance into a dictionary that can be
-        converted to a JSON string. Output contains a few extra
-        attributes for AJAX processing."""
-        exclude = []
-        new_dict = model_to_dict(
-            self,
-            exclude = exclude
-            )
-        # Rename some keys
-        keys = [('id', 'pk'),
-                ('parent', 'parent_id')]
-        for key in keys:
-            new_dict[ key[1] ] = new_dict[ key[0] ]
-            del new_dict[ key[0] ]
-        # Convert parent_id=None to parent_id=0
-        if not new_dict['parent_id']:
-            new_dict['parent_id'] = 0
-        # convert dates to strings
-        for field in ['scheduled', 'deadline']:
-            if new_dict[field]:
-                new_dict[field+'_date'] = new_dict[field].date().isoformat()
-                new_dict[field+'_time'] = new_dict[field].time().isoformat()
-            else:
-                new_dict[field+'_date'] = ''
-                new_dict[field+'_time'] = ''
-            del new_dict[field]
-        for field in ['closed',]:
-            if new_dict[field]:
-                new_dict[field] = new_dict[field].ctime()
-        # Include the todo_state html
-        if self.todo_state:
-            new_dict['todo_abbr'] = self.todo_state.as_html()
-            new_dict['todo_html'] = self.todo_state.as_html()
-            new_dict['todo_html'] += ' - ' + self.todo_state.display_text
-        else:
-            new_dict['todo_html'] = '[None]'
-        # Use styled title
-        new_dict['title_html'] = self.get_title()
-        new_dict['title'] = conditional_escape(self.title)
-        # Include is_leaf_node()
-        new_dict['is_leaf_node'] = self.is_leaf_node()
-        return new_dict
-
     def as_json(self):
         """Process the instance into a json string. Output contains
         a few extra attributes for AJAX processing."""
@@ -599,7 +556,9 @@ class Node(MPTTModel):
         Does not alter the database.
         """
         boolean_fields = ['archived', 'auto_update']
-        datetime_fields = ['scheduled', 'deadline', 'opened', 'closed']
+        date_fields = ['scheduled_date', 'deadline_date']
+        time_fields = ['scheduled_time', 'deadline_time']
+        datetime_fields = ['opened', 'closed']
         for key in fields.keys():
             if key == 'todo_state':
                 # Set foreign keys
@@ -625,6 +584,12 @@ class Node(MPTTModel):
             elif key in datetime_fields and fields[key] is not None:
                 # Convert to datetime object
                 setattr(self, key, dateutil.parser.parse(fields[key]))
+            elif key in date_fields and fields[key] is not None:
+                # Convert to date object
+                setattr(self, key, dateutil.parser.parse(fields[key]).date())
+            elif key in time_fields and fields[key] is not None:
+                # Convert to datetime object
+                setattr(self, key, dateutil.parser.parse(fields[key]).time())
             else:
                 # Set other things
                 setattr(self, key, fields[key])
@@ -710,15 +675,13 @@ def node_repeat(sender, **kwargs):
                         original.year + ((original.month + number - 1) / 12)
                         )
                     )
-                new = datetime(year=year,
+                new = dt.date(year=year,
                                month=month,
-                               day=day,
-                               tzinfo=get_current_timezone())
+                               day=day)
             elif unit == 'y': # Years
-                new = datetime(year=original.year+number,
+                new = dt.date(year=original.year+number,
                                month=original.month,
-                               day=original.day,
-                               tzinfo=get_current_timezone())
+                               day=original.day)
             else: # None of the above
                 raise ValueError
             return new
@@ -729,21 +692,21 @@ def node_repeat(sender, **kwargs):
                 old_node = Node.objects.get(pk=instance.pk)
                 if not (old_node.todo_state == instance.todo_state):
                     # Only if something has changed
-                    if instance.scheduled: # Adjust Node.scheduled
+                    if instance.scheduled_date: # Adjust Node.scheduled_date
                         if instance.repeats_from_completion:
-                            original = datetime.now(get_current_timezone())
+                            original = datetime.now(get_current_timezone()).date()
                         else:
-                            original = instance.scheduled
-                        instance.scheduled = _get_new_time(
+                            original = instance.scheduled_date
+                        instance.scheduled_date = _get_new_time(
                             original,
                             instance.repeating_number,
                             instance.repeating_unit)
-                    if instance.deadline: # Adjust Node.deadline
+                    if instance.deadline_date: # Adjust Node.deadline_date
                         if instance.repeats_from_completion:
-                            original = datetime.now(get_current_timezone())
+                            original = datetime.now(get_current_timezone()).date()
                         else:
-                            original = instance.deadline
-                        instance.deadline = _get_new_time(
+                            original = instance.deadline_date
+                        instance.deadline_date = _get_new_time(
                             original,
                             instance.repeating_number,
                             instance.repeating_unit)

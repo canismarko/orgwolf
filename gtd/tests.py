@@ -185,12 +185,18 @@ class EditNode(TestCase):
             node.related_projects.all()[0].pk,
             1
         )
-        # Datetime object
-        node.set_fields({'scheduled': '2012-12-31T05:00:00Z'})
+        # Date and time objects
+        node.set_fields({'scheduled_date': '2012-12-31',
+                         'scheduled_time': '05:00:00'})
         self.assertEqual(
-            'datetime',
-            node.scheduled.__class__.__name__,
-            'set_fields processes datetime strings into datetime objects'
+            'date',
+            node.scheduled_date.__class__.__name__,
+            'set_fields processes date strings into date objects'
+        )
+        self.assertEqual(
+            'time',
+            node.scheduled_time.__class__.__name__,
+            'set_fields processes time strings into time objects'
         )
 
 class NodeOrder(TestCase):
@@ -465,49 +471,50 @@ class RepeatingNodeTest(TestCase):
         # The state shouldn't actually change since it's repeating
         self.assertEqual(actionable, node.todo_state)
         new_date = dt.datetime(2013, 1, 3, tzinfo=get_current_timezone())
-        self.assertEqual(new_date.date(), node.scheduled.date())
+        self.assertEqual(new_date.date(), node.scheduled_date)
     def test_all_repeat_units(self):
         """Make sure day, week, month and year repeating units work"""
         node = Node.objects.get(title='Buy cat food')
         closed = TodoState.objects.get(abbreviation='DONE')
-        old_date = dt.datetime(2012, 12, 31, tzinfo=get_current_timezone())
+        old_date = dt.date(2012, 12, 31)
+        node.repeating_number = 3
         # Test 'd' for day
         node.repeating_unit='d'
-        node.scheduled = old_date
+        node.scheduled_date = old_date
         node.save()
         node.todo_state=closed
         node.auto_update = True
         node.save()
         self.assertFalse(node.is_closed())
-        new_date = dt.datetime(2013, 1, 3, tzinfo=get_current_timezone())
-        self.assertEqual(new_date.date(), node.scheduled.date())
+        new_date = dt.date(2013, 1, 3)
+        self.assertEqual(new_date, node.scheduled_date)
         # Test 'w' for week
         node.repeating_unit='w'
-        node.scheduled = old_date
+        node.scheduled_date = old_date
         node.save()
         node.todo_state=closed
         node.save()
         self.assertFalse(node.is_closed())
-        new_date = dt.datetime(2013, 1, 21, tzinfo=get_current_timezone())
-        self.assertEqual(new_date.date(), node.scheduled.date())
+        new_date = dt.date(2013, 1, 21)
+        self.assertEqual(new_date, node.scheduled_date)
         # Test 'm' for month
         node.repeating_unit='m'
-        node.scheduled = old_date
+        node.scheduled_date = old_date
         node.save()
         node.todo_state=closed
         node.save()
         self.assertFalse(node.is_closed())
-        new_date = dt.datetime(2013, 3, 31, tzinfo=get_current_timezone())
-        self.assertEqual(new_date.date(), node.scheduled.date())
+        new_date = dt.date(2013, 3, 31)
+        self.assertEqual(new_date, node.scheduled_date)
         # Test 'y' for year
         node.repeating_unit='y'
-        node.scheduled = old_date
+        node.scheduled_date = old_date
         node.save()
         node.todo_state=closed
         node.save()
         self.assertFalse(node.is_closed())
-        new_date = dt.datetime(2015, 12, 31, tzinfo=get_current_timezone())
-        self.assertEqual(new_date.date(), node.scheduled.date())
+        new_date = dt.date(2015, 12, 31)
+        self.assertEqual(new_date, node.scheduled_date)
     def test_31st_bug(self):
         """Test for proper behavior if trying to set a month that
         doesn't have a 31st day."""
@@ -515,25 +522,25 @@ class RepeatingNodeTest(TestCase):
         closed = TodoState.objects.get(abbreviation='DONE')
         node.repeating_unit = 'm'
         node.repeating_number = 1
-        old_date = dt.datetime(2013, 8, 31, tzinfo=get_current_timezone())
-        node.scheduled = old_date
+        old_date = dt.date(2013, 8, 31)
+        node.scheduled_date = old_date
         node.save()
-        node.todo_state=closed
+        node.todo_state = closed
         node.auto_update = True
         node.save()
         self.assertFalse(node.is_closed())
-        new_date = dt.datetime(2013, 9, 30, tzinfo=get_current_timezone())
-        self.assertEqual(new_date.date(), node.scheduled.date())
+        new_date = dt.date(2013, 9, 30)
+        self.assertEqual(new_date, node.scheduled_date)
         # Now try for February type bugs
-        old_date = dt.datetime(2013, 1, 28, tzinfo=get_current_timezone())
-        node.scheduled = old_date
+        old_date = dt.date(2013, 1, 28)
+        node.scheduled_date = old_date
         node.repeating_number = 2
         node.save()
         node.todo_state = closed
         node.save()
         self.assertFalse(node.is_closed())
-        new_date = dt.datetime(2013, 3, 28, tzinfo=get_current_timezone())
-        self.assertEqual(new_date.date(), node.scheduled.date())
+        new_date = dt.date(2013, 3, 28)
+        self.assertEqual(new_date, node.scheduled_date)
     def test_month_bug(self):
         """Test for a bug that imporperly increments months and years
         if original_month + repeating_unit equals 12 and if
@@ -541,9 +548,7 @@ class RepeatingNodeTest(TestCase):
         """
         node = Node.objects.get(title='Buy cat food')
         closed = TodoState.objects.get(abbreviation='DONE')
-        node.scheduled = dt.datetime(
-            2012, 11, 25, 0, 0, tzinfo=get_current_timezone()
-        )
+        node.scheduled_date = dt.date(2012, 11, 25)
         node.repeating_unit = 'm'
         node.repeating_number = 1
         node.repeats_from_completion = False
@@ -553,10 +558,8 @@ class RepeatingNodeTest(TestCase):
         node.auto_update = True
         node.save()
         self.assertEqual(
-            dt.datetime(
-                2012, 12, 25, 0, 0, tzinfo=get_current_timezone()
-            ),
-            node.scheduled
+            dt.date(2012, 12, 25),
+            node.scheduled_date
         )
 
 class FormValidation(TestCase):
@@ -729,7 +732,7 @@ class Shortcuts(TestCase):
             order_nodes.__class__.__name__
             )
         original_qs = Node.objects.all()
-        result_qs = order_nodes(original_qs, field='scheduled')
+        result_qs = order_nodes(original_qs, field='scheduled_date')
         self.assertEqual(
             'QuerySet',
             result_qs.__class__.__name__
@@ -740,8 +743,8 @@ class Shortcuts(TestCase):
             'gtd.shortcuts.order_by_date() method does not modify queryset'
             )
         # Now Check the actual contents of the returned queryset
-        scheduled_qs = original_qs.exclude(scheduled=None)
-        unscheduled_qs = original_qs.filter(scheduled=None)
+        scheduled_qs = original_qs.exclude(scheduled_date=None)
+        unscheduled_qs = original_qs.filter(scheduled_date=None)
         self.maxDiff = None
         result_list = []
         for node in result_qs[(result_qs.count() - unscheduled_qs.count()):]:
@@ -752,7 +755,7 @@ class Shortcuts(TestCase):
             ordered=False
             )
         self.assertEqual(
-            list(scheduled_qs.order_by('scheduled')),
+            list(scheduled_qs.order_by('scheduled_date')),
             list(result_qs)[:scheduled_qs.count()]
             )
     def test_order_nodes_context(self):
@@ -762,7 +765,7 @@ class Shortcuts(TestCase):
         context = Context.objects.get(pk=1)
         ordered_nodes = order_nodes(nodes,
                                     context=context,
-                                    field='deadline',
+                                    field='deadline_date',
                                     )
         self.assertEqual(
             deadline_node,
@@ -794,22 +797,22 @@ class Shortcuts(TestCase):
             node.todo_state.pk,
             response_dict['fields']['todo_state']
             )
-        # self.assertEqual(
-        #     node.scheduled.date().isoformat(),
-        #     response_dict['fields']['scheduled_date']
-        #     )
-        # self.assertEqual(
-        #     node.scheduled.time().isoformat(),
-        #     response_dict['fields']['scheduled_time']
-        #     )
-        # self.assertEqual(
-        #     node.deadline.date().isoformat(),
-        #     response_dict['fields']['deadline_date']
-        #     )
-        # self.assertEqual(
-        #     node.deadline.time().isoformat(),
-        #     response_dict['fields']['deadline_time']
-        #     )
+        self.assertEqual(
+            node.scheduled_date.isoformat(),
+            response_dict['fields']['scheduled_date']
+            )
+        self.assertEqual(
+            node.scheduled_time.isoformat()[:-3],
+            response_dict['fields']['scheduled_time']
+            )
+        self.assertEqual(
+            node.deadline_date.isoformat(),
+            response_dict['fields']['deadline_date']
+            )
+        self.assertEqual(
+            node.deadline_time.isoformat()[:-3],
+            response_dict['fields']['deadline_time']
+            )
         self.assertEqual(
             node.priority,
             response_dict['fields']['priority']
@@ -965,23 +968,57 @@ class ScopeFilter(TestCase):
             add_scope(self.s)
             )
 
+
+class ScopeAPI(TestCase):
+    fixtures = ['test-users.json', 'gtd-test.json', 'gtd-env.json']
+    def setUp(self):
+        self.url = reverse('scope_api');
+        self.user = User.objects.get(username='test')
+        self.assertTrue(
+            self.client.login(
+                username=self.user.username, password='secret')
+        )
+        self.scopes = Scope.objects.filter(owner=self.user)
+        self.scopes = self.scopes | Scope.objects.filter(public=True)
+    def test_get_scope_collection(self):
+        response = self.client.get(self.url)
+        expected = serializers.serialize('json', self.scopes)
+        self.assertEqual(
+            response.content,
+            expected,
+        )
+    def test_scope_get_visible(self):
+        expected = []
+        for scope in self.scopes:
+            expected.append(repr(scope))
+        self.assertQuerysetEqual(
+            Scope.get_visible(user=self.user),
+            expected,
+        )
+
+
 class OverdueFilter(TestCase):
     """Tests the `overdue` node method that makes dates into
     prettier "in 1 day" strings, etc."""
     fixtures = ['gtd-test.json']
     def setUp(self):
-        self.tz = get_current_timezone()
         self.node = Node.objects.get(pk=1)
     def test_filter_exists(self):
         self.assertEqual(
             self.node.overdue.__class__.__name__,
             'instancemethod')
-        self.node.test_date = dt.datetime.now(self.tz)
+        self.node.test_date = dt.datetime.now().date()
         self.assertEqual(
             self.node.overdue('test_date').__class__.__name__,
             'unicode')
-    def test_simple_dt(self):
-        self.node.yesterday = dt.datetime.now(self.tz) + dt.timedelta(-1)
+        # Test behavior if field is None
+        self.node.none_field = None
+        self.assertEqual(
+            self.node.overdue('none_field'),
+            ''
+        )
+    def test_simple_date(self):
+        self.node.yesterday = (dt.datetime.now() + dt.timedelta(-1)).date()
         self.assertEqual(
             self.node.overdue(
                 'yesterday', future=True),
@@ -990,8 +1027,8 @@ class OverdueFilter(TestCase):
         self.assertEqual(
             self.node.overdue('yesterday', future=True),
             '2 days ago')
-    def test_future_dt(self):
-        self.node.tomorrow = dt.datetime.now(self.tz) + dt.timedelta(1)
+    def test_future_date(self):
+        self.node.tomorrow = (dt.datetime.now() + dt.timedelta(1)).date()
         self.assertEqual(
             self.node.overdue('tomorrow', future=True),
             'in 1 day')
@@ -999,18 +1036,6 @@ class OverdueFilter(TestCase):
         self.assertEqual(
             self.node.overdue('tomorrow', future=True),
             'in 2 days')
-    def test_timezones(self):
-        tomorrow = dt.datetime(2013, 1, 17,
-                               23, 21, 56, 987000,
-                               tzinfo=utc)
-        self.node.dt = dt.datetime(2013, 1, 17,
-                              3, 0,
-                              tzinfo=utc)
-        tz = get_current_timezone()
-        self.assertEqual(
-            self.node.overdue('dt', tzinfo=tz, agenda_dt=tomorrow),
-            '1 day ago'
-        )
 
 class UrlGenerate(TestCase):
     """Tests for the gtd url_generator that returns a URL string based
@@ -1375,7 +1400,7 @@ class TimeZones(TestCase):
         )
         self.assertContains(
             response,
-            '<input type="text" name="date" value="{0}" class="input-medium datepicker" placeholder="Change date..."></input>'.format(datestring),
+            '<input type="text" name="date" value="{0}" class="input-medium datepicker form-control" placeholder="Change date..."></input>'.format(datestring),
             status_code=200,
             msg_prefix='Incorrect date set in input date changer'
         )
@@ -1398,12 +1423,12 @@ class DBOptimization(TestCase):
             self.client.get,
             reverse('gtd.views.list_display'),
         )
-    def test_as_pre_json_db(self):
+    def test_as_json_db(self):
         node = Node.objects.select_related('todo_state')
         node = Node.objects.get(pk=1)
         self.assertNumQueries(
-            4,
-            node.as_pre_json,
+            3,
+            node.as_json,
             )
     def test_node_view(self):
         self.assertNumQueries(
@@ -1494,6 +1519,7 @@ class NodeAPI(TestCase):
         self.assertTrue(
             self.client.login(username='test', password='secret')
         )
+        self.user = User.objects.get(username='test')
     def test_url_slug(self):
         """Check if using /<pk>/<slug>/operates as expected"""
         response = self.client.get(
@@ -1517,12 +1543,52 @@ class NodeAPI(TestCase):
         """Check if getting the node attributes by ajax works as expected"""
         response = self.client.get(
             self.url_slug,
-            HTTP_X_REQUESTED_WITH='XMLHttpRequest'
+            HTTP_ACCEPT='application/json'
         )
         r = json.loads(response.content)
         self.assertEqual(
             self.node.pk,
-            r[0]['pk'],
+            r['pk'],
+        )
+    def test_get_node_collection(self):
+        """Check that a collection of nodes can be retried with optional filters
+        applied by parameters"""
+        nodes = Node.objects.mine(self.user)
+        response = self.client.get(
+            '/gtd/node/',
+            HTTP_ACCEPT='application/json'
+        )
+        r = json.loads(response.content)
+        self.assertQuerysetEqual(
+            nodes,
+            [node['pk'] for node in r],
+            transform = lambda x: x.pk
+        )
+        # Now filter by some parameters
+        nodes = Node.objects.mine(self.user).filter(parent_id='1')
+        response = self.client.get(
+            '/gtd/node/',
+            {'parent_id': '1'},
+            HTTP_ACCEPT='application/json',
+        )
+        r = json.loads(response.content)
+        self.assertQuerysetEqual(
+            nodes,
+            [node['pk'] for node in r],
+            transform = lambda x: x.pk
+        )
+        # Root level nodes by parameter
+        nodes = Node.objects.mine(self.user).filter(parent=None)
+        response = self.client.get(
+            '/gtd/node/',
+            {'parent_id': '0'},
+            HTTP_ACCEPT='application/json',
+        )
+        r = json.loads(response.content)
+        self.assertQuerysetEqual(
+            nodes,
+            [node['pk'] for node in r],
+            transform = lambda x: x.pk
         )
     def test_json_put(self):
         """Check if setting attributes by ajax works as expected"""

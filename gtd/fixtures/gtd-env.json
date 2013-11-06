@@ -316,7 +316,7 @@
     "pk": 1, 
     "model": "gtd.scope", 
     "fields": {
-        "owner": null, 
+        "owner": 1, 
         "public": false, 
         "name": "joe_corp", 
         "display": "joe_corp"
@@ -326,10 +326,30 @@
     "pk": 2, 
     "model": "gtd.scope", 
     "fields": {
-        "owner": null, 
+        "owner": 1, 
         "public": false, 
         "name": "Kalsec", 
         "display": "Kalsec"
+    }
+},
+{
+    "pk": 3, 
+    "model": "gtd.scope", 
+    "fields": {
+        "owner": 2, 
+        "public": false, 
+        "name": "private scope", 
+        "display": "private"
+    }
+},
+{
+    "pk": 4, 
+    "model": "gtd.scope", 
+    "fields": {
+        "owner": null, 
+        "public": true, 
+        "name": "public scope", 
+        "display": "public"
     }
 }
 ]

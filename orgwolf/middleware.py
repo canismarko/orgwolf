@@ -140,6 +140,11 @@ class AjaxMiddleware():
         Decode submitted data for REST API depending on format
         (JSON, url-encoded-form, etc)
         """
+        accept = request.META.get('HTTP_ACCEPT', '')
+        if accept.find('application/json') > -1:
+            request.is_json = True
+        else:
+            request.is_json = False
         if request.method in ['PUT', 'POST'] and request.is_ajax():
             parsers = {
                 'application/json': self.parse_json,

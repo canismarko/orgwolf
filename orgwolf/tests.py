@@ -281,3 +281,21 @@ class AjaxMiddlewareTest(TestCase):
             request.PUT['pk'],
             172
         )
+    def test_is_json_field(self):
+        """
+        Tests that the request of object get is_json attribute set
+        based on http_accept header.
+        """
+        # With accept header
+        request = self.factory.get('/gtd/node/1/archive/',
+                                   HTTP_ACCEPT='application/json')
+        self.middleware.process_request(request)
+        self.assertTrue(
+            request.is_json
+        )
+        # Without accept header
+        request = self.factory.get('/gtd/node/1/archive/')
+        self.middleware.process_request(request)
+        self.assertTrue(
+            not request.is_json
+        )

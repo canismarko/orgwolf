@@ -36,7 +36,7 @@ node2 = {
     pk: 2,
     workspace: scope,
     fields: {
-	title: 'test title',
+	title: 'Another test title',
 	text: 'here\'s some text that goes with it',
 	lft: 1,
 	rght: 6,
@@ -605,7 +605,7 @@ test('Headings manager order_by method (pk)', function() {
     );
 });
 
-test('Headings manager order_by method (lft field)', function() {
+test('Headings manager order_by method (fields.lft)', function() {
     var response;
     // Set these fields to make ordering unambiguous
     scope.headings[0].fields.lft = 2;
@@ -622,9 +622,31 @@ test('Headings manager order_by method (lft field)', function() {
     );
 });
 
+test('Headings manager order_by method (fields.title)', function() {
+    var response, heading1, heading2, heading3;
+    heading1 = scope.headings.get({pk: 1});
+    heading2 = scope.headings.get({pk: 2});
+    heading3 = scope.headings.get({pk: 3});
+    // Set properties to ensure predictable sorting
+    heading1.fields.title = 'Boy this is great';
+    heading2.fields.title = 'And this is great too';
+    heading3.fields.title = 'away for the day';
+    response = scope.headings.order_by('title');
+    equal(
+	response[0].pk,
+	heading2.pk,
+	'Uppercase sorted properly'
+    );
+    equal(
+	response[1].pk,
+	heading3.pk,
+	'lowercase sorted properly'
+    );
+});
+
 
 test('workspace.headings.add() method', function() {
-    var heading, heading_new, new_heading, index;
+    var heading, heading_new, new_heading, index, old_length;
     heading = scope.headings.get({pk: 1});
     index = scope.headings.indexOf(heading);
     // Remove heading 1
@@ -639,6 +661,14 @@ test('workspace.headings.add() method', function() {
 	scope.headings.filter_by({pk: 1}).length,
 	1,
 	'Adding a duplicate heading.pk removes the other heading'
+    );
+    // Chcek that adding an empty array is a no-op
+    old_length = scope.headings.length;
+    scope.headings.add([])
+    equal(
+	scope.headings.length,
+	old_length,
+	'HeadingManager is the same length after adding empty array'
     );
 });
 

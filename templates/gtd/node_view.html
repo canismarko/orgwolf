@@ -97,73 +97,6 @@ $('document').ready(function() {
 
 {% block content %}
 
-<div id="node-detail">
-  {# Breadcrumb trail #}
-  {{ breadcrumb_list|breadcrumbs:base_url }}
-  <!-- {% for node in breadcrumb_list %}{% if forloop.first %}&nbsp;{% else %}&gt;{% endif %} -->
-  <!-- {% if forloop.last %} -->
-  <!-- <span class="update" data-field="title">{{ node.get_title }}</span> -->
-  <!-- {% else %} -->
-  <!-- <a href="{{ base_url }}{{node.pk}}/{{ node.slug }}/">{{ node.get_title }}</a> -->
-  <!-- {% endif %} -->
-  <!-- {% endfor %} -->
-
-  <h3 class="update" data-field="title">{{ parent_node.get_title }}</h3>
-
-  {% if node_id %}
-  <form action="edit/" method="POST">
-    <div class="btn-toolbar" id="todo-buttons" node_id="{{ parent_node.pk }}">
-      <div class="btn-group">
-      </div>
-      <div class="btn-group">
-	<button type="submit" name="new_todo" value="0" class="btn new_todo{% if not parent_node.todo_state %} active{% endif %}">
-	  [None]
-	</button>
-	{% for todo_state in all_todo_states_qs %}
-	<button type="submit" name="new_todo" value="{{ todo_state.id }}" class="btn new_todo{% if todo_state = parent_node.todo_state %} active{% endif %}">
-	  {{ todo_state.as_html }}
-	</button>
-	{% endfor %}
-      </div>
-    </div>
-    <input type="hidden" name="function" value="change_todo_state" />
-    {% csrf_token %}
-  </form>
-  <a href="edit/" class="btn btn-default" id="edit-button"><i class="glyphicon glyphicon-pencil"></i> Edit</a>
-  <a href="move/" class="btn btn-default" id="move-button"><i class="glyphicon glyphicon-move"></i> Move</a>
-  <a href="{% url 'gtd.views.list_display' %}parent{{ parent_node.pk }}/" class="btn btn-default">
-    <i class="glyphicon glyphicon-th-list"></i> As List
-  </a>
-  {% else %}
-  <a href="{% url 'gtd.views.list_display' %}" class="btn btn-default">
-    <i class="glyphicon glyphicon-th-list"></i> As List
-  </a>
-  {% endif %}{# if parent_node #}
-
-  {# Parent node item details #}
-  <span node_id="{{ node_id }}">
-    {% if parent_node %}
-    <dl>
-      {% include 'gtd/node_detail.html' %}
-      <dt>Text:</dt>
-      <dd node_id="{{ parent_node.pk }}">
-	<div id="parent-text" class="update" data-field="text">
-	  {{ parent_node.text|escape_html }}
-	</div>
-      </dd>
-    </dl>
-    <a href="new/" class="btn-default" id="add-node">
-      <i class="glyphicon glyphicon-plus"></i>&nbsp;New Node
-    </a>
-    {% else %}
-    <a href="new/" class="btn-default" id="add-node">
-      <i class="glyphicon glyphicon-plus"></i>&nbsp;New Project
-    </a>
-    {% endif %}{# if parent_node #}
-    </span>
-</div><!-- /div id="node-detail"-->
-<br />
-
 <!-- AngularJS app for child nodes outline -->
 {% verbatim %}
 
@@ -179,7 +112,7 @@ $('document').ready(function() {
       	      ng-disabled="form.$invalid">
 	Save
       </button>
-      <button class="btn btn-default btn-xs" ng-click="heading.editable = false">
+      <button class="btn btn-default btn-xs" ng-click="cancel_edit($event)">
 	Don't Save
       </button>
     </div>
@@ -222,31 +155,40 @@ $('document').ready(function() {
 	</div>
 	<div class="row">
 	  <div class="col-md-3">
-	    <label for="deadline_date">Deadline:</label>
+	    <label for="scheduled_date">Scheduled:</label>
 	    <div class="row">
 	      <div class="col-md-6">
-		<input type="text" id="deadline_date" class="form-control" placeholder="YYYY-MM-DD"></input>
+		<input type="text" id="scheduled_date" placeholder="YYYY-MM-DD"
+		       class="form-control datepicker" value="{{ fields.scheduled_date }}"
+		       ng-model="fields.scheduled_date"></input>
 	      </div>
 	      <div class="col-md-6">
-		<input type="text" id="deadline_time" class="form-control" placeholder="HH:MM"></input>
+		<input type="text" id="scheduled_time" placeholder="HH:MM"
+		       class="form-control timepicker"
+		       ng-model="fields.scheduled_time"></input>
 	      </div>
 	    </div>
 	  </div>
 	  <div class="col-md-3">
-	    <label for="scheduled_date">Scheduled:</label>
+	    <label for="deadline_date">Deadline:</label>
 	    <div class="row">
 	      <div class="col-md-6">
-		<input type="text" id="scheduled_date" placeholder="YYYY-MM-DD" class="form-control"></input>
+		<input type="text" id="deadline_date" placeholder="YYYY-MM-DD"
+		       class="form-control datepicker"
+		       ng-model="fields.deadline_date"></input>
 	      </div>
 	      <div class="col-md-6">
-		<input type="text" id="scheduled_time" placeholder="HH:MM" class="form-control"></input>
+		<input type="text" id="deadline_time" placeholder="HH:MM"
+		       class="form-control timepicker"
+		       ng-model="fields.deadline_time"></input>
 	      </div>
 	    </div>
 	  </div>
 	  <div class="col-md-2">
 	    <label>Scope:</label>
-	    <select id="scope" multiple ng-model="fields.scope"
-		    ng-options="a for a in ['A', 'B']" class="form-control">
+	    <select id="scope" multiple class="form-control"
+		    ng-model="fields.scope"
+		    ng-options="a.pk as a.fields.display for a in scopes">
 		    </select>
 	  </div>
 	  <div class="col-md-1">
@@ -296,18 +238,12 @@ $('document').ready(function() {
 	rel="popover">
 	{{ heading.todo_state.fields.abbreviation }}
 	</span>
-  <!-- <div class="popover right todostate" ng-if="heading.todo_popover"> -->
-  <!--   <div class="arrow"></div> -->
-  <!--   <div class="popover-title">Todo State</div> -->
-  <!--   <div class="popover-inner"> -->
-  <!--   </div> -->
-  <!-- </div> -->
-
 </script>
 
 <!-- Recursive function for tree of Tasks -->
 <script type="text/ng-template" id="outline-tree">
   <div class="heading {{heading.state}}" node_id="{{heading.pk}}"
+       id="{{heading.pk}}"
        >
     <div class="ow-hoverable" ng-click="toggle_node($event)"
 	 ng-show="!heading.editable" style="{{ heading | style }}"
@@ -360,16 +296,39 @@ $('document').ready(function() {
 <!-- Initiate recursion for node tree -->
 {% endverbatim %}
 <div ng-controller="nodeOutline" id="outline-appliance"
-     parent_id="{{ parent_node.pk }}">
-{% verbatim %}
-  <div id="add-heading" class="btn btn-default"
-       ng-click="show_all($event)">
-    <i class="glyphicon glyphicon-folder-close"></i>
-    Show Archived
+     parent_id="{{ parent_node.pk }}" parent_tree="{{ parent_node.tree_id }}">
+     {% verbatim %}
+  <form class="form-inline" id="sort-field">
+    <div id="add-heading" class="btn btn-default"
+	 ng-click="add_heading($event)">
+	 <i class="glyphicon glyphicon-plus"></i>
+	 New Project
     </div>
+    <div id="show-all" class="btn btn-default"
+	 ng-click="show_all($event)" ng-if="!show_arx">
+	 <i class="glyphicon glyphicon-folder-close"></i>
+	 Show Archived
+    </div>
+    <div id="show-all" class="btn btn-default active"
+	 ng-click="show_all($event)" ng-if="show_arx">
+	 <i class="glyphicon glyphicon-folder-open"></i>
+	 Show Archived
+    </div>
+    <label for="sort-field">Sort:</label>
+    <select name="sort-field" ng-model="sort_field" class="form-control"
+	    ng-options="x.key as x.display for x in sort_fields">
+    </select>
+  </form>
+  <ul class="nav nav-tabs" ow-scope-tabs>
+    <li scope_id="0" ng-click="change_scope($event)"><a href="#">All</a></li>
+    <li ng-repeat="scope in scopes" scope_id="{{ scope.pk }}"
+	ng-click="change_scope($event)">
+	<a href="#">{{ scope.fields.display }}</a>
+    </li>
+  </ul>
   <div class="outline">
-    <div ng-repeat="heading in rank1_headings" class="children"
-	 ng-show="(show_arx || !(heading.fields.archived))">
+    <div ng-repeat="heading in children | order:sort_field" class="children"
+	 ng-show="(show_arx || !(heading.fields.archived)) && (active_scope === 0 || heading.fields.scope.indexOf(active_scope) > -1)">
       <div ng-include="'outline-tree'"></div>
     </div>
   </div>
@@ -378,6 +337,65 @@ $('document').ready(function() {
 
 <!-- List of child nodes displayed only as graceful fallback -->
 <noscript>
+
+  <div id="node-detail">
+    {# Breadcrumb trail #}
+    {{ breadcrumb_list|breadcrumbs:base_url }}
+
+    <h3 class="update" data-field="title">{{ parent_node.get_title }}</h3>
+
+    {% if node_id %}
+      <form action="edit/" method="POST">
+	<div class="btn-toolbar" id="todo-buttons" node_id="{{ parent_node.pk }}">
+	  <div class="btn-group">
+	  </div>
+	  <div class="btn-group">
+	    <button type="submit" name="new_todo" value="0" class="btn new_todo{% if not parent_node.todo_state %} active{% endif %}">
+	      [None]
+	    </button>
+	    {% for todo_state in all_todo_states_qs %}
+	      <button type="submit" name="new_todo" value="{{ todo_state.id }}" class="btn new_todo{% if todo_state = parent_node.todo_state %} active{% endif %}">
+		{{ todo_state.as_html }}
+	      </button>
+	    {% endfor %}
+	  </div>
+	</div>
+	<input type="hidden" name="function" value="change_todo_state" />
+	{% csrf_token %}
+      </form>
+      <a href="edit/" class="btn btn-default" id="edit-button"><i class="glyphicon glyphicon-pencil"></i> Edit</a>
+      <a href="move/" class="btn btn-default" id="move-button"><i class="glyphicon glyphicon-move"></i> Move</a>
+      <a href="{% url 'gtd.views.list_display' %}parent{{ parent_node.pk }}/" class="btn btn-default">
+	<i class="glyphicon glyphicon-th-list"></i> As List
+      </a>
+    {% else %}
+      <a href="{% url 'gtd.views.list_display' %}" class="btn btn-default">
+	<i class="glyphicon glyphicon-th-list"></i> As List
+      </a>
+    {% endif %}{# if parent_node #}
+
+    {# Parent node item details #}
+    <span node_id="{{ node_id }}">
+      {% if parent_node %}
+	<dl>
+	  {% include 'gtd/node_detail.html' %}
+	  <dt>Text:</dt>
+	  <dd node_id="{{ parent_node.pk }}">
+	    <div id="parent-text" class="update" data-field="text">
+	      {{ parent_node.text|escape_html }}
+	    </div>
+	  </dd>
+	</dl>
+	<a href="new/" class="btn-default" id="add-node">
+	  <i class="glyphicon glyphicon-plus"></i>&nbsp;New Node
+	</a>
+      {% else %}
+	<a href="new/" class="btn-default" id="add-node">
+	  <i class="glyphicon glyphicon-plus"></i>&nbsp;New Project
+	</a>
+      {% endif %}{# if parent_node #}
+    </span>
+  </div><!-- /div id="node-detail"-->
   <div id="outline-workspace" class="outline" data-node_id="{{ node_id }}">
     {% include 'gtd/scope_tabs.html' %}
     <strong>
