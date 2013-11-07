@@ -164,7 +164,7 @@ GtdHeading.prototype.get_parent = function() {
     } else {
 	parent = null;
     }
-    return parent;
+	return parent;
 };
 
 GtdHeading.prototype.get_children = function() {
@@ -284,6 +284,8 @@ GtdHeading.prototype.update = function() {
     this.todo_state = this.workspace.todo_states.get({pk: this.fields.todo_state});
     // Update children
     this.children = this.workspace.headings.filter_by({parent: this.pk});
+    // Update parent_obj
+    this.parent_obj = this.get_parent()
 };
 
 GtdHeading.prototype.save = function(args) {
@@ -550,7 +552,6 @@ GtdHeading.prototype.populate_children = function(options) {
 	});
     };
     if ( ! this.populated ) {
-	console.log(this);
 	// Not yet populated, so get children by ajax
 	if ( this.rank > 0 && this.$children ) {
 	    this.$children.hide();
@@ -626,6 +627,7 @@ Array.prototype.filter_by = function(criteria) {
     // properties listed in criteria object
     var filtered, i, heading, passed, key, obj;
     filtered = [];
+    filtered.workspace = this.workspace;
     for ( i = 0; i < this.length; i += 1 ) {
 	heading = this[i];
 	// Removed to allow filtering on workspace
@@ -714,44 +716,63 @@ Array.prototype.order_by = function(field) {
     }
     return sorted;
 }; // end of order_by method
-Array.prototype.add = function(headings) {
+Array.prototype.add = function(obj) {
     // Add or replace a heading based on pk
     // Returns the authoritative object
-    var that, other_heading, valid, real_heading, insert, new_heading, i;
+    var that, other_heading, valid, real_heading, process, new_heading, i;
     that = this;
     valid = ['pk', 'populated', 'text', 'todo_state', 'archived', 'rank', 'scope', 'related_projects', 'parent'];
-    insert = function(new_heading) {
-	var key;
-	other_heading = that.get({pk: new_heading.pk});
-	if ( other_heading ) {
-	    // Heading already exists so just update it
-	    // First preserve some data
-	    new_heading.populated = other_heading.populated;
-	    for ( key in new_heading ) {
-		if ( new_heading.hasOwnProperty(key) ) {
-		    other_heading[key] = new_heading[key];
+    process = function(headings) {
+	var parents, insert;
+	parents = [];
+	insert = function(new_heading) {
+	    // Called at end of process() once per node
+	    var key;
+	    other_heading = that.get({pk: new_heading.pk});
+	    if ( other_heading ) {
+		// Heading already exists so just update it
+		// First preserve some data
+		new_heading.populated = other_heading.populated;
+		for ( key in new_heading.fields ) {
+		    if ( new_heading.fields.hasOwnProperty(key) ) {
+			other_heading.fields[key] = new_heading.fields[key];
+		    }
 		}
+		real_heading = other_heading;
+	    } else {
+		// Heading doesn't exist so push it to the stack
+		new_heading.workspace = that.workspace;
+		that.push(new_heading);
+		real_heading = new_heading;
 	    }
-	    real_heading = other_heading;
+	    real_heading.update();
+	    parents.push(real_heading.get_parent());
+	    return real_heading;
+	};
+	// Determine if one object or array-like
+	if ( headings instanceof Array ) {
+	    for ( i=0; i<headings.length; i+=1 ) {
+		new_heading = new GtdHeading(headings[i]);
+		insert(new_heading);
+	    }
 	} else {
-	    // Heading doesn't exist so push it to the stack
-	    that.push(new_heading);
-	    real_heading = new_heading;
+	    real_heading = insert(headings);
 	}
-	real_heading.update();
-	return real_heading;
-    };
-    // Determine if one object or array-like
-    if ( headings instanceof Array ) {
-	for ( i=0; i<headings.length; i+=1 ) {
-	    if ( headings[i].pk === 2 ) {
-		console.log('hi');
+	// Now update each parent with its new children
+	parents = parents.filter(function (e, i, arr) {
+	    return arr.lastIndexOf(e) === i;
+	});
+	for ( i=0; i<parents.length; i+=1 ) {
+	    if ( parents[i] ) {
+		parents[i].update();
 	    }
-	    new_heading = new GtdHeading(headings[i]);
-	    insert(new_heading);
 	}
+    }
+    if ( obj.$resolved === false ) {
+	// If ajax request is not resolved then defer processing
+	obj.$promise.then(process);
     } else {
-	real_heading = insert(headings);
+	process(obj);
     }
 
     return real_heading;

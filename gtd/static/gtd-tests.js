@@ -227,7 +227,7 @@ module('GtdHeading model', {
     setup: function() {
 	var heading;
 	// Refresh headings for next test
-	scope.headings = new HeadingManager();
+	scope.headings = new HeadingManager(scope);
 	scope.headings.add(new GtdHeading(node1));
 	scope.headings.add(new GtdHeading(node2));
 	scope.headings.add(new GtdHeading(node3));
@@ -542,6 +542,11 @@ test('Headings manager filter_by method', function() {
     var node3, response, expected, heading, i, r;
     node3 = scope.headings.get({pk: 3});
     response = scope.headings.filter_by({archived: true});
+    equal(
+	response.workspace,
+	scope,
+	'filter_by returns array with workspace set'
+    );
     equal(
 	response[0].pk,
 	node3.pk,

@@ -4,7 +4,6 @@
   {% for node in day_specific_nodes %}
   <tr{% if node.overdue_str %} class="danger"{% endif %} node_id="{{ node.pk }}">
     <td>
-      TODO: update overdue class
       <a href="{% url 'node_object' pk=node.id %}" title="{{ node.hierarchy }}">{{ node.overdue_str }}</a>
     </td>
     <td>

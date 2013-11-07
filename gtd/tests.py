@@ -1553,7 +1553,7 @@ class NodeAPI(TestCase):
     def test_get_node_collection(self):
         """Check that a collection of nodes can be retried with optional filters
         applied by parameters"""
-        nodes = Node.objects.mine(self.user)
+        nodes = Node.objects.mine(self.user, get_archived=True)
         response = self.client.get(
             '/gtd/node/',
             HTTP_ACCEPT='application/json'
@@ -1578,7 +1578,8 @@ class NodeAPI(TestCase):
             transform = lambda x: x.pk
         )
         # Root level nodes by parameter
-        nodes = Node.objects.mine(self.user).filter(parent=None)
+        nodes = Node.objects.mine(self.user, get_archived=True)
+        nodes = nodes.filter(parent=None)
         response = self.client.get(
             '/gtd/node/',
             {'parent_id': '0'},

@@ -40,19 +40,6 @@ dl
 {% block script %}
 <!-- Node view script block -->
 {{ block.super }}
-{% if local_net %}
-<script src="{{ STATIC_URL }}angular/angular.js"></script>
-<script src="{{ STATIC_URL }}angular/angular-animate.js"></script>
-<script src="{{ STATIC_URL }}angular/angular-resource.js"></script>
-<script src="{{ STATIC_URL }}angular/angular-sanitize.js"></script>
-{% else %}
-<script src="http://code.angularjs.org/1.2.0-rc.3/angular.min.js"></script>
-<script src="http://code.angularjs.org/1.2.0-rc.3/angular-animate.min.js"></script>
-<script src="http://code.angularjs.org/1.2.0-rc.3/angular-sanitize.min.js"></script>
-<script src="http://code.angularjs.org/1.2.0-rc.3/angular-resource.js"></script>
-{% endif %}
-<script type="text/javascript" src="{{ STATIC_URL }}gtd-models.js"></script>
-<script type="text/javascript" src="{{ STATIC_URL }}gtd-ctrl.js"></script>
 <script>
 $('document').ready(function() {
     // Hide non-JS elements
@@ -296,7 +283,8 @@ $('document').ready(function() {
 <!-- Initiate recursion for node tree -->
 {% endverbatim %}
 <div ng-controller="nodeOutline" id="outline-appliance"
-     parent_id="{{ parent_node.pk }}" parent_tree="{{ parent_node.tree_id }}">
+     parent_id="{{ parent_node.pk }}" parent_tree="{{ parent_node.tree_id }}"
+     level="{{ parent_node.level }}">
      {% verbatim %}
   <form class="form-inline" id="sort-field">
     <div id="add-heading" class="btn btn-default"

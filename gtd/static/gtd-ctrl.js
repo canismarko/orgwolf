@@ -42,30 +42,30 @@ gtd_module.config(function($httpProvider) {
 * Factory creates GtdHeading objects
 *
 **************************************************/
-gtd_module.factory('Heading', function($resource, $http) {
+gtd_module.factory('OldHeading', function($resource, $http) {
     return function(data) {
         return new GtdHeading(data);
     }
 });
-gtd_module.factory('$heading', function($resource, $http) {
+gtd_module.factory('Heading', function($resource, $http) {
     var res = $resource(
     	'/gtd/node/:pk/:slug/',
     	{id: '@id', slug: '@fields.slug'},
     	{
     	    'query': {
     		method: 'GET',
-    		transformResponse: $http.defaults.transformResponse.push(
-    		    function (data, headersGetter) {
+    		transformResponse: $http.defaults.transformResponse.concat([
+		    function (data, headersGetter) {
     			var i, new_heading;
     			for ( i=0; i<data.length; i+=1 ) {
-    			    new_heading = new GtdHeading(data[i]);
-    			    jQuery.extend(data[i], new_heading);
+    		    	    new_heading = new GtdHeading(data[i]);
+    		    	    jQuery.extend(data[i], new_heading);
     			}
     			return data;
     		    }
-    		),
+		]),
+    		isArray: true
     	    },
-    	    isArray: true
     	}
     );
     return res;
@@ -330,12 +330,13 @@ gtd_module.directive('owTodo', function($filter) {
 * Angular project ouline appliance controller
 *
 **************************************************/
-gtd_module.controller('nodeOutline', function($scope, $http, $resource, Heading, $element) {
-    var TodoState, Scope, url, get_heading, Parent, Tree;
+gtd_module.controller('nodeOutline', function($scope, $http, $resource, OldHeading, Heading, $element, $location, $anchorScroll) {
+    var TodoState, Scope, url, get_heading, Parent, Tree, parent_tree_id, parent_level, target_headings;
     // modified array to hold all the tasks
-    // $scope.children = Heading.query({'parent_id': 0});
+    test_headings = Heading.query({'parent_id': 0});
     $scope.headings = new HeadingManager($scope);
     $scope.children = new HeadingManager($scope);
+    $scope.headings.add(test_headings);
     $scope.active_scope = 0;
     $scope.sort_field = 'title';
     $scope.sort_fields = [
@@ -344,7 +345,6 @@ gtd_module.controller('nodeOutline', function($scope, $http, $resource, Heading,
     ];
     // Get id of parent heading
     $scope.parent_id = $element.attr('parent_id');
-    $scope.parent_tree_id = $element.attr('parent_tree');
     if ($scope.parent_id === '') {
 	$scope.parent_id = 0;
     } else {
@@ -353,42 +353,52 @@ gtd_module.controller('nodeOutline', function($scope, $http, $resource, Heading,
     $scope.show_arx = false;
     $scope.state = 'open';
     $scope.rank = 0;
-    // If a parent node was passed
-    // if ( $scope.parent_id ) {
-    // 	Tree = $resource('/gtd/tree/:tree_id/');
-    // 	$scope.headings.add(
-    // 	    Tree.query({tree_id: $scope.parent_tree_id})
-    // 	);
-    // }
+    $scope.update = function() {
+	$scope.children = $scope.headings.filter_by({parent: null});
+    }
     // Get all TodoState's for later use
     TodoState = $resource('/gtd/todostate/');
     $scope.todo_states = TodoState.query();
     test_headings = $scope.todo_states;
+    // If a parent node was passed
+    if ( $scope.parent_id ) {
+	parent_tree_id = parseInt($element.attr('parent_tree'), 10);
+	parent_level = parseInt($element.attr('level'), 10);
+	target_headings = Heading.query({'tree_id': parent_tree_id,
+				       'level__lte': parent_level + 1});
+	$scope.headings.add(target_headings);
+	// Recurse through and open all the ancestors of the target heading
+	target_headings.$promise.then(function() {
+	    var target = $scope.headings.get({pk: $scope.parent_id});
+	    var open = function(child) {
+		child.toggle('open');
+		child.update();
+		var parent = child.get_parent()
+		if ( parent.rank !== 0 ) {
+		    open(parent);
+		}
+	    }
+	    if ( target.fields.archived ) {
+		$scope.show_arx = true;
+	    }
+	    open(target);
+	    target.editable = true;
+	});
+    }
     // Get Scope objects
     Scope = $resource('/gtd/scope/');
     $scope.scopes = Scope.query();
     url = '/gtd/node/descendants/0/';
-    $http({method: 'GET', url: url}).
-    	success(function(data, status, headers, config) {
-    	    var i;
-    	    for ( i=0; i<data.length; i+=1 ) {
-    		data[i].workspace = $scope;
-    	    }
-    	    $scope.headings.add(data);
-    	}).
-    	error( function(data, status, headers, config) {
-    	    console.error('fail!');
-    	});
+    // Helper function that returns the heading object for a given event
     get_heading = function(e) {
 	var $heading, heading, node_id;
-	// Helper function that returns the heading object for a given event
 	$heading = $(e.delegateTarget).closest('.heading');
 	node_id = Number($heading.attr('node_id'));
 	heading = $scope.headings.get({pk: node_id});
 	return heading;
     };
+    // Handler for when a heading is clicked...
     $scope.toggle_node = function(e) {
-	// When a heading is clicked...
 	var $target, $heading, heading, new_heading;
 	$target = $(e.target);
 	heading = get_heading(e);
@@ -398,8 +408,10 @@ gtd_module.controller('nodeOutline', function($scope, $http, $resource, Heading,
 	    heading.populate_children();
 	    heading.editable = true;
 	} else if ( $target.hasClass('todo-state') ) {
+	    // No-op for todo_state button
 	    console.log('todo-state clicked');
 	} else if ( $target.hasClass('archive-btn') ) {
+	    // Archive heading button
 	    if ( heading.fields.archived ) {
 		heading.fields.archived = false;
 	    } else {
@@ -407,7 +419,8 @@ gtd_module.controller('nodeOutline', function($scope, $http, $resource, Heading,
 	    }
 	    heading.save();
 	} else if ( $target.hasClass('new-btn') ) {
-	    new_heading = new Heading({pk: 0,
+	    // New heading button
+	    new_heading = new OldHeading({pk: 0,
 				       workspace: heading.workspace,
 				       model: 'gtd.node',
 				       fields: {
@@ -435,7 +448,7 @@ gtd_module.controller('nodeOutline', function($scope, $http, $resource, Heading,
     // Handler for adding a new node
     $scope.add_heading = function(e) {
 	var new_heading;
-	new_heading = new Heading({pk: 0,
+	new_heading = new OldHeading({pk: 0,
 				   workspace: $scope,
 				   model: 'gtd.node',
 				   fields: {

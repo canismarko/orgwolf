@@ -30,6 +30,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 {% endblock %}
 {% block script %}
 {{ block.super }}
+  <script src="{{ STATIC_URL }}orgwolf.js"></script>
     <script type="text/javascript">
     $('document').ready(function() {
 	$('#agenda-container').agenda({

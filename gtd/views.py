@@ -701,7 +701,7 @@ class NodeView(DetailView):
             get_dict['parent_id'] = None
         if node_id is None:
             # All nodes
-            nodes = Node.objects.mine(request.user)
+            nodes = Node.objects.mine(request.user, get_archived=True)
             # Apply each criterion to the queryset
             for param, value in get_dict.iteritems():
                 query = {param: value}
