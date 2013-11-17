@@ -252,11 +252,35 @@ GtdHeading.prototype.is_expandable = function() {
 GtdHeading.prototype.is_visible = function() {
     // Determine if the heading is visible.
     // Some operations can be skipped if it's not.
-    var visibility, showall;
-    visibility = this.visible;
-    showall = this.workspace ? this.workspace.show_all : false;
-    if ( this.archived && ! showall ) {
+    var visibility, showall, active_states, active_root;
+    visibility = true; // Assume visible unless we think otherwise
+    // Check archived state
+    showall = this.workspace ? this.workspace.show_arx : false;
+    if ( this.fields.archived && ! showall ) {
 	visibility = false;
+    }
+    // Check if this heading is within the active scope
+    if ( this.workspace.active_scope ) {
+	if ( this.fields.scope.indexOf(this.workspace.active_scope) === -1 ) {
+	    visibility = false;
+	}
+    }
+    // Check if heading is in active todo-states
+    active_states = this.workspace.active_states
+    if ( typeof active_states !== 'undefined' ) {
+	if ( active_states.indexOf(this.fields.todo_state) === -1 ) {
+	    visibility = false;
+	}
+	if ( this.just_modified === true ) {
+	    visibility = true;
+	}
+    }
+    // Check if heading is in active_root's tree
+    active_root = this.workspace.active_root;
+    if ( active_root ) {
+	if ( active_root.fields.tree_id !== this.fields.tree_id ) {
+	    visibility = false;
+	}
     }
     return visibility;
 };
@@ -318,8 +342,10 @@ GtdHeading.prototype.save = function(args) {
 	success: function(data, status, jqXHR) {
 	    heading.workspace.$apply(function() {
 		var new_heading;
-		new_heading = jQuery.parseJSON(data);
-		heading.fields = new_heading.fields;
+		if ( typeof data === 'string' ) {
+		    data = jQuery.parseJSON(data);
+		}
+		heading.fields = data.fields;
 		heading.update();
 	    });
 	},
@@ -603,6 +629,7 @@ var HeadingManager = function(workspace) {
     headings.workspace = workspace;
     return headings;
 };
+
 // Override some method to Array() objects
 Array.prototype.get = function(query) {
     // returns a single heading object based on the query
@@ -622,6 +649,7 @@ Array.prototype.get = function(query) {
     }
     return found;
 };
+
 Array.prototype.filter_by = function(criteria) {
     // Step through the list and filter by any
     // properties listed in criteria object
@@ -673,6 +701,7 @@ Array.prototype.filter_by = function(criteria) {
     }
     return filtered;
 }; // end of filter_by() method
+
 Array.prototype.order_by = function(field) {
     // Accepts a string and orders according to
     // the field represented by that string.
@@ -716,6 +745,7 @@ Array.prototype.order_by = function(field) {
     }
     return sorted;
 }; // end of order_by method
+
 Array.prototype.add = function(obj) {
     // Add or replace a heading based on pk
     // Returns the authoritative object
@@ -777,6 +807,7 @@ Array.prototype.add = function(obj) {
 
     return real_heading;
 };
+
 Array.prototype.delete = function(heading) {
     var idx, status;
     status = false;

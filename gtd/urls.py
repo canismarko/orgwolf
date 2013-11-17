@@ -23,13 +23,14 @@ from django.conf.urls import patterns, include, url
 from django.contrib import admin
 admin.autodiscover()
 
-from gtd.views import Descendants, NodeView, TreeView, TodoStateView, ScopeView
+from gtd.views import (Descendants, NodeView, TreeView, TodoStateView,
+                       ScopeView, NodeListView, ContextView)
 
 urlpatterns = patterns(
     'gtd.views',
     url(r'^$', 'home'),
 
-    url(r'^lists(?P<url_string>/[\w/]+)?/$', 'list_display'),
+    # url(r'^lists(?P<url_string>/[\w/]+)?/$', 'list_display'),
 
     url(r'^agenda(?:/(?P<date>\d{4}-\d{1,2}-\d{1,2}))?/$',
         'agenda_display', name='agenda_display'),
@@ -63,8 +64,18 @@ urlpatterns = patterns(
         TodoStateView.as_view(),
         name='todo_state'
     ),
+    # url(r'^agenda/(?:(?P<date>.*)/)?',
+    #     AgendaView.as_view()
+    # ),
+    url(r'^lists(?P<url_string>/[\w/]+)?/$',
+        NodeListView.as_view(),
+        name='list_display'),
     url(r'^scope/$',
         ScopeView.as_view(),
         name='scope_api',
     ),
+    url(r'^context/$',
+        ContextView.as_view(),
+        name='context_api',
+    )
 )

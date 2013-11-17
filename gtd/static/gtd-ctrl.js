@@ -8,7 +8,9 @@ var test_headings;
 **************************************************/
 var gtd_module = angular.module('orgWolf',
 				['ngAnimate', 'ngResource', 'ngSanitize']);
-gtd_module.config(function($httpProvider) {
+
+gtd_module.config(function($httpProvider, $locationProvider) {
+    // $locationProvider.html5Mode(true);
     // Add custom headers to $http objects
     $httpProvider.defaults.headers.common['X-Request-With'] = 'XMLHttpRequest';
     // Add django CSRF token to all jQuery.ajax() requests
@@ -50,7 +52,30 @@ gtd_module.factory('OldHeading', function($resource, $http) {
 gtd_module.factory('Heading', function($resource, $http) {
     var res = $resource(
     	'/gtd/node/:pk/:slug/',
-    	{id: '@id', slug: '@fields.slug'},
+    	{pk: '@pk', slug: '@fields.slug'},
+    	{
+    	    'query': {
+    		method: 'GET',
+    		transformResponse: $http.defaults.transformResponse.concat([
+		    function (data, headersGetter) {
+    			var i, new_heading;
+    			for ( i=0; i<data.length; i+=1 ) {
+    		    	    new_heading = new GtdHeading(data[i]);
+    		    	    jQuery.extend(data[i], new_heading);
+    			}
+    			return data;
+    		    }
+		]),
+    		isArray: true
+    	    },
+    	}
+    );
+    return res;
+});
+gtd_module.factory('GtdList', function($resource, $http) {
+    var res = $resource(
+	'/gtd/lists/', {},
+    	// {states: '', scope: '', context: ''},
     	{
     	    'query': {
     		method: 'GET',
@@ -131,7 +156,73 @@ gtd_module.filter('asHtml', function($sce) {
 **************************************************/
 gtd_module.filter('order', function($sce) {
     return function(obj, criterion) {
-	return obj.order_by(criterion);
+	var ordered, deadline, other;
+	if ( criterion === 'list' ) {
+	    other = obj.filter_by({deadline_date: null});
+	    deadline = $(obj).not(other).get().order_by('deadline_date');
+	    ordered = deadline;
+	    ordered = ordered.concat(other.order_by('priority'));
+	} else {
+	    ordered = obj.order_by(criterion);
+	}
+	return ordered;
+    };
+});
+
+/*************************************************
+* Filter that creates a link to the list item's
+* tree root heading.
+*
+**************************************************/
+gtd_module.filter('root_cell', function($sce) {
+    return function(obj) {
+	var parent, s;
+	s = '';
+	parent = obj.workspace.parents.get({tree_id: obj.fields.tree_id,
+					    level: 0});
+	if ( parent ) {
+	    // s += '<a href="/gtd/lists/parent' + parent.pk + '/">';
+	    s += '<a>';
+	    s += parent.fields.title + '</a>';
+	}
+	s = $sce.trustAsHtml(s);
+	return s;
+    };
+});
+
+/*************************************************
+* Filter that displays the deadline for a heading
+*
+**************************************************/
+gtd_module.filter('deadline_str', function($sce) {
+    return function(heading) {
+	var str, date;
+	str = '';
+	if ( heading.fields.deadline_date ) {
+	    str = 'Due ';
+	    date = new Date(heading.fields.deadline_date + 'T12:00:00');
+	    var today = new Date();
+	    today.setHours(12, 0, 0, 0);
+	    var time_delta = date.getTime() - today.getTime();
+	    var day_delta = Math.ceil(time_delta / (1000 * 3600 * 24));
+	    if ( day_delta === 0 ) {
+		// Is today
+		str += 'today';
+	    } else if (day_delta === -1) {
+		// Is yesterday
+		str += 'yesterday';
+	    } else if (day_delta < 0) {
+		// Is farther in the past
+		str += Math.abs(day_delta) + ' days ago';
+	    } else if (day_delta === 1) {
+		// Is tomorrow
+		str += 'tomorrow';
+	    } else if (day_delta > 0) {
+		// Is farther in the future
+		str += 'in ' + day_delta + ' days';
+	    }
+	}
+	return str;
     };
 });
 
@@ -227,9 +318,15 @@ gtd_module.directive('owEditable', function() {
 * Directive that shows a list of Scopes tabs
 *
 **************************************************/
-gtd_module.directive('owScopeTabs', function() {
-    // Directive creates the pieces that allow the user to edit a heading
+gtd_module.directive('owScopeTabs', function($resource) {
+    // Directive creates tabs that allow a user to filter by scope
     function link(scope, element, attrs) {
+	var Scope;
+	// Get Scope objects
+	Scope = $resource('/gtd/scope/');
+	scope.scopes = Scope.query();
+	// Build tabs in DOM
+	element.addClass('nav').addClass('nav-tabs');
 	// Set initial active scope tab
 	element.find('[scope_id="'+scope.active_scope+'"]').addClass('active');
 	scope.active_scope
@@ -256,17 +353,17 @@ gtd_module.directive('owTodo', function($filter) {
 	var i, $span, $popover, $options, state, content, s, style;
 	style = $filter('style');
 	scope.heading.todo_popover = false;
+	$span = element.children('span');
 	if (scope.heading.todo_state) {
-	    element.tooltip({
+	    $span.tooltip({
 		delay: {show:1000, hide: 100},
 		title: scope.heading.todo_state.fields.display_text,
 		placement: 'right'
 	    });
 	}
-	$span = element.children('span');
 	function remove_popover($target) {
 	    // Remove the popover
-		$target.popover('destroy');
+		element.popover('destroy');
 	}
 	function add_popover($target) {
 	    // Create and attach popover
@@ -310,6 +407,7 @@ gtd_module.directive('owTodo', function($filter) {
 			scope.heading.fields.todo_state = parseInt(new_todo_id, 10);
 		    }
 		    scope.heading.update();
+		    scope.heading.just_modified = true;
 		    scope.heading.save({ auto: true });
 		    remove_popover($target);
 		    return false;
@@ -323,6 +421,29 @@ gtd_module.directive('owTodo', function($filter) {
     return {
 	link: link,
 	templateUrl: 'todo-state-selector',
+    };
+});
+
+/*************************************************
+* Directive sets the parameters of next
+* actions table row
+**************************************************/
+gtd_module.directive('owListRow', function() {
+    function link(scope, element, attrs) {
+	var node_pk, heading, parent, $parent, html;
+	node_pk = parseInt(attrs.owPk, 10);
+	heading = scope.headings.get({pk: node_pk});
+	parent = scope.parents.get({tree_id: heading.fields.tree_id});
+	parent = scope.parents.get({tree_id: 1});
+	if ( parent ) {
+	    $parent = element.find('.parent-cell');
+	    html = '';
+	    html += parent.fields.title;
+	    $parent.html(html);
+	}
+    }
+    return {
+	link: link,
     };
 });
 
@@ -385,9 +506,6 @@ gtd_module.controller('nodeOutline', function($scope, $http, $resource, OldHeadi
 	    target.editable = true;
 	});
     }
-    // Get Scope objects
-    Scope = $resource('/gtd/scope/');
-    $scope.scopes = Scope.query();
     url = '/gtd/node/descendants/0/';
     // Helper function that returns the heading object for a given event
     get_heading = function(e) {
@@ -459,5 +577,91 @@ gtd_module.controller('nodeOutline', function($scope, $http, $resource, OldHeadi
 	new_heading.editable = true;
 	$scope.headings.add(new_heading);
 	$scope.children.add(new_heading);
+    };
+});
+
+/*************************************************
+* Angular actions list controller
+*
+**************************************************/
+gtd_module.controller('nextActionsList', function($sce, $scope, $resource, $location, GtdList, Heading) {
+    var i, TodoState, Context;
+    TodoState = $resource('/gtd/todostate/');
+    $scope.todo_states = TodoState.query();
+    $scope.update = function() {};
+    $scope.parents = new HeadingManager($scope);
+    $scope.parents.add(Heading.query({level: 0}));
+    $scope.active_context = null;
+    $scope.headings = new HeadingManager($scope);
+    $scope.cached_states = [2]
+    $scope.active_states = [2]
+    $scope.headings.add(GtdList.query({todo_state: 2}));
+    Context = $resource('/gtd/context/');
+    $scope.contexts = Context.query();
+    $scope.show_arx = true;
+    $scope.active_scope = 0;
+    // Set the parent attribute on each list item
+    for ( i; i<$scope.headings.length; i+=1 ) {
+	$scope.headings[i].parent = $scope.parents.get({pk: $scope.headings[i].fields.parent})
+    }
+    // Todo state filtering
+    $scope.toggle_todo_state = function(e) {
+	var i, state_pk, state, state_url;
+	state_pk = parseInt($(e.target).attr('ow-state'), 10);
+	// Hide the current elements
+	i = $scope.active_states.indexOf(state_pk);
+	if ( i > -1 ) {
+	    $scope.active_states.splice(i, 1);
+	} else {
+	    $scope.active_states.push(state_pk);
+	}
+	// Fetch the node list if it's not already retrieved
+	if ( $scope.cached_states.indexOf(state_pk) === -1 ) {
+	    $scope.cached_states.push(state_pk);
+	    $scope.headings.add(GtdList.query({
+		todo_state: state_pk,
+		context: $scope.active_context
+	    }));
+	}
+    };
+    function build_states_url() {
+	var url, i, state;
+	url = '';
+	for ( i=0; i<$scope.active_states.length; i+=1 ) {
+	    state = $scope.todo_states.get({pk: $scope.active_states[i]});
+	    url += state.fields.abbreviation.toLowerCase();
+	    url += '/';
+	}
+	return url;
+    }
+    function build_context_url() {
+	var url;
+	if ( $scope.active_context ) {
+	    url = 'context' + $scope.active_context + '/';
+	} else {
+	    url = '';
+	}
+	return url;
+    }
+    // Handler for changing the context
+    $scope.change_context = function() {
+	$scope.headings = new HeadingManager($scope);
+	$scope.headings.add(
+	    GtdList.query(
+		{
+		    todo_state: $scope.active_states,
+		    context: $scope.active_context
+		}
+	    )
+	);
+    };
+    // Handler for only showing one parent
+    $scope.filter_parent = function(h) {
+	if ( h === null ) {
+	    delete $scope.active_root;
+	} else {
+	    var root = $scope.parents.get({tree_id: h.fields.tree_id});
+	    $scope.active_root = root;
+	}
     };
 });

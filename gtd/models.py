@@ -377,11 +377,15 @@ class Node(MPTTModel):
     # time rather than the original scheduled time.
     repeats_from_completion = models.BooleanField(default=False)
     # Selection criteria
+    PRIORITIES = (
+        ('A', 'A'),
+        ('B', 'B'),
+        ('C', 'C'),
+    )
     priority = models.CharField(
-        max_length=1, blank=True,
-        choices=(('A', 'A'),
-                 ('B', 'B'),
-                 ('C', 'C')))
+        max_length=1, default=PRIORITIES[1][0],
+        choices=PRIORITIES,
+    )
     # Org-mode style string (eg ":comp:home:RN:")
     tag_string = models.TextField(blank=True)
     energy = models.CharField(

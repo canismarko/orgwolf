@@ -48,7 +48,7 @@ from gtd.shortcuts import parse_url, generate_url, get_todo_abbrevs
 from gtd.shortcuts import order_nodes
 from gtd.templatetags.gtd_extras import escape_html
 from gtd.templatetags.gtd_extras import add_scope, breadcrumbs
-from gtd.views import Descendants
+from gtd.views import Descendants, NodeListView
 from orgwolf.preparation import translate_old_text
 from orgwolf.models import OrgWolfUser as User
 
@@ -609,6 +609,7 @@ class ParentStructure(TestCase):
         self.assertEqual(target_parent, parent)
 
 class ContextFiltering(TestCase):
+    """Test the ability of the gtd list app to filter based on passed context"""
     fixtures = ['test-users.json', 'gtd-test.json', 'gtd-env.json']
     def setUp(self):
         self.assertTrue(
@@ -618,9 +619,8 @@ class ContextFiltering(TestCase):
         """Confirm that trying to set context that does not exist
         returns a 404.
         """
-        url = reverse('gtd.views.list_display',
-                      kwargs={'url_string': '/context99'} )
-        response = self.client.get(url)
+        url = reverse('list_display')
+        response = self.client.get(url, {'context': 999})
         self.assertEqual(response.status_code, 404)
     def test_home_tag(self):
         all_nodes_qs = Node.objects.filter(
@@ -641,13 +641,13 @@ class ContextFiltering(TestCase):
         """Test if the active GTD context is saved and stored properly
         in session variables.
         """
-        url = reverse('gtd.views.list_display')
+        url = reverse('list_display')
         response = self.client.get(url);
         self.assertEqual(response.status_code, 200)
         self.assertEqual(
             self.client.session['context'],
             None)
-        url = reverse('gtd.views.list_display',
+        url = reverse('list_display',
                       kwargs={'url_string': '/context1'} )
         response = self.client.get(url);
         self.assertEqual(response.status_code, 200)
@@ -656,16 +656,16 @@ class ContextFiltering(TestCase):
             Context.objects.get(pk=1)
             )
         # Test that base url redirects to the saved context
-        base_url = reverse('gtd.views.list_display')
+        base_url = reverse('list_display')
         response = self.client.get(base_url)
-        redir_url = reverse('gtd.views.list_display',
+        redir_url = reverse('list_display',
                             kwargs={'url_string': '/context1'} )
         self.assertRedirects(response, redir_url)
         response = self.client.get(base_url, follow=True)
         self.assertContains(response,
                             'Actions (Work)',
                             )
-        link_url = reverse('gtd.views.list_display',
+        link_url = reverse('list_display',
                            kwargs={'url_string': '/next/context1'} )
         self.assertContains(response, link_url)
         # Test clearing the context by using the POST filter
@@ -694,33 +694,34 @@ class ContextFiltering(TestCase):
                 result.count())
         )
 
-class ProjectSublist(TestCase):
-    fixtures = ['test-users.json', 'gtd-test.json', 'gtd-env.json']
-    def setUp(self):
-        self.assertTrue(
-            self.client.login(username='test', password='secret')
-            )
-    def test_has_url(self):
-        url = reverse('gtd.views.list_display',
-                      kwargs={'url_string': '/parent1'} )
-        response = self.client.get(url)
-        self.assertEqual(
-            200,
-            response.status_code,
-            'Getting a project sublist does not return status code 200.' +
-            'Got {0}'.format(response.status_code)
-            )
-    def test_bad_url(self):
-        # Parent does not exist
-        url = reverse('gtd.views.list_display',
-                      kwargs={'url_string': '/parent99'})
-        response = self.client.get(url)
-        self.assertEqual(
-            404,
-            response.status_code,
-            'Getting a list for a non-existent project does not return ' +
-            'status code 404. Got {0}'.format(response.status_code)
-        )
+# Project sublist moved to javascript
+# class ProjectSublist(TestCase):
+#     fixtures = ['test-users.json', 'gtd-test.json', 'gtd-env.json']
+#     def setUp(self):
+#         self.assertTrue(
+#             self.client.login(username='test', password='secret')
+#             )
+#     def test_has_url(self):
+#         url = reverse('list_display',
+#                       kwargs={'url_string': '/parent1'} )
+#         response = self.client.get(url)
+#         self.assertEqual(
+#             200,
+#             response.status_code,
+#             'Getting a project sublist does not return status code 200.' +
+#             'Got {0}'.format(response.status_code)
+#             )
+#     def test_bad_url(self):
+#         # Parent does not exist
+#         url = reverse('list_display',
+#                       kwargs={'url_string': '/parent99'})
+#         response = self.client.get(url)
+#         self.assertEqual(
+#             404,
+#             response.status_code,
+#             'Getting a list for a non-existent project does not return ' +
+#             'status code 404. Got {0}'.format(response.status_code)
+#         )
 
 class Shortcuts(TestCase):
     fixtures = ['test-users.json', 'gtd-test.json', 'gtd-env.json']
@@ -997,6 +998,26 @@ class ScopeAPI(TestCase):
         )
 
 
+class ContextAPI(TestCase):
+    fixtures = ['test-users.json', 'gtd-test.json', 'gtd-env.json']
+    def setUp(self):
+        self.url = reverse('context_api');
+        self.user = User.objects.get(username='test')
+        self.assertTrue(
+            self.client.login(
+                username=self.user.username, password='secret')
+        )
+        self.contexts = Context.objects.filter(owner=self.user)
+        self.contexts = self.contexts | Context.objects.filter(owner=None)
+
+    def test_get_context_collection(self):
+        response = self.client.get(self.url)
+        expected = serializers.serialize('json', self.contexts)
+        self.assertEqual(
+            response.content,
+            expected,
+        )
+
 class OverdueFilter(TestCase):
     """Tests the `overdue` node method that makes dates into
     prettier "in 1 day" strings, etc."""
@@ -1172,6 +1193,119 @@ class AgendaNodes(TestCase):
         )
 
 
+class ListViewQueryset(TestCase):
+    """The get_queryset() method of the NodeListView class"""
+    fixtures = ['test-users.json', 'gtd-env.json', 'gtd-test.json']
+    def setUp(self):
+        self.view = NodeListView()
+        self.view.url_data = {}
+        self.view.scope_url_data = {}
+        self.factory = RequestFactory()
+        self.user = User.objects.get(pk=1)
+        self.view.request = self.factory.get('/gtd/lists/')
+        self.view.request.user = self.user
+    def test_returns_queryset(self):
+        self.view.request = self.factory.get('/gtd/lists/')
+        self.view.request.user = self.user
+        qs = self.view.get_queryset()
+        self.assertEqual(
+            qs.__class__.__name__,
+            'QuerySet',
+        )
+    def test_filter_todo_state(self):
+        """Check that passing a todostate to the filter works"""
+        todo = TodoState.objects.filter(pk=1)
+        self.view.url_data = {'todo_state': todo}
+        qs = self.view.get_queryset()
+        expected = Node.objects.assigned(self.user)
+        expected = expected.filter(todo_state=todo)
+        self.assertQuerysetEqual(
+            qs,
+            [repr(x) for x in expected]
+        )
+
+    def test_filter_scope(self):
+        scope = Scope.objects.get(pk=1)
+        self.view.url_data['scope'] = scope
+        qs = self.view.get_queryset()
+        expected = Node.objects.assigned(self.user)
+        expected = expected.filter(scope=scope)
+        self.assertQuerysetEqual(
+            qs,
+            [repr(x) for x in expected]
+        )
+
+    def test_context_filtering(self):
+        context = Context.objects.get(pk=1)
+        self.view.url_data['context'] = context
+        qs = self.view.get_queryset()
+        expected = context.apply(Node.objects.assigned(self.user))
+        self.assertQuerysetEqual(
+            qs,
+            [repr(x) for x in expected]
+        )
+
+
+class ListAPI(TestCase):
+    """
+    Getting a list of actions via AJAX. Selection of Node objects is
+    tested in the ListViewQueryset test class above.
+    """
+    fixtures = ['test-users.json', 'gtd-env.json', 'gtd-test.json']
+    def setUp(self):
+        self.user = User.objects.get(username='test')
+        self.view = NodeListView()
+        self.factory = RequestFactory()
+        self.assertTrue(
+            self.client.login(
+                username=self.user.username, password='secret')
+        )
+    def test_parse_get_params(self):
+        states = TodoState.objects.filter(pk__in=[1, 2])
+        scope = Scope.objects.get(pk=1)
+        context = Context.objects.get(pk=2)
+        request = self.factory.get(
+            '/gtd/list',
+            {
+                'todo_state': ['1', '2'],
+                'scope': ['1'],
+                'context': ['2']
+            },
+        )
+        request.is_json = True
+        request.user = self.user
+        self.view.dispatch(request)
+        self.view.get(request)
+        self.assertQuerysetEqual(
+            self.view.url_data['todo_state'],
+            [repr(x) for x in states]
+        )
+        self.assertEqual(
+            self.view.url_data['scope'],
+            scope
+        )
+        self.assertEqual(
+            self.view.url_data['context'],
+            context
+        )
+    def test_missing_params(self):
+        """Ensure the view ignores parameters that are empty strings"""
+        request = self.factory.get(
+            '/gtd/list',
+            {'context': '',
+             'scope': '',
+             'todo_state': ''}
+        )
+        request.is_json = True
+        request.user = self.user
+        self.view.dispatch(request)
+        self.view.get(request)
+        self.assertEqual(
+            self.view.url_data.get('Context', None),
+            None
+        )
+
+
 class MultiUser(TestCase):
     """Tests for multi-user support in the gtd app"""
     fixtures = ['test-users.json', 'gtd-env.json', 'gtd-test.json']
@@ -1287,8 +1421,9 @@ class MultiUser(TestCase):
             status_code=200,
             msg_prefix='Agenda view',
             )
+
     def test_list_view(self):
-        url = reverse('gtd.views.list_display')
+        url = reverse('list_display')
         response = self.client.get(url)
         self.assertContains(
             response,
@@ -1311,10 +1446,10 @@ class MultiUser(TestCase):
         self.assertTrue(
             self.client.login(username='test', password='secret')
             )
-        bad_url = reverse('gtd.views.list_display') + 'bore/'
-        response = self.client.get(bad_url)
+        url = reverse('list_display')
+        response = self.client.get(url, {'todo_state': 10})
         self.assertEqual(
-            404,
+            400,
             response.status_code
             )
     def test_node_view(self):
@@ -1416,12 +1551,12 @@ class DBOptimization(TestCase):
         )
     def test_display_list(self):
         response = self.client.get(
-            reverse('gtd.views.list_display')
+            reverse('list_display')
         )
         self.assertNumQueries(
             7,
             self.client.get,
-            reverse('gtd.views.list_display'),
+            reverse('list_display'),
         )
     def test_as_json_db(self):
         node = Node.objects.select_related('todo_state')

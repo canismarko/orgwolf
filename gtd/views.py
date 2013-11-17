@@ -39,6 +39,7 @@ from django.utils.decorators import method_decorator
 from django.utils.timezone import get_current_timezone
 from django.views.generic import View
 from django.views.generic.detail import DetailView
+from django.views.generic.list import ListView
 
 from gtd.forms import NodeForm
 from gtd.models import TodoState, Node, Context, Scope
@@ -67,7 +68,7 @@ def list_display(request, url_string=""):
     todo_states_query = TodoState.objects.none()
     todo_abbrevs = get_todo_abbrevs(todo_states)
     todo_abbrevs_lc = []
-    base_url = reverse('gtd.views.list_display')
+    base_url = reverse('list_display')
     base_node_url = reverse('node_object')
     list_url = base_url
     list_url += '{parent}{states}{scope}{context}'
@@ -310,6 +311,277 @@ def agenda_display(request, date=None):
     return render_to_response(template,
                               locals(),
                               RequestContext(request))
+
+
+class NodeListView(ListView):
+    model = Node
+    def dispatch(self, request, *args, **kwargs):
+        """Set some properties first then call regular dispatch"""
+        self.request = request
+        self.todo_states = TodoState.get_visible(request.user)
+        self.scope_url_data = {}
+        list(self.todo_states)
+        self.url_string = kwargs.get('url_string', '')
+        if self.url_string is None:
+            self.url_string = ''
+        # self.url_data = parse_url(self.url_string, request,
+        #                           todo_states=self.todo_states)
+        self.base_url = reverse('list_display')
+        return super(NodeListView, self).dispatch(request, *args, **kwargs)
+
+    def get_queryset(self):
+        nodes = Node.objects.assigned(self.request.user).select_related(
+            'context', 'todo_state', 'root'
+        )
+        # Filter by todo state
+        final_Q = Q()
+        todo_states_query = self.url_data.get('todo_state', [])
+        todo_string = ''
+        for todo_state in todo_states_query:
+            todo_string += '{0}/'.format(todo_state.abbreviation.lower())
+            final_Q = final_Q | Q(todo_state=todo_state)
+        self.scope_url_data['states'] = todo_string
+        nodes = nodes.filter(final_Q)
+        # And filter by scope
+        self.scope = self.url_data.get('scope', None)
+        if self.scope:
+            try:
+                nodes = nodes.filter(scope=self.scope)
+            except Node.ObjectDoesNotExist:
+                pass
+        # Filter by context
+        self.context = self.url_data.get('context', None)
+        if self.context is not None:
+            nodes = self.context.apply(nodes)
+        return nodes
+
+    def post(self, request, *args, **kwargs):
+        """Change active filtering parameters"""
+        base_url = self.base_url
+        todo_regex = re.compile(r'todo(\d+)')
+        new_context_id = 0
+        todo_state_Q = Q()
+        empty_Q = True
+        parent = None
+        # Check for TODO filters
+        for post_item in request.POST:
+            todo_match = todo_regex.match(post_item)
+            if todo_match:
+                todo_state_Q = todo_state_Q | Q(id=todo_match.groups()[0])
+                empty_Q = False
+            elif post_item == 'context':
+                new_context_id = int(request.POST['context'])
+                # Update session variable if user is clearning the context
+                if new_context_id == 0:
+                    request.session['context'] = None
+            elif post_item == 'scope':
+                new_scope_id = int(request.POST['scope'])
+            elif post_item == 'parent_id':
+                parent = Node.objects.get(pk=request.POST['parent_id'])
+        # Now build the new URL and redirect
+        new_url = base_url
+        if empty_Q:
+            matched_todo_states = TodoState.objects.none()
+        else:
+            matched_todo_states = TodoState.objects.filter(todo_state_Q)
+        if parent:
+            new_url += 'parent{0}/'.format(parent.pk)
+        for todo_state in matched_todo_states:
+            new_url += todo_state.abbreviation.lower() + '/'
+        if new_scope_id > 0:
+            new_url += 'scope' + str(new_scope_id) + '/'
+        if new_context_id > 0:
+            new_url += 'context' + str(new_context_id) + '/'
+        return redirect(new_url)
+    def get(self, request, *args, **kwargs):
+        """Determines which list the user has requested and fetches it."""
+        # Get objects based on url parameters
+        self.url_data = {}
+        todo_states = request.GET.getlist('todo_state', [''])
+        if todo_states != ['']:
+            self.url_data['todo_state'] = self.todo_states.filter(
+                pk__in=todo_states
+            )
+            # Check that all todo_states requested are valid
+            if len(self.url_data['todo_state']) != len(todo_states):
+                return HttpResponseBadRequest('Invalid todo_state passed')
+        scope = request.GET.get('scope', '')
+        if scope:
+            self.url_data['scope'] = Scope.objects.get(pk=scope)
+        context = request.GET.get('context', '')
+        if context:
+            # self.url_data['context'] = Context.objects.get(pk=context)
+            self.url_data['context'] = get_object_or_404(Context, pk=context)
+        # AJAX API
+        if request.is_json:
+            nodes = self.get_queryset()
+            return HttpResponse(serializers.serialize('json', nodes))
+        # Get regular page
+        base_url = self.base_url
+        all_scope_qs = Scope.objects.all()
+        all_todo_states_json = TodoState.as_json(queryset=self.todo_states)
+        todo_states_query = TodoState.objects.none()
+        todo_abbrevs = get_todo_abbrevs(self.todo_states)
+        todo_abbrevs_lc = []
+        base_url = reverse('list_display')
+        base_node_url = reverse('node_object')
+        list_url = base_url
+        list_url += '{parent}{states}{scope}{context}'
+        tz = get_current_timezone()
+        nodes = self.get_queryset()
+        # scope_url = base_url # for urls of scope tabs
+        for todo_abbrev in todo_abbrevs:
+            todo_abbrevs_lc.append(todo_abbrev.lower())
+        # Get stored context value (or set if first visit)
+        if 'context' not in request.session:
+            request.session['context'] = None
+        current_context = request.session['context']
+        # # Retrieve the context objects based on url
+        # if self.url_data.get('context', False) != False: # `None` --> context0
+        #     if self.url_data.get('context') != current_context:
+        #         # User is changing the context
+        #         request.session['context'] = self.url_data.get('context')
+        #         current_context = self.url_data.get('context')
+        # elif current_context:
+        #     # Redirect to the url using the save context
+        #     new_url = base_url + generate_url(
+        #         parent=self.url_data.get('parent'),
+        #         context=current_context
+        #         )[1:] # Don't need leading '/'
+        #     return redirect(new_url)
+
+        root_nodes = Node.objects.mine(
+            request.user, get_archived=True
+        ).filter(level=0)
+        # Now apply the context
+        if current_context:
+            self.scope_url_data['context'] = 'context{0}/'.format(
+                current_context.pk
+            )
+        else:
+            self.scope_url_data['context'] = ''
+        try:
+            nodes = current_context.apply(nodes)
+        except AttributeError:
+            pass
+        # And filter by parent node
+        parent = self.url_data.get('parent')
+        if parent:
+            nodes = nodes & parent.get_descendants(include_self=True)
+            self.scope_url_data['parent'] = 'parent{0}/'.format(parent.pk)
+            breadcrumb_list = parent.get_ancestors(include_self=True)
+        else:
+            self.scope_url_data['parent'] = ''
+        # Put nodes with deadlines first
+        nodes = order_nodes(nodes, field='deadline_date', context=current_context)
+        # -------------------- Queryset evaluated -------------------- #
+        # Prepare the URLs for use in the scope and parent links tabs
+        scope_url = list_url.format(
+            context = self.scope_url_data['context'],
+            scope = '{scope}/',
+            states = self.scope_url_data['states'],
+            parent = self.scope_url_data['parent'],
+        )
+        if self.scope:
+            scope_s = 'scope{0}/'.format(self.scope.pk)
+        else:
+            scope_s = ''
+        parent_url = list_url.format(
+            context = self.scope_url_data['context'],
+            scope = scope_s,
+            states = self.scope_url_data['states'],
+            parent = 'parent{0}/'
+        )
+        # Add a field for the root node and deadline
+        for node in nodes:
+            # (uses lists in case of bad unit tests)
+            root_node = [n for n in root_nodes if n.tree_id == node.tree_id]
+            if len(root_node) > 0:
+                node.root_url = parent_url.format(root_node[0].pk)
+                node.root_title = root_node[0].title
+            node.deadline_str = node.overdue('deadline_date')
+        # And serve response
+        if request.is_mobile:
+            template = 'gtd/gtd_list_m.html'
+        else:
+            template = 'gtd/node_list.html'
+        return render_to_response(template,
+                                  locals(),
+                                  RequestContext(request))
+
+
+# class AgendaView(DetailView):
+#     """Manages the retrieval of an individual node"""
+#     model = Node
+#     template_name = 'gtd/node_view.html'
+#     context_object_name = 'parent_node'
+#     deadline_period = 7 # In days # TODO: pull deadline period from user
+#     format_string = "%Y-%m-%d"
+#     @method_decorator(login_required)
+#     def dispatch(self, *args, **kwargs):
+#         return super(AgendaView, self).dispatch(*args, **kwargs)
+
+#     def get(self, request, *args, **kwargs):
+#         date = kwargs.get('date')
+#         today = datetime.date.today()
+#         if date == 'today':
+#             agenda_date = today
+#         elif date:
+#             try:
+#                 agenda_date = datetime.datetime.strptime(date, self.format_string).date()
+#             except ValueError:
+#                 raise Http404
+#             else:
+#                 agenda_date = today
+#         else:
+#             agenda_date = today
+#         logger.debug('AgendaView.get() called')
+#         logger.debug(
+#             'agenda_date = {0}'.format(
+#                 agenda_date,
+#             )
+#         )
+#         if (request.is_ajax() or request.is_json) and not request.is_mobile:
+#             nodes = self.build_queryset(request, 'today')
+#             return HttpResponse(serializers.serialize('json', nodes))
+
+    # def build_queryset(self, request, date):
+    #     all_nodes_qs = Node.objects.mine(request.user).select_related('todo_state')
+    #     tz = get_current_timezone()
+    #     final_Q = Q()
+    #     date_Q = Q(scheduled_date__lte=agenda_date)
+    #     time_specific_Q = Q(scheduled_time=None)
+    #     # TODO: allow user to set todo states
+    #     todo_states = TodoState.get_visible(request.user)
+    #     hard_Q = Q(todo_state = todo_states.get(abbreviation="HARD"))
+    #     dfrd_Q = Q(todo_state = todo_states.get(abbreviation="DFRD"))
+    #     day_specific_nodes = all_nodes_qs.filter(
+    #         (hard_Q | dfrd_Q), date_Q, time_specific_Q)
+    #     day_specific_nodes = day_specific_nodes.order_by('scheduled_date')
+    #     time_specific_nodes = all_nodes_qs.filter(
+    #     (hard_Q | dfrd_Q), date_Q).exclude(time_specific_Q)
+    #     time_specific_nodes = time_specific_nodes.order_by('scheduled_date')
+    #     # Determine query filters for "Upcoming Deadlines" section
+    #     undone_Q = Q(todo_state__closed = False) | Q(todo_state = None)
+    #     deadline = agenda_date + datetime.timedelta(days=deadline_period)
+    #     upcoming_deadline_Q = Q(deadline_date__lte = deadline) # TODO: fix this
+    #     deadline_nodes = all_nodes_qs.filter(undone_Q, upcoming_deadline_Q)
+    #     deadline_nodes = deadline_nodes.order_by("deadline_date")
+    #     # Force database hits and then add overdue data
+    #     day_specific_nodes = list(day_specific_nodes)
+    #     time_specific_nodes = list(time_specific_nodes)
+    #     deadline_nodes = list(deadline_nodes)
+    #     for node in day_specific_nodes:
+    #         node.overdue_str = node.overdue(
+    #             'scheduled_date', agenda_date=agenda_date)
+    #     for node in time_specific_nodes:
+    #         node.overdue_str = node.overdue(
+    #             'scheduled_date', agenda_date=agenda_date)
+    #     for node in deadline_nodes:
+    #         node.overdue_str = node.overdue(
+    #             'deadline_date', agenda_date=agenda_date, future=True)
+    #     return all_nodes_qs
+
 
 @login_required
 def capture_to_inbox(request):
@@ -632,8 +904,8 @@ class NodeView(DetailView):
         all_nodes_qs = Node.objects.mine(request.user, get_archived=show_all)
         all_todo_states_qs = TodoState.get_visible(user=request.user)
         child_nodes_qs = all_nodes_qs
-        all_scope_qs = Scope.objects.all()
-        all_scope_json = serializers.serialize('json', all_scope_qs)
+        # all_scope_qs = Scope.objects.all()
+        # all_scope_json = serializers.serialize('json', all_scope_qs)
         app_url = reverse('node_object')
         scope_url = app_url + '{scope}/'
         scope = Scope.objects.get(pk=1)
@@ -881,6 +1153,14 @@ class ScopeView(View):
     def get(self, request, *args, **kwargs):
         scopes = Scope.get_visible(request.user)
         data = serializers.serialize('json', scopes)
+        return HttpResponse(data)
+
+
+class ContextView(View):
+    """RESTful interaction with the gtd.context object"""
+    def get(self, request, *args, **kwargs):
+        contexts = Context.get_visible(request.user)
+        data = serializers.serialize('json', contexts)
         return HttpResponse(data)
 
 

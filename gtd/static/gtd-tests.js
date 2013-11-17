@@ -307,6 +307,36 @@ test('update() method', function() {
     );
 });
 
+test('is_visible() method', function() {
+    var heading;
+    heading = scope.headings.get({pk: 1});
+    ok(
+	heading.is_visible(),
+	'heading is visible by default'
+    );
+    heading.fields.archived = true;
+    ok(
+	! heading.is_visible(),
+	'archived heading is not visible'
+    );
+    scope.show_arx = true;
+    ok(
+	heading.is_visible(),
+	'archived heading is visible when scope.show_all is true'
+    );
+    scope.active_scope = 1;
+    ok(
+	! heading.is_visible(),
+	'heading is not visible if not in active scope'
+    );
+    delete scope.active_scope;
+    scope.active_states = [1];
+    ok(
+	! heading.is_visible(),
+	'heading is not visible if its todo_state is not active'
+    );
+});
+
 test('MPTT: is_leaf_node', function() {
     // Test various methods related to hierarchical configuration.
     // Uses mptt principles

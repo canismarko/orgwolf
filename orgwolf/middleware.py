@@ -115,9 +115,6 @@ class AjaxMiddleware():
                         m['value'] = float(m['value'])
                     except ValueError:
                         pass
-                # # Convert missing values to None
-                # if m['value'] == '':
-                #     m['value'] = None
                 # Now assign values
                 if m['subkey']:
                     # Handle fields[title]=Archive type objects
@@ -135,6 +132,7 @@ class AjaxMiddleware():
             else:
                 print(datum)
         return new_dict
+
     def process_request(self, request):
         """
         Decode submitted data for REST API depending on format

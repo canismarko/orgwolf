@@ -192,9 +192,9 @@ dd.todo
     transition: all @anim-easing @anim-speed;
     display: block !important;
     position: relative;
-    overflow: hidden;
-    text-overflow: clip;
-    white-space: nowrap;
+    /* overflow: hidden; */
+    /* text-overflow: clip; */
+    /* white-space: nowrap; */
 }
 .outline
 {
@@ -209,8 +209,10 @@ dd.todo
 {
     margin-left: 4px;
 }
-#sort-field select, {
-    width: 200px;
+#sort-field,#list-filters {
+    select, {
+	width: 200px;
+    }
 }
 .input-medium {
     width: 150px;
@@ -260,7 +262,7 @@ dd.todo
 /* { */
 /*     .opacify(30); */
 /* } */
-.heading i.twisty, .heading div.details, .heading div.loading, .heading
+.heading i.twisty, .heading div.details, .heading div.loading
 {
     -webkit-transition: opacity @anim-speed, -webkit-transform @anim-speed, padding-top @anim-speed;
     -moz-transition: opacity @anim-speed, -moz-transform @anim-speed, padding-top @anim-speed;
@@ -439,5 +441,24 @@ div.ow-hoverable, div.clickable, div.ow-buttons
     }
     h6 {
 	font-size: 12px;
+    }
+}
+
+/* Next actions list */
+#gtd-list {
+    a {
+	cursor: pointer;
+    }
+    th {
+	border-top-style: none;
+    }
+    span {
+	display: inline;
+    }
+    [archived="true"] {
+	text-decoration: line-through;
+    }
+    td.todo-col {
+	width: 100px;
     }
 }

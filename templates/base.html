@@ -185,32 +185,34 @@
 	  </li>
 	  <!-- Next actions -->
 	  <li class="dropdown{% if 'list' in request.get_full_path %} active{% endif %}">
-	    <a id="nav-actions" class="dropdown-toggle" data-toggle="dropdown"
-	       {% if request.session.context %}href="{% url 'gtd.views.list_display' '/next' %}context{{ request.session.context.pk }}/" >
-	      Actions ({{ request.session.context.name }})
-	    {% else %}href="{% url 'gtd.views.list_display' '/next' %}">Next Actions
-	      {% endif %}
+	    <a id="nav-actions" href="{% url 'list_display' %}">
+	       <!-- class="dropdown-toggle" data-toggle="dropdown" -->
+	       Next Actions
+	    <!--    {% if request.session.context %}href="{% url 'list_display' '/next' %}context{{ request.session.context.pk }}/" > -->
+	    <!--   Actions ({{ request.session.context.name }}) -->
+	    <!-- {% else %}href="{% url 'list_display' '/next' %}">Next Actions -->
+	    <!--   {% endif %} -->
 	    </a>
 	    <ul class="dropdown-menu">
 	      <!-- Currently active context -->
 	      <li>
 	      {% if request.session.context %}
-		<a href="{% url 'gtd.views.list_display' '/next' %}context{{ request.session.context.pk }}/">{{ request.session.context.name }}</a>
+		<a href="{% url 'list_display' '/next' %}context{{ request.session.context.pk }}/">{{ request.session.context.name }}</a>
 	      {% else %}
-		<a href="{% url 'gtd.views.list_display' '/next' %}">All</a>
+		<a href="{% url 'list_display' '/next' %}">All</a>
 		{% endif %}
 	      </li>
 	      <li class="divider"></li>
 	      <!-- Other contexts -->
 	      {% if request.session.context %}
 	      <li>
-		<a href="{% url 'gtd.views.list_display' '/next' %}context0/">All</a>
+		<a href="{% url 'list_display' '/next' %}context0/">All</a>
 	      </li>
 	      {% endif %}
 	      {% for context in contexts %}
 	      {% if not context.pk == request.session.context.pk %}
 	      <li>
-		<a href="{% url 'gtd.views.list_display' '/next' %}context{{ context.pk }}/">
+		<a href="{% url 'list_display' '/next' %}context{{ context.pk }}/">
 		  {{ context.name }}
 		</a>
 	      </li>

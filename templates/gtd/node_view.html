@@ -45,38 +45,6 @@ $('document').ready(function() {
     // Hide non-JS elements
     $('#add-node').remove();
     $('#todo-buttons').remove();
-
-    {% if parent_node %}
-    var heading = new GtdHeading(
-	{% autoescape off %}{{parent_json}}[0]{% endautoescape %}
-    );
-    // Aloha text editor
-    Aloha.ready(function() {
-    	$('#parent-text').alohaText({
-	    heading: heading});
-    });
-    // todoState chooser for the parent's todo_state
-    var update_todo = function ( todo_state ) {
-	$('#parent-todo').todoState('update', { todo_state: todo_state });
-	heading.todo_state = todo_state;
-	// $('#edit-button').nodeEdit('update', { todo_id: todo_state });
-    };
-    $('#parent-todo').todoState({
-    	node_id: {{ parent_node.pk }},
-    	states: {% autoescape off %}{{ all_todo_states_json_full }}{% endautoescape %},
-	click: function(d) {
-	    update_todo( d.fields.todo_state );
-	}
-    });
-    // Modal node edit form
-    $('#edit-button').nodeEdit({
-	heading: heading,
-	target: '#node-detail',
-	changed: function(d) {
-	    update_todo( d.fields.todo_state );
-	}
-    });
-    {% endif %}
 });
 
 </script>
@@ -307,7 +275,7 @@ $('document').ready(function() {
 	    ng-options="x.key as x.display for x in sort_fields">
     </select>
   </form>
-  <ul class="nav nav-tabs" ow-scope-tabs>
+  <ul ow-scope-tabs>
     <li scope_id="0" ng-click="change_scope($event)"><a href="#">All</a></li>
     <li ng-repeat="scope in scopes" scope_id="{{ scope.pk }}"
 	ng-click="change_scope($event)">
@@ -316,7 +284,7 @@ $('document').ready(function() {
   </ul>
   <div class="outline">
     <div ng-repeat="heading in children | order:sort_field" class="children"
-	 ng-show="(show_arx || !(heading.fields.archived)) && (active_scope === 0 || heading.fields.scope.indexOf(active_scope) > -1)">
+	 ng-show="heading.is_visible()">
       <div ng-include="'outline-tree'"></div>
     </div>
   </div>
@@ -353,11 +321,11 @@ $('document').ready(function() {
       </form>
       <a href="edit/" class="btn btn-default" id="edit-button"><i class="glyphicon glyphicon-pencil"></i> Edit</a>
       <a href="move/" class="btn btn-default" id="move-button"><i class="glyphicon glyphicon-move"></i> Move</a>
-      <a href="{% url 'gtd.views.list_display' %}parent{{ parent_node.pk }}/" class="btn btn-default">
+      <a href="{% url 'list_display' %}parent{{ parent_node.pk }}/" class="btn btn-default">
 	<i class="glyphicon glyphicon-th-list"></i> As List
       </a>
     {% else %}
-      <a href="{% url 'gtd.views.list_display' %}" class="btn btn-default">
+      <a href="{% url 'list_display' %}" class="btn btn-default">
 	<i class="glyphicon glyphicon-th-list"></i> As List
       </a>
     {% endif %}{# if parent_node #}

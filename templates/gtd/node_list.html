@@ -35,25 +35,79 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 </script>
 {% endblock %}
 
-{% block style %}
-{{ block.super }}
-<style type="text/css">
-#gtd-list .todo-state
-{
-    display: inline-block
-}
-#gtd-list td.todo-col
-{
-    width: 100px;
-}
-</style>
-{% endblock %}
-
 {% block content %}
 
 {# Hierarchy, breadcrumb trail #}
   {{ breadcrumb_list|breadcrumbs:base_node_url }}
 
+{% verbatim %}
+<script type="text/ng-template" id="todo-state-selector">
+  <span class="todo-state" style="{{heading.todo_state | style }}"
+	rel="popover">
+	{{ heading.todo_state.fields.abbreviation }}
+	</span>
+</script>
+{% endverbatim %}
+
+{# Angular app for gtd list #}
+<div id="gtd-list" ng-controller="nextActionsList">
+  {% verbatim %}
+  <span ng-if="active_root">
+    Project:
+    <a href="/gtd/node/{{ active_root.pk }}/">{{ active_root.fields.title }}</a>
+    [<a ng-click="filter_parent(null)">&times;</a>]
+  </span>
+  <ul ow-scope-tabs>
+    <li scope_id="0" ng-click="change_scope($event)"><a href="#">All</a></li>
+    <li ng-repeat="scope in scopes" scope_id="{{ scope.pk }}"
+	ng-click="change_scope($event)">
+	<a href="#">{{ scope.fields.display }}</a>
+    </li>
+  </ul>
+  <form action="" method="POST" class="form-inline" id="list-filters">
+    <label for="context">Context:</label>
+    <select name="context" ng-model="active_context" class="form-control"
+	    ng-options="x.pk as x.fields.name for x in contexts"
+	    ng-change="change_context($event)">
+	    <option value="">None</option>
+    </select>
+    <label class="checkbox-inline" ng-repeat="state in todo_states" style="{{ state | style }}">
+      <input type="checkbox" ow-state="{{ state.pk }}"
+	     ng-click="toggle_todo_state($event)"
+	     ng-checked="active_states.indexOf(state.pk) > -1"></input>
+	     {{ state.fields.abbreviation }}
+    </label>
+  </form>
+
+  <table class="table table-condensed" id="gtd-list">
+    <tr>
+      <th>State</th>
+      <th>Description</th>
+      <th>Project</th>
+      <th>Tags</th>
+    </tr>
+    <tr ng-repeat="heading in headings | order: 'list'" ng-show="heading.is_visible()" ow-pk="{{ heading.pk }}"
+	class="heading-row" archived="{{heading.fields.archived}}">
+      <td ow-todo>
+	  {{ heading.todo_state.fields.abbreviation }}
+      </td>
+      <td>
+	<a href="/gtd/node/{{ heading.pk }}/{{ heading.fields.slug }}/">
+          {{ heading.fields.title}}
+	</a>
+	{{ heading | deadline_str }}
+      </td>
+      <td ng-bind-html="heading | root_cell" ng-click="filter_parent(heading)">
+      </td>
+      <td>
+	{{ heading.fields.tag_string }}
+      </td>
+    </tr>
+  </table>
+  {% endverbatim %}
+</div>
+
+<noscript>
 {# Scope tabs #}
 {% include "gtd/scope_tabs.html" %}
 {# Filters #}
@@ -63,7 +117,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 	 />
   <label id="lblContext">
     Context:
-    <select name="context" class="input-small">
+    <select name="context" class="input-small" class="form-control">
     <option value="0"
 	    {% if current_context = None %}
 	    selected="selected"{% endif %}>
@@ -94,7 +148,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
   <input type="hidden" name="parent_id"
 	 value="{{ parent.pk }}">
   {% endif %}
-  <input type="submit" value="Filter" class="btn" />
+  <input type="submit" value="Filter" class="btn btn-default" />
   {% csrf_token %}
 </form>
 {# Display nodes (if any exist #}
@@ -149,4 +203,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 {# No nodes matched so display an error message #}
 <h4>No items matched your criteria. Please change filters and resubmit.</h4>
 {% endif %}
+</div>
+</noscript>
 {% endblock %}
