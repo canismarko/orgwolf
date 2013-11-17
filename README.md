@@ -9,7 +9,8 @@ Project Structure
 Each app contains a few special files. `models.py` holds python classes that moderately correspond to database entries. `views.py` contains functions that serve up responses to web requests. `tests.py` defines the unit tests that ensure previous work isn't broken by subsequent changes. `urls.py` files are a series of regular expressions that describe how to translate a url to a view.
 + `orgwolf/` contains server-wide components (auth, etc)
 + `orgwolf/settings.py
-+ `GettingThingsDone/` contains the GTD components for making lists, etc.
++ `gtd/` contains the GTD components for making lists, etc.
++ `gtd/static/` contains the static and Javascript files for the gtd module.
 + `projects/` contains the tools to work on GTD nodes.
 + `wolfmail/` deals with messaging and sending GTD objects via e-mail
 + `plugins/` interact with other sources of information (eg. GMail, org-mode)
