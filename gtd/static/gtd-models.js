@@ -266,7 +266,7 @@ GtdHeading.prototype.is_visible = function() {
 	}
     }
     // Check if heading is in active todo-states
-    active_states = this.workspace.active_states
+    active_states = this.workspace.active_states;
     if ( typeof active_states !== 'undefined' ) {
 	if ( active_states.indexOf(this.fields.todo_state) === -1 ) {
 	    visibility = false;
@@ -309,7 +309,7 @@ GtdHeading.prototype.update = function() {
     // Update children
     this.children = this.workspace.headings.filter_by({parent: this.pk});
     // Update parent_obj
-    this.parent_obj = this.get_parent()
+    this.parent_obj = this.get_parent();
 };
 
 GtdHeading.prototype.save = function(args) {
@@ -712,7 +712,7 @@ Array.prototype.order_by = function(field) {
     sorted = this.slice(0);
     compare = function( a, b ) {
 	// Test whether key is in heading.fields
-	if ( key in a.fields && key in b.fields ) {
+	if ( a.fields.hasOwnProperty(key) && b.fields.hasOwnProperty(key) ) {
 	    a = a.fields[key];
 	    b = b.fields[key];
 	} else {
@@ -797,7 +797,7 @@ Array.prototype.add = function(obj) {
 		parents[i].update();
 	    }
 	}
-    }
+    };
     if ( obj.$resolved === false ) {
 	// If ajax request is not resolved then defer processing
 	obj.$promise.then(process);
@@ -808,7 +808,7 @@ Array.prototype.add = function(obj) {
     return real_heading;
 };
 
-Array.prototype.delete = function(heading) {
+Array.prototype.remove = function(heading) {
     var idx, status;
     status = false;
     idx = this.indexOf(heading);
@@ -817,5 +817,5 @@ Array.prototype.delete = function(heading) {
 	status = true;
     }
     return status;
-}
+};
 // end definition of HeadingManager()

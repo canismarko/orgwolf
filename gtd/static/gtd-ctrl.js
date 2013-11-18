@@ -1,6 +1,6 @@
 /*globals document, $, jQuery, document, Aloha, window, alert, GtdHeading, HeadingManager, angular*/
 "use strict";
-var test_headings;
+var test_headings, owConfig, HeadingFactory, GtdListFactory, outlineCtrl, listCtrl;
 
 /*************************************************
 * Angular module for all GTD components
@@ -9,7 +9,8 @@ var test_headings;
 var gtd_module = angular.module('orgWolf',
 				['ngAnimate', 'ngResource', 'ngSanitize']);
 
-gtd_module.config(function($httpProvider, $locationProvider) {
+gtd_module.config(['$httpProvider', '$locationProvider', owConfig]);
+function owConfig($httpProvider, $locationProvider) {
     // $locationProvider.html5Mode(true);
     // Add custom headers to $http objects
     $httpProvider.defaults.headers.common['X-Request-With'] = 'XMLHttpRequest';
@@ -38,63 +39,72 @@ gtd_module.config(function($httpProvider, $locationProvider) {
 	    xhr.setRequestHeader('X-CSRFToken', csrftoken);
 	}
     });
-});
+}
 
 /*************************************************
 * Factory creates GtdHeading objects
 *
 **************************************************/
-gtd_module.factory('OldHeading', function($resource, $http) {
+gtd_module.factory('OldHeading', ['$resource', '$http', function($resource, $http) {
     return function(data) {
         return new GtdHeading(data);
-    }
-});
-gtd_module.factory('Heading', function($resource, $http) {
+    };
+}]);
+gtd_module.factory('Heading', ['$resource', '$http', HeadingFactory]);
+function HeadingFactory($resource, $http) {
     var res = $resource(
-    	'/gtd/node/:pk/:slug/',
-    	{pk: '@pk', slug: '@fields.slug'},
-    	{
-    	    'query': {
-    		method: 'GET',
-    		transformResponse: $http.defaults.transformResponse.concat([
+	'/gtd/node/:pk/:slug/',
+	{pk: '@pk', slug: '@fields.slug'},
+	{
+	    'query': {
+		method: 'GET',
+		transformResponse: $http.defaults.transformResponse.concat([
 		    function (data, headersGetter) {
-    			var i, new_heading;
-    			for ( i=0; i<data.length; i+=1 ) {
-    		    	    new_heading = new GtdHeading(data[i]);
-    		    	    jQuery.extend(data[i], new_heading);
-    			}
-    			return data;
-    		    }
+			var i, new_heading;
+			for ( i=0; i<data.length; i+=1 ) {
+			    new_heading = new GtdHeading(data[i]);
+			    jQuery.extend(data[i], new_heading);
+			}
+			return data;
+		    }
 		]),
-    		isArray: true
-    	    },
-    	}
+		isArray: true
+	    },
+	}
     );
     return res;
-});
-gtd_module.factory('GtdList', function($resource, $http) {
+}
+
+/*************************************************
+* Factory creates next actions list $resource
+*
+**************************************************/
+gtd_module.factory(
+    'GtdList',
+    ['$resource', '$http', GtdListFactory]
+);
+function GtdListFactory($resource, $http) {
     var res = $resource(
 	'/gtd/lists/', {},
-    	// {states: '', scope: '', context: ''},
-    	{
-    	    'query': {
-    		method: 'GET',
-    		transformResponse: $http.defaults.transformResponse.concat([
+	{
+	    'query': {
+		method: 'GET',
+		transformResponse: $http.defaults.transformResponse.concat([
 		    function (data, headersGetter) {
-    			var i, new_heading;
-    			for ( i=0; i<data.length; i+=1 ) {
-    		    	    new_heading = new GtdHeading(data[i]);
-    		    	    jQuery.extend(data[i], new_heading);
-    			}
-    			return data;
-    		    }
+			var i, new_heading;
+			for ( i=0; i<data.length; i+=1 ) {
+			    new_heading = new GtdHeading(data[i]);
+			    jQuery.extend(data[i], new_heading);
+			}
+			return data;
+		    }
 		]),
-    		isArray: true
-    	    },
-    	}
+		isArray: true
+	    },
+	}
     );
     return res;
-});
+}
 
 /*************************************************
 * Filter that determines object color
@@ -143,18 +153,18 @@ gtd_module.filter('style', function() {
 * Sanitizes text to safe HTML
 *
 **************************************************/
-gtd_module.filter('asHtml', function($sce) {
+gtd_module.filter('asHtml', ['$sce', function($sce) {
     return function(obj) {
 	var s = $sce.trustAsHtml(obj);
 	return s;
     };
-});
+}]);
 
 /*************************************************
 * Filter that orders top level headings
 *
 **************************************************/
-gtd_module.filter('order', function($sce) {
+gtd_module.filter('order', ['$sce', function($sce) {
     return function(obj, criterion) {
 	var ordered, deadline, other;
 	if ( criterion === 'list' ) {
@@ -167,14 +177,14 @@ gtd_module.filter('order', function($sce) {
 	}
 	return ordered;
     };
-});
+}]);
 
 /*************************************************
 * Filter that creates a link to the list item's
 * tree root heading.
 *
 **************************************************/
-gtd_module.filter('root_cell', function($sce) {
+gtd_module.filter('root_cell', ['$sce', function($sce) {
     return function(obj) {
 	var parent, s;
 	s = '';
@@ -188,23 +198,23 @@ gtd_module.filter('root_cell', function($sce) {
 	s = $sce.trustAsHtml(s);
 	return s;
     };
-});
+}]);
 
 /*************************************************
 * Filter that displays the deadline for a heading
 *
 **************************************************/
-gtd_module.filter('deadline_str', function($sce) {
+gtd_module.filter('deadline_str', ['$sce', function($sce) {
     return function(heading) {
-	var str, date;
+	var str, date, today, time_delta, day_delta;
 	str = '';
 	if ( heading.fields.deadline_date ) {
 	    str = 'Due ';
 	    date = new Date(heading.fields.deadline_date + 'T12:00:00');
-	    var today = new Date();
+	    today = new Date();
 	    today.setHours(12, 0, 0, 0);
-	    var time_delta = date.getTime() - today.getTime();
-	    var day_delta = Math.ceil(time_delta / (1000 * 3600 * 24));
+	    time_delta = date.getTime() - today.getTime();
+	    day_delta = Math.ceil(time_delta / (1000 * 3600 * 24));
 	    if ( day_delta === 0 ) {
 		// Is today
 		str += 'today';
@@ -224,7 +234,7 @@ gtd_module.filter('deadline_str', function($sce) {
 	}
 	return str;
     };
-});
+}]);
 
 /*************************************************
 * Directive that lets a user edit a node
@@ -296,14 +306,14 @@ gtd_module.directive('owEditable', function() {
 	    scope.heading.editable = false;
 	    if ( scope.heading.pk === 0 ) {
 		// Heading is not in the database so remove from views
-		scope.headings.delete(scope.heading);
+		scope.headings.remove(scope.heading);
 		if ( this.fields.parent ) {
-		    scope.heading.get_parent().children.delete(scope.heading);
+		    scope.heading.get_parent().children.remove(scope.heading);
 		} else {
-		    scope.children.delete(scope.heading);
+		    scope.children.remove(scope.heading);
 		}
 	    }
-	}
+	};
 	// Attach aloha editor
 	Aloha.ready( function() {
 	    Aloha.jQuery(element.find('.edit-text')).aloha();
@@ -318,7 +328,7 @@ gtd_module.directive('owEditable', function() {
 * Directive that shows a list of Scopes tabs
 *
 **************************************************/
-gtd_module.directive('owScopeTabs', function($resource) {
+gtd_module.directive('owScopeTabs', ['$resource', function($resource) {
     // Directive creates tabs that allow a user to filter by scope
     function link(scope, element, attrs) {
 	var Scope;
@@ -329,25 +339,24 @@ gtd_module.directive('owScopeTabs', function($resource) {
 	element.addClass('nav').addClass('nav-tabs');
 	// Set initial active scope tab
 	element.find('[scope_id="'+scope.active_scope+'"]').addClass('active');
-	scope.active_scope
 	scope.change_scope = function(e) {
 	    var new_scope;
 	    // User has requested a different scope
 	    element.find('[scope_id="'+scope.active_scope+'"]').removeClass('active');
 	    scope.active_scope = parseInt($(e.currentTarget).attr('scope_id'), 10);
 	    element.find('[scope_id="'+scope.active_scope+'"]').addClass('active');
-	}
+	};
     }
     return {
 	link: link
-    }
-});
+    };
+}]);
 
 /*************************************************
 * Directive that lets a user change the todo state
 * with a popover menu
 **************************************************/
-gtd_module.directive('owTodo', function($filter) {
+gtd_module.directive('owTodo', ['$filter', function($filter) {
     // Directive creates the pieces that allow the user to edit a heading
     function link(scope, element, attrs) {
 	var i, $span, $popover, $options, state, content, s, style;
@@ -422,7 +431,7 @@ gtd_module.directive('owTodo', function($filter) {
 	link: link,
 	templateUrl: 'todo-state-selector',
     };
-});
+}]);
 
 /*************************************************
 * Directive sets the parameters of next
@@ -451,7 +460,13 @@ gtd_module.directive('owListRow', function() {
 * Angular project ouline appliance controller
 *
 **************************************************/
-gtd_module.controller('nodeOutline', function($scope, $http, $resource, OldHeading, Heading, $element, $location, $anchorScroll) {
+gtd_module.controller(
+    'nodeOutline',
+    ['$scope', '$http', '$resource', 'OldHeading', 'Heading',
+     '$element', '$location', '$anchorScroll', outlineCtrl]
+);
+function outlineCtrl($scope, $http, $resource, OldHeading, Heading,
+		     $element, $location, $anchorScroll) {
     var TodoState, Scope, url, get_heading, Parent, Tree, parent_tree_id, parent_level, target_headings;
     // modified array to hold all the tasks
     test_headings = Heading.query({'parent_id': 0});
@@ -476,7 +491,7 @@ gtd_module.controller('nodeOutline', function($scope, $http, $resource, OldHeadi
     $scope.rank = 0;
     $scope.update = function() {
 	$scope.children = $scope.headings.filter_by({parent: null});
-    }
+    };
     // Get all TodoState's for later use
     TodoState = $resource('/gtd/todostate/');
     $scope.todo_states = TodoState.query();
@@ -486,19 +501,21 @@ gtd_module.controller('nodeOutline', function($scope, $http, $resource, OldHeadi
 	parent_tree_id = parseInt($element.attr('parent_tree'), 10);
 	parent_level = parseInt($element.attr('level'), 10);
 	target_headings = Heading.query({'tree_id': parent_tree_id,
-				       'level__lte': parent_level + 1});
+					 'level__lte': parent_level + 1});
 	$scope.headings.add(target_headings);
 	// Recurse through and open all the ancestors of the target heading
 	target_headings.$promise.then(function() {
-	    var target = $scope.headings.get({pk: $scope.parent_id});
-	    var open = function(child) {
+	    var target, open;
+	    target = $scope.headings.get({pk: $scope.parent_id});
+	    open = function(child) {
+		var parent;
 		child.toggle('open');
 		child.update();
-		var parent = child.get_parent()
+		parent = child.get_parent();
 		if ( parent.rank !== 0 ) {
 		    open(parent);
 		}
-	    }
+	    };
 	    if ( target.fields.archived ) {
 		$scope.show_arx = true;
 	    }
@@ -539,13 +556,13 @@ gtd_module.controller('nodeOutline', function($scope, $http, $resource, OldHeadi
 	} else if ( $target.hasClass('new-btn') ) {
 	    // New heading button
 	    new_heading = new OldHeading({pk: 0,
-				       workspace: heading.workspace,
-				       model: 'gtd.node',
-				       fields: {
-					   title: '',
-					   parent: heading.pk,
-					   level: heading.fields.level + 1,
-				       }});
+					  workspace: heading.workspace,
+					  model: 'gtd.node',
+					  fields: {
+					      title: '',
+					      parent: heading.pk,
+					      level: heading.fields.level + 1,
+					  }});
 	    new_heading.editable = true;
 	    heading.children.add(new_heading);
 	    $scope.headings.add(new_heading);
@@ -567,24 +584,28 @@ gtd_module.controller('nodeOutline', function($scope, $http, $resource, OldHeadi
     $scope.add_heading = function(e) {
 	var new_heading;
 	new_heading = new OldHeading({pk: 0,
-				   workspace: $scope,
-				   model: 'gtd.node',
-				   fields: {
-				       title: 'marvelous',
-				       parent: null,
-				       level: 0,
-				   }});
+				      workspace: $scope,
+				      model: 'gtd.node',
+				      fields: {
+					  title: 'marvelous',
+					  parent: null,
+					  level: 0,
+				      }});
 	new_heading.editable = true;
 	$scope.headings.add(new_heading);
 	$scope.children.add(new_heading);
     };
-});
+}
 
 /*************************************************
 * Angular actions list controller
 *
 **************************************************/
-gtd_module.controller('nextActionsList', function($sce, $scope, $resource, $location, GtdList, Heading) {
+gtd_module.controller(
+    'nextActionsList',
+    ['$sce', '$scope', '$resource', '$location', 'GtdList', 'Heading', listCtrl]
+);
+function listCtrl($sce, $scope, $resource, $location, GtdList, Heading) {
     var i, TodoState, Context;
     TodoState = $resource('/gtd/todostate/');
     $scope.todo_states = TodoState.query();
@@ -593,8 +614,8 @@ gtd_module.controller('nextActionsList', function($sce, $scope, $resource, $loca
     $scope.parents.add(Heading.query({level: 0}));
     $scope.active_context = null;
     $scope.headings = new HeadingManager($scope);
-    $scope.cached_states = [2]
-    $scope.active_states = [2]
+    $scope.cached_states = [2];
+    $scope.active_states = [2];
     $scope.headings.add(GtdList.query({todo_state: 2}));
     Context = $resource('/gtd/context/');
     $scope.contexts = Context.query();
@@ -602,7 +623,7 @@ gtd_module.controller('nextActionsList', function($sce, $scope, $resource, $loca
     $scope.active_scope = 0;
     // Set the parent attribute on each list item
     for ( i; i<$scope.headings.length; i+=1 ) {
-	$scope.headings[i].parent = $scope.parents.get({pk: $scope.headings[i].fields.parent})
+	$scope.headings[i].parent = $scope.parents.get({pk: $scope.headings[i].fields.parent});
     }
     // Todo state filtering
     $scope.toggle_todo_state = function(e) {
@@ -664,4 +685,4 @@ gtd_module.controller('nextActionsList', function($sce, $scope, $resource, $loca
 	    $scope.active_root = root;
 	}
     };
-});
+}
