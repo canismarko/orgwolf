@@ -87,16 +87,16 @@ $('document').ready(function() {
 	    </select>
 	  </div>
 	  <div class="col-md-2">
+	    <label for="tag_string">Tag String:</label>
+	    <input type="text" id="tag_string" placeholder="eg. :home:"
+		   ng-model="fields.tag_string" class="form-control"></input>
+	  </div>
+	  <div class="col-md-2">
 	    <label for="priority">Priority:</label>
 	    <select id="priority" ng-model="fields.priority"
 		    class="form-control"
 		    ng-options="x.sym as x.display for x in priorities">
 	    </select>
-	  </div>
-	  <div class="col-md-2">
-	    <label for="tag_string">Tag String:</label>
-	    <input type="text" id="tag_string" placeholder="eg. :home:"
-		   ng-model="fields.tag_string" class="form-control"></input>
 	  </div>
 	  <div class="col-md-1">
 	    <label for="archived">Archived:
@@ -242,8 +242,9 @@ $('document').ready(function() {
     </div>
     <div class="children"
 	 ng-repeat="heading in heading.children"
-	 ng-show="(show_arx || !(heading.fields.archived)) && heading.parent_obj.state == 'open'"
+	 ng-show="heading.is_visible()"
 	 ng-include="'outline-tree'">
+	 <!-- ng-show="(show_arx || !(heading.fields.archived)) && heading.parent_obj.state == 'open'" -->
     </div>
   </div>
 </script>

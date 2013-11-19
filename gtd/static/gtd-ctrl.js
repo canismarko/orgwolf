@@ -293,6 +293,8 @@ gtd_module.directive('owEditable', function() {
 	    field = $target.attr('ng-model').split('.')[1];
 	    scope.fields[field] = $target.val();
 	});
+	// Focus on the title field
+	element.find('#title').focus();
 	// Event handlers for the editable dialog
 	scope.save = function(e) {
 	    // Tasks for when the user saves the edited heading
@@ -303,15 +305,10 @@ gtd_module.directive('owEditable', function() {
 	    scope.heading.save();
 	};
 	scope.cancel_edit = function(e) {
+	    // Handler for if an editable dialog is closed without saving
 	    scope.heading.editable = false;
 	    if ( scope.heading.pk === 0 ) {
-		// Heading is not in the database so remove from views
-		scope.headings.remove(scope.heading);
-		if ( this.fields.parent ) {
-		    scope.heading.get_parent().children.remove(scope.heading);
-		} else {
-		    scope.children.remove(scope.heading);
-		}
+		scope.heading.pk = -1;
 	    }
 	};
 	// Attach aloha editor
@@ -564,6 +561,7 @@ function outlineCtrl($scope, $http, $resource, OldHeading, Heading,
 					      level: heading.fields.level + 1,
 					  }});
 	    new_heading.editable = true;
+	    new_heading.expandable = 'no';
 	    heading.children.add(new_heading);
 	    $scope.headings.add(new_heading);
 	    heading.toggle('open');

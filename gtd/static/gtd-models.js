@@ -155,9 +155,8 @@ GtdHeading.prototype.get_parent = function() {
     var parent;
     if ( this.rank > 0 && this.workspace ) {
 	if ( this.fields.parent === null ) {
-	    // null parent attribute means return heading pk=0
-	    parent = this.workspace.headings.get({pk: 0});
-	    parent = parent || this.workspace;
+	    // null parent attribute means return workspace
+	    parent = this.workspace;
 	} else {
 	    parent = this.workspace.headings.get({pk: this.fields.parent});
 	}
@@ -282,6 +281,19 @@ GtdHeading.prototype.is_visible = function() {
 	    visibility = false;
 	}
     }
+    // Check if parent is open
+    if ( this.parent_obj ) {
+	if ( this.parent_obj.state !== 'open' ) {
+	    if ( this.pk===768 ) {
+		console.log(this.parent_obj);
+	    }
+	    visibility = false;
+	}
+    }
+    // An un-saved heading is not visible
+    if ( this.pk === -1 ) {
+	visibility = false;
+    }
     return visibility;
 };
 
@@ -345,6 +357,8 @@ GtdHeading.prototype.save = function(args) {
 		if ( typeof data === 'string' ) {
 		    data = jQuery.parseJSON(data);
 		}
+		// Update the heading object with the return data
+		heading.pk = data.pk;
 		heading.fields = data.fields;
 		heading.update();
 	    });

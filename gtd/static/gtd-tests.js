@@ -308,7 +308,7 @@ test('update() method', function() {
 });
 
 test('is_visible() method', function() {
-    var heading;
+    var heading, parent, child;
     heading = scope.headings.get({pk: 1});
     ok(
 	heading.is_visible(),
@@ -334,6 +334,20 @@ test('is_visible() method', function() {
     ok(
 	! heading.is_visible(),
 	'heading is not visible if its todo_state is not active'
+    );
+    delete scope.active_states;
+    // Heading is not visible if parent is not open
+    parent = scope.headings.get({pk: 2});
+    child = scope.headings.get({pk: 3});
+    parent.state = 'closed';
+    ok(
+	! child.is_visible(),
+	'child with open parent is visible'
+    );
+    heading.pk = -1;
+    ok(
+	! heading.is_visible(),
+	'heading with pk=-1 is not visible'
     );
 });
 
@@ -699,7 +713,7 @@ test('workspace.headings.add() method', function() {
     );
     // Chcek that adding an empty array is a no-op
     old_length = scope.headings.length;
-    scope.headings.add([])
+    scope.headings.add([]);
     equal(
 	scope.headings.length,
 	old_length,

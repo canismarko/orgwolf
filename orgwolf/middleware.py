@@ -138,16 +138,21 @@ class AjaxMiddleware():
         Decode submitted data for REST API depending on format
         (JSON, url-encoded-form, etc)
         """
+        EXEMPT = [
+            '/accounts/logout/persona/',
+            '/accounts/login/persona/',
+        ]
         accept = request.META.get('HTTP_ACCEPT', '')
         if accept.find('application/json') > -1:
             request.is_json = True
         else:
             request.is_json = False
-        if request.method in ['PUT', 'POST'] and request.is_ajax():
+        if request.method in ['PUT', 'POST'] and request.is_json and request.path not in EXEMPT:
             parsers = {
                 'application/json': self.parse_json,
-                'application/x-www-form-urlencoded': self.parse_url_encoded_form,
+                # 'application/x-www-form-urlencoded': self.parse_url_encoded_form,
             }
             s = request.body
             parser = parsers.get(request.META['CONTENT_TYPE'], lambda x: None)
             setattr(request, request.method, parser(s))
+            print(request)
