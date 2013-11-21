@@ -1153,7 +1153,13 @@ class ScopeView(View):
     def get(self, request, *args, **kwargs):
         scopes = Scope.get_visible(request.user)
         data = serializers.serialize('json', scopes)
-        return HttpResponse(data)
+        if request.is_ajax() or not settings.DEBUG_BAR:
+            return HttpResponse(data)
+        else:
+            # Non-ajax returns the base template to show django-debug-toolbar
+            return render_to_response('base.html',
+                                      locals(),
+                                      RequestContext(request))
 
 
 class ContextView(View):
