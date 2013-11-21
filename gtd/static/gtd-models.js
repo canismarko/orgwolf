@@ -23,9 +23,8 @@ GtdHeading = function (args) {
 	text: '',
 	scope: [],
 	related_projects: [],
-	tree_id: 3,
+	tree_id: 0,
     };
-    this.fields.tree_id = 4;
     this.pk = 0;
     this.archived = false;
     this.populated = false;
@@ -33,10 +32,9 @@ GtdHeading = function (args) {
     this.rank = 1;
     this.state = 'closed';
     this.visible = false;
-    this.fields.scope = [];
     this.children = new HeadingManager(args.workspace);
     // Now update the fields with passed values
-    this.set_fields( args );
+    this.set_fields(args);
     this.parent_obj = this.get_parent();
     // determine rank if possible
     if ( this.workspace ) {
