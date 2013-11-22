@@ -1166,8 +1166,14 @@ class ContextView(View):
     """RESTful interaction with the gtd.context object"""
     def get(self, request, *args, **kwargs):
         contexts = Context.get_visible(request.user)
-        data = serializers.serialize('json', contexts)
-        return HttpResponse(data)
+        data = serializers.serialize('json', contexts,
+                                     fields=('name',))
+        if request.is_ajax() or not settings.DEBUG_BAR:
+            return HttpResponse(data)
+        else:
+            return render_to_response('base.html',
+                                      locals(),
+                                      RequestContext(request))
 
 
 @login_required

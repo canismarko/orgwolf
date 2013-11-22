@@ -142,12 +142,14 @@ class AjaxMiddleware():
             '/accounts/logout/persona/',
             '/accounts/login/persona/',
         ]
-        accept = request.META.get('HTTP_ACCEPT', '')
+        accept = request.META.get('CONTENT_TYPE', '')
         if accept.find('application/json') > -1:
             request.is_json = True
         else:
             request.is_json = False
-        if request.method in ['PUT', 'POST'] and request.is_json and request.path not in EXEMPT:
+        if ( request.method in ['PUT', 'POST']
+             and request.is_json
+             and request.path not in EXEMPT ):
             parsers = {
                 'application/json': self.parse_json,
                 # 'application/x-www-form-urlencoded': self.parse_url_encoded_form,
@@ -155,4 +157,3 @@ class AjaxMiddleware():
             s = request.body
             parser = parsers.get(request.META['CONTENT_TYPE'], lambda x: None)
             setattr(request, request.method, parser(s))
-            print(request)

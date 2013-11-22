@@ -1012,10 +1012,23 @@ class ContextAPI(TestCase):
 
     def test_get_context_collection(self):
         response = self.client.get(self.url)
-        expected = serializers.serialize('json', self.contexts)
+        r = json.loads(response.content)
+        expected = serializers.serialize('json', self.contexts, fields=('name'))
         self.assertEqual(
             response.content,
             expected,
+        )
+
+    def test_context_num_querysets(self):
+        """
+        Make sure the Context.get_visible() is a minimal number of
+        queries.
+        """
+        def hit_db():
+            self.client.get(self.url)
+        self.assertNumQueries(
+            3,
+            hit_db,
         )
 
 class OverdueFilter(TestCase):
@@ -1567,7 +1580,7 @@ class DBOptimization(TestCase):
             )
     def test_node_view(self):
         self.assertNumQueries(
-            10,
+            9,
             self.client.get,
             '/gtd/lists/next/',
         )
@@ -1678,6 +1691,7 @@ class NodeAPI(TestCase):
         """Check if getting the node attributes by ajax works as expected"""
         response = self.client.get(
             self.url_slug,
+            HTTP_X_REQUESTED_WITH='XMLHttpRequest',
             HTTP_ACCEPT='application/json'
         )
         r = json.loads(response.content)
@@ -1691,6 +1705,7 @@ class NodeAPI(TestCase):
         nodes = Node.objects.mine(self.user, get_archived=True)
         response = self.client.get(
             '/gtd/node/',
+            HTTP_X_REQUESTED_WITH='XMLHttpRequest',
             HTTP_ACCEPT='application/json'
         )
         r = json.loads(response.content)
@@ -1704,6 +1719,7 @@ class NodeAPI(TestCase):
         response = self.client.get(
             '/gtd/node/',
             {'parent_id': '1'},
+            HTTP_X_REQUESTED_WITH='XMLHttpRequest',
             HTTP_ACCEPT='application/json',
         )
         r = json.loads(response.content)
@@ -1718,6 +1734,7 @@ class NodeAPI(TestCase):
         response = self.client.get(
             '/gtd/node/',
             {'parent_id': '0'},
+            HTTP_X_REQUESTED_WITH='XMLHttpRequest',
             HTTP_ACCEPT='application/json',
         )
         r = json.loads(response.content)

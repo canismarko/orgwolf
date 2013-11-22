@@ -237,12 +237,13 @@ class Context(models.Model):
         return final_queryset
 
     @staticmethod
-    def get_visible(user):
+    def get_visible(user, related=[]):
         """Return all the Context objects visible to this user"""
         if user.is_authenticated():
-            return Context.objects.filter(Q(owner=user)|Q(owner=None))
+            qs = Context.objects.filter(Q(owner=user)|Q(owner=None))
         else:
-            return Context.objects.filter(Q(owner=None))
+            qs = Context.objects.filter(Q(owner=None))
+        return qs
 
 
 class Priority(models.Model):
