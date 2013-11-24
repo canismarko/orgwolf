@@ -48,7 +48,7 @@ urlpatterns = patterns(
     url(r'^node/search/', 'node_search'),
 
     # New API urls below
-    url(r'^node/(?:(?P<pk>\d+)/)?(?:(?P<slug>[-\w\d]*)/)?(?P<show_all>all/)?$',
+    url(r'^node(?:/(?P<pk>\d+))?(?:/(?P<slug>[-\w\d]*))?(:?/(?P<show_all>all/))?/?$',
         NodeView.as_view(),
         name='node_object'
     ),
@@ -60,21 +60,18 @@ urlpatterns = patterns(
         TreeView.as_view(),
         name='tree_view'
     ),
-    url(r'^todostate/(?:(?P<pk>\d+)/)?$',
+    url(r'^todostate(?:/(?P<pk>\d+))?/?$',
         TodoStateView.as_view(),
         name='todo_state'
     ),
-    # url(r'^agenda/(?:(?P<date>.*)/)?',
-    #     AgendaView.as_view()
-    # ),
-    url(r'^lists(?P<url_string>/[\w/]+)?/$',
+    url(r'^lists(?P<url_string>/[\w/]+)?/?$',
         NodeListView.as_view(),
         name='list_display'),
-    url(r'^scope/$',
+    url(r'^scope/?$',
         ScopeView.as_view(),
         name='scope_api',
     ),
-    url(r'^context/$',
+    url(r'^context/?$',
         ContextView.as_view(),
         name='context_api',
     )

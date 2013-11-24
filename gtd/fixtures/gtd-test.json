@@ -20,7 +20,8 @@
         "tree_id": 1, 
         "todo_state": 6, 
         "scope": [
-            1
+            1,
+	    2
         ], 
         "energy": null, 
         "users": [

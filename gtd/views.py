@@ -892,6 +892,11 @@ class NodeView(DetailView):
         return super(NodeView, self).dispatch(*args, **kwargs)
 
     def get(self, request, *args, **kwargs):
+        if settings.DEBUG_BAR:
+            json = self.get_json(request, *args, **kwargs)
+            return render_to_response('base.html',
+                                      locals(),
+                                      RequestContext(request))
         if (request.is_ajax() or request.is_json) and not request.is_mobile:
             # AJAX request
             return self.get_json(request, *args, **kwargs)
@@ -945,7 +950,7 @@ class NodeView(DetailView):
         if node_id:
             if not (parent_node.access_level(request.user) in ['write', 'read']):
                 new_url = reverse('django.contrib.auth.views.login')
-                new_url += '?next=' + base_url + node_id + '/'
+                new_url += '?next=' + base_url + '/' + node_id + '/'
                 return redirect(new_url)
         if node_id == None:
             node_id = 0
@@ -978,8 +983,8 @@ class NodeView(DetailView):
             for param, value in get_dict.iteritems():
                 query = {param: value}
                 nodes = nodes.filter(**query)
-            json = serializers.serialize('json', nodes)
-            response = HttpResponse(json)
+            # json = serializers.serialize('json', nodes, fields=('title',))
+            response = HttpResponse(nodes.as_json())
         else:
             node = get_object_or_404(Node, pk=node_id)
             response = HttpResponse(node.as_json())
@@ -1002,7 +1007,7 @@ class NodeView(DetailView):
         if scope_id:
             url_kwargs['scope_id'] = scope_id
         url_kwargs['slug'] = self.node.slug
-        base_url = reverse('node_object', kwargs=url_kwargs)
+        base_url = reverse('node_object', kwargs=url_kwargs) + '/'
         breadcrumb_list = self.node.get_ancestors(include_self=True)
         # Make sure user is authorized to edit this node
         if self.node.access_level(request.user) != 'write':
@@ -1103,7 +1108,8 @@ class TreeView(View):
     """Retrieves entire trees at once"""
     def get(self, request, *args, **kwargs):
         nodes = Node.objects.filter(tree_id=kwargs['tree_id'])
-        return HttpResponse(serializers.serialize('json', nodes))
+        # return HttpResponse(serializers.serialize('json', nodes))
+        return HttpResponse(nodes.as_json())
 
 
 class Descendants(View):

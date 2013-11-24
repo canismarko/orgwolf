@@ -226,46 +226,57 @@ class AjaxMiddlewareTest(TestCase):
         self.middleware = AjaxMiddleware()
         self.client = Client()
         self.factory = RequestFactory()
+    def test_set_is_json(self):
+        request = self.factory.get(
+            '/gtd/node/',
+            HTTP_ACCEPT='application/json'
+        )
+        self.middleware.process_request(request)
+        self.assertTrue(request.is_json)
+        request = self.factory.put(
+            '/gtd/node/',
+            content_type='application/json'
+        )
     def test_chainability(self):
         self.assertTrue(
             self.middleware.process_request(self.factory.get('/gtd/node/')) is None
         )
-    def test_html_decoding(self):
-        request = self.factory.put(
-            '/gtd/node/', 'pk=2&fields%5Btext%5D=thisstuff&fields%5Btodo_state%5D=2&fields%5Btag_string%5D=&fields%5Bopened%5D=2012-11-12T06%3A19%3A50Z&fields%5Bassigned%5D=',
-            content_type='application/x-www-form-urlencoded',
-            HTTP_X_REQUESTED_WITH='XMLHttpRequest'
-        )
-        self.middleware.process_request(request)
-        self.assertEqual(
-            request.PUT.__class__.__name__,
-            'dict',
-        )
-        self.assertEqual(
-            request.PUT['pk'],
-            2,
-            'First attribute ("pk") not set'
-        )
-        self.assertEqual(
-            request.PUT['fields']['tag_string'],
-            '',
-        )
-        self.assertEqual(
-            request.PUT['fields']['todo_state'],
-            2,
-            'field[todo_state] not set'
-        )
-        self.assertEqual(
-            request.PUT['fields']['text'],
-            'thisstuff'
-        )
-        self.assertEqual(
-            request.PUT['fields']['opened'],
-            '2012-11-12T06:19:50Z'
-        )
-        self.assertTrue(
-            request.PUT['fields']['assigned'] is None
-        )
+    # def test_html_decoding(self):
+    #     request = self.factory.put(
+    #         '/gtd/node/', 'pk=2&fields%5Btext%5D=thisstuff&fields%5Btodo_state%5D=2&fields%5Btag_string%5D=&fields%5Bopened%5D=2012-11-12T06%3A19%3A50Z&fields%5Bassigned%5D=',
+    #         content_type='application/x-www-form-urlencoded',
+    #         HTTP_X_REQUESTED_WITH='XMLHttpRequest'
+    #     )
+    #     self.middleware.process_request(request)
+    #     self.assertEqual(
+    #         request.PUT.__class__.__name__,
+    #         'dict',
+    #     )
+    #     self.assertEqual(
+    #         request.PUT['pk'],
+    #         2,
+    #         'First attribute ("pk") not set'
+    #     )
+    #     self.assertEqual(
+    #         request.PUT['fields']['tag_string'],
+    #         '',
+    #     )
+    #     self.assertEqual(
+    #         request.PUT['fields']['todo_state'],
+    #         2,
+    #         'field[todo_state] not set'
+    #     )
+    #     self.assertEqual(
+    #         request.PUT['fields']['text'],
+    #         'thisstuff'
+    #     )
+    #     self.assertEqual(
+    #         request.PUT['fields']['opened'],
+    #         '2012-11-12T06:19:50Z'
+    #     )
+    #     self.assertTrue(
+    #         request.PUT['fields']['assigned'] is None
+    #     )
     def test_json_decoding(self):
         request = self.factory.put(
             '/gtd/node/', '{"pk":172,"fields":{"archived":false,"todo_state":null,"text":"","scope":[1],"related_projects":[],"rght":6,"tag_string":"","assigned":null,"lft":1,"deadline":null,"owner":1,"opened":"2012-11-12T06:20:17Z","title":"[a]","time_needed":null,"priority":"","closed":null,"tree_id":2,"energy":null,"repeating_number":null,"scheduled":null,"users":[],"parent":null,"repeating_unit":"","slug":"","level":0,"scheduled_time_specific":true,"repeats_from_completion":true,"deadline_time_specific":true,"repeats":true}}',

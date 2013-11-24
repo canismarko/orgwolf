@@ -48,7 +48,7 @@ from gtd.shortcuts import parse_url, generate_url, get_todo_abbrevs
 from gtd.shortcuts import order_nodes
 from gtd.templatetags.gtd_extras import escape_html
 from gtd.templatetags.gtd_extras import add_scope, breadcrumbs
-from gtd.views import Descendants, NodeListView
+from gtd.views import Descendants, NodeListView, NodeView
 from orgwolf.preparation import translate_old_text
 from orgwolf.models import OrgWolfUser as User
 
@@ -440,6 +440,24 @@ class NodeMutators(TestCase):
             node.get_hierarchy_as_string()
             )
 
+class NodeManagers(TestCase):
+    fixtures = ['test-users.json', 'gtd-test.json', 'gtd-env.json']
+    def test_queryset_as_json(self):
+        qs = Node.objects.all()
+        r = qs.as_json()
+        r_pks = [x['pk'] for x in json.loads(r)]
+        self.assertTrue(
+            isinstance(r, basestring)
+        )
+        # Make sure querysets match up (by pk)
+        self.assertQuerysetEqual(
+            qs,
+            r_pks,
+            transform=lambda x: x.pk,
+            ordered=False,
+        )
+
+
 class NodeArchive(TestCase):
     fixtures = ['test-users.json', 'gtd-test.json', 'gtd-env.json']
     def test_auto_archive(self):
@@ -735,7 +753,7 @@ class Shortcuts(TestCase):
         original_qs = Node.objects.all()
         result_qs = order_nodes(original_qs, field='scheduled_date')
         self.assertEqual(
-            'QuerySet',
+            'NodeQuerySet',
             result_qs.__class__.__name__
             )
         self.assertNotEqual(
@@ -995,6 +1013,7 @@ class ScopeAPI(TestCase):
         self.assertQuerysetEqual(
             Scope.get_visible(user=self.user),
             expected,
+            ordered=False,
         )
 
 
@@ -1223,7 +1242,7 @@ class ListViewQueryset(TestCase):
         qs = self.view.get_queryset()
         self.assertEqual(
             qs.__class__.__name__,
-            'QuerySet',
+            'NodeQuerySet',
         )
     def test_filter_todo_state(self):
         """Check that passing a todostate to the filter works"""
@@ -1234,7 +1253,8 @@ class ListViewQueryset(TestCase):
         expected = expected.filter(todo_state=todo)
         self.assertQuerysetEqual(
             qs,
-            [repr(x) for x in expected]
+            [repr(x) for x in expected],
+            ordered=False,
         )
 
     def test_filter_scope(self):
@@ -1245,7 +1265,8 @@ class ListViewQueryset(TestCase):
         expected = expected.filter(scope=scope)
         self.assertQuerysetEqual(
             qs,
-            [repr(x) for x in expected]
+            [repr(x) for x in expected],
+            ordered=False,
         )
 
     def test_context_filtering(self):
@@ -1255,7 +1276,8 @@ class ListViewQueryset(TestCase):
         expected = context.apply(Node.objects.assigned(self.user))
         self.assertQuerysetEqual(
             qs,
-            [repr(x) for x in expected]
+            [repr(x) for x in expected],
+            ordered=False,
         )
 
 
@@ -1340,7 +1362,7 @@ class MultiUser(TestCase):
         request = self.factory.get(url)
         request.user = self.user2
         self.assertEqual(
-            'QuerySet',
+            'NodeQuerySet',
             Node.objects.owned(request.user).__class__.__name__)
         self.assertEqual(
             list(Node.objects.filter(owner = self.user2)),
@@ -1376,7 +1398,7 @@ class MultiUser(TestCase):
         results = Node.objects.mine(self.user2)
         contact = self.user2.contact_set.all()
         self.assertEqual(
-            'QuerySet',
+            'NodeQuerySet',
             results.__class__.__name__
             )
         self.assertTrue(
@@ -1492,8 +1514,8 @@ class MultiUser(TestCase):
             response.status_code,
         )
         self.assertEqual(
+            response['Location'],
             'http://testserver/accounts/login/?next=/gtd/node/9/',
-            response['Location']
         )
 
 class HTMLEscape(TestCase):
@@ -1580,7 +1602,7 @@ class DBOptimization(TestCase):
             )
     def test_node_view(self):
         self.assertNumQueries(
-            9,
+            10,
             self.client.get,
             '/gtd/lists/next/',
         )
@@ -1651,6 +1673,7 @@ class NodeAPI(TestCase):
             'node_object',
             kwargs={'pk': self.node.pk}
         )
+        self.view = NodeView()
         self.repeating_node = Node.objects.get(pk=7)
         self.repeating_url = reverse(
             'node_object',
@@ -1664,10 +1687,10 @@ class NodeAPI(TestCase):
         )
         self.actionable = TodoState.objects.get(abbreviation='NEXT')
         self.closed = TodoState.objects.get(abbreviation='DONE')
-        self.assertTrue(
-            self.client.login(username='test', password='secret')
-        )
         self.user = User.objects.get(username='test')
+        self.assertTrue(
+            self.client.login(username=self.user.username, password='secret')
+        )
     def test_url_slug(self):
         """Check if using /<pk>/<slug>/operates as expected"""
         response = self.client.get(
@@ -1685,7 +1708,7 @@ class NodeAPI(TestCase):
         self.assertEqual(
             302,
             response.status_code,
-            'Non-slugged response returns 302'
+            'Non-slugged response doesn\'t return 302'
         )
     def test_json_get(self):
         """Check if getting the node attributes by ajax works as expected"""
@@ -1699,6 +1722,7 @@ class NodeAPI(TestCase):
             self.node.pk,
             r['pk'],
         )
+
     def test_get_node_collection(self):
         """Check that a collection of nodes can be retried with optional filters
         applied by parameters"""
@@ -1712,7 +1736,8 @@ class NodeAPI(TestCase):
         self.assertQuerysetEqual(
             nodes,
             [node['pk'] for node in r],
-            transform = lambda x: x.pk
+            transform = lambda x: x.pk,
+            ordered=False,
         )
         # Now filter by some parameters
         nodes = Node.objects.mine(self.user).filter(parent_id='1')
@@ -1743,6 +1768,32 @@ class NodeAPI(TestCase):
             [node['pk'] for node in r],
             transform = lambda x: x.pk
         )
+
+    # def test_json_get_collection_optimization(self):
+    #     """Make sure that getting nodes by AJAX is database efficient"""
+    #     def get_nodes():
+    #         list(Node.objects.mine(self.user))
+    #     self.assertNumQueries(
+    #         1,
+    #         get_nodes
+    #     )
+    #     def get_response():
+    #         factory = RequestFactory()
+    #         request = factory.get(
+    #             '/gtd/node',
+    #         )
+    #         request.user = self.user
+    #         return self.view.get_json(request)
+    #         # return self.client.get(
+    #         #     '/gtd/node/',
+    #         #     HTTP_X_REQUESTED_WITH='XMLHttpRequest',
+    #         #     HTTP_ACCEPT='application/json'
+    #         # )
+    #     self.assertNumQueries(
+    #         1,
+    #         get_response
+    #     )
+
     def test_json_put(self):
         """Check if setting attributes by ajax works as expected"""
         self.assertNotEqual(

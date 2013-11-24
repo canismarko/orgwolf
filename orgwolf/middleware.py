@@ -142,8 +142,11 @@ class AjaxMiddleware():
             '/accounts/logout/persona/',
             '/accounts/login/persona/',
         ]
-        accept = request.META.get('CONTENT_TYPE', '')
-        if accept.find('application/json') > -1:
+        accept = request.META.get('HTTP_ACCEPT', '')
+        content_type = request.META.get('CONTENT_TYPE', '')
+        if content_type.find('application/json') > -1:
+            request.is_json = True
+        elif accept.find('application/json') > -1:
             request.is_json = True
         else:
             request.is_json = False

@@ -30,7 +30,7 @@ import dateutil.parser
 from django.core import serializers
 from django.core.exceptions import ValidationError
 from django.db import models, transaction
-from django.db.models import Q, signals
+from django.db.models import Q, signals, query
 from django.dispatch import receiver
 from django.forms.models import model_to_dict
 from django.template.defaultfilters import slugify
@@ -272,8 +272,27 @@ class Scope(models.Model):
         return self.display
 
 
+class NodeQuerySet(query.QuerySet):
+    def as_json(self):
+        """Return queryset in json serialized format"""
+        # s = '['
+        # first = True
+        # list(self)
+        # for node in self:
+        #     if first:
+        #         first = False
+        #     else:
+        #         s += ', '
+        #     s += node.as_json()
+        # s += ']'
+        # return s
+        return serializers.serialize('json', self)
+
+
 class NodeManager(TreeManager):
     """Object manager for for retrieving nodes."""
+    def get_query_set(self):
+        return NodeQuerySet(self.model)
     def assigned(self, user, get_archived=False):
         """Get all the objects that `user` is responsible for
         """
@@ -500,13 +519,31 @@ class Node(MPTTModel):
         return mark_safe(string)
 
     def as_json(self):
-        """Process the instance into a json string. Output contains
-        a few extra attributes for AJAX processing."""
-        # Return dictionary as json
+        """Process the instance into a json string."""
+        # Convert some fields to serializable format
+        # d = model_to_dict(self)
+        # for field in d:
+        #     if type(d[field]) is dt.date:
+        #         d[field] = str(d[field])
+        #     if type(d[field]) is dt.datetime:
+        #         val = d[field].replace(tzinfo=None)
+        #         d[field] = val.isoformat() + 'Z'
+        #     if type(d[field]) is dt.time:
+        #         d[field] = d[field].strftime('%H:%M:%S')
+        # # Return dictionary as json
+        # fields = d
+        # node_dict = {
+        #     'pk': self.pk,
+        #     'model': 'gtd.node',
+        #     'fields': fields
+        # }
+        # s = json.dumps(node_dict)
+        # return s
         s = serializers.serialize('json', [self])
         # Remove list brackets
         s = s[1:-1]
         return s
+
 
     def get_tags(self):
         tag_strings = self.tag_string.split(":")
