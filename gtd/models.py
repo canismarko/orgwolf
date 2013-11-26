@@ -373,10 +373,6 @@ class Node(MPTTModel):
         'self',
         blank=True, null=True,
         related_name='children')
-    related_projects = models.ManyToManyField(
-        'Node',
-        blank=True,
-        related_name='project_set')
     # Scheduling details
     scheduled_time = models.TimeField(blank=True, null=True)
     scheduled_date = models.DateField(blank=True, null=True)

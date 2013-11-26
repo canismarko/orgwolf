@@ -65,7 +65,7 @@ def new_user(request):
         data = request.POST.copy()
         data['last_login'] = data.get('last_login', datetime.now())
         data['date_joined'] = data.get('date_joined', datetime.now())
-        data['home'] = data.get('home', 'node_object')
+        data['home'] = data.get('home', 'projects')
         new_user_form = RegistrationForm(data)
         if new_user_form.is_valid():
             # Create the new user and log her in

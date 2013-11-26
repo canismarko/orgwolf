@@ -49,10 +49,6 @@ class NodeForm(forms.ModelForm):
         widget=widgets.TextInput(
             attrs={'data-validate': 'int'}),
         );
-    related_projects = forms.ModelMultipleChoiceField(
-        queryset=Node.get_all_projects().order_by('title'),
-        required=False,
-        )
     class Meta:
         fields = ('title',
                   'todo_state',
@@ -68,7 +64,6 @@ class NodeForm(forms.ModelForm):
                   'repeating_unit',
                   'repeats_from_completion',
                   'archived',
-                  'related_projects',
                   'text',
                   )
         model = Node
@@ -82,8 +77,6 @@ class NodeForm(forms.ModelForm):
         # Set initial values if node already exists
         if self.instance.pk:
             local_tz = timezone.get_current_timezone()
-            projects = self.instance.related_projects.all()
-            self.fields['related_projects'].initial = projects
         # Set initial values if node does not exist
         if parent and not self.instance.pk: # A new node with a parent
             related = parent.related_projects.all()
@@ -93,14 +86,6 @@ class NodeForm(forms.ModelForm):
         self.fields['todo_state'].queryset = TodoState.get_visible(user=user)
         # Remove the node's main project (if it exists) from possible values
         instance = dir(self.instance)
-        primary_project = self.instance.get_primary_parent()
-        if parent:
-            primary_project = parent.get_primary_parent()
-        if primary_project:
-            fixed_qs = self.fields['related_projects'].queryset.exclude(
-                pk=primary_project.pk
-                )
-        self.fields['related_projects'].queryset = fixed_qs
 
     def clean_related_projects(self):
         data = self.cleaned_data['related_projects']

@@ -1,0 +1,43 @@
+#######################################################################
+# Copyright 2012 Mark Wolf
+#
+# This file is part of OrgWolf.
+#
+# OrgWolf is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+#######################################################################
+
+from __future__ import unicode_literals, absolute_import, print_function
+
+from rest_framework import serializers
+
+from gtd.models import Context, Scope, Node
+
+
+class ScopeSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Scope
+
+
+class ContextSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Context
+        fields = ('id', 'name')
+
+class NodeSerializer(serializers.ModelSerializer):
+    def __init__(self, qs, *args, **kwargs):
+        # Perform some optimization before hitting the database
+        qs = qs.prefetch_related('scope', 'users')
+        return super(NodeSerializer, self).__init__(qs, *args, **kwargs)
+    class Meta:
+        model = Node

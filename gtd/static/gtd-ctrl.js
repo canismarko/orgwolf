@@ -416,7 +416,6 @@ gtd_module.directive('owTodo', ['$filter', function($filter) {
 		    scope.heading.just_modified = true;
 		    scope.heading.save({ auto: true });
 		    remove_popover($target);
-		    return false;
 		});
 	    });
 	}

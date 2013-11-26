@@ -54,14 +54,14 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
   {% verbatim %}
   <span ng-if="active_root">
     Project:
-    <a href="/gtd/node/{{ active_root.pk }}/">{{ active_root.fields.title }}</a>
+    <a href="/gtd/project/{{ active_root.pk }}/">{{ active_root.fields.title }}</a>
     [<a ng-click="filter_parent(null)">&times;</a>]
   </span>
   <ul ow-scope-tabs>
     <li scope_id="0" ng-click="change_scope($event)"><a href="#">All</a></li>
-    <li ng-repeat="scope in scopes" scope_id="{{ scope.pk }}"
+    <li ng-repeat="scope in scopes" scope_id="{{ scope.id }}"
 	ng-click="change_scope($event)">
-	<a href="#">{{ scope.fields.display }}</a>
+	<a href="#">{{ scope.display }}</a>
     </li>
   </ul>
   <form action="" method="POST" class="form-inline" id="list-filters">

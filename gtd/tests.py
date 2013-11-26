@@ -44,6 +44,7 @@ from django.views.generic import View
 from gtd.forms import NodeForm
 from gtd.models import Node, TodoState, node_repeat, Location
 from gtd.models import Tool, Context, Scope, Contact
+from gtd.serializers import NodeSerializer
 from gtd.shortcuts import parse_url, generate_url, get_todo_abbrevs
 from gtd.shortcuts import order_nodes
 from gtd.templatetags.gtd_extras import escape_html
@@ -77,15 +78,15 @@ class EditNode(TestCase):
                      'deadline': '',
                      'todo_state': closed_todo.id}
         if node: # existing node
-            url = reverse('node_object', kwargs={'pk': node.pk})
+            url = reverse('projects', kwargs={'pk': node.pk})
             post_data['title'] = node.title
         else: # new node
             url = reverse('gtd.views.new_node', kwargs={'node_id': 5})
-            redir_url = reverse('node_object', kwargs={'pk': 5})
+            redir_url = reverse('projects', kwargs={'pk': 5})
             post_data['title'] = 'new node 1'
         response = client.post(url, post_data, follow=True)
         self.assertEqual(200, response.status_code)
-        redir_url = reverse('node_object')
+        redir_url = reverse('projects')
         redirect = re.match(
             'http://testserver{base_url}(\d+)/'.format(base_url=redir_url),
             response.redirect_chain[0][0]
@@ -593,7 +594,7 @@ class FormValidation(TestCase):
             }
         url = reverse('gtd.views.new_node')
         response = self.client.post(url, data)
-        redir_url = reverse('node_object')
+        redir_url = reverse('projects')
         self.assertRedirects(response, redir_url)
         data = {
             'title': 'woah',
@@ -1001,10 +1002,11 @@ class ScopeAPI(TestCase):
         self.scopes = self.scopes | Scope.objects.filter(public=True)
     def test_get_scope_collection(self):
         response = self.client.get(self.url)
-        expected = serializers.serialize('json', self.scopes)
+        expected = self.scopes.values()
+        # expected = serializers.serialize('json', self.scopes)
         self.assertEqual(
-            response.content,
-            expected,
+            [x['id'] for x in json.loads(response.content)],
+            [x['id'] for x in expected],
         )
     def test_scope_get_visible(self):
         expected = []
@@ -1358,7 +1360,7 @@ class MultiUser(TestCase):
             'instancemethod',
             Node.objects.owned.__class__.__name__
             )
-        url = reverse('node_object')
+        url = reverse('projects')
         request = self.factory.get(url)
         request.user = self.user2
         self.assertEqual(
@@ -1425,7 +1427,7 @@ class MultiUser(TestCase):
             kwargs={'pk': assigned.parent.pk}
         else:
             kwargs={}
-        new_url = reverse('node_object', kwargs=kwargs)
+        new_url = reverse('projects', kwargs=kwargs)
         response = self.client.get(new_url)
         self.assertContains(
             response,
@@ -1488,7 +1490,7 @@ class MultiUser(TestCase):
             response.status_code
             )
     def test_node_view(self):
-        url = reverse('node_object')
+        url = reverse('projects')
         response = self.client.get(url)
         self.assertContains(
             response,
@@ -1506,8 +1508,8 @@ class MultiUser(TestCase):
         """Trying to access another person's node by URL
         should redirect the user to the login screen"""
         node = Node.objects.get(pk=9)
-        url = reverse('node_object', kwargs={'pk': node.pk,
-                                             'slug': node.slug})
+        url = reverse('projects', kwargs={'pk': node.pk,
+                                          'slug': node.slug})
         response = self.client.get(url)
         self.assertEqual(
             302,
@@ -1515,7 +1517,7 @@ class MultiUser(TestCase):
         )
         self.assertEqual(
             response['Location'],
-            'http://testserver/accounts/login/?next=/gtd/node/9/',
+            'http://testserver/accounts/login/?next=/gtd/project/9/',
         )
 
 class HTMLEscape(TestCase):
@@ -1658,30 +1660,27 @@ class DescendantsAPI(TestCase):
             response
         )
 
-class NodeAPI(TestCase):
-    """Check the /gtd/node/<node_pk>/<slug>/ functionality.
-    API exchanges objects from django.core.serializers
-    in json with following keys:
-    - obj['pk'] -> Node.id
-    - obj['model'] -> django model reference, eg. 'gtd.node'
-    - obj['fields'] -> object (dict) of model fields"""
+class ProjectView(TestCase):
+    """
+    Check the /gtd/node/<node_pk>/<slug>/ functionality.
+    """
     fixtures = ['test-users.json', 'gtd-test.json', 'gtd-env.json']
     def setUp(self):
         self.node = Node.objects.get(pk=1)
         self.new_url = reverse('node_object')
         self.url = reverse(
-            'node_object',
+            'projects',
             kwargs={'pk': self.node.pk}
         )
         self.view = NodeView()
         self.repeating_node = Node.objects.get(pk=7)
         self.repeating_url = reverse(
-            'node_object',
+            'projects',
             kwargs={'pk': self.repeating_node.pk}
         )
         self.slug = slugify(self.node.title)
         self.url_slug = reverse(
-            'node_object',
+            'projects',
             kwargs={'pk': self.node.pk,
                     'slug': self.node.slug}
         )
@@ -1691,6 +1690,7 @@ class NodeAPI(TestCase):
         self.assertTrue(
             self.client.login(username=self.user.username, password='secret')
         )
+
     def test_url_slug(self):
         """Check if using /<pk>/<slug>/operates as expected"""
         response = self.client.get(
@@ -1708,12 +1708,43 @@ class NodeAPI(TestCase):
         self.assertEqual(
             302,
             response.status_code,
-            'Non-slugged response doesn\'t return 302'
+            'Non-slugged response doesn\'t return 302 ({0})'
+            .format(response.status_code)
+        )
+
+
+class NodeAPI(TestCase):
+    """
+    API exchanges objects from django.core.serializers
+    in json with following keys:
+    - obj['pk'] -> Node.id
+    - obj['model'] -> django model reference, eg. 'gtd.node'
+    - obj['fields'] -> object (dict) of model fields
+    """
+    fixtures = ['test-users.json', 'gtd-test.json', 'gtd-env.json']
+    def setUp(self):
+        self.node = Node.objects.get(pk=1)
+        self.new_url = reverse('node_object')
+        self.url = reverse(
+            'node_object',
+            kwargs={'pk': self.node.pk}
+        )
+        self.view = NodeView()
+        self.repeating_node = Node.objects.get(pk=7)
+        self.repeating_url = reverse(
+            'node_object',
+            kwargs={'pk': self.repeating_node.pk}
+        )
+        self.actionable = TodoState.objects.get(abbreviation='NEXT')
+        self.closed = TodoState.objects.get(abbreviation='DONE')
+        self.user = User.objects.get(username='test')
+        self.assertTrue(
+            self.client.login(username=self.user.username, password='secret')
         )
     def test_json_get(self):
         """Check if getting the node attributes by ajax works as expected"""
         response = self.client.get(
-            self.url_slug,
+            self.url,
             HTTP_X_REQUESTED_WITH='XMLHttpRequest',
             HTTP_ACCEPT='application/json'
         )
@@ -1751,7 +1782,8 @@ class NodeAPI(TestCase):
         self.assertQuerysetEqual(
             nodes,
             [node['pk'] for node in r],
-            transform = lambda x: x.pk
+            transform=lambda x: x.pk,
+            ordered=False,
         )
         # Root level nodes by parameter
         nodes = Node.objects.mine(self.user, get_archived=True)
@@ -1766,33 +1798,20 @@ class NodeAPI(TestCase):
         self.assertQuerysetEqual(
             nodes,
             [node['pk'] for node in r],
-            transform = lambda x: x.pk
+            transform=lambda x: x.pk,
+            ordered=False,
         )
 
-    # def test_json_get_collection_optimization(self):
-    #     """Make sure that getting nodes by AJAX is database efficient"""
-    #     def get_nodes():
-    #         list(Node.objects.mine(self.user))
-    #     self.assertNumQueries(
-    #         1,
-    #         get_nodes
-    #     )
-    #     def get_response():
-    #         factory = RequestFactory()
-    #         request = factory.get(
-    #             '/gtd/node',
-    #         )
-    #         request.user = self.user
-    #         return self.view.get_json(request)
-    #         # return self.client.get(
-    #         #     '/gtd/node/',
-    #         #     HTTP_X_REQUESTED_WITH='XMLHttpRequest',
-    #         #     HTTP_ACCEPT='application/json'
-    #         # )
-    #     self.assertNumQueries(
-    #         1,
-    #         get_response
-    #     )
+    def test_node_serializer(self):
+        """Make sure that getting nodes by AJAX is database efficient"""
+        nodes = Node.objects.all()
+        def hit_db():
+            serializer = NodeSerializer(nodes, many=True)
+            serializer.data
+        self.assertNumQueries(
+            3,
+            hit_db
+        )
 
     def test_json_put(self):
         """Check if setting attributes by ajax works as expected"""
@@ -1810,7 +1829,7 @@ class NodeAPI(TestCase):
             }
         })
         response = self.client.put(
-            self.url_slug,
+            self.url,
             put_data,
             HTTP_X_REQUESTED_WITH='XMLHttpRequest',
             content_type='application/json',
@@ -1843,7 +1862,7 @@ class NodeAPI(TestCase):
             }
         })
         response = self.client.put(
-            self.url_slug,
+            self.url,
             put_data,
             HTTP_X_REQUESTED_WITH='XMLHttpRequest',
             content_type='application/json',

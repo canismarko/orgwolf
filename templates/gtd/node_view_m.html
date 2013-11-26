@@ -23,7 +23,7 @@
     </ul>
     <h2>{{ parent_node.title }}</h2>
     {% if parent_node %}
-    <a href="{% url 'node_object' pk=parent_node.pk %}edit/"
+    <a href="{% url 'projects' pk=parent_node.pk %}edit/"
        data-role="button" data-rel="dialog">
        Edit
     </a>

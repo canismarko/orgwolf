@@ -278,9 +278,9 @@ $('document').ready(function() {
   </form>
   <ul ow-scope-tabs>
     <li scope_id="0" ng-click="change_scope($event)"><a href="#">All</a></li>
-    <li ng-repeat="scope in scopes" scope_id="{{ scope.pk }}"
+    <li ng-repeat="scope in scopes" scope_id="{{ scope.id }}"
 	ng-click="change_scope($event)">
-	<a href="#">{{ scope.fields.display }}</a>
+	<a href="#">{{ scope.display }}</a>
     </li>
   </ul>
   <div class="outline">

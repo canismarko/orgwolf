@@ -9,7 +9,7 @@
 <ul data-role="listview">
   {% for node in nodes_found %}
   <li>
-    <a href="{% url 'node_object' pk=node.pk %}" title="{{ node.get_hierarchy_as_string }}">
+    <a href="{% url 'projects' pk=node.pk %}" title="{{ node.get_hierarchy_as_string }}">
       <h3>{{ node.title }}</h3>
       <p>
 	{{ node.todo_state.as_html }}

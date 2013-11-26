@@ -4,27 +4,27 @@
   {% for node in deadline_nodes %}
   <tr>
     <td>
-      <a href="{% url 'node_object' pk=node.id %}"
+      <a href="{% url 'projects' pk=node.id %}"
 	 title="{{ node.hierarchy }}">
 	{{ node.overdue_str }}
       </a>
     </td>
     <td>
-      <a href="{% url 'node_object' pk=node.id %}"
+      <a href="{% url 'projects' pk=node.id %}"
 	 title="{{ node.hierarchy }}">
 	{{ node.deadline|date:"D d M Y" }}
       </a>
     </td>
     <td>
       {% if node.deadline_time_specific %}
-	<a href="{% url 'node_object' pk=node.id %}"
+	<a href="{% url 'projects' pk=node.id %}"
 	   title="{{ node.hierarchy }}">
 	   {{ node.deadline|date:"G:i" }}
 	</a>
       {% else %}&nbsp;{% endif %}
     </td>
     <td>
-      <a href="{% url 'node_object' pk=node.id %}"
+      <a href="{% url 'projects' pk=node.id %}"
 	 title="{{ node.hierarchy }}">
 	{{ node.title }}
       </a>

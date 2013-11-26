@@ -50,21 +50,25 @@ GtdHeading = function (args) {
 
 // Methods for GtdHeading...
 
-GtdHeading.prototype.set_fields = function( node ) {
+GtdHeading.prototype.set_fields = function( vals ) {
     // Updates properties based on a JSON serliazed Node object
-    var field, d, date_re, pk;
+    var field, d, date_re, pk, node;
+    node = $.extend({}, vals);
     pk = this.pk;
     date_re = /^\d{4}-\d{2}-\d{2}[0-9:TZ]*/;
-    if ( node.pk !== undefined ) {
-	this.pk = Number(node.pk);
+    if ( node.id !== undefined ) {
+	this.pk = Number(node.id);
+	delete node.id;
     }
-    if ( typeof node.workspace !== 'undefined' ) {
+    if ( node.workspace !== undefined ) {
 	this.workspace = node.workspace;
+	delete node.workspace;
     }
     this.model = node.model;
+    delete node.model;
     // Sanity checks
     try {
-	if ( node.fields.parent === this.pk ) {
+	if ( node.parent === this.pk ) {
 	    throw 'bad parent';
 	}
     } catch(err) {
@@ -74,7 +78,7 @@ GtdHeading.prototype.set_fields = function( node ) {
 	}
     }
     // Set fields
-    jQuery.extend(this.fields, node.fields);
+    jQuery.extend(this.fields, node);
 };
 
 GtdHeading.prototype.get_todo_state = function() {
@@ -537,11 +541,18 @@ GtdHeading.prototype.populate_children = function(options) {
     if ( typeof options === 'undefined' ) {
 	options = {};
     }
-    url = '/gtd/node/descendants/' + this.pk + '/';
+    url = '/gtd/node/';
     ancestor = this;
     get_nodes = function(options) {
 	// Get immediate children
-	var payload = {offset: options.offset};
+	var payload, level;
+	level = ancestor.fields.level + options.offset;
+	payload = {
+	    level: level,
+	    tree_id: ancestor.fields.tree_id,
+	    rght__lt: ancestor.fields.rght,
+	    lft__gt: ancestor.fields.lft,
+	};
 	$.getJSON(url, payload, function(response, status, jqXHR) {
 	    // (callback) Process AJAX to get an array of children objects
 	    ancestor.workspace.$apply(function() {

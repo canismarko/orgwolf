@@ -24,7 +24,7 @@ from django.contrib import admin
 admin.autodiscover()
 
 from gtd.views import (Descendants, NodeView, TreeView, TodoStateView,
-                       ScopeView, NodeListView, ContextView)
+                       ScopeView, NodeListView, ContextView, ProjectView)
 
 urlpatterns = patterns(
     'gtd.views',
@@ -48,7 +48,11 @@ urlpatterns = patterns(
     url(r'^node/search/', 'node_search'),
 
     # New API urls below
-    url(r'^node(?:/(?P<pk>\d+))?(?:/(?P<slug>[-\w\d]*))?(:?/(?P<show_all>all/))?/?$',
+    url(r'^project(?:/(?P<pk>\d+))?(?:/(?P<slug>[-\w\d]*))?(:?/(?P<show_all>all/))?/?$',
+        ProjectView.as_view(),
+        name='projects'
+    ),
+    url(r'^node(?:/(?P<pk>\d+))?/?$',
         NodeView.as_view(),
         name='node_object'
     ),

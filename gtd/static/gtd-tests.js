@@ -23,204 +23,104 @@ scope = {
 
 // Constants and setup
 node1 = {
-    pk: 1,
+    id: 1,
     workspace: scope,
-    fields: {
-	title: 'test_title',
-	lft: 1,
-	rght: 2,
-	tree_id: 1,
-    }
+    title: 'test_title',
+    lft: 1,
+    rght: 2,
+    tree_id: 1,
 };
 node2 = {
-    pk: 2,
+    id: 2,
     workspace: scope,
-    fields: {
-	title: 'Another test title',
-	text: 'here\'s some text that goes with it',
-	lft: 1,
-	rght: 6,
-	todo_state: 1,
-	tag_string: ':comp:',
-	scope: [1, 2],
-	archived: false,
-	related_projects: [],
-	tree_id: 2,
-    }
+    title: 'Another test title',
+    text: 'here\'s some text that goes with it',
+    lft: 1,
+    rght: 6,
+    todo_state: 1,
+    tag_string: ':comp:',
+    scope: [1, 2],
+    archived: false,
+    related_projects: [],
+    tree_id: 2,
 };
 node3 = {
-    pk: 3,
     workspace: scope,
     model: 'gtd.node',
-    fields: {
-	rght: 3,
-	text: 'hello, world',
-	energy: null,
-	assigned: null,
-	lft: 2,
-	deadline: '2011-05-13T08:00:00Z',
-	owner: 1,
-	archived: true,
-	opened: '2012-11-17T11:10:39.658Z',
-	title: 'it\'s all falling down',
-	time_needed: null,
-	priority: 'B',
-	closed: '2012-12-28T04:00:00.101Z',
-	tree_id: 2,
-	todo_state: 1,
-	scope: [1, 2],
-	tag_string: ':work:',
-	deadline_time_specific: false,
-	scheduled: '2012-12-31T10:00:00Z',
-	users: [],
-	parent: 2,
-	repeating_unit: 'w',
-	related_projects: [11, 25, 12],
-	level: 1,
-	scheduled_time_specific: true,
-	repeats_from_completion: true,
-	repeating_number: 3,
-	repeats: true
-    }
+    id: 3,
+    rght: 3,
+    text: 'hello, world',
+    energy: null,
+    assigned: null,
+    lft: 2,
+    deadline: '2011-05-13T08:00:00Z',
+    owner: 1,
+    archived: true,
+    opened: '2012-11-17T11:10:39.658Z',
+    title: 'it\'s all falling down',
+    time_needed: null,
+    priority: 'B',
+    closed: '2012-12-28T04:00:00.101Z',
+    tree_id: 2,
+    todo_state: 1,
+    scope: [1, 2],
+    tag_string: ':work:',
+    deadline_time_specific: false,
+    scheduled: '2012-12-31T10:00:00Z',
+    users: [],
+    parent: 2,
+    repeating_unit: 'w',
+    related_projects: [11, 25, 12],
+    level: 1,
+    scheduled_time_specific: true,
+    repeats_from_completion: true,
+    repeating_number: 3,
+    repeats: true
 };
 node4 = {
-    pk: 4,
+    id: 4,
     workspace: scope,
     model: 'gtd.node',
-    fields: {
-	rght: 5,
-	text: 'have a nice day',
-	energy: null,
-	assigned: null,
-	lft: 4,
-	deadline: '2011-05-13T08:00:00Z',
-	owner: 1,
-	archived: true,
-	opened: '2012-11-17T11:10:39.658Z',
-	title: 'it\'s all falling down',
-	time_needed: null,
-	priority: 'B',
-	closed: '2012-12-28T04:00:00.101Z',
-	tree_id: 2,
-	todo_state: 1,
-	scope: [1, 2],
-	tag_string: ':work:',
-	deadline_time_specific: false,
-	scheduled: '2012-12-31T10:00:00Z',
-	users: [],
-	parent: 2,
-	repeating_unit: 'w',
-	related_projects: [11, 25, 12],
-	level: 1,
-	scheduled_time_specific: true,
-	repeats_from_completion: true,
-	repeating_number: 3,
-	repeats: true
-    }
+    rght: 5,
+    text: 'have a nice day',
+    energy: null,
+    assigned: null,
+    lft: 4,
+    deadline: '2011-05-13T08:00:00Z',
+    owner: 1,
+    archived: true,
+    opened: '2012-11-17T11:10:39.658Z',
+    title: 'it\'s all falling down',
+    time_needed: null,
+    priority: 'B',
+    closed: '2012-12-28T04:00:00.101Z',
+    tree_id: 2,
+    todo_state: 1,
+    scope: [1, 2],
+    tag_string: ':work:',
+    deadline_time_specific: false,
+    scheduled: '2012-12-31T10:00:00Z',
+    users: [],
+    parent: 2,
+    repeating_unit: 'w',
+    related_projects: [11, 25, 12],
+    level: 1,
+    scheduled_time_specific: true,
+    repeats_from_completion: true,
+    repeating_number: 3,
+    repeats: true
 };
 var bad_parent_dict = {
-    pk: 1,
-    fields: {
-	title: 'test title',
-	text: 'here\'s some text that goes with it',
-	lft: 14,
-	rght: 15,
-	todo_state: '1',
-	parent: 1,
-	tag_string: ':comp:',
-	scope: [1, 2]
-    }
+    id: 1,
+    title: 'test title',
+    text: 'here\'s some text that goes with it',
+    lft: 14,
+    rght: 15,
+    todo_state: '1',
+    parent: 1,
+    tag_string: ':comp:',
+    scope: [1, 2]
 };
-var archived_dict = {
-    title: 'test_title',
-    text: 'here\' some text that goes with it',
-    pk: '1',
-    todo_id: '1',
-    tags: ':comp:',
-    archived: true,
-};
-var second_dict = {
-    title: 'maybe get some food',
-    pk: '5',
-    todo_id: '2',
-};
-
-var scopes = [
-    {"pk": 1, "model": "gtd.scope",
-     "fields": {
-	 "owner": null,
-	 "public": false,
-	 "name": "joe_corp",
-	 "display": "joe_corp"
-     }
-    },
-    {"pk": 2, "model": "gtd.scope",
-     "fields": {
-	 "owner": null,
-	 "public": false,
-	 "name": "Kalsec",
-	 "display": "Kalsec"
-     }
-    }
-];
-
-var ajax_timer = 20; // how long fake ajax request takes (in milliseconds)
-
-// Setup fake AJAX responses
-$.mockjax({
-    url: '/gtd/node/descendants/5/',
-    responseTime: ajax_timer,
-    responseText: []
-});
-$.mockjax({
-    url: '/gtd/node/descendants/1/',
-    responseTime: ajax_timer,
-    responseText: [
-	{
-	    pk: 9,
-	    fields: {
-		parent: 1,
-		tree_id: 1,
-		lft: 6,
-		rght: 7,
-		level: 1
-	    }
-	},
-	{
-	    pk: 10,
-	    fields: {
-		parent: 1,
-		tree_id: 1,
-		lft: 8,
-		rght: 9,
-		level: 1
-	    }
-	}
-    ]
-});
-$.mockjax({
-    url: '/gtd/node/descendants/2/',
-    responseTime: ajax_timer,
-    responseText: []
-});
-$.mockjax({
-    url: '/gtd/node/descendants/3/',
-    responseTime: ajax_timer,
-    responseText: []
-});
-$.mockjax({
-    url: '/gtd/node/descendants/4/',
-    responseTime: ajax_timer,
-    responseText: [
-	{
-	    pk: 11,
-	    fields: {
-		parent: 4,
-		archived: true
-	    }
-	}
-    ]
-});
 
 
 module('GtdHeading model', {
@@ -254,23 +154,30 @@ test('constructor', function() {
 });
 
 test('set_fields() method', function() {
-    var heading = new GtdHeading();
+    var heading, key;
+    heading = new GtdHeading();
     heading.set_fields(node2);
     equal(
 	heading.pk,
-	node2.pk,
+	node2.id,
 	'sets primary key'
     );
     equal(
 	heading.fields.scope,
-	node2.fields.scope,
+	node2.scope,
 	'Scope set'
     );
-    deepEqual(
-	heading.fields,
-	node2.fields,
-	'Fields objects set'
-    );
+    // Check all the keys set on the reference object
+    for ( var i=0; i<Object.keys(node2).length; i+=1 ) {
+	key = Object.keys(node2)[i];
+	if ( key !== 'id' && key !== 'workspace' ) {
+	    equal(
+		heading.fields[key],
+		node2[key],
+		'field ' + key + ' set'
+	    );
+	}
+    }
 });
 
 test('update() method', function() {
@@ -358,12 +265,12 @@ test('MPTT: is_leaf_node', function() {
     heading = scope.headings.get({pk: 1});
     equal(
 	heading.fields.lft,
-	node1.fields.lft,
+	node1.lft,
 	'GtdHeading.lft set correctly'
     );
     equal(
 	heading.fields.rght,
-	node1.fields.rght,
+	node1.rght,
 	'GtdHeading.rght set correctly'
     );
     strictEqual(

@@ -40,12 +40,15 @@ from django.utils.timezone import get_current_timezone
 from django.views.generic import View
 from django.views.generic.detail import DetailView
 from django.views.generic.list import ListView
+from rest_framework.views import APIView
+from rest_framework.response import Response
 
 from gtd.forms import NodeForm
 from gtd.models import TodoState, Node, Context, Scope
 from gtd.shortcuts import (parse_url, generate_url, get_todo_abbrevs,
                            order_nodes)
 from gtd.templatetags.gtd_extras import escape_html
+from gtd.serializers import ContextSerializer, ScopeSerializer, NodeSerializer
 from mptt.exceptions import InvalidMove
 from orgwolf import settings
 from orgwolf.models import OrgWolfUser as User
@@ -69,7 +72,7 @@ def list_display(request, url_string=""):
     todo_abbrevs = get_todo_abbrevs(todo_states)
     todo_abbrevs_lc = []
     base_url = reverse('list_display')
-    base_node_url = reverse('node_object')
+    base_node_url = reverse('projects')
     list_url = base_url
     list_url += '{parent}{states}{scope}{context}'
     scope_url_data = {}
@@ -424,7 +427,7 @@ class NodeListView(ListView):
         todo_abbrevs = get_todo_abbrevs(self.todo_states)
         todo_abbrevs_lc = []
         base_url = reverse('list_display')
-        base_node_url = reverse('node_object')
+        base_node_url = reverse('projects')
         list_url = base_url
         list_url += '{parent}{states}{scope}{context}'
         tz = get_current_timezone()
@@ -616,7 +619,7 @@ def display_node(request, show_all=False, node_id=None, scope_id=None):
                 url_kwargs['scope_id'] = request.POST['scope']
             if request.POST['node_id']:
                 url_kwargs['node_id'] = request.POST['node_id']
-            return redirect(reverse('node_object', kwargs=url_kwargs))
+            return redirect(reverse('projects', kwargs=url_kwargs))
 
 @login_required
 def edit_node(request, node_id, scope_id, slug):
@@ -629,7 +632,7 @@ def edit_node(request, node_id, scope_id, slug):
     if scope_id:
         url_kwargs['scope_id'] = scope_id
     url_kwargs['slug'] = node.slug
-    base_url = reverse('node_object', kwargs=url_kwargs)
+    base_url = reverse('projects', kwargs=url_kwargs)
     breadcrumb_list = node.get_ancestors(include_self=True)
     # Make sure user is authorized to edit this node
     if node.access_level(request.user) != 'write':
@@ -721,7 +724,7 @@ def edit_node(request, node_id, scope_id, slug):
             return HttpResponseBadRequest('Missing request data')
         if node.parent:
             url_kwargs['pk'] = node.parent.pk
-        redirect_url = reverse('node_object', kwargs=url_kwargs)
+        redirect_url = reverse('projects', kwargs=url_kwargs)
         return redirect(redirect_url)
     elif (request.method == 'POST' and
           request.POST.get('function') == 'change_todo_state'):
@@ -735,7 +738,7 @@ def edit_node(request, node_id, scope_id, slug):
         node.save()
         todo_state = node.todo_state
         url_kwargs['pk'] = node.pk
-        redirect_url = reverse('node_object', kwargs=url_kwargs)
+        redirect_url = reverse('projects', kwargs=url_kwargs)
         return redirect(redirect_url)
     elif request.method == "POST": # Form submission
         post = request.POST
@@ -743,7 +746,7 @@ def edit_node(request, node_id, scope_id, slug):
         if form.is_valid():
             form.save()
             url_kwargs['pk'] = node_id
-            redirect_url = reverse('node_object', kwargs=url_kwargs)
+            redirect_url = reverse('projects', kwargs=url_kwargs)
             return redirect(redirect_url)
     else: # Blank form
         form = NodeForm(instance=node, user=request.user)
@@ -784,7 +787,7 @@ def move_node(request, node_id, scope_id):
             return HttpResponseBadRequest(
                 'A node may not be made a child of any of its descendents')
         url_kwargs['pk'] = node.pk
-        redir_url = reverse('node_object', kwargs=url_kwargs)
+        redir_url = reverse('projects', kwargs=url_kwargs)
         return redirect(redir_url)
     # No action, so prompt the user for the new parent
     list = [] # Hold the final output
@@ -819,7 +822,7 @@ def new_node(request, node_id, scope_id):
     url_kwargs = {}
     if scope_id:
         url_kwargs['scope_id'] = scope_id
-    base_url = reverse('node_object', kwargs=url_kwargs)
+    base_url = reverse('projects', kwargs=url_kwargs)
     new = "Yes" # Used in template logic
     node = None
     if node_id:
@@ -868,7 +871,7 @@ def new_node(request, node_id, scope_id):
             if 'add-another' in request.POST:
                 redirect_url = reverse('gtd.views.new_node', kwargs=url_kwargs)
             else:
-                redirect_url = reverse('node_object', kwargs=url_kwargs)
+                redirect_url = reverse('projects', kwargs=url_kwargs)
             return redirect(redirect_url)
     else: # Blank form
         initial_dict = {}
@@ -882,24 +885,87 @@ def new_node(request, node_id, scope_id):
                               locals(),
                               RequestContext(request))
 
-class NodeView(DetailView):
+
+class NodeView(APIView):
+    @method_decorator(login_required)
+    def dispatch(self, *args, **kwargs):
+        return super(NodeView, self).dispatch(*args, **kwargs)    
+
+    def get(self, request, *args, **kwargs):
+        """Returns the details of the node as a json encoded object"""
+        get_dict = request.GET.copy()
+        node_id = kwargs.get('pk')
+        parent_id = get_dict.get('parent_id', None)
+        if parent_id == '0':
+            get_dict['parent_id'] = None
+        if node_id is None:
+            # All nodes
+            nodes = Node.objects.mine(request.user, get_archived=True)
+            # Apply each criterion to the queryset
+            for param, value in get_dict.iteritems():
+                query = {param: value}
+                nodes = nodes.filter(**query)
+                # json = serializers.serialize('json', nodes, fields=('title',))
+            serializer = NodeSerializer(nodes, many=True)
+        else:
+            node = get_object_or_404(Node, pk=node_id)
+            serializer = NodeSerializer(node)
+        return Response(serializer.data)
+
+    def post(self, request, *args, **kwargs):
+        """Handles ajax interactions, eg. editing Node objects. Called from
+        with self.post(). Mostly conducted through JSON format:
+        {
+          pk: [node primary key],
+          model: (eg 'gtd.node'),
+          fields: [dict of fields to change with new values]
+        }
+
+        Returns: JSON object of all node fields, with changes.
+        """
+        post = request.POST
+        if (post['pk'] == 0) or (post['pk'] == None):
+            # New node is being created
+            self.node = Node()
+            self.node.owner = request.user
+            self.node.save()
+        self.node.set_fields(post['fields'])
+        self.node.save()
+        self.node = Node.objects.get(pk=self.node.pk)
+        # data = serializers.serialize('json', [self.node])
+        return HttpResponse(self.node.as_json())
+
+    def put(self, request, *args, **kwargs):
+        """Handles updating existing nodes"""
+        if kwargs['pk'] is None:
+            # Throw error response if user is trying to
+            # PUT without specifying a pk
+            return HttpResponseNotAllowed(['GET', 'POST'])
+        # Unpack arguments
+        node_id = kwargs['pk']
+        put = request.PUT
+        try:
+            self.node = Node.objects.mine(request.user,
+                                  get_archived=True).get(pk=node_id)
+        except Node.DoesNotExist:
+            # If the node is not accessible return a 404
+            raise Http404()
+        self.node.set_fields(put['fields'])
+        self.node.save()
+        self.node = Node.objects.get(pk=self.node.pk)
+        return HttpResponse(self.node.as_json())
+
+
+class ProjectView(DetailView):
     """Manages the retrieval of an individual node"""
     model = Node
     template_name = 'gtd/node_view.html'
     context_object_name = 'parent_node'
     @method_decorator(login_required)
     def dispatch(self, *args, **kwargs):
-        return super(NodeView, self).dispatch(*args, **kwargs)
+        return super(ProjectView, self).dispatch(*args, **kwargs)
 
     def get(self, request, *args, **kwargs):
-        if settings.DEBUG_BAR:
-            json = self.get_json(request, *args, **kwargs)
-            return render_to_response('base.html',
-                                      locals(),
-                                      RequestContext(request))
-        if (request.is_ajax() or request.is_json) and not request.is_mobile:
-            # AJAX request
-            return self.get_json(request, *args, **kwargs)
         # First unpack arguments
         node_id = kwargs.get('pk')
         scope_id = 0
@@ -911,7 +977,7 @@ class NodeView(DetailView):
         child_nodes_qs = all_nodes_qs
         # all_scope_qs = Scope.objects.all()
         # all_scope_json = serializers.serialize('json', all_scope_qs)
-        app_url = reverse('node_object')
+        app_url = reverse('projects')
         scope_url = app_url + '{scope}/'
         scope = Scope.objects.get(pk=1)
         url_data = {}
@@ -928,7 +994,7 @@ class NodeView(DetailView):
             if slug != parent_node.slug:
                 return redirect(
                     reverse(
-                        'node_object',
+                        'projects',
                         kwargs={'pk': str(parent_node.pk),
                                 'slug': parent_node.slug}
                     )
@@ -941,11 +1007,11 @@ class NodeView(DetailView):
             url_data['scope'] = scope
             child_nodes_qs = child_nodes_qs.filter(scope=scope)
             url_kwargs['scope_id'] = scope_id
-        base_url = reverse('node_object', kwargs=url_kwargs)
+        base_url = reverse('projects', kwargs=url_kwargs)
         if node_id:
             url_kwargs['pk'] = parent_node.pk
             url_kwargs['slug'] = parent_node.slug
-        node_url = reverse('node_object', kwargs=url_kwargs)
+        node_url = reverse('projects', kwargs=url_kwargs)
         # Make sure user is authorized to see this node
         if node_id:
             if not (parent_node.access_level(request.user) in ['write', 'read']):
@@ -969,30 +1035,7 @@ class NodeView(DetailView):
                                   locals(),
                                   RequestContext(request))
 
-    def get_json(self, request, *args, **kwargs):
-        """Returns the details of the node as a json encoded object"""
-        get_dict = request.GET.copy()
-        node_id = kwargs.get('pk')
-        parent_id = get_dict.get('parent_id', None)
-        if parent_id == '0':
-            get_dict['parent_id'] = None
-        if node_id is None:
-            # All nodes
-            nodes = Node.objects.mine(request.user, get_archived=True)
-            # Apply each criterion to the queryset
-            for param, value in get_dict.iteritems():
-                query = {param: value}
-                nodes = nodes.filter(**query)
-            # json = serializers.serialize('json', nodes, fields=('title',))
-            response = HttpResponse(nodes.as_json())
-        else:
-            node = get_object_or_404(Node, pk=node_id)
-            response = HttpResponse(node.as_json())
-        return response
-
     def post(self, request, *args, **kwargs):
-        if request.is_ajax():
-            return self.ajax_post(request, *args, **kwargs)
         post = request.POST
         url_kwargs = {}
         new = "No"
@@ -1007,7 +1050,7 @@ class NodeView(DetailView):
         if scope_id:
             url_kwargs['scope_id'] = scope_id
         url_kwargs['slug'] = self.node.slug
-        base_url = reverse('node_object', kwargs=url_kwargs) + '/'
+        base_url = reverse('projects', kwargs=url_kwargs) + '/'
         breadcrumb_list = self.node.get_ancestors(include_self=True)
         # Make sure user is authorized to edit this node
         if self.node.access_level(request.user) != 'write':
@@ -1029,7 +1072,7 @@ class NodeView(DetailView):
                 return HttpResponseBadRequest('Missing request data')
             if self.node.parent:
                 url_kwargs['pk'] = self.node.parent.pk
-            redirect_url = reverse('node_object', kwargs=url_kwargs)
+            redirect_url = reverse('projects', kwargs=url_kwargs)
             return redirect(redirect_url)
         elif (request.method == 'POST' and
               request.POST.get('function') == 'change_todo_state'):
@@ -1043,7 +1086,7 @@ class NodeView(DetailView):
             self.node.save()
             todo_state = self.node.todo_state
             url_kwargs['pk'] = self.node.pk
-            redirect_url = reverse('node_object', kwargs=url_kwargs)
+            redirect_url = reverse('projects', kwargs=url_kwargs)
             return redirect(redirect_url)
         elif request.method == "POST": # Form submission
             post = request.POST
@@ -1051,7 +1094,7 @@ class NodeView(DetailView):
             if form.is_valid():
                 form.save()
                 url_kwargs['pk'] = node_id
-                redirect_url = reverse('node_object', kwargs=url_kwargs)
+                redirect_url = reverse('projects', kwargs=url_kwargs)
                 return redirect(redirect_url)
         else: # Blank form
             form = NodeForm(instance=node)
@@ -1062,47 +1105,7 @@ class NodeView(DetailView):
         return render_to_response(template,
                                   locals(),
                                   RequestContext(request))
-    def ajax_post(self, request, *args, **kwargs):
-        """Handles ajax interactions, eg. editing Node objects. Called from
-        with self.post(). Mostly conducted through JSON format:
-        {
-          pk: [node primary key],
-          model: (eg 'gtd.node'),
-          fields: [dict of fields to change with new values]
-        }
 
-        Returns: JSON object of all node fields, with changes.
-        """
-        post = request.POST
-        if (post['pk'] == 0) or (post['pk'] == None):
-            # New node is being created
-            self.node = Node()
-            self.node.owner = request.user
-            self.node.save()
-        self.node.set_fields(post['fields'])
-        self.node.save()
-        self.node = Node.objects.get(pk=self.node.pk)
-        # data = serializers.serialize('json', [self.node])
-        return HttpResponse(self.node.as_json())
-    def put(self, request, *args, **kwargs):
-        """Handles updating existing nodes"""
-        if kwargs['pk'] is None:
-            # Throw error response if user is trying to
-            # PUT without specifying a pk
-            return HttpResponseNotAllowed(['GET', 'POST'])
-        # Unpack arguments
-        node_id = kwargs['pk']
-        put = request.PUT
-        try:
-            self.node = Node.objects.mine(request.user,
-                                  get_archived=True).get(pk=node_id)
-        except Node.DoesNotExist:
-            # If the node is not accessible return a 404
-            raise Http404()
-        self.node.set_fields(put['fields'])
-        self.node.save()
-        self.node = Node.objects.get(pk=self.node.pk)
-        return HttpResponse(self.node.as_json())
 
 class TreeView(View):
     """Retrieves entire trees at once"""
@@ -1154,32 +1157,20 @@ class TodoStateView(View):
                                       RequestContext(request))
 
 
-class ScopeView(View):
+class ScopeView(APIView):
     """RESTful interaction with the gtd.Scope object"""
     def get(self, request, *args, **kwargs):
         scopes = Scope.get_visible(request.user)
-        data = serializers.serialize('json', scopes)
-        if request.is_ajax() or not settings.DEBUG_BAR:
-            return HttpResponse(data)
-        else:
-            # Non-ajax returns the base template to show django-debug-toolbar
-            return render_to_response('base.html',
-                                      locals(),
-                                      RequestContext(request))
+        serializer = ScopeSerializer(scopes, many=True)
+        return Response(serializer.data)
 
 
-class ContextView(View):
+class ContextView(APIView):
     """RESTful interaction with the gtd.context object"""
     def get(self, request, *args, **kwargs):
         contexts = Context.get_visible(request.user)
-        data = serializers.serialize('json', contexts,
-                                     fields=('name',))
-        if request.is_ajax() or not settings.DEBUG_BAR:
-            return HttpResponse(data)
-        else:
-            return render_to_response('base.html',
-                                      locals(),
-                                      RequestContext(request))
+        serializer = ContextSerializer(contexts, many=True)
+        return Response(serializer.data)
 
 
 @login_required
@@ -1274,7 +1265,7 @@ def node_search(request):
                 node.root_title = root_node[0].title
     else:
         query = ''
-    base_url = reverse('node_object')
+    base_url = reverse('projects')
     if request.is_mobile:
         template = 'gtd/node_search_m.html'
     else:
