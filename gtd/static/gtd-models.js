@@ -54,7 +54,6 @@ GtdHeading.prototype.set_fields = function( vals ) {
     // Updates properties based on a JSON serliazed Node object
     var field, d, date_re, pk, node;
     node = $.extend({}, vals);
-    pk = this.pk;
     date_re = /^\d{4}-\d{2}-\d{2}[0-9:TZ]*/;
     if ( node.id !== undefined ) {
 	this.pk = Number(node.id);

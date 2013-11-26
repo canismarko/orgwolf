@@ -53,18 +53,13 @@ gtd_module.factory('OldHeading', ['$resource', '$http', function($resource, $htt
 gtd_module.factory('Heading', ['$resource', '$http', HeadingFactory]);
 function HeadingFactory($resource, $http) {
     var res = $resource(
-	'/gtd/node/:pk/:slug/',
-	{pk: '@pk', slug: '@fields.slug'},
+	'/gtd/node/:pk/',
+	{pk: '@pk'},
 	{
 	    'query': {
 		method: 'GET',
 		transformResponse: $http.defaults.transformResponse.concat([
 		    function (data, headersGetter) {
-			var i, new_heading;
-			for ( i=0; i<data.length; i+=1 ) {
-			    new_heading = new GtdHeading(data[i]);
-			    jQuery.extend(data[i], new_heading);
-			}
 			return data;
 		    }
 		]),
@@ -519,7 +514,6 @@ function outlineCtrl($scope, $http, $resource, OldHeading, Heading,
 	    target.editable = true;
 	});
     }
-    url = '/gtd/node/descendants/0/';
     // Helper function that returns the heading object for a given event
     get_heading = function(e) {
 	var $heading, heading, node_id;
