@@ -24,17 +24,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 {% endif %}
 {% endblock %}
 
-{% block script %}
-{{ block.super }}
-<script>
-    $('document').ready(function() {
-	$('#gtd-list').nodeList({
-	    states: {% autoescape off %}{{ all_todo_states_json }}{% endautoescape %}
-	});
-    });
-</script>
-{% endblock %}
-
 {% block content %}
 
 {# Hierarchy, breadcrumb trail #}

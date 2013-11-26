@@ -40,6 +40,7 @@ from django.utils.timezone import get_current_timezone
 from django.views.generic import View
 from django.views.generic.detail import DetailView
 from django.views.generic.list import ListView
+from rest_framework import status
 from rest_framework.views import APIView
 from rest_framework.response import Response
 
@@ -316,7 +317,7 @@ def agenda_display(request, date=None):
                               RequestContext(request))
 
 
-class NodeListView(ListView):
+class NodeListView(APIView):
     model = Node
     def dispatch(self, request, *args, **kwargs):
         """Set some properties first then call regular dispatch"""
@@ -418,7 +419,8 @@ class NodeListView(ListView):
         # AJAX API
         if request.is_json:
             nodes = self.get_queryset()
-            return HttpResponse(serializers.serialize('json', nodes))
+            serializer = NodeSerializer(nodes, many=True)
+            return Response(serializer.data)
         # Get regular page
         base_url = self.base_url
         all_scope_qs = Scope.objects.all()
@@ -889,7 +891,7 @@ def new_node(request, node_id, scope_id):
 class NodeView(APIView):
     @method_decorator(login_required)
     def dispatch(self, *args, **kwargs):
-        return super(NodeView, self).dispatch(*args, **kwargs)    
+        return super(NodeView, self).dispatch(*args, **kwargs)
 
     def get(self, request, *args, **kwargs):
         """Returns the details of the node as a json encoded object"""
@@ -912,19 +914,21 @@ class NodeView(APIView):
             serializer = NodeSerializer(node)
         return Response(serializer.data)
 
-    def post(self, request, *args, **kwargs):
-        """Handles ajax interactions, eg. editing Node objects. Called from
-        with self.post(). Mostly conducted through JSON format:
+    def post(self, request, pk=None, *args, **kwargs):
+        """
+        Handles ajax interactions, eg. editing Node objects.
+        Mostly conducted through JSON format:
         {
-          pk: [node primary key],
-          model: (eg 'gtd.node'),
-          fields: [dict of fields to change with new values]
+          id: [node primary key],
+          field: (eg. title),
+          field: (eg. todo_state),
+          etc...
         }
 
         Returns: JSON object of all node fields, with changes.
         """
-        post = request.POST
-        if (post['pk'] == 0) or (post['pk'] == None):
+        post = request.DATA
+        if (pk == 0) or (pk is None):
             # New node is being created
             self.node = Node()
             self.node.owner = request.user
@@ -932,21 +936,19 @@ class NodeView(APIView):
         self.node.set_fields(post['fields'])
         self.node.save()
         self.node = Node.objects.get(pk=self.node.pk)
-        # data = serializers.serialize('json', [self.node])
-        return HttpResponse(self.node.as_json())
+        serializer = NodeSerializer(self.node)
+        return Response(serializer.data)
 
-    def put(self, request, *args, **kwargs):
+    def put(self, request, pk=None, *args, **kwargs):
         """Handles updating existing nodes"""
-        if kwargs['pk'] is None:
+        if pk is None:
             # Throw error response if user is trying to
             # PUT without specifying a pk
             return HttpResponseNotAllowed(['GET', 'POST'])
-        # Unpack arguments
-        node_id = kwargs['pk']
-        put = request.PUT
+        put = request.DATA
         try:
             self.node = Node.objects.mine(request.user,
-                                  get_archived=True).get(pk=node_id)
+                                  get_archived=True).get(pk=pk)
         except Node.DoesNotExist:
             # If the node is not accessible return a 404
             raise Http404()

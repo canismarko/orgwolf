@@ -150,13 +150,13 @@ class AjaxMiddleware():
             request.is_json = True
         else:
             request.is_json = False
-        if ( request.method in ['PUT', 'POST']
-             and request.is_json
-             and request.path not in EXEMPT ):
-            parsers = {
-                'application/json': self.parse_json,
-                # 'application/x-www-form-urlencoded': self.parse_url_encoded_form,
-            }
-            s = request.body
-            parser = parsers.get(request.META['CONTENT_TYPE'], lambda x: None)
-            setattr(request, request.method, parser(s))
+        # if ( request.method in ['PUT', 'POST']
+        #      and request.is_json
+        #      and request.path not in EXEMPT ):
+        #     parsers = {
+        #         'application/json': self.parse_json,
+        #         # 'application/x-www-form-urlencoded': self.parse_url_encoded_form,
+        #     }
+        #     s = request.body
+        #     parser = parsers.get(request.META['CONTENT_TYPE'], lambda x: None)
+        #     setattr(request, request.method, parser(s))

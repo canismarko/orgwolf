@@ -285,11 +285,11 @@ GtdHeading.prototype.is_visible = function() {
     // Check if parent is open
     if ( this.parent_obj ) {
 	if ( this.parent_obj.state !== 'open' ) {
-	    if ( this.pk===768 ) {
-		console.log(this.parent_obj);
-	    }
 	    visibility = false;
 	}
+    }
+    if ( this.pk === 11 ) {
+	console.log(this.parent_obj.state);
     }
     // An un-saved heading is not visible
     if ( this.pk === -1 ) {

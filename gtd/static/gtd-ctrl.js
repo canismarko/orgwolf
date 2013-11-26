@@ -604,6 +604,7 @@ function listCtrl($sce, $scope, $resource, $location, GtdList, Heading) {
     $scope.parents = new HeadingManager($scope);
     $scope.parents.add(Heading.query({level: 0}));
     $scope.active_context = null;
+    $scope.state = 'open';
     $scope.headings = new HeadingManager($scope);
     $scope.cached_states = [2];
     $scope.active_states = [2];

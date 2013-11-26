@@ -56,6 +56,7 @@ urlpatterns = patterns(
         NodeView.as_view(),
         name='node_object'
     ),
+
     url(r'^node/descendants/(?P<ancestor_pk>\d+)/$',
         Descendants.as_view(),
         name='node_descendants'
@@ -68,9 +69,12 @@ urlpatterns = patterns(
         TodoStateView.as_view(),
         name='todo_state'
     ),
+
     url(r'^lists(?P<url_string>/[\w/]+)?/?$',
         NodeListView.as_view(),
-        name='list_display'),
+        name='list_display'
+    ),
+
     url(r'^scope/?$',
         ScopeView.as_view(),
         name='scope_api',

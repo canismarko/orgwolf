@@ -464,50 +464,57 @@ $(document).ready(function(){
                         heading = $popover.parent().parent().data('nodeOutline');
                         url = '/gtd/node/' + settings.node_id + '/';
                         payload = {
-                            todo_state: new_id,
-                            auto_update: true
+			    fields: {
+				todo_state: new_id,
+				auto_update: true,
+			    },
                         };
 			payload = JSON.stringify(payload);
                         // Avoid dismissing if same todo state selected
                         if ( new_id !== settings.get_todo_id() ) {
                             // If todo state is being changed then...
-                            $.post(url, payload, function(response) {
-                                var heading, old, new_state, s;
-                                // convert response from string into JSON
-                                while ( typeof response === 'string' ) {
-                                    response = $.parseJSON(response);
-                                }
-                                response = response[0];
-                                // (callback) update the document todo states after change
-                                if ( settings.heading ) {
-                                    settings.heading.set_fields(
-                                        response
-                                    );
-                                    settings.heading.redraw();
-                                } else {
-                                    old = $todo.attr('todo_id');
-                                    $todo.attr('todo_id', response.fields.todo_state);
-                                    todo_id = response.fields.todo_state;
-                                    settings.todo_id = response.fields.todo_state;
-                                }
-                                new_state = get_state(response.fields.todo_state);
-                                $todo.html(new_state.display);
-                                $todo.attr('data-original-title', new_state.full);
-                                $options.removeAttr('selected'); // clear selected
-                                s = '.todo-option[todo_id="';
-                                s += response.todo_id + '"]';
-                                $inner.children(s).attr('selected', '');
-                                // Feedback if node repeats
-                                if ( response.fields.repeats ) {
-                                    alert('Node scheduled for ' +
-                                          response.fields.scheduled.slice(0, 10));
-                                }
-                                // Run the user submitted callback
-                                settings.click(response);
-                                // Kludge to avoid stale css
-                                $todo.mouseenter();
-                                $todo.mouseleave();
-                            }); // end of $.post
+                            $.ajax(url, {
+				data: payload,
+				type: 'PUT',
+				contentType: 'application/json',
+				success: function(response) {
+                                    var heading, old, new_state, s;
+                                    // convert response from string into JSON
+                                    while ( typeof response === 'string' ) {
+					response = $.parseJSON(response);
+                                    }
+                                    response = response[0];
+                                    // (callback) update the document todo states after change
+                                    if ( settings.heading ) {
+					settings.heading.set_fields(
+                                            response
+					);
+					settings.heading.redraw();
+                                    } else {
+					old = $todo.attr('todo_id');
+					$todo.attr('todo_id', response.fields.todo_state);
+					todo_id = response.fields.todo_state;
+					settings.todo_id = response.fields.todo_state;
+                                    }
+                                    new_state = get_state(response.fields.todo_state);
+                                    $todo.html(new_state.display);
+                                    $todo.attr('data-original-title', new_state.full);
+                                    $options.removeAttr('selected'); // clear selected
+                                    s = '.todo-option[todo_id="';
+                                    s += response.todo_id + '"]';
+                                    $inner.children(s).attr('selected', '');
+                                    // Feedback if node repeats
+                                    if ( response.fields.repeats ) {
+					alert('Node scheduled for ' +
+                                              response.fields.scheduled.slice(0, 10));
+                                    }
+                                    // Run the user submitted callback
+                                    settings.click(response);
+                                    // Kludge to avoid stale css
+                                    $todo.mouseenter();
+                                    $todo.mouseleave();
+				}
+                            }); // end of $.ajax
                             hide_popover();
                         }
                     });
