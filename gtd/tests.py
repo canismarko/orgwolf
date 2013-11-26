@@ -1003,7 +1003,6 @@ class ScopeAPI(TestCase):
     def test_get_scope_collection(self):
         response = self.client.get(self.url)
         expected = self.scopes.values()
-        # expected = serializers.serialize('json', self.scopes)
         self.assertEqual(
             [x['id'] for x in json.loads(response.content)],
             [x['id'] for x in expected],
@@ -1751,7 +1750,7 @@ class NodeAPI(TestCase):
         r = json.loads(response.content)
         self.assertEqual(
             self.node.pk,
-            r['pk'],
+            r['id'],
         )
 
     def test_get_node_collection(self):
@@ -1766,7 +1765,7 @@ class NodeAPI(TestCase):
         r = json.loads(response.content)
         self.assertQuerysetEqual(
             nodes,
-            [node['pk'] for node in r],
+            [node['id'] for node in r],
             transform = lambda x: x.pk,
             ordered=False,
         )
@@ -1781,23 +1780,26 @@ class NodeAPI(TestCase):
         r = json.loads(response.content)
         self.assertQuerysetEqual(
             nodes,
-            [node['pk'] for node in r],
+            [node['id'] for node in r],
             transform=lambda x: x.pk,
             ordered=False,
         )
         # Root level nodes by parameter
-        nodes = Node.objects.mine(self.user, get_archived=True)
+        nodes = Node.objects.mine(self.user, get_archived=False)
         nodes = nodes.filter(parent=None)
         response = self.client.get(
             '/gtd/node/',
-            {'parent_id': '0'},
+            {
+                'parent_id': '0',
+                'archived': 'false',
+            },
             HTTP_X_REQUESTED_WITH='XMLHttpRequest',
             HTTP_ACCEPT='application/json',
         )
         r = json.loads(response.content)
         self.assertQuerysetEqual(
             nodes,
-            [node['pk'] for node in r],
+            [node['id'] for node in r],
             transform=lambda x: x.pk,
             ordered=False,
         )
@@ -1811,6 +1813,13 @@ class NodeAPI(TestCase):
         self.assertNumQueries(
             3,
             hit_db
+        )
+        # Make sure works with single node
+        node = Node.objects.first()
+        serializer = NodeSerializer(node)
+        self.assertEqual(
+            serializer.data['id'],
+            node.pk
         )
 
     def test_json_put(self):
@@ -2025,7 +2034,7 @@ class NodeAPI(TestCase):
             200,
             response.status_code)
         response = json.loads(response.content)
-        new_node = Node.objects.get(pk=response['pk'])
+        new_node = Node.objects.get(pk=response['id'])
         self.assertEqual(
             1,
             new_node.scope.all().count(),

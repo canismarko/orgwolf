@@ -895,7 +895,8 @@ class NodeView(APIView):
 
     def get(self, request, *args, **kwargs):
         """Returns the details of the node as a json encoded object"""
-        get_dict = request.GET.copy()
+        BOOLS = ('archived',) # Translate 'False' -> False for these fields
+        get_dict = request.QUERY_PARAMS.copy()
         node_id = kwargs.get('pk')
         parent_id = get_dict.get('parent_id', None)
         if parent_id == '0':
@@ -905,6 +906,8 @@ class NodeView(APIView):
             nodes = Node.objects.mine(request.user, get_archived=True)
             # Apply each criterion to the queryset
             for param, value in get_dict.iteritems():
+                if param in BOOLS and value == 'false':
+                    value = False
                 query = {param: value}
                 nodes = nodes.filter(**query)
                 # json = serializers.serialize('json', nodes, fields=('title',))

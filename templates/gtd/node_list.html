@@ -81,9 +81,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 	  {{ heading.todo_state.fields.abbreviation }}
       </td>
       <td>
-	<a href="/gtd/node/{{ heading.pk }}/{{ heading.fields.slug }}/">
-          {{ heading.fields.title}}
-	</a>
+	<a href="/gtd/project/{{ heading.pk }}/{{ heading.fields.slug }}/">
+          {{ heading.fields.title}}</a>
 	{{ heading | deadline_str }}
       </td>
       <td ng-bind-html="heading | root_cell" ng-click="filter_parent(heading)">

@@ -458,12 +458,14 @@ gtd_module.controller(
 );
 function outlineCtrl($scope, $http, $resource, OldHeading, Heading,
 		     $element, $location, $anchorScroll) {
-    var TodoState, Scope, url, get_heading, Parent, Tree, parent_tree_id, parent_level, target_headings;
+    var TodoState, Scope, url, get_heading, Parent, Tree, parent_tree_id, parent_level, target_headings, main_headings;
     // modified array to hold all the tasks
-    test_headings = Heading.query({'parent_id': 0});
+    main_headings = Heading.query({'parent_id': 0,
+				   'archived': false});
     $scope.headings = new HeadingManager($scope);
     $scope.children = new HeadingManager($scope);
-    $scope.headings.add(test_headings);
+    $scope.headings.add(main_headings);
+    $scope.headings.add(main_headings);
     $scope.active_scope = 0;
     $scope.sort_field = 'title';
     $scope.sort_fields = [
@@ -545,14 +547,14 @@ function outlineCtrl($scope, $http, $resource, OldHeading, Heading,
 	    heading.save();
 	} else if ( $target.hasClass('new-btn') ) {
 	    // New heading button
-	    new_heading = new OldHeading({pk: 0,
-					  workspace: heading.workspace,
-					  model: 'gtd.node',
-					  fields: {
-					      title: '',
-					      parent: heading.pk,
-					      level: heading.fields.level + 1,
-					  }});
+	    new_heading = new OldHeading(
+		{
+		    id: 0,
+		    workspace: heading.workspace,
+		    title: '',
+		    parent: heading.pk,
+		    level: heading.fields.level + 1,
+		});
 	    new_heading.editable = true;
 	    new_heading.expandable = 'no';
 	    heading.children.add(new_heading);
@@ -565,26 +567,37 @@ function outlineCtrl($scope, $http, $resource, OldHeading, Heading,
     };
     // Handler for toggling archived nodes
     $scope.show_all = function(e) {
+	var arx_headings;
 	if ( $scope.show_arx === true ) {
 	    $scope.show_arx = false;
 	} else {
 	    $scope.show_arx = true;
 	}
+	// Fetch archived nodes if not cached
+	if ( ! $scope.arx_cached ) {
+	    arx_headings = Heading.query({'parent_id': 0,
+					   'archived': true});
+	    $scope.headings.add(arx_headings);
+	    $scope.headings.add(arx_headings);
+	    $scope.arx_cached = true;
+	}
     };
     // Handler for adding a new node
     $scope.add_heading = function(e) {
 	var new_heading;
-	new_heading = new OldHeading({pk: 0,
-				      workspace: $scope,
-				      model: 'gtd.node',
-				      fields: {
-					  title: 'marvelous',
-					  parent: null,
-					  level: 0,
-				      }});
+	console.log($scope.children.get({pk: 0}));
+	new_heading = new OldHeading(
+	    {
+		id: 0,
+		workspace: $scope,
+		title: 'marvelous',
+		parent: null,
+		level: 0,
+	    });
 	new_heading.editable = true;
 	$scope.headings.add(new_heading);
 	$scope.children.add(new_heading);
+	console.log($scope.children.get({pk: 0}));
     };
 }
 

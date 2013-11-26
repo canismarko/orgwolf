@@ -37,7 +37,9 @@ class ContextSerializer(serializers.ModelSerializer):
 class NodeSerializer(serializers.ModelSerializer):
     def __init__(self, qs, *args, **kwargs):
         # Perform some optimization before hitting the database
-        qs = qs.prefetch_related('scope', 'users')
+        if kwargs.get('many', False):
+            # Prefetch related fields only if passing a queryset
+            qs = qs.prefetch_related('scope', 'users')
         return super(NodeSerializer, self).__init__(qs, *args, **kwargs)
     class Meta:
         model = Node

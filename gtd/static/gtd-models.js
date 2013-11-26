@@ -22,7 +22,7 @@ GtdHeading = function (args) {
 	todo_state: null,
 	text: '',
 	scope: [],
-	related_projects: [],
+	title: '',
 	tree_id: 0,
     };
     this.pk = 0;
@@ -41,10 +41,6 @@ GtdHeading = function (args) {
 	if ( this.parent_obj ) {
 	    this.rank = this.parent_obj.rank + 1;
 	}
-    }
-    // Add this to the parent's list of children
-    if ( this.parent_obj ) {
-	this.parent_obj.children.add(this);
     }
 }; // end of GtdHeading constructor
 
@@ -288,9 +284,6 @@ GtdHeading.prototype.is_visible = function() {
 	    visibility = false;
 	}
     }
-    if ( this.pk === 11 ) {
-	console.log(this.parent_obj.state);
-    }
     // An un-saved heading is not visible
     if ( this.pk === -1 ) {
 	visibility = false;
@@ -360,7 +353,7 @@ GtdHeading.prototype.save = function(args) {
 		}
 		// Update the heading object with the return data
 		heading.pk = data.pk;
-		heading.fields = data.fields;
+		heading.set_fields(data);
 		heading.update();
 	    });
 	},
@@ -733,27 +726,27 @@ Array.prototype.order_by = function(field) {
     key = fields[2];
     sorted = this.slice(0);
     compare = function( a, b ) {
+	var a_val, b_val, num_a, num_b, response;
 	// Test whether key is in heading.fields
 	if ( a.fields.hasOwnProperty(key) && b.fields.hasOwnProperty(key) ) {
-	    a = a.fields[key];
-	    b = b.fields[key];
+	    a_val = a.fields[key];
+	    b_val = b.fields[key];
 	} else {
-	    a = a[key];
-	    b = b[key];
+	    a_val = a[key];
+	    b_val = b[key];
 	}
-	var num_a, num_b, response;
-	num_a = Number(a);
-	num_b = Number(b);
+	num_a = Number(a_val);
+	num_b = Number(b_val);
 	if ( num_a && num_b ) {
 	    // Sorting by number
 	    response = num_a - num_b;
 	} else {
 	    // Sorting by alphabet
-	    a = a.toUpperCase();
-	    b = b.toUpperCase();
-	    if ( a < b ) {
+	    a_val = a_val.toUpperCase();
+	    b_val = b_val.toUpperCase();
+	    if ( a_val < b_val ) {
 		response = -1;
-	    } else if ( a > b ) {
+	    } else if ( a_val > b_val ) {
 		response = 1;
 	    } else {
 		response = 0;
@@ -773,7 +766,7 @@ Array.prototype.add = function(obj) {
     // Returns the authoritative object
     var that, other_heading, valid, real_heading, process, new_heading, i;
     that = this;
-    valid = ['pk', 'populated', 'text', 'todo_state', 'archived', 'rank', 'scope', 'related_projects', 'parent'];
+    valid = ['pk', 'populated', 'text', 'todo_state', 'archived', 'rank', 'scope', 'parent'];
     process = function(headings) {
 	var parents, insert;
 	parents = [];
