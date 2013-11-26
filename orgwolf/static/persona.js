@@ -31,10 +31,9 @@ $(document).ready(function() {
 	    console.log(assertion);
 	    $.ajax({
 		type: 'POST',
-		url: '/accounts/login/persona/?next=/gtd/node/',
+		url: '/accounts/login/persona/',
 		data: {assertion: assertion},
 		success: function(res, status, xhr) {
-		    res = $.parseJSON(res);
 		    window.location.href = res.next;
 		},
 		error: function(xhr, status, err) {

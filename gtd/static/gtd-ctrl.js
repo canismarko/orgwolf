@@ -137,7 +137,7 @@ gtd_module.filter('style', function() {
 	    }
 	    /*jslint nomen: false*/
 	    /*jslint bitwise: false*/
-	} else if ( obj.model === 'gtd.node' ) {
+	} else {// gtd.node model
 	    // Determine color based on node.rank
 	    colors = ['rgb(88, 0, 176)', 'rgb(80, 0, 0)', 'rgb(0, 44, 19)',
 		      'teal', 'slateblue', 'brown'];
