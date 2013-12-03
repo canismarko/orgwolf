@@ -958,8 +958,32 @@ class NodeView(APIView):
         self.node.set_fields(put['fields'])
         self.node.save()
         self.node = Node.objects.get(pk=self.node.pk)
-        return HttpResponse(self.node.as_json())
+        serializer = NodeSerializer(self.node)
+        return Response(serializer.data)
 
+
+class UpcomingNodeView(APIView):
+    """
+    Returns a list of nodes that have upcoming deadlines, based on the
+    optional date passed: /gtd/node/upcoming[/year/month/day/]
+    """
+    @method_decorator(login_required)
+    def dispatch(self, *args, **kwargs):
+        return super(UpcomingNodeView, self).dispatch(*args, **kwargs)
+    def get(self, request, year=None, month=None, day=None):
+        deadline_period = 7 # in days
+        all_nodes_qs = Node.objects.mine(request.user)
+        if year is None:
+            # Default to today
+            target_date = datetime.date.today()
+        # Determine query filters for "Upcoming Deadlines" section
+        undone_Q = Q(todo_state__closed = False) | Q(todo_state = None)
+        deadline = target_date + datetime.timedelta(days=deadline_period)
+        upcoming_deadline_Q = Q(deadline_date__lte = deadline) # TODO: fix this
+        deadline_nodes = all_nodes_qs.filter(undone_Q, upcoming_deadline_Q)
+        deadline_nodes = deadline_nodes.order_by("deadline_date")
+        serializer = NodeSerializer(deadline_nodes, many=True)
+        return Response(serializer.data)
 
 class ProjectView(DetailView):
     """Manages the retrieval of an individual node"""

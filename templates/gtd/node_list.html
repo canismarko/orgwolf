@@ -56,7 +56,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
   <form action="" method="POST" class="form-inline" id="list-filters">
     <label for="context">Context:</label>
     <select name="context" ng-model="active_context" class="form-control"
-	    ng-options="x.pk as x.fields.name for x in contexts"
+	    ng-options="x.id as x.name for x in contexts"
 	    ng-change="change_context($event)">
 	    <option value="">None</option>
     </select>
@@ -71,14 +71,38 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
   <table class="table table-condensed" id="gtd-list">
     <tr>
       <th>State</th>
+      <th>&nbsp;</th>
       <th>Description</th>
       <th>Project</th>
       <th>Tags</th>
     </tr>
-    <tr ng-repeat="heading in headings | order: 'list'" ng-show="heading.is_visible()" ow-pk="{{ heading.pk }}"
-	class="heading-row" archived="{{heading.fields.archived}}">
+    <!-- Upcoming deadlines -->
+    <tr ng-repeat="heading in deadlines" ow-pk="{{ heading.pk }}"
+	class="heading-row">
       <td ow-todo>
 	  {{ heading.todo_state.fields.abbreviation }}
+      </td>
+      <td>
+	<a href="/gtd/project/{{ heading.pk }}/{{ heading.fields.slug }}/">
+          {{ heading.fields.title}}</a>
+	{{ heading | deadline_str }}
+      </td>
+      <td ng-bind-html="heading | root_cell" ng-click="filter_parent(heading)">
+      </td>
+      <td>
+	{{ heading.fields.tag_string }}
+      </td>
+    </tr>
+    <!-- Actionable Items -->
+    <tr ng-repeat="heading in headings | order: 'list'"
+	ng-show="heading.is_visible()" ow-pk="{{ heading.pk }}"
+	class="heading-row" archived="{{ heading.fields.archived }}">
+      <td ow-todo>
+	  {{ heading.todo_state.fields.abbreviation }}
+      </td>
+      <td>
+	<span ng-if="heading.fields.repeats"
+	      class="glyphicon glyphicon-repeat pull-right"></span>
       </td>
       <td>
 	<a href="/gtd/project/{{ heading.pk }}/{{ heading.fields.slug }}/">
@@ -112,10 +136,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
       None
     </option>
     {% for context in contexts %}
-    <option value="{{context.id}}"
+    <option value="{{ context.id }}"
 	    {% if current_context.id = context.id %}
 	    selected="selected"{% endif %}>
-      {{context.name}}
+      {{ context.name }}
     </option>
     {% endfor %}
   </select>

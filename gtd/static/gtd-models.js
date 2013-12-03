@@ -19,10 +19,11 @@ GtdHeading = function (args) {
     //   which is called at the end of the constructor
     this.fields = {
 	archived: false,
-	todo_state: null,
-	text: '',
+	priority: 'B',
 	scope: [],
+	text: '',
 	title: '',
+	todo_state: null,
 	tree_id: 0,
     };
     this.pk = 0;
@@ -245,16 +246,11 @@ GtdHeading.prototype.is_expandable = function() {
     return response;
 };
 
-GtdHeading.prototype.is_visible = function() {
-    // Determine if the heading is visible.
-    // Some operations can be skipped if it's not.
-    var visibility, showall, active_states, active_root;
+GtdHeading.prototype.is_visible = function(view) {
+    // Determine if the heading is visible in the current view.
+    var visibility, showall, active_states, active_root, is_active, is_recent, is_closed, deadline_days, deadline_limit, deadline, today, is_due;
     visibility = true; // Assume visible unless we think otherwise
-    // Check archived state
-    showall = this.workspace ? this.workspace.show_arx : false;
-    if ( this.fields.archived && ! showall ) {
-	visibility = false;
-    }
+    this.update();
     // Check if this heading is within the active scope
     if ( this.workspace.active_scope ) {
 	if ( this.fields.scope.indexOf(this.workspace.active_scope) === -1 ) {
@@ -264,12 +260,31 @@ GtdHeading.prototype.is_visible = function() {
     // Check if heading is in active todo-states
     active_states = this.workspace.active_states;
     if ( typeof active_states !== 'undefined' ) {
+	is_active = true;
 	if ( active_states.indexOf(this.fields.todo_state) === -1 ) {
+	    is_active = false;
+	}
+	// If recently then show anyway
+	is_recent = this.just_modified || false;
+	// If deadline is coming up then show anyway
+	is_closed = this.todo_state ? this.todo_state.fields.closed : false;
+	if ( this.fields.deadline_date && !is_closed ) {
+	    deadline_days = 7;
+	    deadline_limit = deadline_days * 24 * 60 * 60 * 1000;
+	    deadline = new Date(this.fields.deadline_date);
+	    today = new Date();
+	    is_due = ( (deadline - today) < deadline_limit );
+	} else {
+	    is_due = false;
+	}
+	if ( !is_active && !is_due && !is_recent ) {
 	    visibility = false;
 	}
-	if ( this.just_modified === true ) {
-	    visibility = true;
-	}
+    }
+    // Check archived state
+    showall = this.workspace ? this.workspace.show_arx : false;
+    if ( this.fields.archived && ! showall ) {
+	visibility = false;
     }
     // Check if heading is in active_root's tree
     active_root = this.workspace.active_root;

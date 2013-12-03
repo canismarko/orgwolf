@@ -1,6 +1,6 @@
 /*globals document, $, jQuery, document, Aloha, window, alert, GtdHeading, HeadingManager, angular*/
 "use strict";
-var test_headings, owConfig, HeadingFactory, GtdListFactory, outlineCtrl, listCtrl;
+var test_headings, owConfig, HeadingFactory, GtdListFactory, UpcomingFactory, outlineCtrl, listCtrl;
 
 /*************************************************
 * Angular module for all GTD components
@@ -55,6 +55,31 @@ function HeadingFactory($resource, $http) {
     var res = $resource(
 	'/gtd/node/:pk/',
 	{pk: '@pk'},
+	{
+	    'query': {
+		method: 'GET',
+		transformResponse: $http.defaults.transformResponse.concat([
+		    function (data, headersGetter) {
+			return data;
+		    }
+		]),
+		isArray: true
+	    },
+	}
+    );
+    return res;
+}
+
+/*************************************************
+* Factory creates resource for list of nodes with
+* upcoming deadlines
+*
+**************************************************/
+gtd_module.factory('Upcoming', ['$resource', '$http', UpcomingFactory]);
+function UpcomingFactory($resource, $http) {
+    var res = $resource(
+	'/gtd/node/upcoming/',
+	{},
 	{
 	    'query': {
 		method: 'GET',
@@ -590,7 +615,7 @@ function outlineCtrl($scope, $http, $resource, OldHeading, Heading,
 	    {
 		id: 0,
 		workspace: $scope,
-		title: 'marvelous',
+		title: '',
 		parent: null,
 		level: 0,
 	    });
@@ -607,21 +632,26 @@ function outlineCtrl($scope, $http, $resource, OldHeading, Heading,
 **************************************************/
 gtd_module.controller(
     'nextActionsList',
-    ['$sce', '$scope', '$resource', '$location', 'GtdList', 'Heading', listCtrl]
+    ['$sce', '$scope', '$resource', '$location', 'GtdList', 'Heading', 'Upcoming', listCtrl]
 );
-function listCtrl($sce, $scope, $resource, $location, GtdList, Heading) {
+function listCtrl($sce, $scope, $resource, $location, GtdList, Heading, Upcoming) {
     var i, TodoState, Context;
-    TodoState = $resource('/gtd/todostate/');
-    $scope.todo_states = TodoState.query();
-    $scope.update = function() {};
-    $scope.parents = new HeadingManager($scope);
-    $scope.parents.add(Heading.query({level: 0}));
     $scope.active_context = null;
     $scope.state = 'open';
+    // No-op to prevent function-not-found error
+    $scope.update = function() {};
+    // Get list of todo states
+    TodoState = $resource('/gtd/todostate/');
+    $scope.todo_states = TodoState.query();
+    // Get list of root level nodes
+    $scope.parents = new HeadingManager($scope);
+    $scope.parents.add(Heading.query({level: 0}));
+    // Get list of headings
     $scope.headings = new HeadingManager($scope);
     $scope.cached_states = [2];
     $scope.active_states = [2];
     $scope.headings.add(GtdList.query({todo_state: 2}));
+    $scope.headings.add(Upcoming.query());
     Context = $resource('/gtd/context/');
     $scope.contexts = Context.query();
     $scope.show_arx = true;

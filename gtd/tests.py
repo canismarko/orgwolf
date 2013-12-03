@@ -177,15 +177,6 @@ class EditNode(TestCase):
     def test_set_fields(self):
         """Test the ability of a node to set its own fields given a dict"""
         node = Node.objects.get(pk=2)
-        self.assertEqual(
-            len(node.related_projects.all()),
-            0
-        )
-        node.set_fields({'related_projects': [1]})
-        self.assertEqual(
-            node.related_projects.all()[0].pk,
-            1
-        )
         # Date and time objects
         node.set_fields({'scheduled_date': '2012-12-31',
                          'scheduled_time': '05:00:00'})
@@ -862,10 +853,6 @@ class Shortcuts(TestCase):
             response_dict['fields']['archived']
             )
         self.assertEqual(
-            list(node.related_projects.values_list('pk', flat=True)),
-            response_dict['fields']['related_projects']
-            )
-        self.assertEqual(
             node.text,
             response_dict['fields']['text']
             )
@@ -1033,10 +1020,12 @@ class ContextAPI(TestCase):
     def test_get_context_collection(self):
         response = self.client.get(self.url)
         r = json.loads(response.content)
-        expected = serializers.serialize('json', self.contexts, fields=('name'))
-        self.assertEqual(
-            response.content,
+        expected = [x['name'] for x in r]
+        self.assertQuerysetEqual(
+            self.contexts,
             expected,
+            transform=lambda x: x.name,
+            ordered=False
         )
 
     def test_context_num_querysets(self):
@@ -1598,7 +1587,7 @@ class DBOptimization(TestCase):
         node = Node.objects.select_related('todo_state')
         node = Node.objects.get(pk=1)
         self.assertNumQueries(
-            3,
+            2,
             node.as_json,
             )
     def test_node_view(self):
@@ -1846,7 +1835,7 @@ class NodeAPI(TestCase):
         json_response = json.loads(response.content)
         self.assertEqual(
             1,
-            json_response['pk'],
+            json_response['id'],
             'AJAX doesn\'t return correct json object'
         )
         self.assertEqual(
@@ -2003,7 +1992,7 @@ class NodeAPI(TestCase):
         jresponse = json.loads(response.content)
         self.assertEqual(
             self.actionable.pk,
-            jresponse['fields']['todo_state'],
+            jresponse['todo_state'],
             )
 
     def test_add_node_through_json(self):
@@ -2045,6 +2034,39 @@ class NodeAPI(TestCase):
             new_node.scope.all()[0],
             'Scope not set when adding node through json'
         )
+
+
+class UpcomingAPI(TestCase):
+    """
+    Check the UpcomingView class API. Should return a list of nodes with
+    upcoming deadlines.
+    """
+    fixtures = ['test-users.json', 'gtd-test.json', 'gtd-env.json']
+    def setUp(self):
+        self.user = User.objects.get(pk=1)
+        self.assertTrue(
+            self.client.login(username=self.user.username,
+                              password='secret')
+        )
+        self.url = reverse('upcoming')
+    def test_upcoming_deadlines(self):
+        response = self.client.get(
+            self.url,
+            HTTP_X_REQUESTED_WITH='XMLHttpRequest',
+            )
+        self.assertEqual(
+            response.status_code,
+            200,
+            )
+        r = json.loads(response.content)
+        self.assertContains(
+            response,
+            'non-context child'
+            )
+        self.assertNotContains(
+            response,
+            'PetSmart'
+            )
 
 
 class TreeAPI(TestCase):

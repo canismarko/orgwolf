@@ -143,7 +143,7 @@ $('document').ready(function() {
 	    <label>Scope:</label>
 	    <select id="scope" multiple class="form-control"
 		    ng-model="fields.scope"
-		    ng-options="a.pk as a.fields.display for a in scopes">
+		    ng-options="a.id as a.display for a in scopes">
 		    </select>
 	  </div>
 	  <div class="col-md-1">
@@ -174,8 +174,6 @@ $('document').ready(function() {
 		    ng-model="fields.repeats_from_completion"
 		    ng-options="x.value as x.label for x in repeat_schemes">
 	    </select>
-	      <!-- <input type="checkbox" id="repeat_from_completion" -->
-	      <!-- 	     ng-model="fields.repeats_from_completion"></input> -->
 	  </div>
 	</div>
 	<div class="row">
@@ -208,6 +206,8 @@ $('document').ready(function() {
 	 expandable="{{heading.expandable}}"></i>
       <span ow-todo>
       </span>
+      <span ng-if="heading.fields.repeats"
+	    class="glyphicon glyphicon-repeat"></span>
       <div class="clickable ow-title">
 	{{heading.fields.title}}
       </div>

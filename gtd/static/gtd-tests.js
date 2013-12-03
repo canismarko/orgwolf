@@ -7,24 +7,30 @@ var node1, node2, node3, node4, options, i, state, console, getInterface, todo_s
 
 // Mocked scope for angularjs
 todo_state_list = [
-    {pk: 0,
-     display: '[None]'},
-    {pk: 1,
-     display: 'NEXT',
-     full: 'Next Action'},
-    {pk: 2,
-     display: 'DONE',
-     full: 'Completed'},
+    {
+	pk: 1,
+	fields: {
+	    abbreviation: 'NEXT',
+	    display_text: 'Next Action',
+	    actionable: true,
+	    closed: false,
+	},
+    },
+    {
+	pk: 2,
+	fields: {
+	    abbreviation: 'DONE',
+	    display_text: 'Completed',
+	    actionable: false,
+	    closed: true,
+	},
+    },
 ];
 heading_manager = new HeadingManager();
-scope = {
-    todo_states: todo_state_list,
-};
 
 // Constants and setup
 node1 = {
     id: 1,
-    workspace: scope,
     title: 'test_title',
     lft: 1,
     rght: 2,
@@ -32,7 +38,6 @@ node1 = {
 };
 node2 = {
     id: 2,
-    workspace: scope,
     title: 'Another test title',
     text: 'here\'s some text that goes with it',
     lft: 1,
@@ -45,8 +50,6 @@ node2 = {
     tree_id: 2,
 };
 node3 = {
-    workspace: scope,
-    model: 'gtd.node',
     id: 3,
     rght: 3,
     text: 'hello, world',
@@ -79,8 +82,6 @@ node3 = {
 };
 node4 = {
     id: 4,
-    workspace: scope,
-    model: 'gtd.node',
     rght: 5,
     text: 'have a nice day',
     energy: null,
@@ -127,6 +128,13 @@ module('GtdHeading model', {
     setup: function() {
 	var heading;
 	// Refresh headings for next test
+	scope = {
+	    todo_states: todo_state_list,
+	};
+	node1.workspace = scope;
+	node2.workspace = scope;
+	node3.workspace = scope;
+	node4.workspace = scope;
 	scope.headings = new HeadingManager(scope);
 	scope.headings.add(new GtdHeading(node1));
 	scope.headings.add(new GtdHeading(node2));
@@ -242,6 +250,12 @@ test('is_visible() method', function() {
 	! heading.is_visible(),
 	'heading is not visible if its todo_state is not active'
     );
+    heading.just_modified = true;
+    ok(
+	heading.is_visible(),
+	'heading is visible if recently modified'
+    );
+    delete heading.just_modified;
     delete scope.active_states;
     // Heading is not visible if parent is not open
     parent = scope.headings.get({pk: 2});
@@ -256,6 +270,48 @@ test('is_visible() method', function() {
 	! heading.is_visible(),
 	'heading with pk=-1 is not visible'
     );
+});
+
+test('is_visible() method with deadline', function() {
+    var heading = scope.headings.get({pk: 1});
+    scope.active_states = [] // All headings should be invisible
+    ok(
+	! heading.is_visible(),
+	'Heading starts out hidden'
+    );
+    // Make heading due now and test visibility
+    var now = new Date();
+    var ds = now.getFullYear() + '-' + (now.getMonth()+1) + '-' + now.getDate();
+    heading.fields.deadline_date = ds;
+    ok(
+	heading.is_visible(),
+	'Heading is visible if due today'
+    );
+    // Make heading due in the near future and test visibility
+    var soon = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 7);
+    ds = soon.getFullYear() + '-' + (soon.getMonth()+1) + '-' + soon.getDate();
+    heading.fields.deadline_date = ds;
+    ok(
+	heading.is_visible(),
+	'Heading is visible if due in 7 days'
+    );
+    // Make heading completed and test that it's not visible
+    var completed = scope.todo_states.get({abbreviation: 'DONE'});
+    var next = scope.todo_states.get({abbreviation: 'NEXT'});
+    console.log(heading.fields.todo_state);
+    heading.fields.todo_state = completed.pk;
+    ok(
+	! heading.is_visible(),
+	'Heading that is completed is not visible if overdue'
+    );
+    // Make heading actionable but archived (should not be visible)
+    heading.fields.todo_state = next.pk;
+    heading.fields.archived = true;
+    ok(
+	! heading.is_visible(),
+	'Archived but actionable heading is not visible'
+    );
+
 });
 
 test('MPTT: is_leaf_node', function() {
@@ -642,9 +698,10 @@ test('Set todo states', function() {
 	1,
 	'heading object has todo_id set'
     );
+    console.log(heading.fields);
     equal(
 	heading.todo_state,
-	todo_state_list[1],
+	todo_state_list.get({pk: 1}),
 	'heading.get_todo_state returns correct todo_state object'
     );
 });
