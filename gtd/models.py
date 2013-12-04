@@ -275,36 +275,20 @@ class Scope(models.Model):
 class NodeQuerySet(query.QuerySet):
     def as_json(self):
         """Return queryset in json serialized format"""
-        # s = '['
-        # first = True
-        # list(self)
-        # for node in self:
-        #     if first:
-        #         first = False
-        #     else:
-        #         s += ', '
-        #     s += node.as_json()
-        # s += ']'
-        # return s
+        print('Deprecation warning: NodeQuerySet.as_json() has been replaced with django-rest-framework serializers')
         return serializers.serialize('json', self)
 
-
-class NodeManager(TreeManager):
-    """Object manager for for retrieving nodes."""
-    def get_query_set(self):
-        return NodeQuerySet(self.model)
     def assigned(self, user, get_archived=False):
         """Get all the objects that `user` is responsible for
         """
         if user.is_authenticated():
-            if get_archived:
-                qs_all = Node.objects.all()
-            else:
-                qs_all = Node.objects.filter(archived=False)
-            owned = qs_all.filter(assigned=None).filter(owner=user)
+            qs = self
+            if not get_archived:
+                qs = qs.filter(archived=False)
+            owned = qs.filter(assigned=None).filter(owner=user)
             # Look for assigned nodes
             contact = user.contact_set.all()
-            assigned = qs_all.filter(assigned__in=contact)
+            assigned = qs.filter(assigned__in=contact)
             return assigned | owned
         else:
             raise RuntimeWarning('user not authenticated')
@@ -314,10 +298,9 @@ class NodeManager(TreeManager):
         """Get all the objects that have `user` as the owner or assigned,
         or have `user` in the related_users relationship."""
         if user.is_authenticated():
-            if get_archived:
-                qs = Node.objects.all()
-            else:
-                qs = Node.objects.filter(archived=False)
+            qs = self
+            if not get_archived:
+                qs = qs.filter(archived=False)
             owned = Q(owner=user)
             others = Q(users=user)
             # Look for assigned nodes
@@ -332,15 +315,24 @@ class NodeManager(TreeManager):
     def owned(self, user, get_archived=False):
         """Get all the objects owned by the user with some optional
         filters applied"""
-        if get_archived:
-            qs = Node.objects.all()
-        else:
-            qs = Node.objects.filter(archived=False)
+        qs = self
+        if not get_archived:
+            qs = qs.filter(archived=False)
         if user.is_authenticated():
             qs = qs.filter(owner=user)
         else:
             qs = Node.objects.none()
         return qs
+
+
+class NodeManager(TreeManager):
+    """Object manager for for retrieving nodes."""
+    def get_query_set(self):
+        return NodeQuerySet(self.model)
+
+    def __getattr__(self, name):
+        """Ensure that methods of the queryset are callable by the manager"""
+        return getattr(self.get_queryset(), name)
 
 
 @python_2_unicode_compatible

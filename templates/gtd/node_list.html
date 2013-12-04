@@ -39,6 +39,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 {% endverbatim %}
 
 {# Angular app for gtd list #}
+<script>
+  gtd_module.constant('parent_id', '{{ parent.pk }}');
+</script>
 <div id="gtd-list" ng-controller="nextActionsList">
   {% verbatim %}
   <span ng-if="active_root">
@@ -78,7 +81,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
     </tr>
     <!-- Upcoming deadlines -->
     <tr ng-repeat="heading in deadlines" ow-pk="{{ heading.pk }}"
-	class="heading-row">
+	class="heading-row" ow-list-row>
       <td ow-todo>
 	  {{ heading.todo_state.fields.abbreviation }}
       </td>
@@ -96,7 +99,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
     <!-- Actionable Items -->
     <tr ng-repeat="heading in headings | order: 'list'"
 	ng-show="heading.is_visible()" ow-pk="{{ heading.pk }}"
-	class="heading-row" archived="{{ heading.fields.archived }}">
+	class="heading-row" archived="{{ heading.fields.archived }}" ow-list-row>
       <td ow-todo>
 	  {{ heading.todo_state.fields.abbreviation }}
       </td>

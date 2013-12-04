@@ -434,19 +434,46 @@ class NodeMutators(TestCase):
 
 class NodeManagers(TestCase):
     fixtures = ['test-users.json', 'gtd-test.json', 'gtd-env.json']
-    def test_queryset_as_json(self):
-        qs = Node.objects.all()
-        r = qs.as_json()
-        r_pks = [x['pk'] for x in json.loads(r)]
-        self.assertTrue(
-            isinstance(r, basestring)
-        )
-        # Make sure querysets match up (by pk)
+    def setUp(self):
+        self.user = User.objects.get(username='test')
+
+    def test_assigned(self):
+        qs = Node.objects.filter(pk=1)
+        assigned = qs.assigned(self.user)
         self.assertQuerysetEqual(
-            qs,
-            r_pks,
-            transform=lambda x: x.pk,
-            ordered=False,
+            assigned,
+            [repr(x) for x in qs],
+        )
+        self.assertQuerysetEqual(
+            Node.objects.assigned(self.user),
+            [repr(x) for x in Node.objects.all().assigned(self.user)],
+            ordered=False
+        )
+
+    def test_mine(self):
+        qs = Node.objects.filter(pk=1)
+        mine = qs.mine(self.user)
+        self.assertQuerysetEqual(
+            mine,
+            [repr(x) for x in qs],
+        )
+        self.assertQuerysetEqual(
+            Node.objects.mine(self.user),
+            [repr(x) for x in Node.objects.all().mine(self.user)],
+            ordered=False
+        )
+
+    def test_owned(self):
+        qs = Node.objects.filter(pk=1)
+        owned = qs.owned(self.user)
+        self.assertQuerysetEqual(
+            owned,
+            [repr(x) for x in qs],
+        )
+        self.assertQuerysetEqual(
+            Node.objects.owned(self.user),
+            [repr(x) for x in Node.objects.all().owned(self.user)],
+            ordered=False
         )
 
 
@@ -1290,7 +1317,7 @@ class ListAPI(TestCase):
         scope = Scope.objects.get(pk=1)
         context = Context.objects.get(pk=2)
         request = self.factory.get(
-            '/gtd/list',
+            '/gtd/lists',
             {
                 'todo_state': ['1', '2'],
                 'scope': ['1'],
@@ -1313,10 +1340,30 @@ class ListAPI(TestCase):
             self.view.url_data['context'],
             context
         )
+    def test_parent_param(self):
+        """Test that adding the parent= param filters by parent"""
+        parent = Node.objects.get(pk=1)
+        response = self.client.get(
+            '/gtd/lists',
+            {
+                'parent': parent.pk,
+            },
+            HTTP_X_REQUESTED_WITH='XMLHttpRequest',
+            HTTP_ACCEPT='application/json',
+        )
+        r = json.loads(response.content)
+        assigned = Node.objects.assigned(self.user)
+        qs = parent.get_descendants().assigned(self.user)
+        self.assertQuerysetEqual(
+            qs,
+            ['{0} - {1}'.format(x['id'], x['title']) for x in r],
+            transform=lambda x: '{0} - {1}'.format(x.pk, x.title),
+            ordered=False
+        )
     def test_missing_params(self):
         """Ensure the view ignores parameters that are empty strings"""
         request = self.factory.get(
-            '/gtd/list',
+            '/gtd/lists',
             {'context': '',
              'scope': '',
              'todo_state': ''}

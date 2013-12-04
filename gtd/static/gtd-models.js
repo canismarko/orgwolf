@@ -248,7 +248,7 @@ GtdHeading.prototype.is_expandable = function() {
 
 GtdHeading.prototype.is_visible = function(view) {
     // Determine if the heading is visible in the current view.
-    var visibility, showall, active_states, active_root, is_active, is_recent, is_closed, deadline_days, deadline_limit, deadline, today, is_due;
+    var visibility, showall, active_states, active_root, is_active, is_recent, is_closed, deadline_days, deadline_limit, is_due;
     visibility = true; // Assume visible unless we think otherwise
     this.update();
     // Check if this heading is within the active scope
@@ -271,9 +271,7 @@ GtdHeading.prototype.is_visible = function(view) {
 	if ( this.fields.deadline_date && !is_closed ) {
 	    deadline_days = 7;
 	    deadline_limit = deadline_days * 24 * 60 * 60 * 1000;
-	    deadline = new Date(this.fields.deadline_date);
-	    today = new Date();
-	    is_due = ( (deadline - today) < deadline_limit );
+	    is_due = ( this.due() < deadline_limit );
 	} else {
 	    is_due = false;
 	}
@@ -294,16 +292,33 @@ GtdHeading.prototype.is_visible = function(view) {
 	}
     }
     // Check if parent is open
-    if ( this.parent_obj ) {
+    if ( this.parent_obj && !this.workspace.show_list ) {
 	if ( this.parent_obj.state !== 'open' ) {
 	    visibility = false;
 	}
+    }
+    if ( this.pk === 15 ) {
+	console.log(this.parent_obj);
     }
     // An un-saved heading is not visible
     if ( this.pk === -1 ) {
 	visibility = false;
     }
     return visibility;
+};
+
+GtdHeading.prototype.due = function() {
+    // Method determines how many days away the deadline for this node is
+    // or null if no deadline_date field. Negative values mean the node is
+    // overdue.
+    var due, today, deadline;
+    due = null;
+    if ( this.fields.deadline_date ) {
+	today = new Date();
+	deadline = new Date(this.fields.deadline_date);
+	due = deadline - today;
+    }
+    return due;
 };
 
 GtdHeading.prototype.update = function() {

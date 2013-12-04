@@ -455,17 +455,31 @@ gtd_module.directive('owTodo', ['$filter', function($filter) {
 **************************************************/
 gtd_module.directive('owListRow', function() {
     function link(scope, element, attrs) {
-	var node_pk, heading, parent, $parent, html;
+	var node_pk, heading, parent, $parent, html, due, row_cls;
 	node_pk = parseInt(attrs.owPk, 10);
 	heading = scope.headings.get({pk: node_pk});
-	parent = scope.parents.get({tree_id: heading.fields.tree_id});
-	parent = scope.parents.get({tree_id: 1});
-	if ( parent ) {
-	    $parent = element.find('.parent-cell');
-	    html = '';
-	    html += parent.fields.title;
-	    $parent.html(html);
+	// // Set the attributes for the parent column
+	// parent = scope.parents.get({tree_id: heading.fields.tree_id});
+	// parent = scope.parents.get({tree_id: 1});
+	// if ( parent ) {
+	//     $parent = element.find('.parent-cell');
+	//     html = '';
+	//     html += parent.fields.title;
+	//     $parent.html(html);
+	// }
+	// Determine bootstrap row style based on overdue status
+	due = heading.due();
+	if ( due === null ) {
+	    row_cls = '';
+	} else if ( due <= 0 ) {
+	    row_cls = 'danger';
+	} else if ( due > 0 ) {
+	    row_cls = 'warning';
 	}
+	if ( heading.pk === 26 ) {
+	    console.log(due <= 0);
+	}
+	element.addClass(row_cls);
     }
     return {
 	link: link,
@@ -632,12 +646,12 @@ function outlineCtrl($scope, $http, $resource, OldHeading, Heading,
 **************************************************/
 gtd_module.controller(
     'nextActionsList',
-    ['$sce', '$scope', '$resource', '$location', 'GtdList', 'Heading', 'Upcoming', listCtrl]
+    ['$sce', '$scope', '$resource', '$location', 'GtdList', 'Heading', 'Upcoming', 'parent_id', listCtrl]
 );
-function listCtrl($sce, $scope, $resource, $location, GtdList, Heading, Upcoming) {
+function listCtrl($sce, $scope, $resource, $location, GtdList, Heading, Upcoming, parent_id) {
     var i, TodoState, Context;
     $scope.active_context = null;
-    $scope.state = 'open';
+    $scope.show_list = true;
     // No-op to prevent function-not-found error
     $scope.update = function() {};
     // Get list of todo states
@@ -646,11 +660,19 @@ function listCtrl($sce, $scope, $resource, $location, GtdList, Heading, Upcoming
     // Get list of root level nodes
     $scope.parents = new HeadingManager($scope);
     $scope.parents.add(Heading.query({level: 0}));
+    // See if there's a parent specified
+    $scope.list_params = {todo_state: 2};
+    if ( parent_id ) {
+	$scope.list_params.parent = parseInt(parent_id, 10);
+    }
+    console.log($scope);
+    console.log(parent_id);
+    console.log($scope.list_params);
     // Get list of headings
     $scope.headings = new HeadingManager($scope);
     $scope.cached_states = [2];
     $scope.active_states = [2];
-    $scope.headings.add(GtdList.query({todo_state: 2}));
+    $scope.headings.add(GtdList.query($scope.list_params));
     $scope.headings.add(Upcoming.query());
     Context = $resource('/gtd/context/');
     $scope.contexts = Context.query();

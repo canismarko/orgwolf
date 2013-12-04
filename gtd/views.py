@@ -334,7 +334,13 @@ class NodeListView(APIView):
         return super(NodeListView, self).dispatch(request, *args, **kwargs)
 
     def get_queryset(self):
-        nodes = Node.objects.assigned(self.request.user).select_related(
+        parent_id = self.request.GET.get('parent', None)
+        if parent_id is not None:
+            parent = Node.objects.get(pk=parent_id)
+            nodes = parent.get_descendants()
+        else:
+            nodes = Node.objects.all()
+        nodes = nodes.assigned(self.request.user).select_related(
             'context', 'todo_state', 'root'
         )
         # Filter by todo state
@@ -397,6 +403,7 @@ class NodeListView(APIView):
         if new_context_id > 0:
             new_url += 'context' + str(new_context_id) + '/'
         return redirect(new_url)
+
     def get(self, request, *args, **kwargs):
         """Determines which list the user has requested and fetches it."""
         # Get objects based on url parameters
