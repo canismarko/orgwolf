@@ -665,9 +665,6 @@ function listCtrl($sce, $scope, $resource, $location, GtdList, Heading, Upcoming
     if ( parent_id ) {
 	$scope.list_params.parent = parseInt(parent_id, 10);
     }
-    console.log($scope);
-    console.log(parent_id);
-    console.log($scope.list_params);
     // Get list of headings
     $scope.headings = new HeadingManager($scope);
     $scope.cached_states = [2];

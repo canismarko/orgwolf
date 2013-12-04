@@ -328,8 +328,8 @@ class NodeListView(APIView):
         self.url_string = kwargs.get('url_string', '')
         if self.url_string is None:
             self.url_string = ''
-        # self.url_data = parse_url(self.url_string, request,
-        #                           todo_states=self.todo_states)
+        self.url_data = parse_url(self.url_string, request,
+                                  todo_states=self.todo_states)
         self.base_url = reverse('list_display')
         return super(NodeListView, self).dispatch(request, *args, **kwargs)
 
@@ -407,7 +407,7 @@ class NodeListView(APIView):
     def get(self, request, *args, **kwargs):
         """Determines which list the user has requested and fetches it."""
         # Get objects based on url parameters
-        self.url_data = {}
+        # self.url_data = {}
         todo_states = request.GET.getlist('todo_state', [''])
         if todo_states != ['']:
             self.url_data['todo_state'] = self.todo_states.filter(

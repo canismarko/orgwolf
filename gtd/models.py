@@ -327,7 +327,7 @@ class NodeQuerySet(query.QuerySet):
 
 class NodeManager(TreeManager):
     """Object manager for for retrieving nodes."""
-    def get_query_set(self):
+    def get_queryset(self):
         return NodeQuerySet(self.model)
 
     def __getattr__(self, name):
