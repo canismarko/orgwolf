@@ -582,47 +582,53 @@ class Node(MPTTModel):
         return (qs, total)
 
     def set_fields(self, fields):
-        """Accepts a dictionary of fields and updates them on the object.
-        Does not alter the database.
+        """
+        Accepts a dictionary of fields and updates them on this instance.
+        Does not commit new values to the database.
         """
         boolean_fields = ['archived', 'auto_update']
         date_fields = ['scheduled_date', 'deadline_date']
         time_fields = ['scheduled_time', 'deadline_time']
         datetime_fields = ['opened', 'closed']
-        for key in fields.keys():
+        for key, value in fields.iteritems():
+            # Convert 'None' to None singleton
+            if value == 'None':
+                value = None
+            # resolve todo_state foreign key
             if key == 'todo_state':
-                # Set foreign keys
-                if isinstance(fields[key], list):
-                    fields[key] = fields[key][0]
-                if isinstance(fields[key], (int, long)):
-                    self.todo_state = TodoState.objects.get(pk=fields[key])
+                if isinstance(value, list):
+                    value = value[0]
+                if isinstance(value, (int, long)):
+                    self.todo_state = TodoState.objects.get(pk=value)
                 else:
                     self.todo_state = None
-            elif key == 'owner' and isinstance(fields[key], (int, long)):
-                self.owner = User.objects.get(pk=fields[key])
-            elif key == 'parent' and isinstance(fields[key], (int, long)):
-                self.parent = Node.objects.get(pk=fields[key])
+            elif key == 'owner' and isinstance(value, (int, long)):
+                self.owner = User.objects.get(pk=value)
+            elif key == 'parent' and isinstance(value, (int, long)):
+                self.parent = Node.objects.get(pk=value)
+            # Resolve boolean fields to singletons
             elif key in boolean_fields:
-                if isinstance(fields[key], list):
-                    fields[key] = fields[key][0]
-                if fields[key] == 'true':
+                if isinstance(value, list):
+                    value = value[0]
+                if value == 'true':
                     setattr(self, key, True)
-                elif fields[key] == 'false':
+                elif value == 'false':
                     setattr(self, key, False)
                 else:
-                    setattr(self, key, fields[key])
-            elif key in datetime_fields and fields[key] is not None:
+                    setattr(self, key, value)
+            # Resolve datetime fields to datetime objects
+            elif key in datetime_fields and value is not None:
                 # Convert to datetime object
-                setattr(self, key, dateutil.parser.parse(fields[key]))
-            elif key in date_fields and fields[key] is not None:
+                setattr(self, key, dateutil.parser.parse(value))
+            elif key in date_fields and value is not None:
                 # Convert to date object
-                setattr(self, key, dateutil.parser.parse(fields[key]).date())
-            elif key in time_fields and fields[key] is not None:
+                setattr(self, key, dateutil.parser.parse(value).date())
+            elif key in time_fields and value is not None:
                 # Convert to datetime object
-                setattr(self, key, dateutil.parser.parse(fields[key]).time())
+                setattr(self, key, dateutil.parser.parse(value).time())
+            # Set other things
             else:
-                # Set other things
-                setattr(self, key, fields[key])
+                setattr(self, key, value)
 
     # Override superclass save methods
     def save(self, *args, **kwargs):

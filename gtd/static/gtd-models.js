@@ -24,7 +24,7 @@ GtdHeading = function (args) {
 	text: '',
 	title: '',
 	todo_state: null,
-	tree_id: 0,
+	tree_id: null,
     };
     this.pk = 0;
     this.archived = false;
@@ -358,11 +358,7 @@ GtdHeading.prototype.save = function(args) {
     auto_update = args.auto ? true : false;
     url = '/gtd/node/';
     heading.fields.auto_update = auto_update;
-    data = {
-	pk: heading.pk,
-	model: heading.model,
-	fields: heading.fields,
-    };
+    data = jQuery.extend({}, heading.fields, {id: heading.pk});
     if ( heading.pk > 0 ) {
 	// Existing Node instance
 	url += heading.pk + '/';

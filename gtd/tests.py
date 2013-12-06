@@ -40,6 +40,7 @@ from django.test.client import Client, RequestFactory
 from django.utils.html import conditional_escape
 from django.utils.timezone import get_current_timezone, utc
 from django.views.generic import View
+from rest_framework.renderers import JSONRenderer
 
 from gtd.forms import NodeForm
 from gtd.models import Node, TodoState, node_repeat, Location
@@ -1776,6 +1777,7 @@ class NodeAPI(TestCase):
         self.assertTrue(
             self.client.login(username=self.user.username, password='secret')
         )
+
     def test_json_get(self):
         """Check if getting the node attributes by ajax works as expected"""
         response = self.client.get(
@@ -1866,12 +1868,9 @@ class NodeAPI(TestCase):
             'node statrts out with todo_state 2 (next test will fail)'
         )
         put_data = json.dumps({
-            'pk': self.node.pk,
-            'model': 'gtd.node',
-            'fields': {
-                'todo_state': 1,
-                'archived': 'true',
-            }
+            'id': self.node.pk,
+            'todo_state': 1,
+            'archived': 'true',
         })
         response = self.client.put(
             self.url,
@@ -1902,14 +1901,11 @@ class NodeAPI(TestCase):
             'node not archived after ajax POST'
         )
         put_data = json.dumps({
-            'fields': {
-                'archived': 'false'
-            }
+            'archived': 'false'
         })
         response = self.client.put(
             self.url,
             put_data,
-            HTTP_X_REQUESTED_WITH='XMLHttpRequest',
             content_type='application/json',
         )
         self.node = Node.objects.get(pk=self.node.pk)
@@ -1922,13 +1918,12 @@ class NodeAPI(TestCase):
         """Tests archiving/unarchived node by AJAX"""
         self.assertTrue(
             not self.node.archived,
-            'Node starts out archived'
+            'Node starts out not archived'
         )
         self.node.archived = True
-        data = self.node.as_json()
+        serializer = NodeSerializer(self.node)
         response = self.client.put(
-            self.url, data,
-            HTTP_X_REQUESTED_WITH='XMLHttpRequest',
+            self.url, JSONRenderer().render(serializer.data),
             content_type='application/json'
             )
         self.assertEqual(
@@ -1938,7 +1933,7 @@ class NodeAPI(TestCase):
         node = Node.objects.get(pk = self.node.pk)
         self.assertTrue(
             node.archived,
-            'Node does not become archived after changing via AJAX'
+            'Node becomes archived after changing via AJAX'
         )
 
     def test_text_through_json(self):
@@ -1947,12 +1942,11 @@ class NodeAPI(TestCase):
             '',
             self.node.text
             )
-        text = '<strong>evilness</strong>'
+        text = '<script>evilness</script>'
         self.node.text = text
-        data = self.node.as_json()
+        serializer = NodeSerializer(self.node)
         response = self.client.put(
-            self.url, data,
-            HTTP_X_REQUESTED_WITH='XMLHttpRequest',
+            self.url, JSONRenderer().render(serializer.data),
             content_type='application/json',
             )
         self.assertEqual(
@@ -1965,12 +1959,11 @@ class NodeAPI(TestCase):
             node.text
             )
         # Check that it allows <b> and other whitelist elements
-        text = '<b>evilness</b>'
+        text = '<b>niceness</b>'
         self.node.text = text
-        data = self.node.as_json()
+        serializer = NodeSerializer(self.node)
         response = self.client.put(
-            self.url, data,
-            HTTP_X_REQUESTED_WITH='XMLHttpRequest',
+            self.url, JSONRenderer().render(serializer.data),
             content_type='application/json'
             )
         self.assertEqual(
@@ -1985,17 +1978,14 @@ class NodeAPI(TestCase):
 
     def test_edit_autoupdate_off_by_json(self):
         """Tests changing a repeating node by JSON with auto_update off"""
-        # old_state = node.todo_state
-        # new_state = TodoState.objects.get(pk=3)
         self.assertTrue(
             self.repeating_node.todo_state.actionable,
             'Initial todoState is actionable'
             )
         self.repeating_node.todo_state = self.closed
-        data = self.repeating_node.as_json()
+        serializer = NodeSerializer(self.repeating_node)
         self.client.put(
-            self.repeating_url, data,
-            HTTP_X_REQUESTED_WITH='XMLHttpRequest',
+            self.repeating_url, JSONRenderer().render(serializer.data),
             content_type='application/json'
             )
         node = Node.objects.get(pk=self.repeating_node.pk)
@@ -2044,42 +2034,34 @@ class NodeAPI(TestCase):
 
     def test_add_node_through_json(self):
         """Add a new node by submitting the whole form through AJAX"""
-        node = Node()
-        data = model_to_dict(node)
-        node.title = 'new node'
-        node.repeats = False
-        node.owner = User.objects.get(pk=1)
-        node.repeating_unit = None
-        node.repeating_number = None
-        node.scheduled = None
-        node.deadline = None
-        node.todo_state = None
-        node.save()
-        node.scope.add(Scope.objects.get(pk=1))
-        data = node.as_json()
-        data = json.loads(data)
-        data['pk'] = None
-        data = json.dumps(data)
-        node.scope = Scope.objects.filter(pk=1)
+        new_data = {
+            'id': 0,
+            'archived': False,
+            'auto_update': False,
+            'level': 0,
+            'parent': None,
+            'priority': 'B',
+            'text': '',
+            'title': 'New test project',
+            'todo_state': None,
+            'tree_id': None,
+        }
+        # Test that specifying a pk raises a 405 error
         response = self.client.post(
-            self.new_url, data,
-            HTTP_X_REQUESTED_WITH='XMLHttpRequest',
-            content_type='application/json'
-            )
-        self.assertEqual(
-            200,
-            response.status_code)
-        response = json.loads(response.content)
-        new_node = Node.objects.get(pk=response['id'])
-        self.assertEqual(
-            1,
-            new_node.scope.all().count(),
-            'No scopes set when adding node through JSON'
+            self.url, new_data
         )
         self.assertEqual(
-            Scope.objects.get(pk=1),
-            new_node.scope.all()[0],
-            'Scope not set when adding node through json'
+            response.status_code,
+            405
+        )
+        response = self.client.post(
+            self.new_url, new_data
+        )
+        r = json.loads(response.content)
+        new_node = Node.objects.get(pk=r['id'])
+        self.assertEqual(
+            new_node.title,
+            new_data['title']
         )
 
 

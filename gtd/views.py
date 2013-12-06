@@ -926,8 +926,7 @@ class NodeView(APIView):
 
     def post(self, request, pk=None, *args, **kwargs):
         """
-        Handles ajax interactions, eg. editing Node objects.
-        Mostly conducted through JSON format:
+        Create a new Node, conducted through JSON format:
         {
           id: [node primary key],
           field: (eg. title),
@@ -935,34 +934,53 @@ class NodeView(APIView):
           etc...
         }
 
+        Ignores fields related to MPTT for new nodes as these get
+        set automatically based on the 'parent' attribute.
+
         Returns: JSON object of all node fields, with changes.
         """
-        post = request.DATA
-        if (pk == 0) or (pk is None):
-            # New node is being created
-            self.node = Node()
-            self.node.owner = request.user
-            self.node.save()
-        self.node.set_fields(post['fields'])
+        data = request.DATA.copy()
+        if pk is not None:
+            return HttpResponseNotAllowed(['GET', 'POST'])
+        # Create new node
+        self.node = Node()
+        self.node.owner = request.user
         self.node.save()
+        # Set fields (ignore mptt fields for new nodes)
+        for key in ('id', 'tree_id', 'lft', 'rght', 'level'):
+            try:
+                data.pop(key)
+            except KeyError:
+                pass
+        self.node.set_fields(data)
+        self.node.save()
+        # Return newly saved node as json
         self.node = Node.objects.get(pk=self.node.pk)
         serializer = NodeSerializer(self.node)
         return Response(serializer.data)
 
     def put(self, request, pk=None, *args, **kwargs):
-        """Handles updating existing nodes"""
+        """
+        Edit existing nodes through JSON format:
+        {
+          id: [node primary key],
+          field: (eg. title),
+          field: (eg. todo_state),
+          etc...
+        }
+        """
         if pk is None:
             # Throw error response if user is trying to
             # PUT without specifying a pk
             return HttpResponseNotAllowed(['GET', 'POST'])
-        put = request.DATA
+        data = request.DATA.copy()
         try:
             self.node = Node.objects.mine(request.user,
                                   get_archived=True).get(pk=pk)
         except Node.DoesNotExist:
             # If the node is not accessible return a 404
             raise Http404()
-        self.node.set_fields(put['fields'])
+        self.node.set_fields(data)
         self.node.save()
         self.node = Node.objects.get(pk=self.node.pk)
         serializer = NodeSerializer(self.node)
