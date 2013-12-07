@@ -646,11 +646,18 @@ function outlineCtrl($scope, $http, $resource, OldHeading, Heading,
 **************************************************/
 gtd_module.controller(
     'nextActionsList',
-    ['$sce', '$scope', '$resource', '$location', 'GtdList', 'Heading', 'Upcoming', 'parent_id', listCtrl]
+    ['$sce', '$scope', '$resource', '$location', 'GtdList', 'Heading', 'Upcoming', 'parent_id', 'context_id', 'context_name', listCtrl]
 );
-function listCtrl($sce, $scope, $resource, $location, GtdList, Heading, Upcoming, parent_id) {
+function listCtrl($sce, $scope, $resource, $location, GtdList, Heading, Upcoming, parent_id, context_id, context_name) {
     var i, TodoState, Context;
+    $scope.list_params = {todo_state: 2};
     $scope.active_context = null;
+    console.log($location.absUrl());
+    if ( context_id !== 'None' ) {
+	$scope.active_context = parseInt(context_id, 10);
+	$scope.context_name = context_name;
+	$scope.list_params.context = $scope.active_context;
+    }
     $scope.show_list = true;
     // No-op to prevent function-not-found error
     $scope.update = function() {};
@@ -661,7 +668,6 @@ function listCtrl($sce, $scope, $resource, $location, GtdList, Heading, Upcoming
     $scope.parents = new HeadingManager($scope);
     $scope.parents.add(Heading.query({level: 0}));
     // See if there's a parent specified
-    $scope.list_params = {todo_state: 2};
     if ( parent_id ) {
 	$scope.list_params.parent = parseInt(parent_id, 10);
     }
@@ -677,7 +683,9 @@ function listCtrl($sce, $scope, $resource, $location, GtdList, Heading, Upcoming
     $scope.active_scope = 0;
     // Set the parent attribute on each list item
     for ( i; i<$scope.headings.length; i+=1 ) {
-	$scope.headings[i].parent = $scope.parents.get({pk: $scope.headings[i].fields.parent});
+	$scope.headings[i].parent = $scope.parents.get(
+	    {pk: $scope.headings[i].fields.parent}
+	);
     }
     // Todo state filtering
     $scope.toggle_todo_state = function(e) {

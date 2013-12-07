@@ -40,13 +40,19 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 {# Angular app for gtd list #}
 <script>
+  // Pass in some context variables
   gtd_module.constant('parent_id', '{{ parent.pk }}');
+  gtd_module.constant('context_id', '{{ request.session.context_id }}');
+  gtd_module.constant('context_name', '{{ request.session.context_name }}');
 </script>
 <div id="gtd-list" ng-controller="nextActionsList">
   {% verbatim %}
+  <h4 ng-if="context_name">{{ context_name }}</h4>
   <span ng-if="active_root">
     Project:
-    <a href="/gtd/project/{{ active_root.pk }}/">{{ active_root.fields.title }}</a>
+    <a href="/gtd/project/{{ active_root.pk }}/">
+      {{ active_root.fields.title }}
+    </a>
     [<a ng-click="filter_parent(null)">&times;</a>]
   </span>
   <ul ow-scope-tabs>

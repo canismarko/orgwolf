@@ -425,6 +425,13 @@ class NodeListView(APIView):
             self.url_data['context'] = get_object_or_404(Context, pk=context)
         # AJAX API
         if request.is_json:
+            # Update the current context
+            new_context_id = request.GET.get('context', None)
+            if new_context_id is not None:
+                new_context = Context.objects.get(pk=new_context_id)
+                request.session['context_name'] = new_context.name
+            request.session['context_id'] = new_context_id
+            print(request.session['context_id'])
             nodes = self.get_queryset()
             serializer = NodeSerializer(nodes, many=True)
             return Response(serializer.data)
@@ -445,9 +452,10 @@ class NodeListView(APIView):
         for todo_abbrev in todo_abbrevs:
             todo_abbrevs_lc.append(todo_abbrev.lower())
         # Get stored context value (or set if first visit)
-        if 'context' not in request.session:
-            request.session['context'] = None
-        current_context = request.session['context']
+        current_context = None
+        # if 'context' not in request.session:
+        #     request.session['context'] = None
+        # current_context = request.session['context']
         # # Retrieve the context objects based on url
         # if self.url_data.get('context', False) != False: # `None` --> context0
         #     if self.url_data.get('context') != current_context:
@@ -465,17 +473,17 @@ class NodeListView(APIView):
         root_nodes = Node.objects.mine(
             request.user, get_archived=True
         ).filter(level=0)
-        # Now apply the context
-        if current_context:
-            self.scope_url_data['context'] = 'context{0}/'.format(
-                current_context.pk
-            )
-        else:
-            self.scope_url_data['context'] = ''
-        try:
-            nodes = current_context.apply(nodes)
-        except AttributeError:
-            pass
+        # # Now apply the context
+        # if current_context:
+        #     self.scope_url_data['context'] = 'context{0}/'.format(
+        #         current_context.pk
+        #     )
+        # else:
+        #     self.scope_url_data['context'] = ''
+        # try:
+        #     nodes = current_context.apply(nodes)
+        # except AttributeError:
+        #     pass
         # And filter by parent node
         parent = self.url_data.get('parent')
         if parent:
@@ -488,30 +496,30 @@ class NodeListView(APIView):
         nodes = order_nodes(nodes, field='deadline_date', context=current_context)
         # -------------------- Queryset evaluated -------------------- #
         # Prepare the URLs for use in the scope and parent links tabs
-        scope_url = list_url.format(
-            context = self.scope_url_data['context'],
-            scope = '{scope}/',
-            states = self.scope_url_data['states'],
-            parent = self.scope_url_data['parent'],
-        )
+        # scope_url = list_url.format(
+        #     context = self.scope_url_data['context'],
+        #     scope = '{scope}/',
+        #     states = self.scope_url_data['states'],
+        #     parent = self.scope_url_data['parent'],
+        # )
         if self.scope:
             scope_s = 'scope{0}/'.format(self.scope.pk)
         else:
             scope_s = ''
-        parent_url = list_url.format(
-            context = self.scope_url_data['context'],
-            scope = scope_s,
-            states = self.scope_url_data['states'],
-            parent = 'parent{0}/'
-        )
+        # parent_url = list_url.format(
+        #     context = self.scope_url_data['context'],
+        #     scope = scope_s,
+        #     states = self.scope_url_data['states'],
+        #     parent = 'parent{0}/'
+        # )
         # Add a field for the root node and deadline
-        for node in nodes:
-            # (uses lists in case of bad unit tests)
-            root_node = [n for n in root_nodes if n.tree_id == node.tree_id]
-            if len(root_node) > 0:
-                node.root_url = parent_url.format(root_node[0].pk)
-                node.root_title = root_node[0].title
-            node.deadline_str = node.overdue('deadline_date')
+        # for node in nodes:
+        #     # (uses lists in case of bad unit tests)
+        #     root_node = [n for n in root_nodes if n.tree_id == node.tree_id]
+        #     if len(root_node) > 0:
+        #         node.root_url = parent_url.format(root_node[0].pk)
+        #         node.root_title = root_node[0].title
+        #     node.deadline_str = node.overdue('deadline_date')
         # And serve response
         if request.is_mobile:
             template = 'gtd/gtd_list_m.html'

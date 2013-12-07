@@ -75,8 +75,12 @@ urlpatterns = patterns(
         TodoStateView.as_view(),
         name='todo_state'
     ),
+    # url(r'^lists(?P<url_string>/[\w/]+)?/?$',
+    #     NodeListView.as_view(),
+    #     name='list_display'
+    # ),
 
-    url(r'^lists(?P<url_string>/[\w/]+)?/?$',
+    url(r'^lists(?:/(?P<context_id>\d+)/(?P<context_slug>[-A-Za-z0-9_]+))?/?$',
         NodeListView.as_view(),
         name='list_display'
     ),

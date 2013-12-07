@@ -26,6 +26,7 @@ import json
 import datetime as dt
 from datetime import datetime, timedelta
 import dateutil.parser
+from warnings import warn
 
 from django.core import serializers
 from django.core.exceptions import ValidationError
@@ -275,7 +276,8 @@ class Scope(models.Model):
 class NodeQuerySet(query.QuerySet):
     def as_json(self):
         """Return queryset in json serialized format"""
-        print('Deprecation warning: NodeQuerySet.as_json() has been replaced with django-rest-framework serializers')
+        # print('Deprecation warning: )
+        warn('NodeQuerySet.as_json() has been replaced with django-rest-framework serializers', DeprecationWarning)
         return serializers.serialize('json', self)
 
     def assigned(self, user, get_archived=False):

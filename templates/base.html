@@ -184,42 +184,55 @@
 	    </a>
 	  </li>
 	  <!-- Next actions -->
-	  <li class="dropdown{% if 'list' in request.get_full_path %} active{% endif %}">
-	    <a id="nav-actions" href="{% url 'list_display' %}">
-	       <!-- class="dropdown-toggle" data-toggle="dropdown" -->
-	       Next Actions
-	    <!--    {% if request.session.context %}href="{% url 'list_display' '/next' %}context{{ request.session.context.pk }}/" > -->
-	    <!--   Actions ({{ request.session.context.name }}) -->
-	    <!-- {% else %}href="{% url 'list_display' '/next' %}">Next Actions -->
-	    <!--   {% endif %} -->
+	  <li{% if 'lists' in request.get_full_path %} class="active"{% endif %}>
+	    {% if request.session.context_id %}
+	    <a href="{% url 'list_display' context_id=request.session.context_id context_slug=request.session.context_name|slugify %}">
+	      {{ request.session.context_name }} Actions
 	    </a>
-	    <ul class="dropdown-menu">
-	      <!-- Currently active context -->
-	      <li>
-	      {% if request.session.context %}
-		<a href="{% url 'list_display' '/next' %}context{{ request.session.context.pk }}/">{{ request.session.context.name }}</a>
-	      {% else %}
-		<a href="{% url 'list_display' '/next' %}">All</a>
-		{% endif %}
-	      </li>
-	      <li class="divider"></li>
-	      <!-- Other contexts -->
-	      {% if request.session.context %}
-	      <li>
-		<a href="{% url 'list_display' '/next' %}context0/">All</a>
-	      </li>
-	      {% endif %}
-	      {% for context in contexts %}
-	      {% if not context.pk == request.session.context.pk %}
-	      <li>
-		<a href="{% url 'list_display' '/next' %}context{{ context.pk }}/">
-		  {{ context.name }}
-		</a>
-	      </li>
-	      {% endif %}
-	      {% endfor %}
-	    </ul>
+	    {% else %}
+	    <a href="{% url 'list_display' %}">
+	      Next Actions
+	    </a>
+	    {% endif %}
 	  </li>
+	  {% comment %}
+	  <!-- <li class="dropdown{% if 'list' in request.get_full_path %} active{% endif %}"> -->
+	  <!--   <a id="nav-actions" href="{% url 'list_display' %}"> -->
+	  <!--      <\!-- class="dropdown-toggle" data-toggle="dropdown" -\-> -->
+	  <!--      Next Actions -->
+	  <!--      {% if request.session.context %}href="{% url 'list_display' %}context{{ request.session.context.pk }}/" > -->
+	  <!--     Actions ({{ request.session.context.name }}) -->
+	  <!--   {% else %}href="{% url 'list_display' %}">Next Actions -->
+	  <!--     {% endif %} -->
+	  <!--   </a> -->
+	  <!--   <ul class="dropdown-menu"> -->
+	  <!--     <\!-- Currently active context -\-> -->
+	  <!--     <li> -->
+	  <!--     {% if request.session.context %} -->
+	  <!-- 	<a href="{% url 'list_display' %}context{{ request.session.context.pk }}/">{{ request.session.context.name }}</a> -->
+	  <!--     {% else %} -->
+	  <!-- 	<a href="{% url 'list_display' %}">All</a> -->
+	  <!-- 	{% endif %} -->
+	  <!--     </li> -->
+	  <!--     <li class="divider"></li> -->
+	  <!--     <\!-- Other contexts -\-> -->
+	  <!--     {% if request.session.context %} -->
+	  <!--     <li> -->
+	  <!-- 	<a href="{% url 'list_display' %}context0/">All</a> -->
+	  <!--     </li> -->
+	  <!--     {% endif %} -->
+	  <!--     {% for context in contexts %} -->
+	  <!--     {% if not context.pk == request.session.context.pk %} -->
+	  <!--     <li> -->
+	  <!-- 	<a href="{% url 'list_display' %}context{{ context.pk }}/"> -->
+	  <!-- 	  {{ context.name }} -->
+	  <!-- 	</a> -->
+	  <!--     </li> -->
+	  <!--     {% endif %} -->
+	  <!--     {% endfor %} -->
+	  <!--   </ul> -->
+	  <!-- </li> -->
+	  {% endcomment %}
 	  <li><a href="{% url 'wolfmail.views.display_label' %}">Inbox</a></li>
 	  <li{% if 'node' in request.get_full_path %} class="active"{% endif %}>
 	    <a href="{% url 'projects' %}">Projects</a>
