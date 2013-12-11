@@ -38,7 +38,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 </script>
 {% endverbatim %}
 
-{# Angular app for gtd list #}
+<!-- Angular app for gtd list -->
 <script>
   // Pass in some context variables
   gtd_module.constant('parent_id', '{{ parent.pk }}');
@@ -47,6 +47,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 </script>
 <div id="gtd-list" ng-controller="nextActionsList">
   {% verbatim %}
+
   <h4 ng-if="context_name">{{ context_name }}</h4>
   <span ng-if="active_root">
     Project:

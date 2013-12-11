@@ -650,7 +650,7 @@ gtd_module.controller(
     ['$sce', '$scope', '$resource', '$location', 'GtdList', 'Heading', 'Upcoming', 'parent_id', 'context_id', 'context_name', listCtrl]
 );
 function listCtrl($sce, $scope, $resource, $location, GtdList, Heading, Upcoming, parent_id, context_id, context_name) {
-    var i, TodoState, Context;
+    var i, TodoState, Context, today;
     $scope.list_params = {todo_state: 2};
     $scope.active_context = null;
     console.log($location.absUrl());
@@ -672,10 +672,16 @@ function listCtrl($sce, $scope, $resource, $location, GtdList, Heading, Upcoming
     if ( parent_id ) {
 	$scope.list_params.parent = parseInt(parent_id, 10);
     }
+    // Get list of hard scheduled commitments
+    today = new Date();
+    $scope.scheduled = new HeadingManager($scope);
+    $scope.scheduled.add(GtdList.query({scheduled_date__lte: today,
+					todo_state: 8}));
     // Get list of headings
     $scope.headings = new HeadingManager($scope);
     $scope.cached_states = [2];
     $scope.active_states = [2];
+    console.log($scope.list_params);
     $scope.headings.add(GtdList.query($scope.list_params));
     $scope.headings.add(Upcoming.query());
     Context = $resource('/gtd/context/');
@@ -702,10 +708,8 @@ function listCtrl($sce, $scope, $resource, $location, GtdList, Heading, Upcoming
 	// Fetch the node list if it's not already retrieved
 	if ( $scope.cached_states.indexOf(state_pk) === -1 ) {
 	    $scope.cached_states.push(state_pk);
-	    $scope.headings.add(GtdList.query({
-		todo_state: state_pk,
-		context: $scope.active_context
-	    }));
+	    $scope.list_params.todo_state = state_pk;
+	    $scope.headings.add(GtdList.query($scope.list_params));
 	}
     };
     function build_states_url() {
@@ -728,16 +732,12 @@ function listCtrl($sce, $scope, $resource, $location, GtdList, Heading, Upcoming
 	return url;
     }
     // Handler for changing the context
-    $scope.change_context = function() {
+    $scope.change_context = function(e) {
+	// Get new list of headings for this context
 	$scope.headings = new HeadingManager($scope);
-	$scope.headings.add(
-	    GtdList.query(
-		{
-		    todo_state: $scope.active_states,
-		    context: $scope.active_context
-		}
-	    )
-	);
+	$scope.list_params.context = $scope.active_context;
+	$scope.list_params.todo_state = $scope.active_states;
+	$scope.headings.add(GtdList.query($scope.list_params));
     };
     // Handler for only showing one parent
     $scope.filter_parent = function(h) {
