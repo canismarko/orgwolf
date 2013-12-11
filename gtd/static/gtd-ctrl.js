@@ -593,6 +593,7 @@ function outlineCtrl($scope, $http, $resource, OldHeading, Heading,
 		    title: '',
 		    parent: heading.pk,
 		    level: heading.fields.level + 1,
+		    scope: heading.fields.scope,
 		});
 	    new_heading.editable = true;
 	    new_heading.expandable = 'no';
