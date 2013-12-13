@@ -34,7 +34,7 @@ from django.http import HttpResponse
 from orgwolf import settings
 from orgwolf.models import OrgWolfUser as User
 from orgwolf.forms import FeedbackForm, RegistrationForm, ProfileForm, PasswordForm
-from wolfmail.models import MailItem, Label
+from wolfmail.models import MailItem
 
 def home(request):
     if request.user.is_authenticated():

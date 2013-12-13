@@ -18,15 +18,21 @@
 #######################################################################
 
 from django.conf.urls import patterns, include, url
+from wolfmail.views import DeferredItemView
 
 # Uncomment the next two lines to enable the admin:
 from django.contrib import admin
 admin.autodiscover()
 
 urlpatterns = patterns('wolfmail.views',
-                       url(r'^$', 'display_label', kwargs={'requested_label': 'inbox'}),
-                       url(r'^([^/\d][^/]*)/$', 'display_label'),
-                       url(r'^([^/\d][^/]*)/(\d+)/$', 'display_message'),
-                       url(r'^([^/\d][^/]*)/(\d+)/new_node/$', 'convert_mail_to_node'),
-                       url(r'^([^/\d][^/]*)/(\d+)/new_node/([^/\d][^/]*/)?$', 'quick_node'),
+                       # url(r'^$', 'display_label', kwargs={'requested_label': 'inbox'}),
+                       # url(r'^([^/\d][^/]*)/$', 'display_label'),
+                       # url(r'^([^/\d][^/]*)/(\d+)/$', 'display_message'),
+                       # url(r'^([^/\d][^/]*)/(\d+)/new_node/$', 'convert_mail_to_node'),
+                       # url(r'^([^/\d][^/]*)/(\d+)/new_node/([^/\d][^/]*/)?$', 'quick_node'),
+                       url(r'^inbox/?$', 'inbox', name='inbox'),
+                       url(r'^deferreditem/?',
+                           DeferredItemView.as_view(),
+                           name='deferred_items',
+                       ),
 )

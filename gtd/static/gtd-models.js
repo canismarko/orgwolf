@@ -860,3 +860,13 @@ Array.prototype.remove = function(heading) {
     return status;
 };
 // end definition of HeadingManager()
+
+/*************************************************
+* Add a method to the Date object for exporting
+* to standard string for dates
+*************************************************/
+Date.prototype.ow_date = function() {
+    var s;
+    s = this.getFullYear() + '-' + (this.getMonth()+1) + '-' + this.getDate();
+    return s;
+};

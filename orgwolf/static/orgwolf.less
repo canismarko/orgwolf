@@ -445,6 +445,11 @@ div.ow-hoverable, div.clickable, div.ow-buttons
 }
 
 /* Next actions list */
+#gtd-list,#scheduled-list {
+    [archived="true"] {
+	text-decoration: line-through;
+    }
+}
 #gtd-list {
     a {
 	cursor: pointer;
@@ -455,10 +460,10 @@ div.ow-hoverable, div.clickable, div.ow-buttons
     span {
 	display: inline;
     }
-    [archived="true"] {
-	text-decoration: line-through;
-    }
     td.todo-col {
 	width: 100px;
     }
+}
+#scheduled-list {
+    width: 50%;
 }

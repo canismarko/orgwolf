@@ -233,7 +233,7 @@
 	  <!--   </ul> -->
 	  <!-- </li> -->
 	  {% endcomment %}
-	  <li><a href="{% url 'wolfmail.views.display_label' %}">Inbox</a></li>
+	  <li><a href="{% url 'inbox' %}">Inbox</a></li>
 	  <li{% if 'node' in request.get_full_path %} class="active"{% endif %}>
 	    <a href="{% url 'projects' %}">Projects</a>
 	  </li>

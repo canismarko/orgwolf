@@ -53,7 +53,7 @@ from gtd.serializers import ContextSerializer, ScopeSerializer, NodeSerializer
 from mptt.exceptions import InvalidMove
 from orgwolf import settings
 from orgwolf.models import OrgWolfUser as User
-from wolfmail.models import MailItem, Label
+from wolfmail.models import MailItem
 
 # Prepare logger
 logger = logging.getLogger('gtd.views')

@@ -37,7 +37,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 	</span>
 </script>
 {% endverbatim %}
-
 <!-- Angular app for gtd list -->
 <script>
   // Pass in some context variables
@@ -47,7 +46,32 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 </script>
 <div id="gtd-list" ng-controller="nextActionsList">
   {% verbatim %}
-
+  <!-- List of hard scheduled items for the day -->
+  <table class="table table-condensed" id="scheduled-list">
+    <tr>
+      <th>Time</th>
+      <th>State</th>
+      <th>&nbsp;</th>
+      <th>Description</th>
+      <th>Project</th>
+      <th>Tags</th>
+    </tr>
+    <tr ng-repeat="heading in scheduled"
+	archived="{{ heading.fields.archived }}">
+      <td>{{ heading.fields.scheduled_time }}</td>
+      <td ow-todo>{{ heading.todo_state.fields.abbreviation }}</td>
+      <td>
+	<span ng-if="heading.fields.repeats"
+	      class="glyphicon glyphicon-repeat pull-right"></span>
+      </td>
+      <td>
+	<a href="/gtd/project/{{ heading.pk }}/{{ heading.fields.slug }}/">
+          {{ heading.fields.title}}</a>
+      </td>
+      <td>&nbsp;</td>
+      <td>{{ heading.fields.tag_string }}</td>
+    </tr>
+  </table>
   <h4 ng-if="context_name">{{ context_name }}</h4>
   <span ng-if="active_root">
     Project:
@@ -56,6 +80,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
     </a>
     [<a ng-click="filter_parent(null)">&times;</a>]
   </span>
+  <!-- Scope Tabs -->
   <ul ow-scope-tabs>
     <li scope_id="0" ng-click="change_scope($event)"><a href="#">All</a></li>
     <li ng-repeat="scope in scopes" scope_id="{{ scope.id }}"
@@ -64,12 +89,14 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
     </li>
   </ul>
   <form action="" method="POST" class="form-inline" id="list-filters">
+    <!-- Context selection box -->
     <label for="context">Context:</label>
     <select name="context" ng-model="active_context" class="form-control"
 	    ng-options="x.id as x.name for x in contexts"
 	    ng-change="change_context($event)">
 	    <option value="">None</option>
     </select>
+    <!-- TodoState selection checkboxes -->
     <label class="checkbox-inline" ng-repeat="state in todo_states" style="{{ state | style }}">
       <input type="checkbox" ow-state="{{ state.pk }}"
 	     ng-click="toggle_todo_state($event)"
@@ -85,23 +112,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
       <th>Description</th>
       <th>Project</th>
       <th>Tags</th>
-    </tr>
-    <!-- Upcoming deadlines -->
-    <tr ng-repeat="heading in deadlines" ow-pk="{{ heading.pk }}"
-	class="heading-row" ow-list-row>
-      <td ow-todo>
-	  {{ heading.todo_state.fields.abbreviation }}
-      </td>
-      <td>
-	<a href="/gtd/project/{{ heading.pk }}/{{ heading.fields.slug }}/">
-          {{ heading.fields.title}}</a>
-	{{ heading | deadline_str }}
-      </td>
-      <td ng-bind-html="heading | root_cell" ng-click="filter_parent(heading)">
-      </td>
-      <td>
-	{{ heading.fields.tag_string }}
-      </td>
     </tr>
     <!-- Actionable Items -->
     <tr ng-repeat="heading in headings | order: 'list'"

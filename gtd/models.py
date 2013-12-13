@@ -721,7 +721,7 @@ def node_repeat(sender, **kwargs):
                                month=original.month,
                                day=original.day)
             else: # None of the above
-                raise ValueError
+                raise ValueError('"{}" is not a valid time unit'.format(unit))
             return new
         # Code execution starts here
         instance = kwargs['instance']

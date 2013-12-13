@@ -476,9 +476,6 @@ gtd_module.directive('owListRow', function() {
 	} else if ( due > 0 ) {
 	    row_cls = 'warning';
 	}
-	if ( heading.pk === 26 ) {
-	    console.log(due <= 0);
-	}
 	element.addClass(row_cls);
     }
     return {
@@ -675,13 +672,13 @@ function listCtrl($sce, $scope, $resource, $location, GtdList, Heading, Upcoming
     // Get list of hard scheduled commitments
     today = new Date();
     $scope.scheduled = new HeadingManager($scope);
-    $scope.scheduled.add(GtdList.query({scheduled_date__lte: today,
+    $scope.scheduled.add(GtdList.query({scheduled_date__lte: today.ow_date(),
 					todo_state: 8}));
+    console.log($scope.scheduled);
     // Get list of headings
     $scope.headings = new HeadingManager($scope);
     $scope.cached_states = [2];
     $scope.active_states = [2];
-    console.log($scope.list_params);
     $scope.headings.add(GtdList.query($scope.list_params));
     $scope.headings.add(Upcoming.query());
     Context = $resource('/gtd/context/');
