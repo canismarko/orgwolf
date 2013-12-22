@@ -20,8 +20,8 @@
         "tree_id": 1, 
         "todo_state": 6, 
         "scope": [
-            1,
-	    2
+            1, 
+            2
         ], 
         "energy": null, 
         "users": [
@@ -51,7 +51,7 @@
         "owner": 1, 
         "scheduled_time": "23:21:56.987", 
         "archived": false, 
-        "deadline_time": "9:33:56.987", 
+        "deadline_time": "09:33:56.987", 
         "title": "Meijer", 
         "time_needed": null, 
         "priority": "", 
@@ -470,7 +470,7 @@
     "pk": 14, 
     "model": "gtd.node", 
     "fields": {
-        "rght": 6, 
+        "rght": 8, 
         "text": "", 
         "tag_string": "", 
         "assigned": null, 
@@ -554,18 +554,20 @@
         "closed": null, 
         "tree_id": 7, 
         "todo_state": 5, 
-        "scope": [], 
+        "scope": [
+            1
+        ], 
         "energy": null, 
         "users": [], 
         "parent": 14, 
-        "repeating_unit": null, 
+        "repeating_unit": "d", 
         "scheduled_date": "2013-05-15", 
         "slug": "agenda_future_node", 
         "opened": "2013-05-13T23:22:04.038Z", 
         "level": 1, 
         "repeats_from_completion": false, 
-        "repeating_number": null, 
-        "repeats": false
+        "repeating_number": 3, 
+        "repeats": true
     }
 },
 {
@@ -772,6 +774,40 @@
         "opened": "2012-11-17T11:10:41.299Z", 
         "level": 0, 
         "repeats_from_completion": false, 
+        "repeating_number": 3, 
+        "repeats": true
+    }
+},
+{
+    "pk": 23, 
+    "model": "gtd.node", 
+    "fields": {
+        "rght": 7, 
+        "text": "", 
+        "tag_string": "", 
+        "assigned": null, 
+        "lft": 6, 
+        "deadline_date": null, 
+        "owner": 1, 
+        "scheduled_time": null, 
+        "archived": false, 
+        "deadline_time": null, 
+        "title": "repeats from completed", 
+        "time_needed": null, 
+        "priority": "B", 
+        "closed": null, 
+        "tree_id": 7, 
+        "todo_state": 5, 
+        "scope": [], 
+        "energy": null, 
+        "users": [], 
+        "parent": 14, 
+        "repeating_unit": "d", 
+        "scheduled_date": "2013-12-10", 
+        "slug": "", 
+        "opened": "2013-12-21T18:58:11.526Z", 
+        "level": 1, 
+        "repeats_from_completion": true, 
         "repeating_number": 3, 
         "repeats": true
     }

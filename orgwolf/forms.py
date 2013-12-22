@@ -20,13 +20,6 @@
 from django import forms
 from django.contrib.auth import forms as authforms, authenticate
 from orgwolf.models import OrgWolfUser as User
-from wolfmail.models import MailItem
-
-class FeedbackForm(forms.ModelForm):
-    subject = forms.CharField()
-    class Meta:
-        model = MailItem
-        fields = ('subject', 'message_text')
 
 class UserForm(forms.ModelForm):
     password = forms.CharField(

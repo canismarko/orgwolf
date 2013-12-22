@@ -6,7 +6,7 @@
         "display_text": "Next Action", 
         "actionable": true, 
         "_color_rgb": 0, 
-        "_color_alpha": 0.0, 
+        "_color_alpha": 1.0, 
         "abbreviation": "NEXT", 
         "closed": false, 
         "owner": null, 
@@ -21,7 +21,7 @@
         "display_text": "Future Action", 
         "actionable": true, 
         "_color_rgb": 0, 
-        "_color_alpha": 0.0, 
+        "_color_alpha": 1.0, 
         "abbreviation": "ACTN", 
         "closed": false, 
         "owner": null, 
@@ -36,7 +36,7 @@
         "display_text": "Completed", 
         "actionable": false, 
         "_color_rgb": 0, 
-        "_color_alpha": 0.0, 
+        "_color_alpha": 1.0, 
         "abbreviation": "DONE", 
         "closed": true, 
         "owner": null, 
@@ -51,7 +51,7 @@
         "display_text": "Someday Maybe", 
         "actionable": false, 
         "_color_rgb": 0, 
-        "_color_alpha": 0.0, 
+        "_color_alpha": 1.0, 
         "abbreviation": "SMDY", 
         "closed": false, 
         "owner": null, 
@@ -66,7 +66,7 @@
         "display_text": "Deferred", 
         "actionable": false, 
         "_color_rgb": 0, 
-        "_color_alpha": 0.0, 
+        "_color_alpha": 1.0, 
         "abbreviation": "DFRD", 
         "closed": false, 
         "owner": null, 
@@ -81,7 +81,7 @@
         "display_text": "Waiting For", 
         "actionable": false, 
         "_color_rgb": 0, 
-        "_color_alpha": 0.0, 
+        "_color_alpha": 1.0, 
         "abbreviation": "WAIT", 
         "closed": true, 
         "owner": null, 
@@ -111,40 +111,10 @@
         "display_text": "Hard Scheduled", 
         "actionable": false, 
         "_color_rgb": 0, 
-        "_color_alpha": 0.0, 
+        "_color_alpha": 1.0, 
         "abbreviation": "HARD", 
         "closed": false, 
         "owner": null, 
-        "order": 45, 
-        "class_size": 0
-    }
-},
-{
-    "pk": 9, 
-    "model": "gtd.todostate", 
-    "fields": {
-        "display_text": "Supersonic", 
-        "actionable": false, 
-        "_color_rgb": 0, 
-        "_color_alpha": 0.0, 
-        "abbreviation": "SPED", 
-        "closed": false, 
-        "owner": 1, 
-        "order": 45, 
-        "class_size": 0
-    }
-},
-{
-    "pk": 10, 
-    "model": "gtd.todostate", 
-    "fields": {
-        "display_text": "Something boring to do", 
-        "actionable": false, 
-        "_color_rgb": 0, 
-        "_color_alpha": 0.0, 
-        "abbreviation": "BORE", 
-        "closed": false, 
-        "owner": 2, 
         "order": 45, 
         "class_size": 0
     }
@@ -155,7 +125,7 @@
     "fields": {
         "owner": 1, 
         "tag_string": "work", 
-        "display": "Kalsec", 
+        "display": "Work", 
         "public": true
     }
 },
@@ -165,7 +135,7 @@
     "fields": {
         "owner": 1, 
         "tag_string": "home", 
-        "display": "Sheldon", 
+        "display": "Home", 
         "public": true
     }
 },

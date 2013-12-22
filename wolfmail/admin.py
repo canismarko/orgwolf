@@ -20,5 +20,4 @@
 from django.contrib import admin
 from wolfmail.models import *
 
-admin.site.register(MailItem)
-admin.site.register(DeferredItem)
+admin.site.register(Message)

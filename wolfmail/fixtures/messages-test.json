@@ -1,0 +1,53 @@
+[
+{
+    "pk": 1, 
+    "model": "wolfmail.message", 
+    "fields": {
+        "spawned_nodes": [], 
+        "sender": "", 
+        "message_text": "", 
+        "rcvd_date": "2013-12-15T22:05:27Z", 
+        "in_inbox": true, 
+        "owner": 1, 
+        "handler_path": "plugins.deferred", 
+        "unread": true, 
+        "recipient": "", 
+        "subject": "Deferred item 1", 
+	"source_node": 15
+    }
+},
+{
+    "pk": 2, 
+    "model": "wolfmail.message", 
+    "fields": {
+        "spawned_nodes": [], 
+        "sender": "", 
+        "message_text": "", 
+        "rcvd_date": "2013-05-15T00:00:00Z", 
+        "in_inbox": false, 
+        "owner": 1, 
+        "handler_path": "plugins.deferred", 
+        "unread": true, 
+        "recipient": "", 
+        "subject": "Deferred item 2 archived",
+	"source_node": 16
+    }
+},
+{
+    "pk": 3, 
+    "model": "wolfmail.message", 
+    "fields": {
+        "spawned_nodes": [], 
+        "sender": "", 
+        "message_text": "", 
+        "rcvd_date": "2013-12-10T00:00:00Z", 
+        "in_inbox": true, 
+        "owner": 1, 
+        "handler_path": "plugins.deferred", 
+        "unread": true, 
+        "recipient": "", 
+        "subject": "repeats from completed",
+	"source_node": 23
+    }
+}
+]

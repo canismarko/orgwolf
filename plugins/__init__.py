@@ -16,3 +16,16 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #######################################################################
+
+class BaseMessageHandler():
+    """
+    Handler to be subclassed by plugins. Responsible for processing the various
+    commands (methods) on a message. Each plugin file should define exactly
+    one subclass of BaseMessageHandler called 'MessageHandler'.
+    """
+    def __init__(self, msg):
+        """Set the msg as an attribute for later analysis"""
+        self._msg = msg
+
+    def create_node(self):
+        raise NotImplementedError

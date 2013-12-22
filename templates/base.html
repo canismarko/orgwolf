@@ -105,6 +105,8 @@
       <script src="{{ STATIC_URL }}orgwolf.js"></script>
       <script type="text/javascript" src="{{ STATIC_URL }}gtd-models.js"></script>
       <script type="text/javascript" src="{{ STATIC_URL }}gtd-ctrl.js"></script>
+      <script type="text/javascript" src="{{ STATIC_URL }}wolfmail-models.js"></script>
+      <script type="text/javascript" src="{{ STATIC_URL }}wolfmail-ctrl.js"></script>
       {% if not local_net %}
 	<script src="{{ STATIC_URL }}persona.js"></script>
       {% endif %}
@@ -178,64 +180,31 @@
 
       <div class="collapse navbar-collapse navbar-ex1-collapse">
 	<ul class="nav navbar-nav">
-	  <li{% if 'agenda' in request.get_full_path %} class="active"{% endif %}>
-	    <a href="{% url 'gtd.views.agenda_display' %}">
-	      Today's Agenda
-	    </a>
-	  </li>
 	  <!-- Next actions -->
 	  <li{% if 'lists' in request.get_full_path %} class="active"{% endif %}>
 	    {% if request.session.context_id %}
 	    <a href="{% url 'list_display' context_id=request.session.context_id context_slug=request.session.context_name|slugify %}">
+	      <span class="glyphicon glyphicon-list"></span>
 	      {{ request.session.context_name }} Actions
 	    </a>
 	    {% else %}
 	    <a href="{% url 'list_display' %}">
+	      <span class="glyphicon glyphicon-list"></span>
 	      Next Actions
 	    </a>
 	    {% endif %}
 	  </li>
-	  {% comment %}
-	  <!-- <li class="dropdown{% if 'list' in request.get_full_path %} active{% endif %}"> -->
-	  <!--   <a id="nav-actions" href="{% url 'list_display' %}"> -->
-	  <!--      <\!-- class="dropdown-toggle" data-toggle="dropdown" -\-> -->
-	  <!--      Next Actions -->
-	  <!--      {% if request.session.context %}href="{% url 'list_display' %}context{{ request.session.context.pk }}/" > -->
-	  <!--     Actions ({{ request.session.context.name }}) -->
-	  <!--   {% else %}href="{% url 'list_display' %}">Next Actions -->
-	  <!--     {% endif %} -->
-	  <!--   </a> -->
-	  <!--   <ul class="dropdown-menu"> -->
-	  <!--     <\!-- Currently active context -\-> -->
-	  <!--     <li> -->
-	  <!--     {% if request.session.context %} -->
-	  <!-- 	<a href="{% url 'list_display' %}context{{ request.session.context.pk }}/">{{ request.session.context.name }}</a> -->
-	  <!--     {% else %} -->
-	  <!-- 	<a href="{% url 'list_display' %}">All</a> -->
-	  <!-- 	{% endif %} -->
-	  <!--     </li> -->
-	  <!--     <li class="divider"></li> -->
-	  <!--     <\!-- Other contexts -\-> -->
-	  <!--     {% if request.session.context %} -->
-	  <!--     <li> -->
-	  <!-- 	<a href="{% url 'list_display' %}context0/">All</a> -->
-	  <!--     </li> -->
-	  <!--     {% endif %} -->
-	  <!--     {% for context in contexts %} -->
-	  <!--     {% if not context.pk == request.session.context.pk %} -->
-	  <!--     <li> -->
-	  <!-- 	<a href="{% url 'list_display' %}context{{ context.pk }}/"> -->
-	  <!-- 	  {{ context.name }} -->
-	  <!-- 	</a> -->
-	  <!--     </li> -->
-	  <!--     {% endif %} -->
-	  <!--     {% endfor %} -->
-	  <!--   </ul> -->
-	  <!-- </li> -->
-	  {% endcomment %}
-	  <li><a href="{% url 'inbox' %}">Inbox</a></li>
+	  <!-- Inbox -->
+	  <li>
+	    <a href="{% url 'inbox' %}">
+	      <span class="glyphicon glyphicon-inbox"></span>
+	      Inbox
+	    </a>
+	  </li>
 	  <li{% if 'node' in request.get_full_path %} class="active"{% endif %}>
-	    <a href="{% url 'projects' %}">Projects</a>
+	    <a href="{% url 'projects' %}">
+	      <span class="glyphicon glyphicon-tasks"></span>
+	      Projects</a>
 	  </li>
 	</ul>
 

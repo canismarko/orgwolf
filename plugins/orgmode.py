@@ -18,15 +18,17 @@
 #######################################################################
 
 from __future__ import unicode_literals
+
+import pytz # At least as a reminder to have it installed
+import re
+import io
+from io import StringIO
+
 from django.core.exceptions import ValidationError
 from django.db.models import signals
 from django.utils import unittest
 from datetime import datetime
 from django.utils import timezone
-from io import StringIO
-import pytz # At least as a reminder to have it installed
-import re
-import io
 
 from orgwolf.models import OrgWolfUser as User
 from orgwolf.stack import Stack
@@ -47,7 +49,7 @@ HEADING_RE = re.compile(r, re.UNICODE)
 r =  r''
 r += r'(?:'
 r += r'(SCHEDULED:|DEADLINE:)[ \t]*'
-r += r'(<[^>]+>' # Date(time)stamp 
+r += r'(<[^>]+>' # Date(time)stamp
 r += r'(?:--<[^>\]]+>)?)' # optional range
 r += r'|'
 r += r'(CLOSED:)[ \t]*'

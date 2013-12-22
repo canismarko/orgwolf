@@ -17,25 +17,13 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #######################################################################
 
-from django import forms
-from django.contrib import admin
+from __future__ import unicode_literals, absolute_import, print_function
 
-import gtd.models as gtd
-from gtd.forms import NodeForm
-from mptt.admin import MPTTModelAdmin
+from rest_framework import serializers
 
-class NodeAdminForm(NodeForm):
+from wolfmail.models import Message
+
+
+class MessageSerializer(serializers.ModelSerializer):
     class Meta:
-        model = gtd.Node
-
-class NodeAdmin(MPTTModelAdmin):
-# class NodeAdmin(admin.ModelAdmin):
-    form = NodeAdminForm
-
-admin.site.register(gtd.TodoState)
-admin.site.register(gtd.Node, NodeAdmin)
-admin.site.register(gtd.Context)
-admin.site.register(gtd.Tool)
-admin.site.register(gtd.Location)
-admin.site.register(gtd.Contact)
-admin.site.register(gtd.Scope)
+        model = Message

@@ -6,4 +6,39 @@ Inbox
 
 {% block content %}
 
+<div ng-controller="owInbox">
+  {% verbatim %}
+  <table class="table message-list">
+    <tr>
+      <th class="col-md-1">Actions</th>
+      <th>From</th>
+      <th>Subject</th>
+      <th>Received</th>
+    </tr>
+    <tr ng-repeat="message in messages" unread="{{ message.unread }}"
+	ow-message-row>
+      <td>
+	<span data-title="Create New Task" ng-click="message.create_node()"
+	      class="glyphicon glyphicon-tasks"></span>
+
+	<span data-title="Defer"
+	      class="glyphicon glyphicon-time"></span>
+
+	<span data-title="Archive"
+	      class="glyphicon glyphicon-save"></span>
+
+	<span data-title="Delete"
+	      class="glyphicon glyphicon-trash"></span>
+
+	<span data-title="Reply"
+	      class="glyphicon glyphicon-arrow-left"></span>
+      </td>
+      <td>{{ message.fields.sender }}</td>
+      <td>{{ message.fields.subject }}</td>
+      <td>{{ message.fields.rcvd_date }}</td>
+    </tr>
+  </table>
+  {% endverbatim %}
+</div>
+
 {% endblock %}

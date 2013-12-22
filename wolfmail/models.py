@@ -17,79 +17,46 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #######################################################################
 
+import importlib
+
 from django.db import models
+from django.dispatch import receiver
 from django.contrib.auth.models import User
 from django.utils.encoding import python_2_unicode_compatible
 
-from gtd.models import Node
 from orgwolf import settings
 from orgwolf.models import Color
 from plugins.models import Plugin
 
-# @python_2_unicode_compatible
-# class Label(models.Model):
-#     """
-#     A label for grouping mail items.
-#     Eg. Inbox, Waiting_for
-#     """
-#     name = models.CharField(max_length=100)
-#     owner = models.ForeignKey(settings.AUTH_USER_MODEL)
-#     _color_rgb = models.IntegerField(default=0x000000)
-#     _color_alpha = models.FloatField(default=1)
-#     def color(self):
-#         """Returns a Color object built from _color_rgba field."""
-#         red = (self._color_rgb & Color.RED_MASK) >> Color.RED_OFFSET
-#         green = (self._color_rgb & Color.GREEN_MASK) >> Color.GREEN_OFFSET
-#         blue = (self._color_rgb & Color.BLUE_MASK) >> Color.BLUE_OFFSET
-#         new_color = Color(red, green, blue, self._color_alpha)
-#         return new_color
-#     def __str__(self):
-#         return self.name
 
 @python_2_unicode_compatible
-class MailItem(models.Model):
+class Message(models.Model):
     """
-    Incoming item that hasn't been processed yet.
+    Class for all messages that get passed around, either incoming or
+    outgoing.  Most of the functionality is actually implemented in
+    the self.handler attribute that is created on __init__() from the
+    self.handler_path field.
     """
-    sender = models.TextField()
+    subject = models.TextField()
+    sender = models.TextField(blank=True)
     recipient = models.TextField(blank=True)
     owner = models.ForeignKey(settings.AUTH_USER_MODEL)
     unread = models.BooleanField(default=True)
-    plugin = models.ForeignKey(Plugin, blank=True, null=True)
+    handler_path = models.CharField(max_length=100)
     in_inbox = models.BooleanField(default=True)
-    subject = models.TextField()
     rcvd_date = models.DateTimeField()
     message_text = models.TextField(blank=True)
-    nodes = models.ManyToManyField(Node, blank=True)
-    def __str__(self):
-        return self.subject
-    def spawn_node(self):
-        """Create a new GTD node based on this mail item.
-        For example a new TODO item."""
-        pass # TOOO: create spawn_node method
+    spawned_nodes = models.ManyToManyField('gtd.Node', blank=True)
+    source_node = models.OneToOneField('gtd.Node', null=True, blank=True,
+                                       related_name='deferred_message')
 
-@python_2_unicode_compatible
-class DeferredItem(models.Model):
-    """
-    An actionable reminder that has been deferred to the rcvd_date.
-    Analagous to something placed in a GTD tickler file.
-    """
-    subject = models.TextField()
-    unread = models.BooleanField(default=True)
-    nodes = models.ManyToManyField(Node, blank=True)
-    scheduled = models.DateField()
-    in_inbox = models.BooleanField(default=True)
-    repeats = models.BooleanField(default=False)
-    repeating_number = models.IntegerField(blank=True, null=True)
-    repeating_unit = models.CharField(
-        max_length=1, blank=True, null=True,
-        choices=(('d', 'Days'),
-                 ('w', 'Weeks'),
-                 ('m', 'Months'),
-                 ('y', 'Years')))
-    # If repeats_from_completions is True, then when the system
-    # repeats this node, it will schedule it from the current
-    # time rather than the original scheduled time.
-    repeats_from_completion = models.BooleanField(default=False)
     def __str__(self):
         return self.subject
+
+
+@receiver(models.signals.post_init, sender=Message)
+def add_handler(sender, instance, **kwargs):
+    """Add the appropriate Handler() object as an attribute"""
+    if not instance.handler_path == '':
+        module = importlib.import_module(instance.handler_path)
+        instance.handler = module.MessageHandler(instance)

@@ -30,6 +30,7 @@ import re
 
 from django.contrib.auth.models import AnonymousUser
 from django.core import serializers
+from django.core.exceptions import ValidationError
 from django.core.urlresolvers import reverse
 from django.db.models import Q
 from django.forms.models import model_to_dict
@@ -53,6 +54,8 @@ from gtd.templatetags.gtd_extras import add_scope, breadcrumbs
 from gtd.views import Descendants, NodeListView, NodeView
 from orgwolf.preparation import translate_old_text
 from orgwolf.models import OrgWolfUser as User
+from plugins.deferred import MessageHandler as DeferredMessageHandler
+from wolfmail.models import Message
 
 class EditNode(TestCase):
     """
@@ -732,34 +735,6 @@ class ContextFiltering(TestCase):
                 result.count())
         )
 
-# Project sublist moved to javascript
-# class ProjectSublist(TestCase):
-#     fixtures = ['test-users.json', 'gtd-test.json', 'gtd-env.json']
-#     def setUp(self):
-#         self.assertTrue(
-#             self.client.login(username='test', password='secret')
-#             )
-#     def test_has_url(self):
-#         url = reverse('list_display',
-#                       kwargs={'url_string': '/parent1'} )
-#         response = self.client.get(url)
-#         self.assertEqual(
-#             200,
-#             response.status_code,
-#             'Getting a project sublist does not return status code 200.' +
-#             'Got {0}'.format(response.status_code)
-#             )
-#     def test_bad_url(self):
-#         # Parent does not exist
-#         url = reverse('list_display',
-#                       kwargs={'url_string': '/parent99'})
-#         response = self.client.get(url)
-#         self.assertEqual(
-#             404,
-#             response.status_code,
-#             'Getting a list for a non-existent project does not return ' +
-#             'status code 404. Got {0}'.format(response.status_code)
-#         )
 
 class Shortcuts(TestCase):
     fixtures = ['test-users.json', 'gtd-test.json', 'gtd-env.json']
@@ -1108,6 +1083,7 @@ class OverdueFilter(TestCase):
             self.node.overdue('tomorrow', future=True),
             'in 2 days')
 
+
 class UrlGenerate(TestCase):
     """Tests for the gtd url_generator that returns a URL string based
     on scope/context/etc."""
@@ -1181,6 +1157,7 @@ class UrlGenerate(TestCase):
                 parent=parent
                 )
             )
+
 
 class TodoStateRetrieval(TestCase):
     """Tests the methods of TodoState that retrieves the list of "in play"
@@ -1556,12 +1533,13 @@ class MultiUser(TestCase):
             'http://testserver/accounts/login/?next=/gtd/project/9/',
         )
 
+
 class HTMLEscape(TestCase):
-    """Test the ability of node text to be converted using
-    markdown syntax"""
+    """Test the ability of node text to be converted safely to HTML"""
+    fixtures = ['test-users.json']
     def setUp(self):
         self.f = escape_html
-    def test_info(self):
+    def test_template_tag(self):
         """Test class type, return value, etc"""
         self.assertEqual(
             'function',
@@ -1581,6 +1559,16 @@ class HTMLEscape(TestCase):
             '<h1>',
             self.f('<h1>')
             )
+
+    def test_auto_escape(self):
+        """Check that Node text gets automatically escaped when being saved"""
+        node = Node()
+        node.title = 'Hello, world'
+        node.owner = User.objects.get(pk=1)
+        node.text = '<script>'
+        node.save()
+        print(node.text)
+
 
 class TimeZones(TestCase):
     """Define various aspects of datetime objects, specifically
@@ -1645,6 +1633,7 @@ class DBOptimization(TestCase):
             '/gtd/lists/next/',
         )
 
+
 class DescendantsAPI(TestCase):
     """Tests for getting a list of descendants of a given node
     of varying levels."""
@@ -1695,6 +1684,7 @@ class DescendantsAPI(TestCase):
             json_target,
             response
         )
+
 
 class ProjectView(TestCase):
     """
@@ -2121,4 +2111,76 @@ class TreeAPI(TestCase):
         self.assertEqual(
             Node.objects.filter(tree_id=self.node.tree_id).count(),
             len(r)
+        )
+
+
+class MessageIntegration(TestCase):
+    """
+    Tests for Node specific details of the wolfmail.models.Message class.
+    Most tests should reside in wolfmail.tests but some are part of the
+    Node definition (pre_save signals, etc).
+    """
+    fixtures = ['test-users.json', 'gtd-env.json', 'gtd-test.json']
+    def test_set_presave_deferred(self):
+        dfrd = TodoState.objects.get(abbreviation='DFRD')
+        node = Node()
+        node.owner = User.objects.get(pk=1)
+        node.title = 'Test deferred node'
+        self.assertEqual(
+            Message.objects.filter(source_node=node).count(),
+            0,
+            'Deferred message is set upon new node creation'
+        )
+        # Set to deferred state and check that Message is created
+        node.todo_state = dfrd
+        self.assertRaises(ValidationError, node.save)
+        node.scheduled_date = dt.datetime.today().date()
+        node.save()
+        node = Node.objects.get(pk=node.pk)
+        self.assertTrue(
+            isinstance(node.deferred_message, Message)
+        )
+        self.assertTrue(
+            node.deferred_message.in_inbox,
+            'new message is not in_inbox'
+        )
+        self.assertTrue(
+            isinstance(node.deferred_message.handler, DeferredMessageHandler),
+            'new message is not a deferred message'
+        )
+        # Change the deferred date and check that the Message is updated
+        node = Node.objects.get(pk=node.pk)
+        new_date = node.scheduled_date + dt.timedelta(days=3)
+        node.scheduled_date = new_date
+        node.save()
+        node = Node.objects.get(pk=node.pk)
+        # Set to a different state and check that Message is deleted
+        done = TodoState.objects.get(abbreviation='DONE')
+        node.todo_state = done
+        node.save()
+        node = Node.objects.get(pk=node.pk)
+        self.assertEqual(
+            Message.objects.filter(source_node=node).count(),
+            0,
+            'Deferred message not removed when node is DONE'
+        )
+
+    def test_schedule_from_completion(self):
+        """
+        See that a node with repeats_from_completion=True will
+        reschedule a deferred Node
+        """
+        node = Node.objects.get(pk=23)
+        nxt = TodoState.objects.get(abbreviation='NEXT')
+        done = TodoState.objects.get(abbreviation='DONE')
+        dfrd = TodoState.objects.get(abbreviation='DFRD')
+        node.todo_state = nxt
+        node.save()
+        node.todo_state = done
+        node.auto_update = True
+        node.save()
+        node = Node.objects.get(pk=node.pk)
+        self.assertEqual(
+            node.todo_state,
+            dfrd,
         )

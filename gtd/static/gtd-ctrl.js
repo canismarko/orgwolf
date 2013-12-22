@@ -1,4 +1,4 @@
-/*globals document, $, jQuery, document, Aloha, window, alert, GtdHeading, HeadingManager, angular*/
+/*globals document, $, jQuery, Aloha, window, alert, GtdHeading, HeadingManager, angular*/
 "use strict";
 var test_headings, owConfig, HeadingFactory, GtdListFactory, UpcomingFactory, outlineCtrl, listCtrl;
 
@@ -458,15 +458,6 @@ gtd_module.directive('owListRow', function() {
 	var node_pk, heading, parent, $parent, html, due, row_cls;
 	node_pk = parseInt(attrs.owPk, 10);
 	heading = scope.headings.get({pk: node_pk});
-	// // Set the attributes for the parent column
-	// parent = scope.parents.get({tree_id: heading.fields.tree_id});
-	// parent = scope.parents.get({tree_id: 1});
-	// if ( parent ) {
-	//     $parent = element.find('.parent-cell');
-	//     html = '';
-	//     html += parent.fields.title;
-	//     $parent.html(html);
-	// }
 	// Determine bootstrap row style based on overdue status
 	due = heading.due();
 	if ( due === null ) {

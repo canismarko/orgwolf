@@ -17,8 +17,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #######################################################################
 
-from __future__ import unicode_literals, absolute_import
-from __future__ import print_function
+from __future__ import unicode_literals, absolute_import, print_function
 import re
 import math
 import operator
@@ -44,6 +43,8 @@ from mptt.managers import TreeManager
 from mptt.models import MPTTModel, TreeForeignKey
 from orgwolf import settings
 from orgwolf.models import Color, HTMLEscaper, OrgWolfUser as User
+from wolfmail.models import Message
+
 
 @python_2_unicode_compatible
 class TodoState(models.Model):
@@ -347,6 +348,7 @@ class Node(MPTTModel):
     auto_update = False
     auto_close = True
     objects = NodeManager()
+    # Database fields
     owner = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         related_name="owned_node_set")
@@ -362,7 +364,6 @@ class Node(MPTTModel):
         blank=True, null=True)
     archived = models.BooleanField(default=False)
     text = models.TextField(blank=True)
-    # Determine where this heading is
     parent = TreeForeignKey(
         'self',
         blank=True, null=True,
@@ -471,6 +472,17 @@ class Node(MPTTModel):
     def get_level(self):
         """Gets the node's level in the tree (1-indexed)."""
         return self.level + 1
+
+    def get_deferred_msg(self):
+        """
+        Encapsulate the deferred_message field to avoid DoesNotExist error.
+        Returns None is not set.
+        """
+        try:
+            msg = self.deferred_message
+        except Message.DoesNotExist:
+            msg = None
+        return msg
 
     @staticmethod
     def get_all_projects():
@@ -674,19 +686,49 @@ def node_timestamp(sender, **kwargs):
                 instance.closed = datetime.now(get_current_timezone())
 
 @receiver(signals.pre_save, sender=Node)
-def clean_text(sender, **kwargs):
+def validate_deferred_date(sender, instance, **kwargs):
+    """
+    If the Node is deferred, validate that the scheduled_date field is set."""
+    if not kwargs['raw']:
+        if (getattr(instance.todo_state, 'abbreviation', None) == 'DFRD' and
+            instance.scheduled_date is None):
+            raise ValidationError('Node is DFRD but scheduled_date not set')
+
+@receiver(signals.post_save, sender=Node)
+def set_deferred_message(sender, instance, **kwargs):
+    """
+    Checks if the Node is a deferred Node and if so,
+    set the deferred_message foreign key.
+    """
+    if not kwargs['raw']:
+        if getattr(instance.todo_state, 'abbreviation', None) == 'DFRD':
+            # Node is deferred so create new message or update existing message
+            message = instance.get_deferred_msg()
+            if message is None:
+                message = Message()
+                message.source_node = instance
+            message.subject = instance.title
+            message.handler_path = 'plugins.deferred'
+            message.owner = instance.owner
+            message.rcvd_date = dt.datetime.combine(
+                instance.scheduled_date,
+                dt.time(0, tzinfo=get_current_timezone()),
+            )
+            message.save()
+        else:
+            # If instance is not deferred, then it can't have a deferred_message
+            message = instance.get_deferred_msg()
+            if message is not None and message.pk is not None:
+                instance.deferred_message.delete()
+
+@receiver(signals.pre_save, sender=Node)
+def clean_text(sender, instance, **kwargs):
     """pre_save receiver that cleans up the text before saving
     eg. escape HTML"""
     if not kwargs['raw']:
-        instance = kwargs['instance']
-        if instance.id:
-            old_text = Node.objects.get(pk=instance.id).text
-        else:
-            old_text = ''
-        if instance.text != old_text:
-            # only escape the text if it changed
-            parser = HTMLEscaper()
-            instance.text = parser.clean(instance.text)
+        parser = HTMLEscaper()
+        instance.text = parser.clean(instance.text)
+
 
 @receiver(signals.pre_save, sender=Node)
 def node_repeat(sender, **kwargs):
@@ -730,9 +772,12 @@ def node_repeat(sender, **kwargs):
                 old_node = Node.objects.get(pk=instance.pk)
                 if not (old_node.todo_state == instance.todo_state):
                     # Only if something has changed
+                    new_state = old_node.todo_state
                     if instance.scheduled_date: # Adjust Node.scheduled_date
                         if instance.repeats_from_completion:
                             original = datetime.now(get_current_timezone()).date()
+                            # repeats from completion only makes sense for DFRD
+                            new_state = TodoState.objects.get(abbreviation='DFRD')
                         else:
                             original = instance.scheduled_date
                         instance.scheduled_date = _get_new_time(
@@ -750,14 +795,14 @@ def node_repeat(sender, **kwargs):
                             instance.repeating_unit)
                     # Make a record of what we just did
                     new_repetition = NodeRepetition()
-                    new_repetition.node=instance
+                    new_repetition.node = instance
                     new_repetition.original_todo_state = old_node.todo_state
                     new_repetition.new_todo_state = instance.todo_state
                     new_repetition.timestamp = datetime.now(
                         get_current_timezone())
                     new_repetition.save()
                     # Set the actual todo_state back to its original value
-                    instance.todo_state = old_node.todo_state
+                    instance.todo_state = new_state
 
 
 @receiver(signals.pre_save, sender=Node)

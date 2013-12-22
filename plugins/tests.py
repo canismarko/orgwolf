@@ -19,29 +19,32 @@
 #######################################################################
 
 from __future__ import unicode_literals
-from django.test import TestCase
-from django.utils.timezone import get_current_timezone
+
 import re
 import datetime as dt
 
-from orgwolf.models import OrgWolfUser as User
-from plugins import orgmode
+from django.test import TestCase
+from django.utils.timezone import get_current_timezone
+
 from gtd.models import Node, TodoState
+from orgwolf.models import OrgWolfUser as User
+from plugins import orgmode, deferred, BaseMessageHandler
+from wolfmail.models import Message
 
 class RegexTest(TestCase):
     def test_heading_regex(self):
         """Make sure the regular expressions properly detect headings and
         (perhaps more importantly) don't detect non-headings"""
         # Separate text vs stars
-        self.assertEqual(orgmode.HEADING_RE.search("* Heading").groups(), 
+        self.assertEqual(orgmode.HEADING_RE.search("* Heading").groups(),
                     ("*", "Heading", None, None, None))
-        self.assertEqual(orgmode.HEADING_RE.search("******* Heading").groups(), 
+        self.assertEqual(orgmode.HEADING_RE.search("******* Heading").groups(),
                     ("*******", "Heading", None, None, None))
-        self.assertEqual(orgmode.HEADING_RE.search("*Heading"), 
-                         None)   
-        self.assertEqual(orgmode.HEADING_RE.search("* * Heading").groups(), 
+        self.assertEqual(orgmode.HEADING_RE.search("*Heading"),
+                         None)
+        self.assertEqual(orgmode.HEADING_RE.search("* * Heading").groups(),
                     ("*", "*", None, "Heading", None))
-        self.assertEqual(orgmode.HEADING_RE.search("* Heading").groups(), 
+        self.assertEqual(orgmode.HEADING_RE.search("* Heading").groups(),
                     ("*", "Heading", None, None, None))
         self.assertEqual(orgmode.HEADING_RE.search("** State Heading").groups(), 
                     ("**", "State", None, "Heading", None))
@@ -53,11 +56,11 @@ class RegexTest(TestCase):
         # priorities
         self.assertEqual(orgmode.HEADING_RE.search("* state [#G] Heading").groups(), 
                     ("*", "state", "G", "Heading", None))
-        self.assertEqual(orgmode.HEADING_RE.search("* [C] Heading").groups(), 
+        self.assertEqual(orgmode.HEADING_RE.search("* [C] Heading").groups(),
                     ("*", "[C]", None, "Heading", None))
-        self.assertEqual(orgmode.HEADING_RE.search("* [#&] Heading").groups(), 
+        self.assertEqual(orgmode.HEADING_RE.search("* [#&] Heading").groups(),
                     ("*", "[#&]", None, "Heading", None))
-        self.assertEqual(orgmode.HEADING_RE.search("* [#] Heading").groups(), 
+        self.assertEqual(orgmode.HEADING_RE.search("* [#] Heading").groups(),
                     ("*", "[#]", None, "Heading", None))
         # Tag string
         self.assertEqual(orgmode.HEADING_RE.search("* Heading :tag1:").groups(), 
@@ -109,7 +112,7 @@ class RegexTest(TestCase):
              None, None, None, None, None, None, None))
         self.assertEqual(
             orgmode.DATE_RE.search("<2012-11-02 4:19>").groups(),
-            ("2012", "11", "02", None, "4", "19", None, 
+            ("2012", "11", "02", None, "4", "19", None,
              None, None, None, None, None, None, None))
         self.assertEqual(
             orgmode.DATE_RE.search("<2012-11-02 Thu>").groups(),
@@ -117,7 +120,7 @@ class RegexTest(TestCase):
              None, None, None, None, None, None, None))
         self.assertEqual(
             orgmode.DATE_RE.search("[2012-11-02 Fri 14:19]").groups(),
-            ("2012", "11", "02", "Fri", "14", "19", None, 
+            ("2012", "11", "02", "Fri", "14", "19", None,
              None, None, None, None, None, None, None))
         self.assertEqual(
             orgmode.DATE_RE.search("<2012-11-02 4:19 +379d>").groups(),
@@ -125,7 +128,7 @@ class RegexTest(TestCase):
              None, None, None, None, None, None, None))
         self.assertEqual(
             orgmode.DATE_RE.search("<2012-11-02 4:19>--<2011-07-13 Sat 15:17 .3y>").groups(),
-            ("2012", "11", "02", None, "4", "19", None, 
+            ("2012", "11", "02", None, "4", "19", None,
              "2011", "07", "13", "Sat", "15", "17", ".3y"))
         # TODO: write unittests for valid dates (eg day between 1 and 31)
 
@@ -153,9 +156,9 @@ Some heading 1 text (no indent)
 ** Heading 0-1							       :jaz3z:
 Some texts for heading 0-1
 | and | a  | table   |
-| row | io | smidgin | 
-*** Heading 0-1-0  
-** 
+| row | io | smidgin |
+*** Heading 0-1-0
+**
 * [#A] [#B] Heading 1
   SCHEDULED: <2012-10-21 Sun>
 ** NEXT Heading 1-0
@@ -206,3 +209,124 @@ Some texts for heading 0-1
         self.assertEqual(len(input_string), len(output_string))
         for line_index in range(0, len(input_string)):
             self.assertEqual(output_string[line_index], input_string[line_index])
+
+
+class DeferredHandlerTest(TestCase):
+    fixtures = ['gtd-env.json', 'gtd-test.json',
+                'test-users.json', 'messages-test.json', ]
+    def setUp(self):
+        self.user = User.objects.get(pk=1)
+
+    def test_sets_handler(self):
+        message = Message.objects.get(pk=1)
+        self.assertTrue(
+            isinstance(message.handler, deferred.MessageHandler),
+            'self.handler is instance of {} not {}'.format(
+                message.handler.__class__, deferred.MessageHandler)
+        )
+        self.assertEqual(
+            message,
+            message.handler._msg,
+        )
+
+    def test_inheritance(self):
+        deferred_handler = deferred.MessageHandler(None)
+        self.assertTrue(
+            isinstance(deferred_handler, BaseMessageHandler),
+            'deferred MessageHandler() does not inherit from BaseMessageHandler'
+        )
+
+    def test_create_node(self):
+        """Test whether the MessageHandler.create_node method works"""
+        message = Message.objects.get(pk=1)
+        new_node = message.handler.create_node()
+        self.assertTrue(
+            isinstance(new_node, Node),
+            'create_node method did not return a Node instance'
+        )
+        self.assertEqual(
+            Message.objects.filter(pk=message.pk).count(),
+            0,
+            'Message not deleted after create_node() called'
+        )
+
+    def test_create_repeating_node(self):
+        """
+        Test whether a create_node() method correctly resets when source_node
+        repeats.
+        """
+        message = Message.objects.get(pk=2)
+        old_date = message.rcvd_date
+        self.assertEqual(
+            message.spawned_nodes.all().count(),
+            0,
+            'spawned nodes already exist at first'
+        )
+        new_node = message.handler.create_node()
+        self.assertEqual(
+            message.spawned_nodes.first(),
+            new_node,
+            'new_node not added to spawned_nodes'
+        );
+        message = Message.objects.get(pk=message.pk)
+        self.assertEqual(
+            new_node.title,
+            message.source_node.title,
+        )
+        self.assertQuerysetEqual(
+            new_node.scope.all(),
+            [repr(x) for x in message.source_node.scope.all()]
+        )
+        self.assertEqual(
+            new_node.parent.pk,
+            message.source_node.pk,
+            'new Node is not a child of source Node'
+        )
+        self.assertEqual(
+            new_node.get_ancestors(ascending=True)[0].pk,
+            message.source_node.pk,
+            'new Node not properly inserted into MPTT tree'
+        )
+        self.assertNotEqual(
+            new_node.pk,
+            message.source_node.pk,
+            'new_node and message.source_node as same instance'
+        )
+        # Test auto-updating of dates
+        self.assertEqual(
+            message.rcvd_date.date(),
+            message.source_node.scheduled_date
+        )
+
+   def test_auto_message(self):
+        """
+        Verify that creating and modifying a DFRD Node will trigger
+        Message creation.
+        """
+        node = Node()
+        node.owner = self.user
+        node.title = 'New deferred node'
+        node.scheduled_date = dt.datetime.now().date()
+        dfrd = TodoState.objects.get(abbreviation='DFRD')
+        nxt = TodoState.objects.get(abbreviation='NEXT')
+        # Create a new deferred node
+        node.todo_state = dfrd
+        self.assertRaises(
+            Message.DoesNotExist,
+            lambda x: node.deferred_message,
+            'New Node() starts out with a message'
+        )
+        node.save()
+        node = Node.objects.get(pk=node.pk)
+        self.assertTrue(
+            isinstance(node.deferred_message, Message)
+        )
+        # Now make the node NEXT and see that the message disappears
+        node.todo_state = nxt
+        node.save()
+        node = Node.objects.get(pk=node.pk)
+        self.assertRaises(
+            Message.DoesNotExist,
+            lambda x: node.deferred_message,
+            'New Node() starts out with a message'
+        )
