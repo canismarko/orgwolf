@@ -176,7 +176,7 @@ Some texts for heading 0-1
     def test_scheduling_repeats(self):
         node = Node.objects.get(title="Heading 1-1")
         target_date = dt.date(2012, 10, 19)
-        self.assertEqual(target_date, node.scheduled.date())
+        self.assertEqual(target_date, node.scheduled_date)
         self.assertTrue(node.repeats)
         self.assertFalse(node.repeats_from_completion)
         self.assertEqual(2, node.repeating_number)
@@ -194,7 +194,7 @@ Some texts for heading 0-1
 
     def test_text_identification(self):
         test_node = Node.objects.get(title='Heading 0-1')
-        self.assertEqual('Some texts for heading 0-1\n| and | a  | table   |\n| row | io | smidgin | \n',
+        self.assertEqual('Some texts for heading 0-1\n| and | a  | table   |\n| row | io | smidgin |\n',
                     test_node.text)
 
     def test_output(self):
@@ -295,10 +295,10 @@ class DeferredHandlerTest(TestCase):
         # Test auto-updating of dates
         self.assertEqual(
             message.rcvd_date.date(),
-            message.source_node.scheduled_date
+            message.source_node.scheduled_date,
         )
 
-   def test_auto_message(self):
+    def test_auto_message(self):
         """
         Verify that creating and modifying a DFRD Node will trigger
         Message creation.

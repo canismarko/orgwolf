@@ -1,14 +1,26 @@
-import sys
+#######################################################################
+# Copyright 2012 Mark Wolf
+#
+# This file is part of OrgWolf.
+#
+# OrgWolf is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+#######################################################################
+
 import cProfile
 import re
-import urlparse
-import json
 
-from cStringIO import StringIO
 from django.conf import settings
-from django.db.models.fields.related import ReverseSingleRelatedObjectDescriptor as ForeignKey
-
-from gtd.models import Node
 
 class MobileDetectionMiddleware(object):
     """
@@ -80,83 +92,3 @@ class ProfilerMiddleware(object):
             self.profiler.create_stats()
             self.profiler.dump_stats(settings.PROFILE_FILE)
         return response
-
-class AjaxMiddleware():
-    """Modifies request/response as a gateway between views and REST API"""
-    def parse_json(self, data):
-        new_dict = json.loads(data)
-        return new_dict
-    def parse_url_encoded_form(self, s):
-        """Accepts a URL_encoded string and parses into a dictionary"""
-        new_dict = {}
-        string_fields = (
-            'text', 'priority', 'title', 'repeating_unit', 'tag_string')
-        # Replace URL codes with actual characters
-        htmlCodes =  (
-            (' ', '+'),
-            (':', '%3A'),
-            ('[', '%5B'),
-            (']', '%5D'),
-            ('+', '%2B'),
-        )
-        for code in htmlCodes:
-            s = s.replace(code[1], code[0])
-        r = re.compile('(?P<key>[a-zA-Z_-]+)(?:\[(?P<subkey>[a-zA-Z_-]+)\])?=(?P<value>[a-zA-Z0-9_:\-]*)')
-        # Sort through each value and parse into key, value, etc
-        for datum in s.rsplit('&'):
-            m = r.match(datum)
-            if m:
-                m = m.groupdict()
-                # Convert numbers to float or int
-                try:
-                    m['value'] = int(m['value'])
-                except ValueError:
-                    try:
-                        m['value'] = float(m['value'])
-                    except ValueError:
-                        pass
-                # Now assign values
-                if m['subkey']:
-                    # Handle fields[title]=Archive type objects
-                    # Convert missing foreign keys to None objects
-                    if (m['subkey'] not in string_fields
-                        and m['value'] == ''):
-                        m['value'] = None
-                    # and add to dictionary
-                    d = new_dict.get(m['key'], {})
-                    d[m['subkey']] = m['value']
-                    new_dict[m['key']] = d
-                else:
-                    # Handle simple key=value
-                    new_dict[m['key']] = m['value']
-            else:
-                print(datum)
-        return new_dict
-
-    def process_request(self, request):
-        """
-        Decode submitted data for REST API depending on format
-        (JSON, url-encoded-form, etc)
-        """
-        EXEMPT = [
-            '/accounts/logout/persona/',
-            '/accounts/login/persona/',
-        ]
-        accept = request.META.get('HTTP_ACCEPT', '')
-        content_type = request.META.get('CONTENT_TYPE', '')
-        if content_type.find('application/json') > -1:
-            request.is_json = True
-        elif accept.find('application/json') > -1:
-            request.is_json = True
-        else:
-            request.is_json = False
-        # if ( request.method in ['PUT', 'POST']
-        #      and request.is_json
-        #      and request.path not in EXEMPT ):
-        #     parsers = {
-        #         'application/json': self.parse_json,
-        #         # 'application/x-www-form-urlencoded': self.parse_url_encoded_form,
-        #     }
-        #     s = request.body
-        #     parser = parsers.get(request.META['CONTENT_TYPE'], lambda x: None)
-        #     setattr(request, request.method, parser(s))

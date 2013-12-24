@@ -53,7 +53,6 @@ from gtd.serializers import ContextSerializer, ScopeSerializer, NodeSerializer
 from mptt.exceptions import InvalidMove
 from orgwolf import settings
 from orgwolf.models import OrgWolfUser as User
-# from wolfmail.models import MailItem
 
 # Prepare logger
 logger = logging.getLogger('gtd.views')
@@ -216,102 +215,11 @@ def list_display(request, url_string=""):
                               locals(),
                               RequestContext(request))
 
+
 @login_required
-def agenda_display(request, date=None):
-    logger.debug('agenda_display() view called')
-    format_string = "%Y-%m-%d"
-    if request.method == "POST":
-        # Check and process the new date
-        try:
-            datetime.datetime.strptime(request.POST['date'], format_string)
-        except ValueError:
-            pass
-        else:
-            new_url = "/gtd/agenda/" + request.POST['date']
-            return redirect(new_url)
-    deadline_period = 7 # In days # TODO: pull deadline period from user
-    all_nodes_qs = Node.objects.mine(request.user).select_related('todo_state')
-    tz = get_current_timezone()
-    final_Q = Q()
-    if date:
-        try:
-            agenda_date = datetime.datetime.strptime(date, format_string).date()
-        except ValueError:
-            raise Http404
-    else:
-        agenda_date = datetime.date.today()
-    # agenda_dt = datetime.datetime(
-    #     year=agenda_date.year,
-    #     month=agenda_date.month,
-    #     day=agenda_date.day,
-    #     hour=23, minute=59,
-    #     second=59,
-    #     tzinfo=tz
-    # ).astimezone(tz)
-    logger.debug(
-        'agenda_date = {0}'.format(
-            agenda_date,
-        )
-    )
-    agenda_dt_str = agenda_date.strftime('%Y-%m-%d')
-    one_day = datetime.timedelta(days=1)
-    tomorrow = agenda_date + one_day
-    yesterday = agenda_date - one_day
-    # Determine query filters for "Today" section
-    date_Q = Q(scheduled_date__lte=agenda_date)
-    time_specific_Q = Q(scheduled_time=None)
-    # TODO: allow user to set todo states
-    todo_states = TodoState.get_visible(request.user)
-    hard_Q = Q(todo_state = todo_states.get(abbreviation="HARD"))
-    dfrd_Q = Q(todo_state = todo_states.get(abbreviation="DFRD"))
-    day_specific_nodes = all_nodes_qs.filter(
-        (hard_Q | dfrd_Q), date_Q, time_specific_Q)
-    day_specific_nodes = day_specific_nodes.order_by('scheduled_date')
-    time_specific_nodes = all_nodes_qs.filter(
-        (hard_Q | dfrd_Q), date_Q).exclude(time_specific_Q)
-    time_specific_nodes = time_specific_nodes.order_by('scheduled_date')
-    # Determine query filters for "Upcoming Deadlines" section
-    undone_Q = Q(todo_state__closed = False) | Q(todo_state = None)
-    deadline = agenda_date + datetime.timedelta(days=deadline_period)
-    upcoming_deadline_Q = Q(deadline_date__lte = deadline) # TODO: fix this
-    deadline_nodes = all_nodes_qs.filter(undone_Q, upcoming_deadline_Q)
-    deadline_nodes = deadline_nodes.order_by("deadline_date")
-    # Force database hits and then add overdue data
-    day_specific_nodes = list(day_specific_nodes)
-    time_specific_nodes = list(time_specific_nodes)
-    deadline_nodes = list(deadline_nodes)
-    for node in day_specific_nodes:
-        node.overdue_str = node.overdue(
-            'scheduled_date', agenda_date=agenda_date)
-    for node in time_specific_nodes:
-        node.overdue_str = node.overdue(
-            'scheduled_date', agenda_date=agenda_date)
-    for node in deadline_nodes:
-        node.overdue_str = node.overdue(
-            'deadline_date', agenda_date=agenda_date, future=True)
-    # Create some data for javascript plugins
-    all_todo_states_json = TodoState.as_json(queryset=todo_states,
-                                             user=request.user)
-    if request.GET.get('format') == 'json':
-        # Render just the table rows for AJAX functionality
-        json_data = {'status': 'success'}
-        json_data['daily_html'] = render_to_string(
-            'gtd/agenda_daily.html',
-            locals(),
-            RequestContext(request))
-        json_data['timely_html'] = render_to_string(
-            'gtd/agenda_timely.html',
-            locals(),
-            RequestContext(request))
-        json_data['deadlines_html'] = render_to_string(
-            'gtd/agenda_deadlines.html',
-            locals(),
-            RequestContext(request))
-        return HttpResponse(json.dumps(json_data))
-    if request.is_mobile:
-        template = 'gtd/agenda_m.html'
-    else:
-        template = 'gtd/agenda.html'
+def actions(request, context_id, context_slug):
+    base_node_url = reverse('projects')
+    template = 'gtd/node_list.html'
     return render_to_response(template,
                               locals(),
                               RequestContext(request))
@@ -407,7 +315,6 @@ class NodeListView(APIView):
     def get(self, request, *args, **kwargs):
         """Determines which list the user has requested and fetches it."""
         # Get objects based on url parameters
-        # self.url_data = {}
         todo_states = request.GET.getlist('todo_state', [''])
         if todo_states != ['']:
             self.url_data['todo_state'] = self.todo_states.filter(
@@ -423,184 +330,15 @@ class NodeListView(APIView):
         if context:
             # self.url_data['context'] = Context.objects.get(pk=context)
             self.url_data['context'] = get_object_or_404(Context, pk=context)
-        # AJAX API
-        if request.is_json:
-            # Update the current context
-            new_context_id = request.GET.get('context', None)
-            if new_context_id is not None:
-                new_context = Context.objects.get(pk=new_context_id)
-                request.session['context_name'] = new_context.name
-            request.session['context_id'] = new_context_id
-            print(request.session['context_id'])
-            nodes = self.get_queryset()
-            serializer = NodeSerializer(nodes, many=True)
-            return Response(serializer.data)
-        # Get regular page
-        base_url = self.base_url
-        all_scope_qs = Scope.objects.all()
-        all_todo_states_json = TodoState.as_json(queryset=self.todo_states)
-        todo_states_query = TodoState.objects.none()
-        todo_abbrevs = get_todo_abbrevs(self.todo_states)
-        todo_abbrevs_lc = []
-        base_url = reverse('list_display')
-        base_node_url = reverse('projects')
-        list_url = base_url
-        list_url += '{parent}{states}{scope}{context}'
-        tz = get_current_timezone()
+        # Update the current context
+        new_context_id = request.GET.get('context', None)
+        if new_context_id is not None:
+            new_context = Context.objects.get(pk=new_context_id)
+            request.session['context_name'] = new_context.name
+        request.session['context_id'] = new_context_id
         nodes = self.get_queryset()
-        # scope_url = base_url # for urls of scope tabs
-        for todo_abbrev in todo_abbrevs:
-            todo_abbrevs_lc.append(todo_abbrev.lower())
-        # Get stored context value (or set if first visit)
-        current_context = None
-        # if 'context' not in request.session:
-        #     request.session['context'] = None
-        # current_context = request.session['context']
-        # # Retrieve the context objects based on url
-        # if self.url_data.get('context', False) != False: # `None` --> context0
-        #     if self.url_data.get('context') != current_context:
-        #         # User is changing the context
-        #         request.session['context'] = self.url_data.get('context')
-        #         current_context = self.url_data.get('context')
-        # elif current_context:
-        #     # Redirect to the url using the save context
-        #     new_url = base_url + generate_url(
-        #         parent=self.url_data.get('parent'),
-        #         context=current_context
-        #         )[1:] # Don't need leading '/'
-        #     return redirect(new_url)
-
-        root_nodes = Node.objects.mine(
-            request.user, get_archived=True
-        ).filter(level=0)
-        # # Now apply the context
-        # if current_context:
-        #     self.scope_url_data['context'] = 'context{0}/'.format(
-        #         current_context.pk
-        #     )
-        # else:
-        #     self.scope_url_data['context'] = ''
-        # try:
-        #     nodes = current_context.apply(nodes)
-        # except AttributeError:
-        #     pass
-        # And filter by parent node
-        parent = self.url_data.get('parent')
-        if parent:
-            nodes = nodes & parent.get_descendants(include_self=True)
-            self.scope_url_data['parent'] = 'parent{0}/'.format(parent.pk)
-            breadcrumb_list = parent.get_ancestors(include_self=True)
-        else:
-            self.scope_url_data['parent'] = ''
-        # Put nodes with deadlines first
-        nodes = order_nodes(nodes, field='deadline_date', context=current_context)
-        # -------------------- Queryset evaluated -------------------- #
-        # Prepare the URLs for use in the scope and parent links tabs
-        # scope_url = list_url.format(
-        #     context = self.scope_url_data['context'],
-        #     scope = '{scope}/',
-        #     states = self.scope_url_data['states'],
-        #     parent = self.scope_url_data['parent'],
-        # )
-        if self.scope:
-            scope_s = 'scope{0}/'.format(self.scope.pk)
-        else:
-            scope_s = ''
-        # parent_url = list_url.format(
-        #     context = self.scope_url_data['context'],
-        #     scope = scope_s,
-        #     states = self.scope_url_data['states'],
-        #     parent = 'parent{0}/'
-        # )
-        # Add a field for the root node and deadline
-        # for node in nodes:
-        #     # (uses lists in case of bad unit tests)
-        #     root_node = [n for n in root_nodes if n.tree_id == node.tree_id]
-        #     if len(root_node) > 0:
-        #         node.root_url = parent_url.format(root_node[0].pk)
-        #         node.root_title = root_node[0].title
-        #     node.deadline_str = node.overdue('deadline_date')
-        # And serve response
-        if request.is_mobile:
-            template = 'gtd/gtd_list_m.html'
-        else:
-            template = 'gtd/node_list.html'
-        return render_to_response(template,
-                                  locals(),
-                                  RequestContext(request))
-
-
-# class AgendaView(DetailView):
-#     """Manages the retrieval of an individual node"""
-#     model = Node
-#     template_name = 'gtd/node_view.html'
-#     context_object_name = 'parent_node'
-#     deadline_period = 7 # In days # TODO: pull deadline period from user
-#     format_string = "%Y-%m-%d"
-#     @method_decorator(login_required)
-#     def dispatch(self, *args, **kwargs):
-#         return super(AgendaView, self).dispatch(*args, **kwargs)
-
-#     def get(self, request, *args, **kwargs):
-#         date = kwargs.get('date')
-#         today = datetime.date.today()
-#         if date == 'today':
-#             agenda_date = today
-#         elif date:
-#             try:
-#                 agenda_date = datetime.datetime.strptime(date, self.format_string).date()
-#             except ValueError:
-#                 raise Http404
-#             else:
-#                 agenda_date = today
-#         else:
-#             agenda_date = today
-#         logger.debug('AgendaView.get() called')
-#         logger.debug(
-#             'agenda_date = {0}'.format(
-#                 agenda_date,
-#             )
-#         )
-#         if (request.is_ajax() or request.is_json) and not request.is_mobile:
-#             nodes = self.build_queryset(request, 'today')
-#             return HttpResponse(serializers.serialize('json', nodes))
-
-    # def build_queryset(self, request, date):
-    #     all_nodes_qs = Node.objects.mine(request.user).select_related('todo_state')
-    #     tz = get_current_timezone()
-    #     final_Q = Q()
-    #     date_Q = Q(scheduled_date__lte=agenda_date)
-    #     time_specific_Q = Q(scheduled_time=None)
-    #     # TODO: allow user to set todo states
-    #     todo_states = TodoState.get_visible(request.user)
-    #     hard_Q = Q(todo_state = todo_states.get(abbreviation="HARD"))
-    #     dfrd_Q = Q(todo_state = todo_states.get(abbreviation="DFRD"))
-    #     day_specific_nodes = all_nodes_qs.filter(
-    #         (hard_Q | dfrd_Q), date_Q, time_specific_Q)
-    #     day_specific_nodes = day_specific_nodes.order_by('scheduled_date')
-    #     time_specific_nodes = all_nodes_qs.filter(
-    #     (hard_Q | dfrd_Q), date_Q).exclude(time_specific_Q)
-    #     time_specific_nodes = time_specific_nodes.order_by('scheduled_date')
-    #     # Determine query filters for "Upcoming Deadlines" section
-    #     undone_Q = Q(todo_state__closed = False) | Q(todo_state = None)
-    #     deadline = agenda_date + datetime.timedelta(days=deadline_period)
-    #     upcoming_deadline_Q = Q(deadline_date__lte = deadline) # TODO: fix this
-    #     deadline_nodes = all_nodes_qs.filter(undone_Q, upcoming_deadline_Q)
-    #     deadline_nodes = deadline_nodes.order_by("deadline_date")
-    #     # Force database hits and then add overdue data
-    #     day_specific_nodes = list(day_specific_nodes)
-    #     time_specific_nodes = list(time_specific_nodes)
-    #     deadline_nodes = list(deadline_nodes)
-    #     for node in day_specific_nodes:
-    #         node.overdue_str = node.overdue(
-    #             'scheduled_date', agenda_date=agenda_date)
-    #     for node in time_specific_nodes:
-    #         node.overdue_str = node.overdue(
-    #             'scheduled_date', agenda_date=agenda_date)
-    #     for node in deadline_nodes:
-    #         node.overdue_str = node.overdue(
-    #             'deadline_date', agenda_date=agenda_date, future=True)
-    #     return all_nodes_qs
+        serializer = NodeSerializer(nodes, many=True)
+        return Response(serializer.data)
 
 
 @login_required
@@ -621,284 +359,6 @@ def capture_to_inbox(request):
             new_item.labels.add(Label.objects.get(name="Inbox"))
     # TODO: automatically redirect using django.messaging
     return render_to_response('gtd/capture_success.html',
-                              locals(),
-                              RequestContext(request))
-
-@login_required
-def display_node(request, show_all=False, node_id=None, scope_id=None):
-    """Displays a node as a list of links to its children.
-    If no node_id is specified, shows the projects list."""
-    if request.method == "POST":
-        if request.POST['function'] == 'filter':
-            # User has asked to filter
-            url_kwargs = {}
-            if int(request.POST['scope']) > 0:
-                url_kwargs['scope_id'] = request.POST['scope']
-            if request.POST['node_id']:
-                url_kwargs['node_id'] = request.POST['node_id']
-            return redirect(reverse('projects', kwargs=url_kwargs))
-
-@login_required
-def edit_node(request, node_id, scope_id, slug):
-    """Display a form to allow the user to edit a node"""
-    if request.method == 'POST':
-        post = request.POST
-    url_kwargs = {}
-    new = "No"
-    node = Node.objects.get(pk=node_id)
-    if scope_id:
-        url_kwargs['scope_id'] = scope_id
-    url_kwargs['slug'] = node.slug
-    base_url = reverse('projects', kwargs=url_kwargs)
-    breadcrumb_list = node.get_ancestors(include_self=True)
-    # Make sure user is authorized to edit this node
-    if node.access_level(request.user) != 'write':
-        new_url = reverse('django.contrib.auth.views.login')
-        new_url += '?next=' + base_url + node_id + '/'
-        return redirect(new_url)
-    if request.is_ajax() and request.POST.get('format') == 'json':
-        # Handle JSON requests
-        post = request.POST
-        try:
-            node = Node.objects.owned(request.user,
-                                  get_archived=True).get(pk=node_id)
-        except Node.DoesNotExist:
-            # If the node is not accessible return a 404
-            return HttpResponse(json.dumps({'status': '404'}))
-        if post.get('form') == 'modal':
-            # Form posted from the modal javascript dialog
-            if post.get('todo_state') == '0':
-                post.pop('todo_state')
-            form = NodeForm(post, instance=node)
-            if form.is_valid():
-                if post.get('auto_update') == 'false':
-                    form.auto_update = False
-                form.save()
-                node = Node.objects.get(pk=node.pk)
-                # Prepare the response
-                node_data = node.as_pre_json()
-                data = {
-                    'status': 'success',
-                    'node_id': node.pk,
-                    'node_data': node_data,
-                    }
-            else:
-                print(form.errors)
-                return HttpResponseBadRequest(form.errors)
-        else: # if post.get('form') != 'modal':
-            # Text
-            new_text = post.get('text', node.text)
-            if new_text == '\n<br>':
-                new_text = ''
-            node.text = new_text
-            # todo_state
-            new_todo_id = post.get('todo_id', None)
-            if new_todo_id == '0':
-                node.todo_state = None
-            elif new_todo_id > 0:
-                try:
-                    node.todo_state = TodoState.objects.get(pk=new_todo_id)
-                except TodoState.DoesNotExist:
-                    return HttpResponseBadRequest(
-                        'Invalid todo_id: %s' % new_todo_id)
-            # auto_repeat
-            if post.get('auto_update') == 'false':
-                node.auto_update = False
-            else:
-                node.auto_update = True
-            # archived
-            archived = post.get('archived')
-            if archived == 'true':
-                node.archived = True
-            elif archived == 'false':
-                node.archived = False
-            node.save()
-            data = {
-                'status': 'success',
-                'node_id': node.pk,
-                'todo_id': getattr(node.todo_state, 'pk', 0),
-                'text': node.text,
-                'archived': node.archived,
-                }
-        return HttpResponse(json.dumps(data))
-    if request.is_ajax() and request.GET.get('format') == 'modal_form':
-        # User asked for the modal form used in jQuery plugins
-        form = NodeForm(instance=node)
-        return render_to_response('gtd/node_edit_modal.html',
-                                  locals(),
-                                  RequestContext(request))
-    elif request.method == "POST" and request.POST.get('function') == 'reorder':
-        # User is trying to move the node up or down
-        if 'move_up' in request.POST:
-            node.move_to(node.get_previous_sibling(),
-                         position='left'
-                         )
-        elif 'move_down' in request.POST:
-            node.move_to(node.get_next_sibling(),
-                         position='right'
-                         )
-        else:
-            return HttpResponseBadRequest('Missing request data')
-        if node.parent:
-            url_kwargs['pk'] = node.parent.pk
-        redirect_url = reverse('projects', kwargs=url_kwargs)
-        return redirect(redirect_url)
-    elif (request.method == 'POST' and
-          request.POST.get('function') == 'change_todo_state'):
-        # User has asked to change TodoState
-        new_todo_id = request.POST['new_todo']
-        if new_todo_id == '0':
-            node.todo_state = None
-        else:
-            node.todo_state = TodoState.objects.get(pk=new_todo_id)
-        node.auto_update = True
-        node.save()
-        todo_state = node.todo_state
-        url_kwargs['pk'] = node.pk
-        redirect_url = reverse('projects', kwargs=url_kwargs)
-        return redirect(redirect_url)
-    elif request.method == "POST": # Form submission
-        post = request.POST
-        form = NodeForm(request.POST, instance=node)
-        if form.is_valid():
-            form.save()
-            url_kwargs['pk'] = node_id
-            redirect_url = reverse('projects', kwargs=url_kwargs)
-            return redirect(redirect_url)
-    else: # Blank form
-        form = NodeForm(instance=node, user=request.user)
-    if request.is_mobile:
-        template = 'gtd/node_edit_m.html'
-    else:
-        template = 'gtd/node_edit.html'
-    return render_to_response(template,
-                              locals(),
-                              RequestContext(request))
-
-@login_required
-def move_node(request, node_id, scope_id):
-    """Allows a user to change the location of a Node within it's tree or
-    switch trees altogether."""
-    post = request.POST
-    url_kwargs = {}
-    if scope_id:
-        url_kwargs['scope_id'] = scope_id
-    node = Node.objects.get(pk=node_id)
-    if request.method == 'POST' and request.POST.get('function') == 'move':
-        # User is trying to change the parent of the Node instance
-        target_id = post.get('target_id')
-        if target_id == 'None' or target_id == None:
-            target = None
-        else:
-            try:
-                target = Node.objects.get(pk=post.get('target_id'))
-            except Node.DoesNotExist:
-
-                return HttpResponseBadRequest(
-                    'Please post a valid value for \'target_id\'. '.join(
-                        'Received \'{0}\''.format(target_id) ))
-        node.parent = target
-        try:
-            node.save()
-        except InvalidMove:
-            return HttpResponseBadRequest(
-                'A node may not be made a child of any of its descendents')
-        url_kwargs['pk'] = node.pk
-        redir_url = reverse('projects', kwargs=url_kwargs)
-        return redirect(redir_url)
-    # No action, so prompt the user for the new parent
-    list = [] # Hold the final output
-    # Prepare the current tree
-    tree = node.get_root().get_descendants(include_self=True)
-    for child in tree:
-        if not child.is_descendant_of(node):
-            indent = ''
-            for i in range(0, child.level):
-                indent += '---'
-            if child == node:
-                is_active = False
-            else:
-                is_active = True
-            list.append({'instance': child,
-                         'indent': indent,
-                         'is_active': is_active,
-                         })
-    # Prepare the other root nodes
-    others = Node.objects.filter(level=0).exclude(tree_id=node.tree_id)
-    for other in others:
-        list.append({'instance': other,
-                     'is_active': True})
-    template = 'gtd/node_move.html'
-    return render_to_response(template,
-                              locals(),
-                              RequestContext(request))
-
-@login_required
-def new_node(request, node_id, scope_id):
-    """Display a form to allow the user to create a new node"""
-    url_kwargs = {}
-    if scope_id:
-        url_kwargs['scope_id'] = scope_id
-    base_url = reverse('projects', kwargs=url_kwargs)
-    new = "Yes" # Used in template logic
-    node = None
-    if node_id:
-        node = Node.objects.get(pk=node_id)
-        breadcrumb_list = node.get_ancestors(include_self=True)
-    if request.is_ajax() and request.GET.get('format') == 'modal_form':
-        # User asked for the modal form used in jQuery plugins
-        form = NodeForm(parent=node)
-        return render_to_response('gtd/node_edit_modal.html',
-                                  locals(),
-                                  RequestContext(request))
-    if request.is_ajax() and request.POST.get('format') == 'json':
-        # Handle json requests
-        post = request.POST;
-        if post.get('form') == 'modal':
-            # Form posted from the modal javascript dialog
-            if post.get('todo_state') == '0':
-                post.pop('todo_state')
-            form = NodeForm(post)
-            if form.is_valid():
-                # Create and save the object
-                new_node = form.save(commit=False)
-                new_node.owner = request.user
-                new_node.parent = node
-                new_node.save()
-                form.save_m2m()
-                data = serializers.serialize('json', [new_node])
-            else:
-                return HttpResponseBadRequest(str(form.errors))
-        return HttpResponse(json.dumps(data))
-    if request.method == "POST": # Form submission
-        form = NodeForm(request.POST, parent=node)
-        if form.is_valid():
-            form = form.save(commit=False)
-            form.owner = request.user
-            siblings = Node.objects.filter(parent__id=node_id)
-            if node:
-                form.parent = Node.objects.get(pk=node.pk)
-            form.save()
-            if request.POST.has_key('scope'):
-                for new_scope_id in request.POST['scope']:
-                    form.scope.add(Scope.objects.get(pk=new_scope_id))
-            form.save()
-            if hasattr(form.parent, 'pk'):
-                url_kwargs['pk'] = form.parent.pk
-            if 'add-another' in request.POST:
-                redirect_url = reverse('gtd.views.new_node', kwargs=url_kwargs)
-            else:
-                redirect_url = reverse('projects', kwargs=url_kwargs)
-            return redirect(redirect_url)
-    else: # Blank form
-        initial_dict = {}
-        projects = getattr(node, 'related_projects', None)
-        form = NodeForm(parent=node)
-    if request.is_mobile:
-        template = 'gtd/node_edit_m.html'
-    else:
-        template = 'gtd/node_edit.html'
-    return render_to_response(template,
                               locals(),
                               RequestContext(request))
 
@@ -1018,6 +478,7 @@ class UpcomingNodeView(APIView):
         serializer = NodeSerializer(deadline_nodes, many=True)
         return Response(serializer.data)
 
+
 class ProjectView(DetailView):
     """Manages the retrieval of an individual node"""
     model = Node
@@ -1037,8 +498,6 @@ class ProjectView(DetailView):
         all_nodes_qs = Node.objects.mine(request.user, get_archived=show_all)
         all_todo_states_qs = TodoState.get_visible(user=request.user)
         child_nodes_qs = all_nodes_qs
-        # all_scope_qs = Scope.objects.all()
-        # all_scope_json = serializers.serialize('json', all_scope_qs)
         app_url = reverse('projects')
         scope_url = app_url + '{scope}/'
         scope = Scope.objects.get(pk=1)
@@ -1169,14 +628,6 @@ class ProjectView(DetailView):
                                   RequestContext(request))
 
 
-class TreeView(View):
-    """Retrieves entire trees at once"""
-    def get(self, request, *args, **kwargs):
-        nodes = Node.objects.filter(tree_id=kwargs['tree_id'])
-        # return HttpResponse(serializers.serialize('json', nodes))
-        return HttpResponse(nodes.as_json())
-
-
 class Descendants(View):
     """Manages the retrieval of descendants of a given node"""
     def get(self, request, *args, **kwargs):
@@ -1202,6 +653,7 @@ class Descendants(View):
             return render_to_response('base.html',
                                       locals(),
                                       RequestContext(request))
+
 
 class TodoStateView(View):
     """Handles RESTful retrieval of TodoState objects"""

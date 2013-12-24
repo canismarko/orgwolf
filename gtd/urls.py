@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 #######################################################################
 # Copyright 2012 Mark Wolf
 #
@@ -23,29 +24,16 @@ from django.conf.urls import patterns, include, url
 from django.contrib import admin
 admin.autodiscover()
 
-from gtd.views import (Descendants, NodeView, TreeView, TodoStateView,
-                       ScopeView, NodeListView, ContextView, ProjectView,
-                       UpcomingNodeView)
+from gtd.views import (Descendants, NodeView, TodoStateView,
+                       ScopeView, NodeListView, ContextView,
+                       ProjectView, UpcomingNodeView, actions)
 
 urlpatterns = patterns(
     'gtd.views',
     url(r'^$', 'home'),
 
-    # url(r'^lists(?P<url_string>/[\w/]+)?/$', 'list_display'),
-
-    url(r'^agenda(?:/(?P<date>\d{4}-\d{1,2}-\d{1,2}))?/$',
-        'agenda_display', name='agenda_display'),
-
     url(r'^toinbox/$', 'capture_to_inbox'),
 
-    url(r'^node/(?:scope(?P<scope_id>\d+)/)?(?P<node_id>\d+)/(?:(?P<slug>[-\w\d]+)/)?edit/',
-        'edit_node',
-    ),
-    url(r'^node/(?:scope(?P<scope_id>\d+)/)?(?P<node_id>\d+)/(?:[A-Za-z0-4\-]+/)?move/',
-        'move_node'),
-    url(r'^node/(?:scope(?P<scope_id>\d+)/)?(?:(?P<node_id>\d+)/)?new/',
-        'new_node',
-        name='new_node'),
     url(r'^node/search/', 'node_search'),
 
     # New API urls below
@@ -53,6 +41,7 @@ urlpatterns = patterns(
         ProjectView.as_view(),
         name='projects'
     ),
+
     url(r'^node(?:/(?P<pk>\d+))?/?$',
         NodeView.as_view(),
         name='node_object'
@@ -61,34 +50,33 @@ urlpatterns = patterns(
     url(r'^node/upcoming/?',
         UpcomingNodeView.as_view(),
         name='upcoming'
-        ),
+    ),
 
     url(r'^node/descendants/(?P<ancestor_pk>\d+)/$',
         Descendants.as_view(),
         name='node_descendants'
     ),
-    url(r'^tree/(?P<tree_id>\d+)/$',
-        TreeView.as_view(),
-        name='tree_view'
-    ),
+
     url(r'^todostate(?:/(?P<pk>\d+))?/?$',
         TodoStateView.as_view(),
         name='todo_state'
     ),
-    # url(r'^lists(?P<url_string>/[\w/]+)?/?$',
-    #     NodeListView.as_view(),
-    #     name='list_display'
-    # ),
+
+    url(r'^actions(?:/(?P<context_id>\d+)/(?P<context_slug>[-A-Za-z0-9_]+))?/?$',
+        'actions',
+        name='list_display'
+    ),
 
     url(r'^lists(?:/(?P<context_id>\d+)/(?P<context_slug>[-A-Za-z0-9_]+))?/?$',
         NodeListView.as_view(),
-        name='list_display'
+        name='list_api'
     ),
 
     url(r'^scope/?$',
         ScopeView.as_view(),
         name='scope_api',
     ),
+
     url(r'^context/?$',
         ContextView.as_view(),
         name='context_api',

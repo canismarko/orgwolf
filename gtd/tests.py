@@ -57,327 +57,6 @@ from orgwolf.models import OrgWolfUser as User
 from plugins.deferred import MessageHandler as DeferredMessageHandler
 from wolfmail.models import Message
 
-class EditNode(TestCase):
-    """
-    Test case for editing a node by *non-AJAX* methods only. AJAX functions
-    should be in NodeAPI test case.
-    """
-    fixtures = ['test-users.json', 'gtd-test.json', 'gtd-env.json']
-    def setUp(self):
-        self.user = User.objects.get(username='test')
-        self.assertTrue(
-            self.client.login(username=self.user.username, password='secret')
-            )
-    def close_node_through_client(self, client, node=None):
-        """
-        Helper function that uses the client to edit a node
-        and set it to a closed state. If the optional /node/
-        argument is passed then that node is edited, otherwise
-        a new node is created.
-        """
-        closed_todo = TodoState.objects.get(abbreviation='DONE')
-        self.assertTrue(closed_todo.closed)
-        post_data = {'scheduled': '',
-                     'priority': '',
-                     'deadline': '',
-                     'todo_state': closed_todo.id}
-        if node: # existing node
-            url = reverse('projects', kwargs={'pk': node.pk})
-            post_data['title'] = node.title
-        else: # new node
-            url = reverse('gtd.views.new_node', kwargs={'node_id': 5})
-            redir_url = reverse('projects', kwargs={'pk': 5})
-            post_data['title'] = 'new node 1'
-        response = client.post(url, post_data, follow=True)
-        self.assertEqual(200, response.status_code)
-        redir_url = reverse('projects')
-        redirect = re.match(
-            'http://testserver{base_url}(\d+)/'.format(base_url=redir_url),
-            response.redirect_chain[0][0]
-            )
-        self.assertTrue(redirect.group()) # Did the redirect match
-        self.assertEqual(302, response.redirect_chain[0][1])
-        return redirect.groups()[0]
-
-    def test_close_timestamp(self):
-        """
-        Test that the "closed" timestamp is set automatically."
-        """
-        now = dt.datetime.utcnow()
-        client = Client()
-        # Login
-        self.assertTrue(
-            client.login(username='test', password='secret')
-            )
-        node = Node.objects.get(title='Buy cat food')
-        # Make sure it's not closed first
-        self.assertFalse(node.is_closed())
-        # Edit the node through the client
-        self.close_node_through_client(self.client, node)
-        # Refresh the node
-        new_node = Node.objects.get(title='Buy cat food')
-        # Make sure the node is closed
-        self.assertTrue(new_node.is_closed())
-        self.assertEqual(now.date(), new_node.closed.date())
-
-        # Same thing if it has no initial todostate
-        node = Node.objects.get(title='Buy cat food')
-        node.todo_state = None
-        node.save()
-        self.assertEqual(None, node.todo_state)
-        # Now run the request
-        self.close_node_through_client(self.client, node)
-        # Refresh the node
-        new_node = Node.objects.get(title='Buy cat food')
-        # Make sure the node is closed
-        self.assertTrue(new_node.is_closed())
-        self.assertEqual(now.date(), new_node.closed.date())
-
-        # Test that closed is set for new nodes
-        new_node_id = self.close_node_through_client(self.client)
-        new_node = Node.objects.get(id=new_node_id)
-        # Make sure the node is closed
-        self.assertTrue(new_node.is_closed())
-        self.assertEqual(now.date(), new_node.closed.date())
-
-    def test_set_todo_state(self):
-        node = Node.objects.get(title='Buy cat food')
-        todo_state = TodoState.objects.get(id=2)
-        node.todo_state = todo_state
-        node.save()
-        self.assertEqual(todo_state, node.todo_state)
-
-    def test_edit_form_states(self):
-        """Make sure edit node form has only the valid states for this user"""
-        node = Node.objects.get(pk=1)
-        edit_url = reverse('gtd.views.edit_node',
-                           kwargs={'node_id': node.pk,
-                                   'slug': node.slug}
-        )
-        response = self.client.get(edit_url)
-        good_states = TodoState.objects.filter(
-            Q(owner=None) | Q(owner=self.user)
-        )
-        bad_states = TodoState.objects.exclude(
-            owner=None).exclude(owner=self.user)
-        self.assertTrue(
-            len(good_states) > 0,
-            'No good states found to test for (bad fixtures)'
-        )
-        self.assertTrue(
-            len(bad_states) > 0,
-            'No bad states found to test for (bad fixtures)'
-        )
-        for state in good_states:
-            self.assertContains(
-                response,
-                state
-            )
-        for state in bad_states:
-            self.assertNotContains(
-                response,
-                state
-            )
-    def test_set_fields(self):
-        """Test the ability of a node to set its own fields given a dict"""
-        node = Node.objects.get(pk=2)
-        # Date and time objects
-        node.set_fields({'scheduled_date': '2012-12-31',
-                         'scheduled_time': '05:00:00'})
-        self.assertEqual(
-            'date',
-            node.scheduled_date.__class__.__name__,
-            'set_fields processes date strings into date objects'
-        )
-        self.assertEqual(
-            'time',
-            node.scheduled_time.__class__.__name__,
-            'set_fields processes time strings into time objects'
-        )
-
-class NodeOrder(TestCase):
-    """Holds tests for accessing and modifying the order of nodes"""
-    fixtures = ['test-users.json', 'gtd-env.json', 'gtd-test.json']
-    def setUp(self):
-        self.nodes_qs = Node.objects.owned(User.objects.get(pk=1))
-        self.user = User.objects.get(pk=1)
-        self.client.login(username='test', password='secret')
-
-    def test_move_up(self):
-        children = Node.objects.filter(parent__pk=1)
-        child1 = children[0]
-        child2 = children[1]
-        self.assertTrue(
-            child1.lft < child2.lft
-            )
-        url = reverse('gtd.views.edit_node', kwargs={'node_id': child2.pk})
-        response = self.client.post(
-            url,
-            {'function': 'reorder',
-             'move_up': 'Move Up'}
-            )
-        self.assertEqual(
-            302,
-            response.status_code
-            )
-        child1 = Node.objects.get(pk=child1.pk)
-        child2 = Node.objects.get(pk=child2.pk)
-        self.assertTrue(
-            child1.lft > child2.lft,
-            'Nodes were not re-arranged: {0} !> {1}'.format(
-                child1.lft, child2.lft)
-            )
-    def test_move_down(self):
-        children = Node.objects.filter(parent__pk=1)
-        child1 = children[0]
-        child2 = children[1]
-        self.assertTrue(
-            child1.lft < child2.lft
-            )
-        url = reverse('gtd.views.edit_node', kwargs={'node_id': child1.pk})
-        response = self.client.post(
-            url,
-            {'function': 'reorder',
-             'move_down': 'Move Down'}
-            )
-        self.assertEqual(
-            302,
-            response.status_code
-            )
-        child1 = Node.objects.get(pk=child1.pk)
-        child2 = Node.objects.get(pk=child2.pk)
-        self.assertTrue(
-            child1.lft > child2.lft,
-            'Nodes were not re-arranged: {0} !> {1}'.format(
-                child1.lft, child2.lft)
-            )
-
-    def test_valid_move(self):
-        """Test if the Node can change parents"""
-        node = Node.objects.get(pk=1)
-        old_parent = node.parent
-        new_parent = Node.objects.get(pk=6)
-        url = reverse('gtd.views.move_node', kwargs={'node_id': node.pk})
-        response = self.client.post(
-            url,
-            {'function': 'move',
-             'target_id': new_parent.pk}
-            )
-        self.assertEqual(
-            302,
-            response.status_code
-            )
-        node = Node.objects.get(pk=node.pk)
-        self.assertEqual(
-            new_parent,
-            node.parent,
-            )
-    def test_root_move(self):
-        """Test if the moved Node can be given None as a parent"""
-        node = Node.objects.get(pk=1)
-        old_parent = node.parent
-        new_parent = None
-        url = reverse('gtd.views.move_node', kwargs={'node_id': node.pk})
-        response = self.client.post(
-            url,
-            {'function': 'move',
-             'target_id': 'None'}
-            )
-        self.assertEqual(
-            302,
-            response.status_code
-            )
-        node = Node.objects.get(pk=node.pk)
-        self.assertEqual(
-            new_parent,
-            node.parent,
-            )
-    def test_invalid_move(self):
-        """Make sure that the operation fails if the user tries to make a
-        Node a child of one of its descendents."""
-        node = Node.objects.get(pk=1)
-        old_parent = node.parent
-        new_parent = Node.objects.get(pk=2)
-        url = reverse('gtd.views.move_node', kwargs={'node_id': node.pk})
-        response = self.client.post(
-            url,
-            {'function': 'move',
-             'target_id': new_parent.pk}
-            )
-        self.assertEqual(
-            400,
-            response.status_code
-            )
-        node = Node.objects.get(pk=node.pk)
-        self.assertEqual(
-            old_parent,
-            node.parent,
-            )
-    def test_move_invalid_parent(self):
-        """Test what happens if the user tries to move a Node
-        to a parent that doesn't exist"""
-        node = Node.objects.get(pk=1)
-        old_parent = node.parent
-        url = reverse('gtd.views.move_node', kwargs={'node_id': node.pk})
-        response = self.client.post(
-            url,
-            {'function': 'move',
-             'target_id': '99',
-             }
-            )
-        self.assertEqual(
-            400,
-            response.status_code
-            )
-        node = Node.objects.get(pk=node.pk)
-        self.assertEqual(
-            old_parent,
-            node.parent,
-            )
-
-class MoveNodePage(TestCase):
-    fixtures = ['test-users.json', 'gtd-env.json', 'gtd-test.json']
-    def setUp(self):
-        self.nodes_qs = Node.objects.owned(User.objects.get(pk=1))
-        self.user = User.objects.get(pk=1)
-        self.client.login(username='test', password='secret')
-    def test_get_page(self):
-        """Make sure the page is accessible"""
-        node = Node.objects.get(pk=2)
-        url = reverse('gtd.views.move_node', kwargs={'node_id': node.pk})
-        response = self.client.get(url)
-        self.assertEqual(
-            200,
-            response.status_code
-            )
-        self.assertContains(
-            response,
-            'Please select a new parent for node {0}: {1}'.format(node.pk,
-                                                                node.get_title()),
-            )
-        tree = node.get_root().get_descendants(include_self=True)
-
-        for child in tree:
-            if child.is_descendant_of(node):
-                self.assertNotContains(
-                    response,
-                    child.get_title()
-                    )
-            else:
-                self.assertContains(
-                    response,
-                    child.get_title()
-                    )
-        others = Node.objects.filter(level=0).exclude(tree_id=node.tree_id)
-        for root in others:
-            self.assertContains(
-                response,
-                root.get_title()
-                )
-        self.assertContains(
-            response,
-            'Create new project'
-            )
 
 class NodeMutators(TestCase):
     fixtures = ['test-users.json', 'gtd-env.json', 'gtd-test.json']
@@ -435,6 +114,7 @@ class NodeMutators(TestCase):
                                  node.get_title() ),
             node.get_hierarchy_as_string()
             )
+
 
 class NodeManagers(TestCase):
     fixtures = ['test-users.json', 'gtd-test.json', 'gtd-env.json']
@@ -496,8 +176,10 @@ class NodeArchive(TestCase):
         self.assertTrue(node.todo_state.closed)
         self.assertTrue(node.archived)
 
+
 class RepeatingNodeTest(TestCase):
     fixtures = ['test-users.json', 'gtd-test.json', 'gtd-env.json']
+
     def test_scheduled_repetition(self):
         """Make sure the item is rescheduled properly."""
         node = Node.objects.get(title='Buy cat food')
@@ -513,6 +195,7 @@ class RepeatingNodeTest(TestCase):
         self.assertEqual(actionable, node.todo_state)
         new_date = dt.datetime(2013, 1, 3, tzinfo=get_current_timezone())
         self.assertEqual(new_date.date(), node.scheduled_date)
+
     def test_all_repeat_units(self):
         """Make sure day, week, month and year repeating units work"""
         node = Node.objects.get(title='Buy cat food')
@@ -556,6 +239,7 @@ class RepeatingNodeTest(TestCase):
         self.assertFalse(node.is_closed())
         new_date = dt.date(2015, 12, 31)
         self.assertEqual(new_date, node.scheduled_date)
+
     def test_31st_bug(self):
         """Test for proper behavior if trying to set a month that
         doesn't have a 31st day."""
@@ -582,6 +266,7 @@ class RepeatingNodeTest(TestCase):
         self.assertFalse(node.is_closed())
         new_date = dt.date(2013, 3, 28)
         self.assertEqual(new_date, node.scheduled_date)
+
     def test_month_bug(self):
         """Test for a bug that imporperly increments months and years
         if original_month + repeating_unit equals 12 and if
@@ -603,40 +288,6 @@ class RepeatingNodeTest(TestCase):
             node.scheduled_date
         )
 
-class FormValidation(TestCase):
-    fixtures = ['test-users.json', 'gtd-env.json']
-    def setUp(self):
-        self.client.login(username='test', password='secret')
-        self.form = NodeForm()
-    def test_repeating_number(self):
-        """See if the program properly fails with nonsense values
-        for repeating unit (eg -4, 0)"""
-        data = {
-            'title': 'woah'
-            }
-        url = reverse('gtd.views.new_node')
-        response = self.client.post(url, data)
-        redir_url = reverse('projects')
-        self.assertRedirects(response, redir_url)
-        data = {
-            'title': 'woah',
-            'repeating_number': -1,
-            }
-        url = reverse('gtd.views.edit_node', kwargs={'node_id': 1})
-        response = self.client.post(url, data)
-        self.assertEqual(
-            200,
-            response.status_code
-            )
-        data = {
-            'title': 'woah',
-            'repeating_number': '0',
-            }
-        response = self.client.post(url, data)
-        self.assertEqual(
-            200,
-            response.status_code
-            )
 
 class ParentStructure(TestCase):
     fixtures = ['test-users.json', 'gtd-test.json', 'gtd-env.json']
@@ -656,13 +307,8 @@ class ContextFiltering(TestCase):
         self.assertTrue(
             self.client.login(username='test', password='secret')
             )
-    def test_bad_context(self):
-        """Confirm that trying to set context that does not exist
-        returns a 404.
-        """
-        url = reverse('list_display')
-        response = self.client.get(url, {'context': 999})
-        self.assertEqual(response.status_code, 404)
+
+
     def test_home_tag(self):
         all_nodes_qs = Node.objects.filter(
             Q(tag_string=':work:')|Q(tag_string=':home:')
@@ -678,45 +324,7 @@ class ContextFiltering(TestCase):
             list(Node.objects.filter(title='Home Node')),
             list(home.apply(all_nodes_qs))
             )
-    def test_context_session_variables(self):
-        """Test if the active GTD context is saved and stored properly
-        in session variables.
-        """
-        url = reverse('list_display')
-        response = self.client.get(url);
-        self.assertEqual(response.status_code, 200)
-        self.assertEqual(
-            self.client.session['context'],
-            None)
-        url = reverse('list_display',
-                      kwargs={'url_string': '/context1'} )
-        response = self.client.get(url);
-        self.assertEqual(response.status_code, 200)
-        self.assertEqual(
-            self.client.session['context'],
-            Context.objects.get(pk=1)
-            )
-        # Test that base url redirects to the saved context
-        base_url = reverse('list_display')
-        response = self.client.get(base_url)
-        redir_url = reverse('list_display',
-                            kwargs={'url_string': '/context1'} )
-        self.assertRedirects(response, redir_url)
-        response = self.client.get(base_url, follow=True)
-        self.assertContains(response,
-                            'Actions (Work)',
-                            )
-        link_url = reverse('list_display',
-                           kwargs={'url_string': '/next/context1'} )
-        self.assertContains(response, link_url)
-        # Test clearing the context by using the POST filter
-        response = self.client.post(redir_url, {'context': '0',
-                                                'scope': '0',
-                                                })
-        self.assertRedirects(response, base_url)
-        self.assertEqual(
-            self.client.session['context'],
-            None)
+
     def test_get_owned(self):
         user = User.objects.get(pk=1)
         contexts = Context.get_visible(user)
@@ -738,6 +346,7 @@ class ContextFiltering(TestCase):
 
 class Shortcuts(TestCase):
     fixtures = ['test-users.json', 'gtd-test.json', 'gtd-env.json']
+
     def test_order_nodes(self):
         """Tests the gtd.shortcuts.order_by_date function."""
         # First make sure the method actual does something
@@ -772,6 +381,7 @@ class Shortcuts(TestCase):
             list(scheduled_qs.order_by('scheduled_date')),
             list(result_qs)[:scheduled_qs.count()]
             )
+
     def test_order_nodes_context(self):
         nodes = Node.objects.filter(tree_id=8)
         context_node = Node.objects.get(pk=18)
@@ -789,6 +399,7 @@ class Shortcuts(TestCase):
             context_node,
             ordered_nodes[1]
             )
+
     def test_node_as_json(self):
         """Translate Node details into a JSON string"""
         node = Node.objects.get(pk=2)
@@ -882,11 +493,13 @@ class Shortcuts(TestCase):
 
 class NodePermissions(TestCase):
     fixtures = ['test-users.json', 'gtd-test.json', 'gtd-env.json']
+
     def setUp(self):
         self.assertTrue(
             self.client.login(username='test', password='secret')
             )
         self.user = User.objects.get(username='test')
+
     def test_owned(self):
         node = Node.objects.filter(owner=self.user)[0]
         self.assertEqual(
@@ -899,12 +512,15 @@ class UrlParse(TestCase):
     """Tests for the gtd url_parser that extracts context and scope information
     from the URL string and returns it as a useful dictionary."""
     fixtures = ['test-users.json', 'gtd-test.json', 'gtd-env.json']
+
     def setUp(self):
         pass
+
     def test_function_exists(self):
         self.assertEqual(parse_url.__class__.__name__, 'function')
         return_value = parse_url('')
         self.assertEqual(return_value.__class__.__name__, 'dict')
+
     def test_processes_context(self):
         context2 = Context.objects.get(pk=2)
         # Successfully finds an existing context
@@ -917,6 +533,7 @@ class UrlParse(TestCase):
             )
         # Finds a context if mixed in with scope
         self.assertEqual(context2, parse_url('/scope1/context2/')['context'])
+
     def test_processes_scope(self):
         scope1 = Scope.objects.get(pk=1)
         # Successfully finds an existing scope
@@ -929,6 +546,7 @@ class UrlParse(TestCase):
             )
         # Finds a context if mixed in with scope
         self.assertEqual(scope1, parse_url('/scope1/context1/')['scope'])
+
     def test_processes_states(self):
         hard = TodoState.objects.get(pk=8)
         self.assertEqual(
@@ -939,6 +557,7 @@ class UrlParse(TestCase):
             hard,
             parse_url('/hard/scope1/context1/')['todo_states'][0]
             )
+
     def test_processes_parents(self):
         node = Node.objects.get(pk=1)
         self.assertEqual(
@@ -949,6 +568,7 @@ class UrlParse(TestCase):
             node,
             parse_url('/parent1/next/')['parent']
             )
+
     def test_bad_urls(self):
         """Tests to make sure that the system properly raises
         404 errors when bad urls are passed"""
@@ -962,16 +582,20 @@ class UrlParse(TestCase):
                 parse_url,
                 url)
 
+
 class ScopeFilter(TestCase):
     fixtures = ['gtd-env.json']
+
     def setUp(self):
         self.s = '/gtd/lists/{scope}/'
+
     def test_basic_scope(self):
         scope = Scope.objects.get(pk=1)
         self.assertEqual(
             '/gtd/lists/scope1/',
             add_scope(self.s, scope)
             )
+
     def test_no_scope(self):
         self.assertEqual(
             '/gtd/lists/',
@@ -981,6 +605,7 @@ class ScopeFilter(TestCase):
 
 class ScopeAPI(TestCase):
     fixtures = ['test-users.json', 'gtd-test.json', 'gtd-env.json']
+
     def setUp(self):
         self.url = reverse('scope_api');
         self.user = User.objects.get(username='test')
@@ -990,6 +615,7 @@ class ScopeAPI(TestCase):
         )
         self.scopes = Scope.objects.filter(owner=self.user)
         self.scopes = self.scopes | Scope.objects.filter(public=True)
+
     def test_get_scope_collection(self):
         response = self.client.get(self.url)
         expected = self.scopes.values()
@@ -997,6 +623,7 @@ class ScopeAPI(TestCase):
             [x['id'] for x in json.loads(response.content)],
             [x['id'] for x in expected],
         )
+
     def test_scope_get_visible(self):
         expected = []
         for scope in self.scopes:
@@ -1010,6 +637,7 @@ class ScopeAPI(TestCase):
 
 class ContextAPI(TestCase):
     fixtures = ['test-users.json', 'gtd-test.json', 'gtd-env.json']
+
     def setUp(self):
         self.url = reverse('context_api');
         self.user = User.objects.get(username='test')
@@ -1043,12 +671,15 @@ class ContextAPI(TestCase):
             hit_db,
         )
 
+
 class OverdueFilter(TestCase):
     """Tests the `overdue` node method that makes dates into
     prettier "in 1 day" strings, etc."""
     fixtures = ['gtd-test.json']
+
     def setUp(self):
         self.node = Node.objects.get(pk=1)
+
     def test_filter_exists(self):
         self.assertEqual(
             self.node.overdue.__class__.__name__,
@@ -1063,6 +694,7 @@ class OverdueFilter(TestCase):
             self.node.overdue('none_field'),
             ''
         )
+
     def test_simple_date(self):
         self.node.yesterday = (dt.datetime.now() + dt.timedelta(-1)).date()
         self.assertEqual(
@@ -1073,6 +705,7 @@ class OverdueFilter(TestCase):
         self.assertEqual(
             self.node.overdue('yesterday', future=True),
             '2 days ago')
+
     def test_future_date(self):
         self.node.tomorrow = (dt.datetime.now() + dt.timedelta(1)).date()
         self.assertEqual(
@@ -1088,6 +721,7 @@ class UrlGenerate(TestCase):
     """Tests for the gtd url_generator that returns a URL string based
     on scope/context/etc."""
     fixtures = ['test-users.json', 'gtd-test.json', 'gtd-env.json']
+
     def test_meta(self):
         """Test if it exists and returns a string"""
         self.assertEqual(
@@ -1100,6 +734,7 @@ class UrlGenerate(TestCase):
                 generate_url().__class__
                 )
             )
+
     def test_individual_entries(self):
         """Test passing each parameter type one at a time"""
         state1 = TodoState.objects.get(pk=1)
@@ -1133,6 +768,7 @@ class UrlGenerate(TestCase):
             '/parent{0}/'.format(parent.pk),
             generate_url(parent=parent)
             )
+
     def test_multiple_entries(self):
         """Test various combinations of parameters to generate_url"""
         states = TodoState.objects.filter(pk__lte = 2)
@@ -1164,6 +800,7 @@ class TodoStateRetrieval(TestCase):
     todo states.
     """
     fixtures = ['test-users.json', 'gtd-test.json', 'gtd-env.json']
+
     def test_as_json(self):
         self.assertEqual(
             TodoState.as_json.__class__.__name__,
@@ -1184,6 +821,7 @@ class TodoStateRetrieval(TestCase):
             'Expected: ' + str(len(TodoState.get_visible())+1) + '\nGot: ' +
             str(len(result))
         )
+
     def test_get_visible(self):
         user = User.objects.get(pk=1)
         expected = TodoState.objects.filter(Q(owner=user) | Q(owner=None))
@@ -1193,36 +831,10 @@ class TodoStateRetrieval(TestCase):
             )
 
 
-class AgendaNodes(TestCase):
-    """Make sure the correct nodes show up in the agenda view"""
-    fixtures = ['test-users.json', 'gtd-env.json', 'gtd-test.json']
-    def setUp(self):
-        self.user = User.objects.get(username='test')
-        self.assertTrue(
-            self.client.login(
-                username='test', password='secret')
-        )
-        self.datestring = '2013-05-14'
-        self.url = reverse(
-            'agenda_display',
-            kwargs={'date': self.datestring})
-
-    def test_future_nodes(self):
-        """Test if nodes scheduled for the future are not shown in
-        today's agenda"""
-        future_node = Node.objects.get(pk=16)
-        response = self.client.get(self.url)
-        self.assertNotContains(
-            response,
-            future_node.title,
-            status_code=200,
-            msg_prefix='Future node found in today\'s agenda'
-        )
-
-
 class ListViewQueryset(TestCase):
     """The get_queryset() method of the NodeListView class"""
     fixtures = ['test-users.json', 'gtd-env.json', 'gtd-test.json']
+
     def setUp(self):
         self.view = NodeListView()
         self.view.url_data = {}
@@ -1231,6 +843,7 @@ class ListViewQueryset(TestCase):
         self.user = User.objects.get(pk=1)
         self.view.request = self.factory.get('/gtd/lists/')
         self.view.request.user = self.user
+
     def test_returns_queryset(self):
         self.view.request = self.factory.get('/gtd/lists/')
         self.view.request.user = self.user
@@ -1239,6 +852,7 @@ class ListViewQueryset(TestCase):
             qs.__class__.__name__,
             'NodeQuerySet',
         )
+
     def test_filter_todo_state(self):
         """Check that passing a todostate to the filter works"""
         todo = TodoState.objects.filter(pk=1)
@@ -1282,6 +896,7 @@ class ListAPI(TestCase):
     tested in the ListViewQueryset test class above.
     """
     fixtures = ['test-users.json', 'gtd-env.json', 'gtd-test.json']
+
     def setUp(self):
         self.user = User.objects.get(username='test')
         self.view = NodeListView()
@@ -1290,6 +905,7 @@ class ListAPI(TestCase):
             self.client.login(
                 username=self.user.username, password='secret')
         )
+
     def test_parse_get_params(self):
         states = TodoState.objects.filter(pk__in=[1, 2])
         scope = Scope.objects.get(pk=1)
@@ -1304,6 +920,7 @@ class ListAPI(TestCase):
         )
         request.is_json = True
         request.user = self.user
+        request.session = {'context_name': None}
         self.view.dispatch(request)
         self.view.get(request)
         self.assertQuerysetEqual(
@@ -1318,6 +935,7 @@ class ListAPI(TestCase):
             self.view.url_data['context'],
             context
         )
+
     def test_parent_param(self):
         """Test that adding the parent= param filters by parent"""
         parent = Node.objects.get(pk=1)
@@ -1338,27 +956,12 @@ class ListAPI(TestCase):
             transform=lambda x: '{0} - {1}'.format(x.pk, x.title),
             ordered=False
         )
-    def test_missing_params(self):
-        """Ensure the view ignores parameters that are empty strings"""
-        request = self.factory.get(
-            '/gtd/lists',
-            {'context': '',
-             'scope': '',
-             'todo_state': ''}
-        )
-        request.is_json = True
-        request.user = self.user
-        self.view.dispatch(request)
-        self.view.get(request)
-        self.assertEqual(
-            self.view.url_data.get('Context', None),
-            None
-        )
 
 
 class MultiUser(TestCase):
     """Tests for multi-user support in the gtd app"""
     fixtures = ['test-users.json', 'gtd-env.json', 'gtd-test.json']
+
     def setUp(self):
         self.factory = RequestFactory()
         self.user1 = User.objects.get(pk=1)
@@ -1447,33 +1050,8 @@ class MultiUser(TestCase):
             assigned.title,
             )
 
-    def test_agenda_view(self):
-        url = reverse('gtd.views.agenda_display')
-        response = self.client.get(url)
-        self.assertContains(
-            response,
-            'Test user assigned node',
-            status_code=200
-            )
-        self.assertContains(
-            response,
-            'Test user others node',
-            status_code=200
-            )
-        self.assertContains(
-            response,
-            'Test user owned node',
-            status_code=200
-            )
-        self.assertNotContains(
-            response,
-            'not test-users node',
-            status_code=200,
-            msg_prefix='Agenda view',
-            )
-
     def test_list_view(self):
-        url = reverse('list_display')
+        url = reverse('list_api')
         response = self.client.get(url)
         self.assertContains(
             response,
@@ -1491,17 +1069,6 @@ class MultiUser(TestCase):
             status_code=200
             )
 
-    def test_bad_list_view(self):
-        """User 'test' does not have access to this todo_state"""
-        self.assertTrue(
-            self.client.login(username='test', password='secret')
-            )
-        url = reverse('list_display')
-        response = self.client.get(url, {'todo_state': 10})
-        self.assertEqual(
-            400,
-            response.status_code
-            )
     def test_node_view(self):
         url = reverse('projects')
         response = self.client.get(url)
@@ -1567,70 +1134,30 @@ class HTMLEscape(TestCase):
         node.owner = User.objects.get(pk=1)
         node.text = '<script>'
         node.save()
-        print(node.text)
-
-
-class TimeZones(TestCase):
-    """Define various aspects of datetime objects, specifically
-    as the reltate to timezone support"""
-    fixtures = ['test-users.json', 'gtd-env.json', 'gtd-test.json']
-    def setUp(self):
-        self.node = Node.objects.get(pk=15)
-        self.user = User.objects.get(username='test')
-        self.assertTrue(
-            self.client.login(username=self.user.username,
-                              password='secret')
-        )
-    def test_agenda_timezone(self):
-        datestring = '2013-01-17'
-        agenda_url = reverse(
-            'agenda_display',
-            kwargs={'date': datestring}
-        )
-        response = self.client.get(agenda_url)
-        self.assertContains(
-            response,
-            self.node.title,
-            status_code=200,
-            msg_prefix='Agenda does not have time specific node on the right day',
-        )
-        self.assertContains(
-            response,
-            '<input type="text" name="date" value="{0}" class="input-medium datepicker form-control" placeholder="Change date..."></input>'.format(datestring),
-            status_code=200,
-            msg_prefix='Incorrect date set in input date changer'
+        self.assertEqual(
+            node.text,
+            '&lt;script&gt;'
         )
 
 
 class DBOptimization(TestCase):
     """Define and test the optimal database plan for different views"""
     fixtures = ['test-users.json', 'gtd-test.json', 'gtd-env.json']
+
     def setUp(self):
         self.user = User.objects.get(username='test')
         self.assertTrue(
             self.client.login(username='test', password='secret')
         )
+
     def test_display_list(self):
         response = self.client.get(
             reverse('list_display')
         )
         self.assertNumQueries(
-            7,
+            4,
             self.client.get,
             reverse('list_display'),
-        )
-    def test_as_json_db(self):
-        node = Node.objects.select_related('todo_state')
-        node = Node.objects.get(pk=1)
-        self.assertNumQueries(
-            2,
-            node.as_json,
-            )
-    def test_node_view(self):
-        self.assertNumQueries(
-            10,
-            self.client.get,
-            '/gtd/lists/next/',
         )
 
 
@@ -1638,6 +1165,7 @@ class DescendantsAPI(TestCase):
     """Tests for getting a list of descendants of a given node
     of varying levels."""
     fixtures = ['test-users.json', 'gtd-test.json', 'gtd-env.json']
+
     def setUp(self):
         self.node = Node.objects.get(pk=1)
         self.url = reverse('node_descendants',
@@ -1645,6 +1173,7 @@ class DescendantsAPI(TestCase):
         self.assertTrue(
             self.client.login(username='test', password='secret')
         )
+
     def test_basic_view_behavior(self):
         """Make sure that the view uses the class based system"""
         desc_view = Descendants()
@@ -1657,6 +1186,7 @@ class DescendantsAPI(TestCase):
             200,
             response.status_code,
         )
+
     def test_return_offset1(self):
         self.maxDiff = None
         response = self.client.get(
@@ -1691,6 +1221,7 @@ class ProjectView(TestCase):
     Check the /gtd/node/<node_pk>/<slug>/ functionality.
     """
     fixtures = ['test-users.json', 'gtd-test.json', 'gtd-env.json']
+
     def setUp(self):
         self.node = Node.objects.get(pk=1)
         self.new_url = reverse('node_object')
@@ -1748,6 +1279,7 @@ class NodeAPI(TestCase):
     - obj['fields'] -> object (dict) of model fields
     """
     fixtures = ['test-users.json', 'gtd-test.json', 'gtd-env.json']
+
     def setUp(self):
         self.node = Node.objects.get(pk=1)
         self.new_url = reverse('node_object')
@@ -2061,6 +1593,7 @@ class UpcomingAPI(TestCase):
     upcoming deadlines.
     """
     fixtures = ['test-users.json', 'gtd-test.json', 'gtd-env.json']
+
     def setUp(self):
         self.user = User.objects.get(pk=1)
         self.assertTrue(
@@ -2068,6 +1601,7 @@ class UpcomingAPI(TestCase):
                               password='secret')
         )
         self.url = reverse('upcoming')
+
     def test_upcoming_deadlines(self):
         response = self.client.get(
             self.url,
@@ -2088,32 +1622,6 @@ class UpcomingAPI(TestCase):
             )
 
 
-class TreeAPI(TestCase):
-    """Check the /gtd/tree/<node_pk>/ functionality.
-    API exchanges list of objects in tree order
-    using django.core.serializers in json with
-    following keys:
-    - obj['pk'] -> Node.id
-    - obj['model'] -> django model reference, eg. 'gtd.node'
-    - obj['fields'] -> object (dict) of model fields"""
-    fixtures = ['test-users.json', 'gtd-test.json', 'gtd-env.json']
-    def setUp(self):
-        self.node = Node.objects.get(pk=1)
-        self.url = reverse('tree_view',
-                           kwargs={'tree_id': self.node.tree_id})
-        self.assertTrue(
-            self.client.login(username='test', password='secret')
-        )
-    def test_json_get(self):
-        """Make sure the user can get a JSON list of nodes in this tree"""
-        response = self.client.get(self.url)
-        r = json.loads(response.content)
-        self.assertEqual(
-            Node.objects.filter(tree_id=self.node.tree_id).count(),
-            len(r)
-        )
-
-
 class MessageIntegration(TestCase):
     """
     Tests for Node specific details of the wolfmail.models.Message class.
@@ -2121,6 +1629,7 @@ class MessageIntegration(TestCase):
     Node definition (pre_save signals, etc).
     """
     fixtures = ['test-users.json', 'gtd-env.json', 'gtd-test.json']
+
     def test_set_presave_deferred(self):
         dfrd = TodoState.objects.get(abbreviation='DFRD')
         node = Node()

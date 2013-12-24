@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 #######################################################################
 # Copyright 2012 Mark Wolf
 #
@@ -83,7 +84,7 @@ def reset_database(confirm=False):
 def import_structure(file=None, string=None, request=None, scope=None):
     """
     Parses either an org-mode file or an org-mode string and saves the
-    resulting heirerarchy to the OrgWolf models in the gtd module. 
+    resulting heirerarchy to the OrgWolf models in the gtd module.
     # TODO: rewrite this without PyOrgMode
     """
     # We want pre & post save signals skipped
@@ -102,7 +103,7 @@ def import_structure(file=None, string=None, request=None, scope=None):
                     scope = scope[0]
                 else:
                     scope = Scope(name=scope_string, display=scope_string)
-                    scope.save()                  
+                    scope.save()
     else:
         raise AttributeError("Please supply a file or a string")
     # First, build a list of dictionaries that hold the pieces of each line.
@@ -245,11 +246,13 @@ def import_structure(file=None, string=None, request=None, scope=None):
                                 parent.repeats_from_completion = True
                         # Set the appropriate fields
                         if match[0] == "SCHEDULED:":
-                            parent.scheduled = new_datetime
-                            parent.scheduled_time_specific = time_specific
+                            parent.scheduled_date = new_datetime.date()
+                            if time_specific:
+                                parent.scheduled_time = new_datetime.time()
                         elif match[0] == "DEADLINE:":
-                            parent.deadline = new_datetime
-                            parent.deadline_time_specific = time_specific
+                            parent.deadline_date = new_datetime.date()
+                            if time_specific:
+                                parent.deadline_time = new_datetime.date()
                         elif match[0] == "CLOSED:":
                             parent.closed = new_datetime
                         parent.auto_close = False # Disable closed timestamp
@@ -270,23 +273,30 @@ def heading_as_string(current_node, level):
         heading_string += " " + str(current_node.tag_string)
     heading_string += "\n"
     # add scheduled components
-    if current_node.scheduled or current_node.deadline or current_node.closed:
+    if (current_node.scheduled_date or
+        current_node.deadline_date or
+        current_node.closed):
         scheduled_string = " " * level # Indent
-    if current_node.scheduled:
-        scheduled_string += current_node.scheduled.strftime(" SCHEDULED: <%Y-%m-%d %a")
-        if current_node.scheduled_time_specific:
-            scheduled_string += current_node.scheduled.strftime(" %H:%M>")
+    if current_node.scheduled_date:
+        scheduled_string += current_node.scheduled_date.strftime(
+            " SCHEDULED: <%Y-%m-%d %a")
+        if current_node.scheduled_time:
+            scheduled_string += current_node.scheduled_time.strftime(" %H:%M>")
         else:
             scheduled_string += ">"
-    if current_node.deadline:
-        scheduled_string += current_node.deadline.strftime(" DEADLINE: <%Y-%m-%d %a")
-        if current_node.deadline_time_specific:
-            scheduled_string += current_node.deadline.strftime(" %H:%M")
+    if current_node.deadline_date:
+        scheduled_string += current_node.deadline_date.strftime(
+            " DEADLINE: <%Y-%m-%d %a")
+        if current_node.deadline_time:
+            scheduled_string += current_node.deadline_time.strftime(" %H:%M")
         else:
             scheduled_string += ">"
     if current_node.closed:
-        scheduled_string += current_node.closed.strftime(" CLOSED: <%Y-%m-%d %a %H:%M>")
-    if current_node.scheduled or current_node.deadline or current_node.closed:
+        scheduled_string += current_node.closed.strftime(
+            " CLOSED: <%Y-%m-%d %a %H:%M>")
+    if (current_node.scheduled_date or
+        current_node.deadline_date or
+        current_node.closed):
         heading_string += scheduled_string + "\n"
     # Check for text associated with this heading
     if current_node.text:

@@ -60,6 +60,7 @@ class TodoState(models.Model):
     order = models.IntegerField(default=50)
     _color_rgb = models.IntegerField(default=0x000000)
     _color_alpha = models.FloatField(default=0)
+
     def color(self):
         """Returns a Color object built from _color_rgba field."""
         red = (
@@ -73,12 +74,14 @@ class TodoState(models.Model):
         ) >> Color.BLUE_OFFSET
         new_color = Color(red, green, blue, self._color_alpha)
         return new_color
+
     def __str__(self):
         return mark_safe(
             conditional_escape(self.as_html()) +
             ' - ' +
             conditional_escape(self.display_text)
             )
+
     def __repr__(self):
         return '<TodoState: {0}-{1}>'.format(
             self.abbreviation,
@@ -86,6 +89,7 @@ class TodoState(models.Model):
         )
     class Meta():
         ordering = ['order']
+
     @staticmethod
     def get_visible(user=None):
         """Returns a queryset containing all the TodoState objects
@@ -94,6 +98,7 @@ class TodoState(models.Model):
         if user:
             query = query | Q(owner=user)
         return TodoState.objects.filter(query)
+
     @staticmethod
     def as_json(queryset=None, full=False, user=None):
         """Converts a queryset of todo states into a JSON string"""
@@ -111,6 +116,7 @@ class TodoState(models.Model):
                 new_dict['display'] += ' - ' + state.display_text
             new_array.append(new_dict)
         return unicode(json.dumps(new_array))
+
     def as_html(self):
         """Converts this todostate to an HTML string that can
         be put into templates"""
@@ -120,6 +126,7 @@ class TodoState(models.Model):
         if not self.closed: # Bold if not a closed TodoState
             html = '<strong>' + html + '</strong>'
         return mark_safe(html)
+
 
 @python_2_unicode_compatible
 class Tag(models.Model):
@@ -131,8 +138,10 @@ class Tag(models.Model):
     def __str__(self):
         return self.display
 
+
 class Tool(Tag):
     pass
+
 
 class Location(Tag):
     GPS_info = False # TODO
@@ -140,6 +149,7 @@ class Location(Tag):
         'Tool',
         related_name='including_locations_set', blank=True
     )
+
 
 class Contact(Tag):
     f_name = models.CharField(max_length = 50)
@@ -153,6 +163,7 @@ class Contact(Tag):
             return self.user.__str__()
     def __repr__(self):
         return '<Contact: {0}>'.format(self.__str__())
+
 
 # Saving a new user creates a new contact
 @receiver(signals.post_save, sender=User)
@@ -172,6 +183,7 @@ def contact_post_save(sender, **kwargs):
             else:
                 contact.tag_string = instance.username[0:1].upper()
             contact.save()
+
 
 @python_2_unicode_compatible
 class Context(models.Model):
@@ -264,22 +276,19 @@ class Scope(models.Model):
     public = models.BooleanField(default=False)
     display = models.CharField(max_length=50)
     name = models.CharField(max_length=50)
+
     @staticmethod
     def get_visible(user=None):
         """Return a queryset of scopes that the user can subscribe to"""
         public = Scope.objects.filter(public=True)
         scopes = Scope.objects.filter(owner=user)
         return scopes | public
+
     def __str__(self):
         return self.display
 
 
 class NodeQuerySet(query.QuerySet):
-    def as_json(self):
-        """Return queryset in json serialized format"""
-        # print('Deprecation warning: )
-        warn('NodeQuerySet.as_json() has been replaced with django-rest-framework serializers', DeprecationWarning)
-        return serializers.serialize('json', self)
 
     def assigned(self, user, get_archived=False):
         """Get all the objects that `user` is responsible for
@@ -522,30 +531,10 @@ class Node(MPTTModel):
 
     def as_json(self):
         """Process the instance into a json string."""
-        # Convert some fields to serializable format
-        # d = model_to_dict(self)
-        # for field in d:
-        #     if type(d[field]) is dt.date:
-        #         d[field] = str(d[field])
-        #     if type(d[field]) is dt.datetime:
-        #         val = d[field].replace(tzinfo=None)
-        #         d[field] = val.isoformat() + 'Z'
-        #     if type(d[field]) is dt.time:
-        #         d[field] = d[field].strftime('%H:%M:%S')
-        # # Return dictionary as json
-        # fields = d
-        # node_dict = {
-        #     'pk': self.pk,
-        #     'model': 'gtd.node',
-        #     'fields': fields
-        # }
-        # s = json.dumps(node_dict)
-        # return s
         s = serializers.serialize('json', [self])
         # Remove list brackets
         s = s[1:-1]
         return s
-
 
     def get_tags(self):
         tag_strings = self.tag_string.split(":")
