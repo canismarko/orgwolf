@@ -60,7 +60,6 @@ def new_user(request):
     """New user registration"""
     if request.method == 'POST':
         # Validate and create new user
-        # data = request.POST.copy()
         data = request.POST.copy()
         data['last_login'] = data.get('last_login', datetime.now())
         data['date_joined'] = data.get('date_joined', datetime.now())
@@ -124,26 +123,26 @@ def profile(request):
         # Prepare the relevant forms
         profile_form = ProfileForm(instance=request.user)
     # Sort the social_auth accounts into active and inactive lists
-    backends = list(settings.SOCIAL_AUTH_BACKENDS)
-    accounts = request.user.social_auth.all()
+    # backends = list(settings.SOCIAL_AUTH_BACKENDS)
+    # accounts = request.user.social_auth.all()
     active_backends = []
     be_list = []
-    for backend in backends:
-        be_list.append( backend['backend'] )
-    for account in accounts:
-        be_str = '{0}.{1}'.format(
-            account.get_backend().AUTH_BACKEND.__module__,
-            account.get_backend().AUTH_BACKEND.__name__
-            )
-        if be_str in be_list: # User is authenticated on this backend
-            new_be = backends.pop(
-                be_list.index(be_str)
-                )
-            new_be['pk'] = account.pk
-            active_backends.append(new_be)
-            be_list.pop(
-                be_list.index(be_str)
-                )
+    # for backend in backends:
+    #     be_list.append( backend['backend'] )
+    # for account in accounts:
+    #     be_str = '{0}.{1}'.format(
+    #         account.get_backend().AUTH_BACKEND.__module__,
+    #         account.get_backend().AUTH_BACKEND.__name__
+    #         )
+    #     if be_str in be_list: # User is authenticated on this backend
+    #         new_be = backends.pop(
+    #             be_list.index(be_str)
+    #             )
+    #         new_be['pk'] = account.pk
+    #         active_backends.append(new_be)
+    #         be_list.pop(
+    #             be_list.index(be_str)
+    #             )
     # See if the user has a password saved
     if is_password_usable(request.user.password):
         password_set = True

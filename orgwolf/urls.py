@@ -33,7 +33,7 @@ urlpatterns = patterns('',
                        url(r'^messaging/', include('wolfmail.urls')),
                        url(r'^wolfmail/', include('wolfmail.urls')),
                        # Authentication stuff
-                       url(r'', include('social_auth.urls')),
+                       # url(r'', include('social_auth.urls')),
                        url(r'^accounts/login/$',
                            login,
                            name='login',

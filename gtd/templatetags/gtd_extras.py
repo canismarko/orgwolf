@@ -26,7 +26,6 @@ other attributes.
 from __future__ import unicode_literals, absolute_import, print_function
 import datetime as dt
 import re
-from markdown import markdown
 
 from django import template
 from django.utils.html import conditional_escape
@@ -169,5 +168,4 @@ def overdue_deadline(node, agenda_dt=None):
 def escape_html(raw_text):
     parser = HTMLEscaper()
     new_html = parser.clean(raw_text)
-    new_text = markdown(new_html)
     return mark_safe(new_html)
