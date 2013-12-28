@@ -1674,6 +1674,28 @@ class MessageIntegration(TestCase):
             'Deferred message not removed when node is DONE'
         )
 
+    def test_archiving_node(self):
+        """Archiving a deferred node should delete the message."""
+        # Create the Node and verify that message is created
+        dfrd = TodoState.objects.get(abbreviation='DFRD')
+        node = Node()
+        node.todo_state = dfrd
+        node.owner = User.objects.get(pk=1)
+        node.title = 'Deferred node'
+        node.scheduled_date = dt.datetime.today()
+        node.save()
+        self.assertTrue(
+            isinstance(node.deferred_message, Message)
+        )
+        # Now archive the node and check that message is deleted
+        node.archived = True
+        node.save()
+        node = Node.objects.get(pk=node.pk)
+        self.assertRaises(
+            Message.DoesNotExist,
+            lambda: node.deferred_message,
+        )
+
     def test_schedule_from_completion(self):
         """
         See that a node with repeats_from_completion=True will

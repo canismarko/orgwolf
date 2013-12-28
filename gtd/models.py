@@ -690,7 +690,8 @@ def set_deferred_message(sender, instance, **kwargs):
     set the deferred_message foreign key.
     """
     if not kwargs['raw']:
-        if getattr(instance.todo_state, 'abbreviation', None) == 'DFRD':
+        if (getattr(instance.todo_state, 'abbreviation', None) == 'DFRD' and
+            not instance.archived):
             # Node is deferred so create new message or update existing message
             message = instance.get_deferred_msg()
             if message is None:
