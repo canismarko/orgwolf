@@ -77,7 +77,9 @@ class MobileDetectionMiddleware(object):
                 if test in user_agents_test:
                     is_mobile = True
 
-        request.is_mobile = is_mobile
+        # Disable mobile versions...
+        # request.is_mobile = is_mobile
+        request.is_mobile = False
 
 class ProfilerMiddleware(object):
     """Used for benchmarking and performance analysis"""

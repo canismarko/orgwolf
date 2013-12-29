@@ -1,4 +1,4 @@
-/*globals $, jQuery, document, Aloha, window, navigator, persona_user, ow_waiting, alert */
+/*globals $, jQuery, document, location, Aloha, window, navigator, persona_user, ow_waiting, alert */
 "use strict";
 $(document).ready(function() {
     // Rearrange to the login windows to show persona login
@@ -39,7 +39,7 @@ $(document).ready(function() {
 	    $.ajax({
 		type: 'POST',
 		url: '/accounts/logout/persona/', // This is a URL on your website.
-		success: function(res, status, xhr) { location.reload() },
+		success: function(res, status, xhr) { location.reload(); },
 		error: function(xhr, status, err) { alert("Logout failure: " + err); }
 	    });
 	}
