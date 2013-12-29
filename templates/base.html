@@ -56,8 +56,6 @@
     <link rel="stylesheet" type="text/css"
     	  href="{{ STATIC_URL }}timepicker/timepicker.css" />
     <link rel="stylesheet" type="text/css"
-	  href="{{ STATIC_URL }}persona-buttons.css" />
-    <link rel="stylesheet" type="text/css"
 	  href="{{ STATIC_URL }}social/auth-buttons.css" />
     <link rel="stylesheet/less" type="text/css"
 	  href="{{ STATIC_URL }}orgwolf.less" />
@@ -107,9 +105,7 @@
       <script type="text/javascript" src="{{ STATIC_URL }}gtd-ctrl.js"></script>
       <script type="text/javascript" src="{{ STATIC_URL }}wolfmail-models.js"></script>
       <script type="text/javascript" src="{{ STATIC_URL }}wolfmail-ctrl.js"></script>
-      {% if not local_net %}
-	<script src="{{ STATIC_URL }}persona.js"></script>
-      {% endif %}
+      <script src="{{ STATIC_URL }}persona.js"></script>
     {% else %}
       <script src="{{ STATIC_URL }}orgwolf-min.js"></script>
     {% endif %}
@@ -209,22 +205,24 @@
 	</ul>
 
 	{% block inbox_widget %}
-	<form class="navbar-form navbar-left" method="POST" id="new_inbox_form"
-	      action="/gtd/toinbox/?next={{request.get_full_path}}">
-	  <div class="form-group">
-	    <input type="text" name="new_inbox_item" id="new_inbox_item"
-		   class="form-control" placeholder="To inbox...">
+	  <form class="navbar-form navbar-left col-md-3">
+	    <div class="input-group">
+	      <input type="text" name="new_inbox_item" id="new_inbox_item"
+		 class="form-control" placeholder="To inbox...">
 		   </input>
-	  </div>
-	  <input type="submit" value="Save" class="btn btn-default" />
-	  {% csrf_token %}
-	</form>
+	  <span class="input-group-btn">
+	    <button type="submit" class="btn btn-default">
+	      Save
+	    </button>
+	  </span>
+	    </div>
+	  </form>
 	{% endblock %}
 
 	<ul class="nav navbar-nav navbar-right">
+	  {% if request.user.is_authenticated %}
 	  <li class="pull-right"><a href="https://github.com/m3wolf/OrgWolf/issues/new">Feedback</a></li>
 	  {#<li><a href="/feedback/?next={{request.get_full_path}}">Feedback</a></li>#}
-	  {% if request.user.is_authenticated %}
 	  {% if request.user.is_staff %}
 	  <li class="util-dropdown" role="menuitem">
 	    <a href="/admin/">Admin</a>
@@ -234,11 +232,14 @@
 	    <a href="/accounts/profile/">Account</a>
 	  </li>
 	  <li class="util-dropdown" role="menuitem">
-	    <a href="/accounts/logout/" id="logout">Logout</a>
+	    <a href="#" id="logout">Logout</a>
 	  </li>
 	  {% else %}
+	  {{ settings }}
 	  <li>
-	    <a href="/accounts/login/?next={{request.get_full_path}}">Login</a>
+	    <a href="#" class="persona-button">
+	      <img src="{{ STATIC_URL }}/persona-button.png" />
+	    </a>
 	  </li>
 	  {% endif %}
 	</ul>
@@ -247,7 +248,7 @@
 
     {% endblock %}{# end of nav #}
 
-    {# Search box #}
+    {# search box #}
     {% block search %}
     {% include "gtd/search_box.html" %}
     {% endblock %}

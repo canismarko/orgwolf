@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 #######################################################################
 # Copyright 2012 Mark Wolf
 #
@@ -216,7 +217,6 @@ def list_display(request, url_string=""):
                               RequestContext(request))
 
 
-@login_required
 def actions(request, context_id, context_slug):
     base_node_url = reverse('projects')
     template = 'gtd/node_list.html'
@@ -226,6 +226,9 @@ def actions(request, context_id, context_slug):
 
 
 class NodeListView(APIView):
+    """
+    Interacts with next-action style lists of <Node>s
+    """
     model = Node
     def dispatch(self, request, *args, **kwargs):
         """Set some properties first then call regular dispatch"""
@@ -364,9 +367,9 @@ def capture_to_inbox(request):
 
 
 class NodeView(APIView):
-    @method_decorator(login_required)
-    def dispatch(self, *args, **kwargs):
-        return super(NodeView, self).dispatch(*args, **kwargs)
+    # @method_decorator(login_required)
+    # def dispatch(self, *args, **kwargs):
+    #     return super(NodeView, self).dispatch(*args, **kwargs)
 
     def get(self, request, *args, **kwargs):
         """Returns the details of the node as a json encoded object"""
@@ -480,13 +483,13 @@ class UpcomingNodeView(APIView):
 
 
 class ProjectView(DetailView):
-    """Manages the retrieval of an individual node"""
+    """Manages the retrieval of a tree view for the nodes"""
     model = Node
     template_name = 'gtd/node_view.html'
     context_object_name = 'parent_node'
-    @method_decorator(login_required)
-    def dispatch(self, *args, **kwargs):
-        return super(ProjectView, self).dispatch(*args, **kwargs)
+    # @method_decorator(login_required)
+    # def dispatch(self, *args, **kwargs):
+    #     return super(ProjectView, self).dispatch(*args, **kwargs)
 
     def get(self, request, *args, **kwargs):
         # First unpack arguments

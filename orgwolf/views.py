@@ -37,24 +37,12 @@ from orgwolf.forms import RegistrationForm, ProfileForm, PasswordForm
 
 def home(request):
     if request.user.is_authenticated():
-        if request.is_mobile:
-            template = 'home_m.html'
-        else:
-            template = 'home.html'
-        return render_to_response(template,
-                                  locals(),
-                                  RequestContext(request))
+        url = reverse(request.user.home)
+        print(request.user.home)
     else:
-        form = authforms.AuthenticationForm()
-        new_user_form = RegistrationForm()
-        new_user_form.fields['username'].help_text = ''
-        if request.is_mobile:
-            template = 'landing_m.html'
-        else:
-            template = 'landing.html'
-        return render_to_response(template,
-                                  locals(),
-                                  RequestContext(request))
+        url = reverse('list_display')
+    print(url)
+    return redirect(url)
 
 def new_user(request):
     """New user registration"""
@@ -213,7 +201,7 @@ def persona_login(request):
 
 def persona_logout(request):
     logout(request)
-    return response
+    return HttpResponse()
 
 def jstest(request):
     """Executes the javascript test runner (QUnit).

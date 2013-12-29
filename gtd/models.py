@@ -95,7 +95,7 @@ class TodoState(models.Model):
         """Returns a queryset containing all the TodoState objects
         that are currently in play."""
         query = Q(owner=None)
-        if user:
+        if not user.is_anonymous():
             query = query | Q(owner=user)
         return TodoState.objects.filter(query)
 
@@ -281,7 +281,10 @@ class Scope(models.Model):
     def get_visible(user=None):
         """Return a queryset of scopes that the user can subscribe to"""
         public = Scope.objects.filter(public=True)
-        scopes = Scope.objects.filter(owner=user)
+        if user.is_anonymous():
+            scopes = Scope.objects.none()
+        else:
+            scopes = Scope.objects.filter(owner=user)
         return scopes | public
 
     def __str__(self):
@@ -321,7 +324,7 @@ class NodeQuerySet(query.QuerySet):
             qs = qs.filter(owned | others | assigned)
             return qs
         else:
-            raise RuntimeWarning('user not authenticated')
+            # raise RuntimeWarning('user not authenticated')
             return Node.objects.none()
 
     def owned(self, user, get_archived=False):
