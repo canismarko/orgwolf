@@ -8,9 +8,10 @@ Inbox
 
 <div ng-controller="owInbox">
   {% verbatim %}
+  <!-- Table shows the list of messages -->
   <table class="table message-list">
     <tr>
-      <th class="col-md-1">Actions</th>
+      <th class="col-md-2">Actions</th>
       <th>From</th>
       <th>Subject</th>
       <th>Received</th>
@@ -18,8 +19,12 @@ Inbox
     <tr ng-repeat="message in messages" unread="{{ message.unread }}"
 	ow-message-row>
       <td>
-	<span data-title="Create New Task" ng-click="message.create_node()"
+	<span data-title="Create New Task"
+	      ng-click="create_task_modal(message)"
 	      class="glyphicon glyphicon-tasks"></span>
+
+	<span data-title="Create New Project"
+	      class="glyphicon glyphicon-folder-close"></span>
 
 	<span data-title="Defer"
 	      class="glyphicon glyphicon-time"></span>
@@ -33,11 +38,49 @@ Inbox
 	<span data-title="Reply"
 	      class="glyphicon glyphicon-arrow-left"></span>
       </td>
-      <td>{{ message.fields.sender }}</td>
+      <td ng-bind-html="message | format_sender"></td>
+      <!-- <td>{{ message | format_sender }}</td> -->
       <td>{{ message.fields.subject }}</td>
       <td>{{ message.fields.rcvd_date }}</td>
     </tr>
   </table>
+  <!-- Modal for adding a new Node/task -->
+  <div class="modal fade task">
+    <div class="modal-dialog">
+      <div class="modal-content">
+	<div class="modal-header">
+	  <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+	  <h4 class="modal-title">New Task</h4>
+	</div>
+	<div class="modal-body">
+	  <div class="form-group">
+	    <label for="title">Title</label>
+	    <input id="title" class="form-control" ng-model="new_node.title" />
+	  </div>
+	  <div class="form-group" ng-if="modal_task">
+	    <label for="project">Project</label>
+	    <select id="project" class="form-control"
+		    ng-model="project"
+		    ng-change="change_project(project)"
+		    ng-options="x.title for x in projects | order: 'title'"
+>
+	    </select>
+	  </div>
+	  <div class="form-group" ng-if="modal_task">
+	    <label for="parent">Parent</label>
+	    <select id="parent" class="form-control"
+		    ng-model="parent"
+		    ng-options="x | parent_label for x in parents"
+		    ng-change="change_parent(parent)">
+	    </select>
+	</div>
+	<div class="modal-footer">
+	  <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+	  <button type="button" class="btn btn-primary" ng-click="create_node()">Save</button>
+	</div>
+      </div><!-- /.modal-content -->
+    </div><!-- /.modal-dialog -->
+  </div><!-- /.modal for new node/task -->
   {% endverbatim %}
 </div>
 

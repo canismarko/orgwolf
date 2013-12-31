@@ -26,15 +26,17 @@ from plugins import BaseMessageHandler
 
 class MessageHandler(BaseMessageHandler):
     """
-    Handler for manipulating messages that are generated from DFRD Node objects.
+    Handler for manipulating messages that are generated
+    from DFRD Node objects.
     """
 
     def create_node(self):
         """
-        Behavior varies depending on its source Node object's repeating status.
-        If Node repeats, then create a new Node, change the rcvd_date and add
-        to spawned_nodes. If Node does not repeat, then return the source Node
-        and delete the Message object.
+        Behavior varies depending on its source Node object's
+        repeating status. If Node repeats, then create a new Node,
+        change the rcvd_date and add to spawned_nodes. If Node
+        does not repeat, then return the source Node and delete
+        the Message object.
         """
         source_node = self._msg.source_node
         if source_node.repeats and not source_node.repeats_from_completion:

@@ -25,5 +25,31 @@ from wolfmail.models import Message
 
 
 class MessageSerializer(serializers.ModelSerializer):
+
+    def __init__(self, qs=None, *args, **kwargs):
+        # prefetch_related to cut down on db hits
+        if kwargs.get('many', False):
+            qs = qs.select_related('source_node')
+        return super(MessageSerializer, self).__init__(qs, *args, **kwargs)
+
+    # Custom fields
+    node_tree_id = serializers.SerializerMethodField('get_node_tree_id')
+    node_slug = serializers.SerializerMethodField('get_node_slug')
+
     class Meta:
         model = Message
+        exclude = ('spawned_nodes',)
+
+    def get_node_tree_id(self, msg):
+        if msg.source_node is not None:
+            tree_id = msg.source_node.tree_id
+        else:
+            tree_id = None
+        return tree_id
+
+    def get_node_slug(self, msg):
+        if msg.source_node is not None:
+            slug = msg.source_node.slug
+        else:
+            slug = None
+        return slug

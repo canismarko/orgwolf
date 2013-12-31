@@ -388,7 +388,6 @@ class NodeView(APIView):
                     value = False
                 query = {param: value}
                 nodes = nodes.filter(**query)
-                # json = serializers.serialize('json', nodes, fields=('title',))
             serializer = NodeSerializer(nodes, many=True)
         else:
             node = get_object_or_404(Node, pk=node_id)

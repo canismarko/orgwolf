@@ -205,7 +205,8 @@
 	</ul>
 
 	{% block inbox_widget %}
-	  <form class="navbar-form navbar-left col-md-3">
+	  <form class="navbar-form navbar-left col-md-3"
+		ng-controller="inboxCapture" ng-submit="capture($event)">
 	    <div class="input-group">
 	      <input type="text" name="new_inbox_item" id="new_inbox_item"
 		 class="form-control" placeholder="To inbox...">

@@ -27,6 +27,7 @@ from datetime import datetime, timedelta
 import dateutil.parser
 from warnings import warn
 
+from django.contrib.auth.models import AnonymousUser
 from django.core import serializers
 from django.core.exceptions import ValidationError
 from django.db import models, transaction
@@ -91,7 +92,7 @@ class TodoState(models.Model):
         ordering = ['order']
 
     @staticmethod
-    def get_visible(user=None):
+    def get_visible(user=AnonymousUser()):
         """Returns a queryset containing all the TodoState objects
         that are currently in play."""
         query = Q(owner=None)
@@ -100,11 +101,11 @@ class TodoState(models.Model):
         return TodoState.objects.filter(query)
 
     @staticmethod
-    def as_json(queryset=None, full=False, user=None):
+    def as_json(queryset=None, full=False, user=AnonymousUser()):
         """Converts a queryset of todo states into a JSON string"""
         new_array = [{'todo_id': 0, 'pk': 0, 'display': '<span class="todo-none">[None]</span>', 'full': ''}]
-        if not queryset:
-            queryset=TodoState.get_visible(user=user)
+        if queryset is None:
+            queryset = TodoState.get_visible(user=user)
         for state in queryset:
             new_dict = {
                 'todo_id': state.pk,

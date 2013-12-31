@@ -19,6 +19,7 @@
 
 import datetime as dt
 
+from django.contrib.auth.models import AnonymousUser
 from django.core.exceptions import ValidationError
 from django import forms
 from django.forms import widgets
@@ -72,7 +73,7 @@ class NodeForm(forms.ModelForm):
             }
     def __init__(self, *args, **kwargs):
         parent = kwargs.pop('parent', None)
-        user = kwargs.pop('user', None)
+        user = kwargs.pop('user', AnonymousUser())
         super(NodeForm, self).__init__(*args, **kwargs)
         # Set initial values if node already exists
         if self.instance.pk:

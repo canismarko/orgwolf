@@ -218,11 +218,11 @@ $('document').ready(function() {
 	     title="View As List">
 	     </i>
 	</a>
-	<i class="glyphicon glyphicon-folder-close archive-btn"
+	<i class="glyphicon glyphicon-eye-close archive-btn"
 	   title="Archive"
 	   ng-hide="heading.fields.archived">
 	</i>
-	<i class="glyphicon glyphicon-folder-open archive-btn"
+	<i class="glyphicon glyphicon-eye-open archive-btn"
 	   title="Un-archive"
 	   ng-show="heading.fields.archived">
 	</i>
@@ -263,12 +263,12 @@ $('document').ready(function() {
     </div>
     <div id="show-all" class="btn btn-default"
 	 ng-click="show_all($event)" ng-if="!show_arx">
-	 <i class="glyphicon glyphicon-folder-close"></i>
+	 <i class="glyphicon glyphicon-eye-close"></i>
 	 Show Archived
     </div>
     <div id="show-all" class="btn btn-default active"
 	 ng-click="show_all($event)" ng-if="show_arx">
-	 <i class="glyphicon glyphicon-folder-open"></i>
+	 <i class="glyphicon glyphicon-eye-close"></i>
 	 Show Archived
     </div>
     <label for="sort-field">Sort:</label>

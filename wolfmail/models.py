@@ -21,12 +21,9 @@ import importlib
 
 from django.db import models
 from django.dispatch import receiver
-from django.contrib.auth.models import User
 from django.utils.encoding import python_2_unicode_compatible
 
 from orgwolf import settings
-from orgwolf.models import Color
-from plugins.models import Plugin
 
 
 @python_2_unicode_compatible

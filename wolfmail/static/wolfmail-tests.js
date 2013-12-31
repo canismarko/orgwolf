@@ -1,3 +1,5 @@
+var scope;
+
 var msg1 = {
     "id": 1,
     "subject": "Deferred item 1",
@@ -64,8 +66,31 @@ asyncTest('create_node() method', function() {
 	    );
 	}
     });
-    msg.create_node('meet David at the ski hill');
+    msg.create_node({title: 'meet David at the ski hill',
+		     list: scope.messages});
     $.mockjaxClear(mock_id);
+});
+
+asyncTest('create_node() method delete', function() {
+    var msg = scope.messages.get({pk: 1});
+    // Actual tests live in the mocked AJAX callback
+    var mock_id = $.mockjax({
+	url: '/wolfmail/message/1/',
+	type: 'put',
+	responseTime: 0,
+    });
+    msg.create_node({title: 'meet David at the ski hill',
+		     list: scope.messages});
+    setTimeout(function() {
+	// Verify that the Node is deleted from the messages list
+	start();
+	equal(
+	    scope.messages.get({pk: msg.pk}),
+	    null,
+	    'Message deleted from messages list'
+	);
+	$.mockjaxClear(mock_id);
+    }, 50);
 });
 
 asyncTest('create_project() method', function() {

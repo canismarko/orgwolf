@@ -20,6 +20,7 @@
 from __future__ import unicode_literals, absolute_import, print_function
 import re
 
+from django.contrib.auth.models import AnonymousUser
 from django.db import DatabaseError
 from django.db import transaction
 from django.db.models.query import QuerySet
@@ -88,7 +89,7 @@ def parse_url(raw_url, request=None, todo_states=None):
         raw_url = regex.sub('', raw_url)
     # Find any todo states
     if todo_states == None:
-        todo_states = TodoState.get_visible(getattr(request, 'user', None))
+        todo_states = TodoState.get_visible(getattr(request, 'user', AnonymousUser()))
     todo_abbrevs = get_todo_abbrevs(todo_states)
     todo_states_query = TodoState.objects.none()
     seperator = ''

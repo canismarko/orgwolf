@@ -211,6 +211,28 @@ Some texts for heading 0-1
             self.assertEqual(output_string[line_index], input_string[line_index])
 
 
+class BaseMessageHandlerTest(TestCase):
+    """Tests for the default BaseMessageHandler class"""
+    fixtures = ['test-users.json']
+    def test_create_node(self):
+        message = Message()
+        message.owner = User.objects.get(pk=1)
+        message.subject = 'ordinary message'
+        message.rcvd_date = dt.datetime.now()
+        message.save()
+        handler = BaseMessageHandler(message)
+        node = handler.create_node()
+        self.assertEqual(
+            Message.objects.filter(pk=message.pk).count(),
+            0,
+            'Message not deleted after node created'
+        )
+        self.assertTrue(
+            isinstance(node, Node),
+            'create_node() returns a Node object'
+        )
+
+
 class DeferredHandlerTest(TestCase):
     fixtures = ['gtd-env.json', 'gtd-test.json',
                 'test-users.json', 'messages-test.json', ]

@@ -17,6 +17,7 @@ from gtd.models import Node
 from orgwolf.models import OrgWolfUser as User
 from plugins.deferred import MessageHandler as DeferredHandler
 from wolfmail.models import Message
+from wolfmail.serializers import MessageSerializer
 
 
 class MessageAPI(TestCase):
@@ -30,6 +31,7 @@ class MessageAPI(TestCase):
             'Login failed'
         )
         self.url = reverse('messages')
+
     def test_get_all_messages(self):
         response = self.client.get(self.url)
         r = json.loads(response.content)
@@ -40,6 +42,7 @@ class MessageAPI(TestCase):
             transform=lambda x: x.subject,
             ordered=False,
         )
+
     def test_get_inbox(self):
         response = self.client.get(self.url, {'in_inbox': True})
         r = json.loads(response.content)
@@ -61,8 +64,19 @@ class MessageAPI(TestCase):
         url = reverse('messages', kwargs={'pk': message.pk})
         response = self.client.put(
             url,
-            json.dumps({'action': 'create_node'}),
+            json.dumps({'action': 'create_node',
+                        'title': 'man of action',
+                        'parent': 1}),
             content_type='application/json'
+        )
+        r = json.loads(response.content)
+        self.assertEqual(
+            r['status'],
+            'success',
+        )
+        self.assertEqual(
+            r['result'],
+            'message_deleted'
         )
         self.assertEqual(
             Message.objects.filter(pk=1).count(),
@@ -74,6 +88,16 @@ class MessageAPI(TestCase):
             node.todo_state.abbreviation,
             'NEXT',
             'create_node action does not set new nodes todo_state'
+        )
+        self.assertEqual(
+            node.title,
+            'man of action',
+            'Title not set on new node'
+        )
+        self.assertEqual(
+            node.parent,
+            Node.objects.get(pk=1),
+            'Parent not set'
         )
 
     def test_convert_repeating_to_node(self):
@@ -104,4 +128,49 @@ class MessageAPI(TestCase):
             [x['subject'] for x in r],
             transform=lambda x: x.subject,
             ordered=False
+        )
+
+    def test_post_new_message(self):
+        data = {
+            'subject': 'find a place for dinner',
+            'handler_path': 'plugins.quickcapture',
+        }
+        response = self.client.post(
+            self.url, data
+        )
+        r = json.loads(response.content)
+        msg = Message.objects.get(pk=r['id'])
+        self.assertEqual(
+            msg.subject,
+            data['subject'],
+        )
+
+class MessageSerializerTest(TestCase):
+    """
+    Check that the MessageSerializer works as expected for API calls
+    """
+    fixtures = ['test-users.json', 'messages-test.json',
+                'gtd-env.json', 'gtd-test.json']
+
+    def test_db_optimization(self):
+        messages = Message.objects.all()
+        serializer = MessageSerializer(messages, many=True)
+        def eval_queryset():
+            list(serializer.data)
+        self.assertNumQueries(
+            1,
+            eval_queryset
+        )
+
+    def test_node_tree_id(self):
+        message = Message.objects.get(pk=1)
+        node = message.source_node
+        serializer = MessageSerializer(message)
+        self.assertEqual(
+            serializer.data['node_tree_id'],
+            node.tree_id
+        )
+        self.assertEqual(
+            serializer.data['node_slug'],
+            node.slug
         )

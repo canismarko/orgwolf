@@ -1,6 +1,6 @@
 /*globals document, $, jQuery, Aloha, window, alert, GtdHeading, HeadingManager, angular*/
 "use strict";
-var test_headings, owConfig, HeadingFactory, GtdListFactory, UpcomingFactory, outlineCtrl, listCtrl;
+var test_headings, owConfig, HeadingFactory, GtdListFactory, UpcomingFactory, outlineCtrl, listCtrl, ow_waiting;
 
 /*************************************************
 * Angular module for all GTD components
@@ -473,6 +473,43 @@ gtd_module.directive('owListRow', function() {
 	link: link,
     };
 });
+
+/*************************************************
+* Angular controller for capturing quick thoughts
+* to the inbox
+**************************************************/
+gtd_module.controller(
+    'inboxCapture',
+    ['$scope', '$rootScope',
+    function ($scope, $rootScope) {
+	$scope.capture = function(e) {
+	    // Send a captured inbox item to the server for processing
+	    var text, data, $textbox;
+	    data = {handler_path: 'plugins.quickcapture'};
+	    $textbox = $(e.target).find('#new_inbox_item');
+	    data.subject = $textbox.val();
+	    ow_waiting('spinner.inbox');
+	    $.ajax(
+		'/wolfmail/message/',
+		{type: 'POST',
+		 data: data,
+		 complete: function() {
+		     ow_waiting('clear.inbox');
+		 },
+		 success: function() {
+		     $textbox.val('');
+		     $rootScope.$emit('refresh_messages');
+		 },
+		 error: function(jqXHR, status, error) {
+		     alert('Failed!');
+		     console.log(status);
+		     console.log(error);
+		 }
+		}
+	    );
+	};
+    }]
+);
 
 /*************************************************
 * Angular project ouline appliance controller

@@ -26,8 +26,9 @@ from django.contrib.auth.models import User
 from django.shortcuts import render_to_response, redirect
 from django.template import RequestContext
 from django.utils.decorators import method_decorator
-from rest_framework.views import APIView
+from rest_framework.parsers import JSONParser
 from rest_framework.response import Response
+from rest_framework.views import APIView
 
 from gtd.forms import NodeForm
 from gtd.models import Node, TodoState
@@ -63,6 +64,24 @@ class MessageView(APIView):
         action = request.DATA.get('action')
         message = Message.objects.get(pk=pk)
         node = message.handler.create_node()
+        # Set some attributes on the newly created Node()
         node.todo_state = TodoState.objects.get(abbreviation='NEXT')
+        node.title = request.DATA.get('title', node.title)
+        pid = request.DATA.get('parent', None)
+        if pid is not None:
+            node.parent = Node.objects.get(pk=pid)
         node.save()
-        return Response()
+        r = {'status': 'success',
+             'result': 'message_deleted'}
+        return Response(r)
+
+    def post(self, request, pk):
+        # data = JSONParser().parse(request.DATA.dict())
+        # msg = Message(**data)
+        data = request.DATA.dict()
+        data['rcvd_date'] = dt.datetime.now()
+        data['owner'] = request.user
+        msg = Message(**data)
+        msg.save()
+        serializer = MessageSerializer(msg)
+        return Response(serializer.data)

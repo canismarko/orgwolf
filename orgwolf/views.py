@@ -175,7 +175,6 @@ def persona_login(request):
         elif len(users) == 0:
             # Create new user
             user = User()
-            user.home = 'orgwolf.views.home'
             user.email = r['email']
             user.username = r['email']
             user.password = '!'

@@ -297,9 +297,6 @@ GtdHeading.prototype.is_visible = function(view) {
 	    visibility = false;
 	}
     }
-    if ( this.pk === 15 ) {
-	console.log(this.parent_obj);
-    }
     // An un-saved heading is not visible
     if ( this.pk === -1 ) {
 	visibility = false;
@@ -754,7 +751,11 @@ Array.prototype.order_by = function(field) {
     compare = function( a, b ) {
 	var a_val, b_val, num_a, num_b, response;
 	// Test whether key is in heading.fields
-	if ( a.fields.hasOwnProperty(key) && b.fields.hasOwnProperty(key) ) {
+	if ( typeof a.fields === 'undefined' || typeof b.fields === 'undefined' ){
+	    // Failsafe in case not using actual heading objects
+	    a_val = a[key];
+	    b_val = b[key];
+	} else if ( a.fields.hasOwnProperty(key) && b.fields.hasOwnProperty(key) ) {
 	    a_val = a.fields[key];
 	    b_val = b.fields[key];
 	} else {
