@@ -49,5 +49,22 @@
         "subject": "repeats from completed",
 	"source_node": 23
     }
+},
+{
+    "pk": 4, 
+    "model": "wolfmail.message", 
+    "fields": {
+        "spawned_nodes": [], 
+        "sender": "", 
+        "message_text": "", 
+        "rcvd_date": "2013-12-10T00:00:00Z", 
+        "in_inbox": true, 
+        "owner": 1, 
+        "handler_path": "plugins.quickcapture", 
+        "unread": true, 
+        "recipient": "", 
+        "subject": "quick captured message",
+	"source_node": null
+    }
 }
 ]

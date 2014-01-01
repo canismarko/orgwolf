@@ -31,7 +31,6 @@ Message.prototype.create_node = function(obj) {
     $.extend(data, obj);
     delete data.list;
     delete data.$scope;
-    console.log(data);
     jQuery.ajax(this.url, {
 	type: 'PUT',
 	data: data,
@@ -43,14 +42,6 @@ Message.prototype.create_node = function(obj) {
 		success();
 	    }
 	}
-    });
-};
-
-Message.prototype.create_project = function(title) {
-    jQuery.ajax(this.url, {
-	type: 'PUT',
-	data: {action: 'create_project',
-	       title: title}
     });
 };
 
@@ -70,5 +61,26 @@ Message.prototype.defer = function(args) {
     jQuery.ajax(this.url, {
 	type: 'PUT',
 	data: data
+    });
+};
+
+Message.prototype.delete_msg = function(obj) {
+    // Delete the message in the database
+    var success, that;
+    that = this;
+    success = function() {
+	obj.list.remove(that);
+    };
+    jQuery.ajax(this.url, {
+	type: 'DELETE',
+	data: {'action': 'delete'},
+	success: function() {
+	    // Determine whether to call $scope.$apply() to refresh models
+	    if (typeof obj.$scope !== 'undefined' ) {
+		obj.$scope.$apply(success());
+	    } else {
+		success();
+	    }
+	}
     });
 };

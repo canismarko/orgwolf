@@ -58,7 +58,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
     </tr>
     <tr ng-repeat="heading in scheduled"
 	archived="{{ heading.fields.archived }}">
-      <td>{{ heading.fields.scheduled_time }}</td>
+      <td>{{ heading.fields.scheduled_date }} {{ heading.fields.scheduled_time }}</td>
       <td ow-todo>{{ heading.todo_state.fields.abbreviation }}</td>
       <td>
 	<span ng-if="heading.fields.repeats"

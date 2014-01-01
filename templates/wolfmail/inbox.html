@@ -24,6 +24,7 @@ Inbox
 	      class="glyphicon glyphicon-tasks"></span>
 
 	<span data-title="Create New Project"
+	      ng-click="create_project_modal(message)"
 	      class="glyphicon glyphicon-folder-close"></span>
 
 	<span data-title="Defer"
@@ -33,6 +34,7 @@ Inbox
 	      class="glyphicon glyphicon-save"></span>
 
 	<span data-title="Delete"
+	      ng-click="delete_modal(message)"
 	      class="glyphicon glyphicon-trash"></span>
 
 	<span data-title="Reply"
@@ -50,7 +52,8 @@ Inbox
       <div class="modal-content">
 	<div class="modal-header">
 	  <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
-	  <h4 class="modal-title">New Task</h4>
+	  <h4 class="modal-title" ng-if="modal_task">New Task</h4>
+	  <h4 class="modal-title" ng-if="!modal_task">New Project</h4>
 	</div>
 	<div class="modal-body">
 	  <div class="form-group">
@@ -73,6 +76,7 @@ Inbox
 		    ng-options="x | parent_label for x in parents"
 		    ng-change="change_parent(parent)">
 	    </select>
+	  </div>
 	</div>
 	<div class="modal-footer">
 	  <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
@@ -81,6 +85,30 @@ Inbox
       </div><!-- /.modal-content -->
     </div><!-- /.modal-dialog -->
   </div><!-- /.modal for new node/task -->
+  <!-- Modal for deleting a Node -->
+  <div class="modal fade delete">
+    <div class="modal-dialog">
+      <div class="modal-content">
+	<div class="modal-header">
+	  <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+	  <h4 class="modal-title">Delete Message?</h4>
+	</div>
+	<div class="modal-body">
+	  <p>
+	    Are you sure you want to delete
+	    &ldquo;{{ active_msg.fields.subject }}&rdquo;?
+	  </p>
+	  <p>
+	    This action cannot be undone.
+	  </p>
+	</div>
+	<div class="modal-footer">
+	  <button type="button" class="btn btn-default" data-dismiss="modal">Don't Delete</button>
+	  <button type="button" class="btn btn-danger" ng-click="delete_node()">Delete</button>
+	</div>
+      </div><!-- /.modal-content -->
+    </div><!-- /.modal-dialog -->
+  </div><!-- /.modal -->
   {% endverbatim %}
 </div>
 

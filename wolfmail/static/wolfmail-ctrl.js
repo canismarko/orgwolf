@@ -44,6 +44,8 @@ gtd_module.filter('format_sender', ['$sce', function($sce) {
 	    s += '<span class="dfrd">DFRD</span> Node';
 	    s += '</a>';
 	    s = $sce.trustAsHtml(s);
+	} else if (msg.fields.handler_path === 'plugins.quickcapture' ) {
+	    s = 'Quick capture';
 	} else {
 	    s = msg.fields.sender;
 	}
@@ -97,6 +99,7 @@ function owinbox($scope, $rootScope, $resource, MessageAPI, Heading) {
     ds += '-' + today.getDate() + 'T23:59:59Z';
     // Find the modals for processing messages
     $scope.$task_modal = $('.modal.task');
+    $scope.$delete_modal = $('.modal.delete');
     // Get list of messages
     get_messages = function(e) {
 	$scope.messages = MessageAPI.query(
@@ -115,6 +118,8 @@ function owinbox($scope, $rootScope, $resource, MessageAPI, Heading) {
     // Angular handlers
     $scope.create_task_modal = function(msg) {
 	$scope.new_node.title = msg.fields.subject;
+	delete $scope.new_node.tree_id;
+	delete $scope.new_node.parent;
 	if ( msg.fields.handler_path === 'plugins.deferred' ) {
 	    // Deferred nodes don't show the modal
 	    delete $scope.new_node.tree_id;
@@ -126,6 +131,18 @@ function owinbox($scope, $rootScope, $resource, MessageAPI, Heading) {
 	    $scope.modal_task = true;
 	    $scope.$task_modal.modal();
 	}
+    };
+    $scope.create_project_modal = function(msg) {
+	delete $scope.new_node.tree_id;
+	delete $scope.new_node.parent;
+	$scope.new_node.title = msg.fields.subject;
+	$scope.active_msg = msg;
+	$scope.modal_task = false;
+	$scope.$task_modal.modal();
+    };
+    $scope.delete_modal = function(msg) {
+	$scope.active_msg = msg;
+	$scope.$delete_modal.modal();
     };
     $scope.change_project = function(project) {
 	// Get a list of descendants for the selected project(tree)
@@ -140,7 +157,11 @@ function owinbox($scope, $rootScope, $resource, MessageAPI, Heading) {
     $scope.create_node = function() {
 	// Send the new Node to the API
 	$scope.$task_modal.modal('hide');
-	console.log($scope.new_node);
 	$scope.active_msg.create_node($scope.new_node);
+    };
+    $scope.delete_node = function() {
+	// Delete the message in the database
+	$scope.$delete_modal.modal('hide');
+	$scope.active_msg.delete_msg($scope.new_node);
     };
 }

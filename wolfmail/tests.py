@@ -145,6 +145,40 @@ class MessageAPI(TestCase):
             data['subject'],
         )
 
+    def test_delete_message(self):
+        """
+        Delete a message via the API
+        """
+        msg = Message.objects.get(pk=4)
+        url = reverse('messages', kwargs={'pk': msg.pk})
+        response = self.client.delete(url)
+        r = json.loads(response.content)
+        self.assertEqual(
+            Message.objects.filter(pk=4).count(),
+            0,
+            'Message not deleted'
+        )
+        self.assertEqual(
+            r['status'],
+            'success',
+        )
+        self.assertEqual(
+            r['result'],
+            'message_deleted'
+        )
+
+    def test_delete_message_bad_url(self):
+        """
+        Delete a message via the API
+        """
+        url = reverse('messages')
+        response = self.client.delete(url)
+        self.assertEqual(
+            response.status_code,
+            405,
+        )
+
+
 class MessageSerializerTest(TestCase):
     """
     Check that the MessageSerializer works as expected for API calls

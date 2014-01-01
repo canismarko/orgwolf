@@ -93,31 +93,6 @@ asyncTest('create_node() method delete', function() {
     }, 50);
 });
 
-asyncTest('create_project() method', function() {
-    expect(2);
-    var msg = scope.messages.get({pk: 1});
-    // Actual tests live in the mocked AJAX callback
-    var mock_id = $.mockjax({
-	url: '/wolfmail/message/1/',
-	type: 'put',
-	responseTime: 0,
-	response: function(e) {
-	    start();
-	    equal(
-		e.data.action,
-		'create_project'
-	    );
-	    equal(
-		e.data.title,
-		'Skiing',
-		'title sent as JSON'
-	    );
-	}
-    });
-    msg.create_project('Skiing');
-    $.mockjaxClear(mock_id);
-});
-
 asyncTest('defer() method', function() {
     expect(5);
     var msg = scope.messages.get({pk: 1});
@@ -166,4 +141,45 @@ asyncTest('defer() method', function() {
     });
     msg.defer({by: 3, unit: 'd'});
     $.mockjaxClear(mock_id);
+});
+
+asyncTest('delete() method', function() {
+    expect(1);
+    var msg = scope.messages.get({pk: 1});
+    var mock_id = $.mockjax({
+	url: '/wolfmail/message/1/',
+	type: 'delete',
+	responseTime: 0,
+	response: function(e) {
+	    start();
+	    equal(
+		e.data.action,
+		'delete',
+		'action sent as JSON'
+	    );
+	}
+    });
+    msg.delete_msg({list: scope.messages});
+    $.mockjaxClear(mock_id);
+});
+
+asyncTest('delete_node() method delete', function() {
+    var msg = scope.messages.get({pk: 1});
+    // Actual tests live in the mocked AJAX callback
+    var mock_id = $.mockjax({
+	url: '/wolfmail/message/1/',
+	type: 'delete',
+	responseTime: 0,
+    });
+    msg.delete_msg({list: scope.messages});
+    setTimeout(function() {
+	// Verify that the Node is deleted from the messages list
+	start();
+	equal(
+	    scope.messages.get({pk: msg.pk}),
+	    null,
+	    'Message deleted from messages list'
+	);
+	$.mockjaxClear(mock_id);
+    }, 50);
 });

@@ -20,6 +20,10 @@
 <!DOCTYPE html>
 <html lang="en" xmlns="http://www.w3.org/1999/xhtml" ng-app="orgWolf">
   <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
     <title>
       {% block title%}TODO: implement title{% endblock %}
     </title>
@@ -32,6 +36,8 @@
 	    type="image/png"
 	    href="{{ STATIC_URL }}orgwolf-icon.ico" />
     {% endif %}
+      <link rel="apple-touch-icon"
+	    href="{{ STATIC_URL }}orgwolf-icon-114.png" />
     {% if enable_css %}
       {% block all_style %}
 
@@ -169,7 +175,7 @@
 	  {% if debug %}
 	  <img src="{{ STATIC_URL }}orgwolf-logo-debug.png" />
 	  {% else %}
-	  <img src="{{ STATIC_URL }}orgwolf-logo.jpg" />
+	  <img src="{{ STATIC_URL }}orgwolf-logo.png" />
 	  {% endif %}
 	</a>
       </div>
@@ -177,7 +183,7 @@
       <div class="collapse navbar-collapse navbar-ex1-collapse">
 	<ul class="nav navbar-nav">
 	  <!-- Next actions -->
-	  <li{% if 'lists' in request.get_full_path %} class="active"{% endif %}>
+	  <li{% if 'actions' in request.get_full_path %} class="active"{% endif %}>
 	    {% if request.session.context_id %}
 	    <a href="{% url 'list_display' context_id=request.session.context_id context_slug=request.session.context_name|slugify %}">
 	      <span class="glyphicon glyphicon-list"></span>
@@ -191,13 +197,14 @@
 	    {% endif %}
 	  </li>
 	  <!-- Inbox -->
-	  <li>
+	  <li{% if 'inbox' in request.get_full_path %} class="active"{% endif %}>
 	    <a href="{% url 'inbox' %}">
 	      <span class="glyphicon glyphicon-inbox"></span>
 	      Inbox
 	    </a>
 	  </li>
-	  <li{% if 'node' in request.get_full_path %} class="active"{% endif %}>
+	  <!-- Project Outline -->
+	  <li{% if 'project' in request.get_full_path %} class="active"{% endif %}>
 	    <a href="{% url 'projects' %}">
 	      <span class="glyphicon glyphicon-tasks"></span>
 	      Projects</a>
@@ -249,14 +256,16 @@
 
     {% endblock %}{# end of nav #}
 
-    {# search box #}
-    {% block search %}
-    {% include "gtd/search_box.html" %}
-    {% endblock %}
+	{# search box #}
+	{% block search %}
+	{% include "gtd/search_box.html" %}
+	{% endblock %}
 
-    {% block content %}
-    <br />This feature is not yet impletemented. Check back later.<br />
-    {% endblock %}
+	{% block content %}
+	<br />This feature is not yet impletemented. Check back later.<br />
+	{% endblock %}
+
+    </div>
 
   </body>
 </html>

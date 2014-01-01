@@ -23,6 +23,7 @@ import datetime as dt
 
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
+from django.http import HttpResponseNotAllowed
 from django.shortcuts import render_to_response, redirect
 from django.template import RequestContext
 from django.utils.decorators import method_decorator
@@ -85,3 +86,11 @@ class MessageView(APIView):
         msg.save()
         serializer = MessageSerializer(msg)
         return Response(serializer.data)
+
+    def delete(self, request, pk):
+        if pk is None:
+            return HttpResponseNotAllowed(['GET', 'POST'])
+        msg = Message.objects.get(pk=pk)
+        msg.delete()
+        return Response({'status': 'success',
+                         'result': 'message_deleted'})

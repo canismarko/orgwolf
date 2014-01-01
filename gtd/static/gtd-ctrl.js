@@ -678,7 +678,6 @@ function listCtrl($sce, $scope, $resource, $location, GtdList, Heading, Upcoming
     var i, TodoState, Context, today;
     $scope.list_params = {todo_state: 2};
     $scope.active_context = null;
-    console.log($location.absUrl());
     if ( context_id !== 'None' ) {
 	$scope.active_context = parseInt(context_id, 10);
 	$scope.context_name = context_name;
@@ -700,8 +699,10 @@ function listCtrl($sce, $scope, $resource, $location, GtdList, Heading, Upcoming
     // Get list of hard scheduled commitments
     today = new Date();
     $scope.scheduled = new HeadingManager($scope);
-    $scope.scheduled.add(GtdList.query({scheduled_date__lte: today.ow_date(),
-					todo_state: 8}));
+    $scope.scheduled.add(Heading.query(
+	{scheduled_date__lte: today.ow_date(),
+	 todo_state: 8}
+    ));
     console.log($scope.scheduled);
     // Get list of headings
     $scope.headings = new HeadingManager($scope);
