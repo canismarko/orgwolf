@@ -62,16 +62,19 @@ class MessageView(APIView):
         return Response(serializer.data)
 
     def put(self, request, pk):
-        action = request.DATA.get('action')
+        action = request.DATA.get('action', None)
         message = Message.objects.get(pk=pk)
-        node = message.handler.create_node()
-        # Set some attributes on the newly created Node()
-        node.todo_state = TodoState.objects.get(abbreviation='NEXT')
-        node.title = request.DATA.get('title', node.title)
-        pid = request.DATA.get('parent', None)
-        if pid is not None:
-            node.parent = Node.objects.get(pk=pid)
-        node.save()
+        if action == 'create_node':
+            node = message.handler.create_node()
+            # Set some attributes on the newly created Node()
+            node.todo_state = TodoState.objects.get(abbreviation='NEXT')
+            node.title = request.DATA.get('title', node.title)
+            pid = request.DATA.get('parent', None)
+            if pid is not None:
+                node.parent = Node.objects.get(pk=pid)
+            node.save()
+        elif action == 'archive':
+            message.handler.archive()
         r = {'status': 'success',
              'result': 'message_deleted'}
         return Response(r)

@@ -84,3 +84,24 @@ Message.prototype.delete_msg = function(obj) {
 	}
     });
 };
+
+Message.prototype.archive = function(obj) {
+    // Delete the message in the database
+    var success, that;
+    that = this;
+    success = function() {
+	obj.list.remove(that);
+    };
+    jQuery.ajax(this.url, {
+	type: 'PUT',
+	data: {'action': 'archive'},
+	success: function() {
+	    // Determine whether to call $scope.$apply() to refresh models
+	    if (typeof obj.$scope !== 'undefined' ) {
+		obj.$scope.$apply(success());
+	    } else {
+		success();
+	    }
+	}
+    });
+};

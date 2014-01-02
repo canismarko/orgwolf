@@ -31,14 +31,15 @@ Inbox
 	      class="glyphicon glyphicon-time"></span>
 
 	<span data-title="Archive"
+	      ng-click="archive_msg(message)"
 	      class="glyphicon glyphicon-save"></span>
 
 	<span data-title="Delete"
 	      ng-click="delete_modal(message)"
 	      class="glyphicon glyphicon-trash"></span>
 
-	<span data-title="Reply"
-	      class="glyphicon glyphicon-arrow-left"></span>
+	<!-- <span data-title="Reply" -->
+	<!--       class="glyphicon glyphicon-arrow-left"></span> -->
       </td>
       <td ng-bind-html="message | format_sender"></td>
       <!-- <td>{{ message | format_sender }}</td> -->

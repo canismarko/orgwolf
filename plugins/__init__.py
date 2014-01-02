@@ -40,3 +40,10 @@ class BaseMessageHandler():
         new_node.owner = self._msg.owner
         self._msg.delete()
         return new_node
+
+    def archive(self):
+        """
+        Removes the message from the inbox
+        """
+        self._msg.in_inbox = False
+        self._msg.save()

@@ -178,6 +178,25 @@ class MessageAPI(TestCase):
             405,
         )
 
+    def test_put_with_data(self):
+        """
+        Test that sending new field values as a PUT request sets them
+        appropriately.
+        """
+        msg = Message.objects.get(pk=1)
+        url = reverse('messages', kwargs={'pk': msg.pk})
+        self.assertTrue(
+            msg.in_inbox,
+            'Message starts out with in_inbox=False (bad fixture?)'
+        )
+        response = self.client.put(url,
+                                   json.dumps({'action': 'archive'}),
+                                   content_type='application/json')
+        msg = Message.objects.get(pk=1)
+        self.assertTrue(
+            not msg.in_inbox,
+            'Message not changed'
+        )
 
 class MessageSerializerTest(TestCase):
     """

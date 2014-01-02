@@ -143,6 +143,47 @@ asyncTest('defer() method', function() {
     $.mockjaxClear(mock_id);
 });
 
+asyncTest('archive() method', function() {
+    expect(1);
+    var msg = scope.messages.get({pk: 1});
+    var mock_id = $.mockjax({
+	url: '/wolfmail/message/1/',
+	type: 'put',
+	responseTime: 0,
+	response: function(e) {
+	    start();
+	    equal(
+		e.data.action,
+		'archive',
+		'action sent as JSON'
+	    );
+	}
+    });
+    msg.archive({list: scope.messages});
+    $.mockjaxClear(mock_id);
+});
+
+asyncTest('archive() method delete', function() {
+    var msg = scope.messages.get({pk: 1});
+    // Actual tests live in the mocked AJAX callback
+    var mock_id = $.mockjax({
+	url: '/wolfmail/message/1/',
+	type: 'put',
+	responseTime: 0,
+    });
+    msg.archive({list: scope.messages});
+    setTimeout(function() {
+	// Verify that the Node is deleted from the messages list
+	start();
+	equal(
+	    scope.messages.get({pk: msg.pk}),
+	    null,
+	    'Message deleted from messages list'
+	);
+	$.mockjaxClear(mock_id);
+    }, 50);
+});
+
 asyncTest('delete() method', function() {
     expect(1);
     var msg = scope.messages.get({pk: 1});

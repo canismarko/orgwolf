@@ -140,6 +140,10 @@ function owinbox($scope, $rootScope, $resource, MessageAPI, Heading) {
 	$scope.modal_task = false;
 	$scope.$task_modal.modal();
     };
+    $scope.archive_msg = function(msg) {
+	// Remove the message from the inbox in the database
+	msg.archive($scope.new_node);
+    };
     $scope.delete_modal = function(msg) {
 	$scope.active_msg = msg;
 	$scope.$delete_modal.modal();
