@@ -74,6 +74,10 @@ class MessageView(APIView):
             if pid is not None:
                 node.parent = Node.objects.get(pk=pid)
             node.save()
+            # Close this Node if requested
+            if request.DATA.get('close', False):
+                node.todo_state = TodoState.objects.get(abbreviation='DONE')
+                node.save()
         elif action == 'archive':
             # Archive this Message
             message.handler.archive()

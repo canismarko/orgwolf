@@ -101,6 +101,23 @@ class MessageAPI(TestCase):
             'Parent not set'
         )
 
+    def test_convert_to_closed_node(self):
+        message = Message.objects.get(pk=1)
+        node = message.source_node
+        url = reverse('messages', kwargs={'pk': message.pk})
+        response = self.client.put(
+            url,
+            json.dumps({'action': 'create_node',
+                        'close': True}),
+            content_type='application/json'
+        )
+        r = json.loads(response.content)
+        node = Node.objects.get(pk=node.pk)
+        self.assertEqual(
+            node.todo_state.abbreviation,
+            'DONE'
+        )
+
     def test_convert_repeating_to_node(self):
         message = Message.objects.get(pk=2)
         node = message.source_node

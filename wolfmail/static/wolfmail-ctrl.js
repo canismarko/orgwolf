@@ -74,8 +74,26 @@ gtd_module.filter('parent_label', function() {
 **************************************************/
 gtd_module.directive('owMessageRow', function() {
     function link(scope, element, attrs) {
-	var $element = $(element);
+	var $element, $bTask, $bProject, $bComplete, $bDefer, $bArchive, $bDelete;
+	$element = $(element);
 	$element.find('.glyphicon').tooltip();
+	// Find buttons
+	$bTask = $element.find('.glyphicon-tasks');
+	$bProject = $element.find('.glyphicon-folder-close');
+	$bComplete = $element.find('.glyphicon-check');
+	$bDefer = $element.find('.glyphicon-time');
+	$bArchive = $element.find('.glyphicon-save');
+	$bDelete = $element.find('.glyphicon-trash');
+	// Set button visibility for this row
+	if (attrs.owHandler === 'plugins.deferred') {
+	    // Deferred nodes
+	    $bProject.hide();
+	    $bDefer.hide();
+	    $bArchive.hide();
+	    $bDelete.hide();
+	} else {
+	    $bComplete.hide();
+	}
     }
     return {
 	link: link,
@@ -132,6 +150,14 @@ function owinbox($scope, $rootScope, $resource, MessageAPI, Heading) {
 	    $scope.modal_task = true;
 	    $scope.$task_modal.modal();
 	}
+    };
+    $scope.open_task_modal = function(msg) {
+	$scope.new_node.close = false;
+	$scope.create_task_modal(msg);
+    };
+    $scope.complete_task = function(msg) {
+	$scope.new_node.close = true;
+	$scope.create_task_modal(msg);
     };
     $scope.create_project_modal = function(msg) {
 	delete $scope.new_node.tree_id;

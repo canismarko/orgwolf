@@ -45,7 +45,7 @@ test('set_fields() method', function() {
 });
 
 asyncTest('create_node() method', function() {
-    expect(2);
+    expect(3);
     var msg = scope.messages.get({pk: 1});
     // Actual tests live in the mocked AJAX callback
     var mock_id = $.mockjax({
@@ -64,10 +64,16 @@ asyncTest('create_node() method', function() {
 		'meet David at the ski hill',
 		'title sent via JSON'
 	    );
+	    equal(
+		e.data.close,
+		true,
+		'close attribute sent via JSON'
+	    );
 	}
     });
     msg.create_node({title: 'meet David at the ski hill',
-		     list: scope.messages});
+		     list: scope.messages,
+		     close: true});
     $.mockjaxClear(mock_id);
 });
 

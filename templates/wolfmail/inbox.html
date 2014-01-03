@@ -17,15 +17,20 @@ Inbox
       <th>Received</th>
     </tr>
     <tr ng-repeat="message in messages" unread="{{ message.unread }}"
+	ow-handler="{{ message.fields.handler_path }}"
 	ow-message-row>
       <td>
 	<span data-title="Create New Task"
-	      ng-click="create_task_modal(message)"
+	      ng-click="open_task_modal(message)"
 	      class="glyphicon glyphicon-tasks"></span>
 
 	<span data-title="Create New Project"
 	      ng-click="create_project_modal(message)"
 	      class="glyphicon glyphicon-folder-close"></span>
+
+	<span data-title="Mark as 'Done'"
+	      ng-click="complete_task(message)"
+	      class="glyphicon glyphicon-check"></span>
 
 	<span data-title="Defer"
 	      ng-click="defer_modal(message)"
