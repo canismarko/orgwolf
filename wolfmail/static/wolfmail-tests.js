@@ -93,56 +93,6 @@ asyncTest('create_node() method delete', function() {
     }, 50);
 });
 
-asyncTest('defer() method', function() {
-    expect(5);
-    var msg = scope.messages.get({pk: 1});
-    // First test passing just a string
-    var mock_id = $.mockjax({
-	url: '/wolfmail/message/1/',
-	type: 'put',
-	responseTime: 0,
-	response: function(e) {
-	    start();
-	    equal(
-		e.data.action,
-		'defer',
-		'action sent as JSON'
-	    );
-	    equal(
-		e.data.to,
-		'2013-11-13'
-	    );
-	    stop();
-	}
-    });
-    msg.defer('2013-11-13');
-    $.mockjaxClear(mock_id);
-    // The test passing a number and unit
-        var mock_id = $.mockjax({
-	url: '/wolfmail/message/1/',
-	type: 'put',
-	responseTime: 0,
-	response: function(e) {
-	    start();
-	    equal(
-		e.data.action,
-		'defer',
-		'action sent as JSON'
-	    );
-	    equal(
-		e.data.by,
-		'3'
-	    );
-	    equal(
-		e.data.unit,
-		'd'
-	    );
-	}
-    });
-    msg.defer({by: 3, unit: 'd'});
-    $.mockjaxClear(mock_id);
-});
-
 asyncTest('archive() method', function() {
     expect(1);
     var msg = scope.messages.get({pk: 1});
@@ -172,6 +122,54 @@ asyncTest('archive() method delete', function() {
 	responseTime: 0,
     });
     msg.archive({list: scope.messages});
+    setTimeout(function() {
+	// Verify that the Node is deleted from the messages list
+	start();
+	equal(
+	    scope.messages.get({pk: msg.pk}),
+	    null,
+	    'Message deleted from messages list'
+	);
+	$.mockjaxClear(mock_id);
+    }, 50);
+});
+
+asyncTest('defer() method', function() {
+    expect(2);
+    var msg = scope.messages.get({pk: 1});
+    var mock_id = $.mockjax({
+	url: '/wolfmail/message/1/',
+	type: 'put',
+	responseTime: 0,
+	response: function(e) {
+	    start();
+	    equal(
+		e.data.action,
+		'defer',
+		'action sent as JSON'
+	    );
+	    equal(
+		e.data.target_date,
+		'2013-01-04',
+		'new target_date sent as JSON'
+	    );
+	}
+    });
+    msg.defer({list: scope.messages,
+	      target_date: '2013-01-04'});
+    $.mockjaxClear(mock_id);
+});
+
+asyncTest('defer() method delete', function() {
+    var msg = scope.messages.get({pk: 1});
+    // Actual tests live in the mocked AJAX callback
+    var mock_id = $.mockjax({
+	url: '/wolfmail/message/1/',
+	type: 'put',
+	responseTime: 0,
+    });
+    msg.defer({list: scope.messages,
+	      target_date: '2013-01-04'});
     setTimeout(function() {
 	// Verify that the Node is deleted from the messages list
 	start();

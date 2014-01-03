@@ -100,6 +100,7 @@ function owinbox($scope, $rootScope, $resource, MessageAPI, Heading) {
     // Find the modals for processing messages
     $scope.$task_modal = $('.modal.task');
     $scope.$delete_modal = $('.modal.delete');
+    $scope.$defer_modal = $('.modal.defer');
     // Get list of messages
     get_messages = function(e) {
 	$scope.messages = MessageAPI.query(
@@ -140,6 +141,18 @@ function owinbox($scope, $rootScope, $resource, MessageAPI, Heading) {
 	$scope.modal_task = false;
 	$scope.$task_modal.modal();
     };
+    $scope.defer_modal = function(msg) {
+	var today;
+	today = new Date();
+	$scope.active_msg = msg;
+	$scope.$defer_modal.modal();
+	$scope.$defer_modal.find('.datepicker').datepicker({
+	    format: 'yyyy-mm-dd',
+	    todayBtn: true,
+	    todayHighlight: true,
+	    startDate: today,
+	});
+    };
     $scope.archive_msg = function(msg) {
 	// Remove the message from the inbox in the database
 	msg.archive($scope.new_node);
@@ -155,13 +168,20 @@ function owinbox($scope, $rootScope, $resource, MessageAPI, Heading) {
 	$scope.parent = project;
     };
     $scope.change_parent = function(parent) {
-	console.log(parent);
+	// User picked a new project for the Node()
 	$scope.new_node.parent = parent.id;
     };
     $scope.create_node = function() {
 	// Send the new Node to the API
 	$scope.$task_modal.modal('hide');
 	$scope.active_msg.create_node($scope.new_node);
+    };
+    $scope.defer_msg = function() {
+	// Reschedule this message to appear in the future
+	$scope.new_node.target_date = $scope.$defer_modal.find('#target-date').val();
+	console.log($scope.new_node);
+	$scope.active_msg.defer($scope.new_node);
+	$scope.defer_modal.modal('hide');
     };
     $scope.delete_node = function() {
 	// Delete the message in the database

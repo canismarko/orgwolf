@@ -7,6 +7,7 @@ Replace this with more appropriate tests for your application.
 
 import datetime as dt
 import json
+import pytz
 
 from django.core.urlresolvers import reverse
 from django.test import TestCase
@@ -178,10 +179,9 @@ class MessageAPI(TestCase):
             405,
         )
 
-    def test_put_with_data(self):
+    def test_archive(self):
         """
-        Test that sending new field values as a PUT request sets them
-        appropriately.
+        Test that the 'archive' action functions properly.
         """
         msg = Message.objects.get(pk=1)
         url = reverse('messages', kwargs={'pk': msg.pk})
@@ -197,6 +197,32 @@ class MessageAPI(TestCase):
             not msg.in_inbox,
             'Message not changed'
         )
+
+    def test_defer(self):
+        """
+        Test that the 'defer' action functions properly.
+        """
+        msg = Message.objects.get(pk=1)
+        url = reverse('messages', kwargs={'pk': msg.pk})
+        now = dt.datetime(2014, 1, 2, tzinfo=get_current_timezone())
+        msg.rcvd_date = now
+        msg.save()
+        # Send the API call to defer the Message()
+        future_date = now + dt.timedelta(days=3)
+        future_str = future_date.strftime('%Y-%m-%d')
+        response = self.client.put(
+            url,
+            json.dumps({'action': 'defer',
+                        'target_date': future_str}),
+            content_type='application/json'
+        )
+        # Now check that the new rcvd_date is set
+        msg = Message.objects.get(pk=1)
+        self.assertEqual(
+            msg.rcvd_date,
+            future_date,
+        )
+
 
 class MessageSerializerTest(TestCase):
     """

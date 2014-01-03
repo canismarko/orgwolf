@@ -45,25 +45,6 @@ Message.prototype.create_node = function(obj) {
     });
 };
 
-Message.prototype.defer = function(args) {
-    // Re-schedule this message for later on
-    // If obj is a string, assume it's the new date. If it's an object then pass
-    // it should be of the form
-    // { by: 3, unit: 'd' } (by 3 days)
-    var data = {action: 'defer'};
-    // Set JSON data
-    if ( typeof args === 'string' ) {
-	data.to = args;
-    } else {
-	data.by = args.by;
-	data.unit = args.unit;
-    }
-    jQuery.ajax(this.url, {
-	type: 'PUT',
-	data: data
-    });
-};
-
 Message.prototype.delete_msg = function(obj) {
     // Delete the message in the database
     var success, that;
@@ -95,6 +76,28 @@ Message.prototype.archive = function(obj) {
     jQuery.ajax(this.url, {
 	type: 'PUT',
 	data: {'action': 'archive'},
+	success: function() {
+	    // Determine whether to call $scope.$apply() to refresh models
+	    if (typeof obj.$scope !== 'undefined' ) {
+		obj.$scope.$apply(success());
+	    } else {
+		success();
+	    }
+	}
+    });
+};
+
+Message.prototype.defer = function(obj) {
+    // Reschedule the message in the database for later
+     var success, that;
+    that = this;
+    success = function() {
+	obj.list.remove(that);
+    };
+    jQuery.ajax(this.url, {
+	type: 'PUT',
+	data: {'action': 'defer',
+	       'target_date': obj.target_date},
 	success: function() {
 	    // Determine whether to call $scope.$apply() to refresh models
 	    if (typeof obj.$scope !== 'undefined' ) {

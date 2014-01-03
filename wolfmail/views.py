@@ -27,6 +27,7 @@ from django.http import HttpResponseNotAllowed
 from django.shortcuts import render_to_response, redirect
 from django.template import RequestContext
 from django.utils.decorators import method_decorator
+from django.utils.timezone import get_current_timezone
 from rest_framework.parsers import JSONParser
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -74,7 +75,16 @@ class MessageView(APIView):
                 node.parent = Node.objects.get(pk=pid)
             node.save()
         elif action == 'archive':
+            # Archive this Message
             message.handler.archive()
+        elif action == 'defer':
+            # Reschedule this Message to a later date
+            new_date = dt.datetime.strptime(
+                request.DATA['target_date'],
+                '%Y-%m-%d'
+            ).replace(tzinfo=get_current_timezone())
+            message.rcvd_date = new_date
+            message.save()
         r = {'status': 'success',
              'result': 'message_deleted'}
         return Response(r)
@@ -83,7 +93,7 @@ class MessageView(APIView):
         # data = JSONParser().parse(request.DATA.dict())
         # msg = Message(**data)
         data = request.DATA.dict()
-        data['rcvd_date'] = dt.datetime.now()
+        data['rcvd_date'] = dt.datetime.now(get_current_timezone())
         data['owner'] = request.user
         msg = Message(**data)
         msg.save()

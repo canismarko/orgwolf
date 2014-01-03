@@ -28,6 +28,7 @@ Inbox
 	      class="glyphicon glyphicon-folder-close"></span>
 
 	<span data-title="Defer"
+	      ng-click="defer_modal(message)"
 	      class="glyphicon glyphicon-time"></span>
 
 	<span data-title="Archive"
@@ -80,12 +81,13 @@ Inbox
 	  </div>
 	</div>
 	<div class="modal-footer">
-	  <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-	  <button type="button" class="btn btn-primary" ng-click="create_node()">Save</button>
+	  <button type="button" class="btn btn-default" data-dismiss="modal">Discard Changes</button>
+	  <button type="button" class="btn btn-primary" ng-click="create_node()">Create</button>
 	</div>
       </div><!-- /.modal-content -->
     </div><!-- /.modal-dialog -->
   </div><!-- /.modal for new node/task -->
+
   <!-- Modal for deleting a Node -->
   <div class="modal fade delete">
     <div class="modal-dialog">
@@ -109,7 +111,29 @@ Inbox
 	</div>
       </div><!-- /.modal-content -->
     </div><!-- /.modal-dialog -->
-  </div><!-- /.modal -->
+  </div><!-- /.modal.delete -->
+
+  <!-- Modal for deferring a message for later -->
+  <div class="modal fade defer">
+    <div class="modal-dialog">
+      <div class="modal-content">
+	<div class="modal-header">
+	  <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+	  <h4>Defer Message to Future</h4>
+	</div>
+	<div class="modal-body">
+	  <label for="target-date">Scheduled Date:</label>
+	  <input id="target-date" type="text"
+		 class="form-control datepicker"
+		 placeholder="YYYY-MM-DD" />
+	</div>
+	<div class="modal-footer">
+	  <button type="button" class="btn btn-default" data-dismiss="modal">Don't Defer</button>
+	  <button type="button" class="btn btn-primary" ng-click="defer_msg()">Defer</button>
+	</div>
+      </div><!-- /.modal-content -->
+    </div><!-- /.modal-dialog -->
+  </div><!-- /.modal.defer -->
   {% endverbatim %}
 </div>
 
