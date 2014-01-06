@@ -44,6 +44,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
   gtd_module.constant('context_id', '{{ request.session.context_id }}');
   gtd_module.constant('context_name', '{{ request.session.context_name }}');
 </script>
+
+<!-- Search box -->
+<div class="col-sm-5 col-md-4 pull-right">
+  {% include 'gtd/search_box.html' %}
+</div>
+
 <div id="gtd-list" ng-controller="nextActionsList">
   {% verbatim %}
   <!-- List of hard scheduled items for the day -->
@@ -73,22 +79,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
       <td>{{ heading.fields.tag_string }}</td>
     </tr>
   </table>
+
   <h4 ng-if="context_name">{{ context_name }}</h4>
-  <span ng-if="active_root">
-    Project:
-    <a href="/gtd/project/{{ active_root.pk }}/">
-      {{ active_root.fields.title }}
-    </a>
-    [<a ng-click="filter_parent(null)">&times;</a>]
-  </span>
-  <!-- Scope Tabs -->
-  <ul ow-scope-tabs>
-    <li scope_id="0" ng-click="change_scope($event)"><a href="#">All</a></li>
-    <li ng-repeat="scope in scopes" scope_id="{{ scope.id }}"
-	ng-click="change_scope($event)">
-	<a href="#">{{ scope.display }}</a>
-    </li>
-  </ul>
   <form action="" method="POST" id="list-filters"
 	class="form-inline ow-unauth-hide">
     <!-- Context selection box -->
@@ -106,6 +98,23 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 	     {{ state.fields.abbreviation }}
     </label>
   </form>
+
+  <!-- Indicator for current active project -->
+  <span ng-if="active_root">
+    Project:
+    <a href="/gtd/project/{{ active_root.pk }}/">
+      {{ active_root.fields.title }}
+    </a>
+    [<a ng-click="filter_parent(null)">&times;</a>]
+  </span>
+  <!-- Scope Tabs -->
+  <ul ow-scope-tabs>
+    <li scope_id="0" ng-click="change_scope($event)"><a href="#">All</a></li>
+    <li ng-repeat="scope in scopes" scope_id="{{ scope.id }}"
+	ng-click="change_scope($event)">
+	<a href="#">{{ scope.display }}</a>
+    </li>
+  </ul>
 
   <table class="table table-condensed" id="gtd-list">
     <tr>

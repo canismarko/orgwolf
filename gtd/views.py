@@ -412,10 +412,11 @@ class NodeView(APIView):
         """
         data = request.DATA.copy()
         if pk is not None:
-            return HttpResponseNotAllowed(['GET', 'POST'])
+            return HttpResponseNotAllowed(['GET', 'PUT'])
         # Create new node
         self.node = Node()
-        self.node.owner = request.user
+        if not request.user.is_anonymous():
+            self.node.owner = request.user
         self.node.save()
         # Set fields (ignore mptt fields for new nodes)
         for key in ('id', 'tree_id', 'lft', 'rght', 'level'):
@@ -428,9 +429,11 @@ class NodeView(APIView):
         # Return newly saved node as json
         self.node = Node.objects.get(pk=self.node.pk)
         serializer = NodeSerializer(self.node)
+        data = serializer.data
+        # Don't keep nodes sent via the public interface
         if request.user.is_anonymous():
             self.node.delete()
-        return Response(serializer.data)
+        return Response(data)
 
     def put(self, request, pk=None, *args, **kwargs):
         """

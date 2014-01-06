@@ -269,30 +269,46 @@ $('document').ready(function() {
 <div ng-controller="nodeOutline" id="outline-appliance"
      parent_id="{{ parent_node.pk }}" parent_tree="{{ parent_node.tree_id }}"
      level="{{ parent_node.level }}">
-  <form id="sort-field"
-	class="form-inline">
-     {% verbatim %}
-    <div id="add-heading" class="btn btn-default"
-	 ng-click="add_heading($event)">
-	 <i class="glyphicon glyphicon-plus"></i>
-	 New Project
+  <div class="container">
+    <div class="row">
+
+      <!-- Search box -->
+      <div class="col-sm-5 col-md-4 pull-right">
+	{% include 'gtd/search_box.html' %}
+      </div>
+
+      <form id="sort-field"
+	    class="form-inline">
+	<div class="col-md-4">
+	  {% verbatim %}
+	  <div id="add-heading" class="btn btn-default"
+	       ng-click="add_heading($event)">
+	    <i class="glyphicon glyphicon-plus"></i>
+	    New Project
+	  </div>
+	  <div id="show-all" class="btn btn-default ow-unauth-hide"
+	       ng-click="show_all($event)" ng-if="!show_arx">
+	    <i class="glyphicon glyphicon-eye-close"></i>
+	    Show Archived
+	  </div>
+	  <div id="show-all" class="btn btn-default active ow-unauth-hide"
+	       ng-click="show_all($event)" ng-if="show_arx">
+	    <i class="glyphicon glyphicon-eye-close"></i>
+	    Show Archived
+	  </div>
+	</div>
+	<div class="col-md-4 col-sm-3">
+	  <label for="sort-field" class="ow-unauth-hide">Sort:</label>
+	  <select name="sort-field" ng-model="sort_field"
+		  class="form-control  ow-unauth-hide"
+		  ng-options="x.key as x.display for x in sort_fields">
+	  </select>
+	</div>
+      </form>
     </div>
-    <div id="show-all" class="btn btn-default ow-unauth-hide"
-	 ng-click="show_all($event)" ng-if="!show_arx">
-	 <i class="glyphicon glyphicon-eye-close"></i>
-	 Show Archived
-    </div>
-    <div id="show-all" class="btn btn-default active ow-unauth-hide"
-	 ng-click="show_all($event)" ng-if="show_arx">
-	 <i class="glyphicon glyphicon-eye-close"></i>
-	 Show Archived
-    </div>
-    <label for="sort-field" class="ow-unauth-hide">Sort:</label>
-    <select name="sort-field" ng-model="sort_field"
-	    class="form-control  ow-unauth-hide"
-	    ng-options="x.key as x.display for x in sort_fields">
-    </select>
-  </form>
+
+  </div><!-- /.container -->
+
   <ul ow-scope-tabs>
     <li scope_id="0" ng-click="change_scope($event)"><a href="#">All</a></li>
     <li ng-repeat="scope in scopes" scope_id="{{ scope.id }}"

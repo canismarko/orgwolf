@@ -259,17 +259,20 @@
 
     {% endblock %}{# end of nav #}
 
-	{# search box #}
-	{% block search %}
-	{% include "gtd/search_box.html" %}
-	{% endblock %}
+	<!-- {# search box #} -->
+	<!-- {% block search %} -->
+	<!-- {% include "gtd/search_box.html" %} -->
+	<!-- {% endblock %} -->
 
     {% if request.user.is_anonymous %}
     <div class="container" id="unauth-warn">
       <div class="row">
 	<div class="alert alert-warning col-md-5 col-md-offset-3">
 	  You are in <strong>demo mode</strong>; changes will not be
-	  saved.<br />Please <strong>click the sign-in button</strong> in the upper right.
+	  saved.<br />Please
+	  <a href="#" class="persona-button">
+	    <img src="{{ STATIC_URL}}/persona-button-small.png" /></a>
+	  to create a new account.
 	</div>
       </div>
     </div>

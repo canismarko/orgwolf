@@ -1633,7 +1633,7 @@ class NodeAPI(TestCase):
             jresponse['todo_state'],
             )
 
-    def test_add_node_through_json(self):
+    def test_post(self):
         """Add a new node by submitting the whole form through AJAX"""
         new_data = {
             'id': 0,
@@ -1663,6 +1663,30 @@ class NodeAPI(TestCase):
         self.assertEqual(
             new_node.title,
             new_data['title']
+        )
+
+    def test_post_anonymous(self):
+        """
+        If User is not logged in, the API should just return
+        the submitted data without saving it to the DB.
+        """
+        self.client.logout()
+        data = {'title': 'anonymous new project'}
+        response = self.client.post(
+            reverse('node_object'),
+            json.dumps(data),
+            content_type='application/json'
+        )
+        r = json.loads(response.content)
+        self.assertEqual(
+            Node.objects.filter(title=data['title']).count(),
+            0,
+            'Node was saved to database'
+        )
+        self.assertRaises(
+            KeyError,
+            lambda x: x['id'],
+            r
         )
 
 

@@ -6,6 +6,11 @@ Inbox
 
 {% block content %}
 
+<!-- Search box -->
+<div class="col-sm-5 col-md-4 pull-right">
+  {% include 'gtd/search_box.html' %}
+</div>
+
 <div ng-controller="owInbox">
   {% verbatim %}
   <!-- Table shows the list of messages -->
