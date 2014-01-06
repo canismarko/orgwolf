@@ -54,6 +54,9 @@ class MessageView(APIView):
 
     def get(self, request, pk=None):
         data = request.GET.copy()
+        if data.get('now', False):
+            data.pop('now')
+            data['rcvd_date__lte'] = dt.datetime.now()
         # No pk so list as collection
         qs = Message.objects.filter(owner=request.user)
         # Filter by get params

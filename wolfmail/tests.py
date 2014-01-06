@@ -134,12 +134,16 @@ class MessageAPI(TestCase):
         )
 
     def test_filter_inbox_by_date(self):
-        qs = Message.objects.filter(
-            rcvd_date__lte=dt.datetime(2013, 12, 21,
-                                       23, 59, 59,
-                                       tzinfo=get_current_timezone())
-        )
-        response = self.client.get(self.url, {'rcvd_date__lte': '2013-12-21'})
+        """
+        Make sure that the view handles string dates appropriately.
+        Specifically, it needs to convert from UTC to current timezone.
+        """
+        curr_dt = dt.datetime(2014, 1, 5,
+                              4, 0, 0,
+                              tzinfo=pytz.utc)
+        tz_str = curr_dt.astimezone(get_current_timezone()).isoformat()
+        qs = Message.objects.filter(rcvd_date__lte=curr_dt)
+        response = self.client.get(self.url, {'rcvd_date__lte': tz_str})
         r = json.loads(response.content)
         self.assertQuerysetEqual(
             qs,

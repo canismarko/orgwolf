@@ -216,10 +216,13 @@
 		ng-controller="inboxCapture" ng-submit="capture($event)">
 	    <div class="input-group">
 	      <input type="text" name="new_inbox_item" id="new_inbox_item"
-		 class="form-control" placeholder="To inbox...">
+		     class="form-control"
+		     placeholder="To inbox..."
+		     {% if request.user.is_anonymous %} disabled{% endif %}>
 		   </input>
 	  <span class="input-group-btn">
-	    <button type="submit" class="btn btn-default">
+	    <button type="submit" class="btn btn-default"
+		    {% if request.user.is_anonymous %} disabled{% endif %}>
 	      Save
 	    </button>
 	  </span>
@@ -245,7 +248,7 @@
 	  {% else %}
 	  {{ settings }}
 	  <li>
-	    <a href="#" class="persona-button">
+	    <a href="#" class="persona-button navbar-brand">
 	      <img src="{{ STATIC_URL }}/persona-button.png" />
 	    </a>
 	  </li>
@@ -260,6 +263,17 @@
 	{% block search %}
 	{% include "gtd/search_box.html" %}
 	{% endblock %}
+
+    {% if request.user.is_anonymous %}
+    <div class="container">
+      <div class="row">
+	<div class="alert alert-warning col-md-5 col-md-offset-3">
+	  You are in <strong>demo mode</strong>; changes will not be
+	  saved.<br />Please <strong>click the sign-in button</strong> in the upper right.
+	</div>
+      </div>
+    </div>
+    {% endif %}
 
 	{% block content %}
 	<br />This feature is not yet impletemented. Check back later.<br />

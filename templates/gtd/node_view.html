@@ -211,24 +211,38 @@ $('document').ready(function() {
       <div class="clickable ow-title">
 	{{heading.fields.title}}
       </div>
-      <div class="ow-buttons">
-	<i class="glyphicon glyphicon-pencil edit-btn" title="Edit"></i>
-	<a href="/gtd/lists/parent{{ heading.pk }}/next/">
+
+      <div class="ow-buttons btn-group btn-group-xs">
+
+	<button type="button" class="btn btn-default">
+	  <i class="glyphicon glyphicon-pencil edit-btn" title="Edit"></i>
+	</button>
+
+	<a href="/gtd/lists/parent{{ heading.pk }}/next/"
+	   class="btn btn-default">
 	  <i class="glyphicon glyphicon-th-list list-btn"
 	     title="View As List">
 	     </i>
 	</a>
-	<i class="glyphicon glyphicon-eye-close archive-btn"
-	   title="Archive"
-	   ng-hide="heading.fields.archived">
-	</i>
-	<i class="glyphicon glyphicon-eye-open archive-btn"
-	   title="Un-archive"
-	   ng-show="heading.fields.archived">
-	</i>
-	<i class="glyphicon glyphicon-plus new-btn"
-	   title="New subheading">
-	</i>
+
+	</button>
+
+	<button type="button" class="btn btn-default">
+	  <i class="glyphicon glyphicon-eye-close archive-btn"
+	     title="Archive"
+	     ng-hide="heading.fields.archived">
+	  </i>
+	  <i class="glyphicon glyphicon-eye-open archive-btn"
+	     title="Un-archive"
+	     ng-show="heading.fields.archived">
+	  </i>
+	</button>
+
+	<button type="button" class="btn btn-default">
+	  <i class="glyphicon glyphicon-plus new-btn"
+	     title="New subheading">
+	  </i>
+	</button>
       </div>
     </div>
     <div ng-include="'editable'"></div>

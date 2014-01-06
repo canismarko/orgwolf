@@ -681,7 +681,9 @@ function listCtrl($sce, $scope, $resource, $location, GtdList, Heading, Upcoming
     if ( context_id !== 'None' ) {
 	$scope.active_context = parseInt(context_id, 10);
 	$scope.context_name = context_name;
-	$scope.list_params.context = $scope.active_context;
+	if ($scope.active_context) {
+	    $scope.list_params.context = $scope.active_context;
+	}
     }
     $scope.show_list = true;
     // No-op to prevent function-not-found error
@@ -703,7 +705,6 @@ function listCtrl($sce, $scope, $resource, $location, GtdList, Heading, Upcoming
 	{scheduled_date__lte: today.ow_date(),
 	 todo_state: 8}
     ));
-    console.log($scope.scheduled);
     // Get list of headings
     $scope.headings = new HeadingManager($scope);
     $scope.cached_states = [2];

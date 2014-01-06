@@ -279,14 +279,12 @@ class Scope(models.Model):
     name = models.CharField(max_length=50)
 
     @staticmethod
-    def get_visible(user=None):
+    def get_visible(user=AnonymousUser()):
         """Return a queryset of scopes that the user can subscribe to"""
-        public = Scope.objects.filter(public=True)
-        if user.is_anonymous():
-            scopes = Scope.objects.none()
-        else:
-            scopes = Scope.objects.filter(owner=user)
-        return scopes | public
+        query = Q(owner=None)
+        if not user.is_anonymous():
+            query = query | Q(owner=user)
+        return Scope.objects.filter(query)
 
     def __str__(self):
         return self.display
@@ -307,26 +305,24 @@ class NodeQuerySet(query.QuerySet):
             assigned = qs.filter(assigned__in=contact)
             return assigned | owned
         else:
-            raise RuntimeWarning('user not authenticated')
-            return Node.objects.none()
+            return Node.objects.filter(owner=None)
 
     def mine(self, user, get_archived=False):
         """Get all the objects that have `user` as the owner or assigned,
         or have `user` in the related_users relationship."""
-        if user.is_authenticated():
-            qs = self
-            if not get_archived:
-                qs = qs.filter(archived=False)
+        qs = self
+        if user.is_anonymous():
+            qs = qs.filter(owner=None)
+        else:
             owned = Q(owner=user)
             others = Q(users=user)
             # Look for assigned nodes
             contact = user.contact_set.all()
             assigned = Q(assigned__in=contact)
             qs = qs.filter(owned | others | assigned)
-            return qs
-        else:
-            # raise RuntimeWarning('user not authenticated')
-            return Node.objects.none()
+        if not get_archived:
+            qs = qs.filter(archived=False)
+        return qs
 
     def owned(self, user, get_archived=False):
         """Get all the objects owned by the user with some optional
@@ -364,7 +360,8 @@ class Node(MPTTModel):
     # Database fields
     owner = models.ForeignKey(
         settings.AUTH_USER_MODEL,
-        related_name="owned_node_set")
+        related_name="owned_node_set",
+        null=True, blank=True)
     users = models.ManyToManyField(settings.AUTH_USER_MODEL, blank=True)
     assigned = models.ForeignKey(
         'Contact',
@@ -469,7 +466,10 @@ class Node(MPTTModel):
         - 'read'
         """
         access = None
-        if self.owner == user:
+        if self.owner == None:
+            # Public nodes
+            access = 'read'
+        elif self.owner == user:
             access = 'write'
         return access
 

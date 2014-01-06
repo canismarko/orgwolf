@@ -78,12 +78,12 @@ gtd_module.directive('owMessageRow', function() {
 	$element = $(element);
 	$element.find('.glyphicon').tooltip();
 	// Find buttons
-	$bTask = $element.find('.glyphicon-tasks');
-	$bProject = $element.find('.glyphicon-folder-close');
-	$bComplete = $element.find('.glyphicon-check');
-	$bDefer = $element.find('.glyphicon-time');
-	$bArchive = $element.find('.glyphicon-save');
-	$bDelete = $element.find('.glyphicon-trash');
+	$bTask = $element.find('.msg-task');
+	$bProject = $element.find('.msg-project');
+	$bComplete = $element.find('.msg-complete');
+	$bDefer = $element.find('.msg-defer');
+	$bArchive = $element.find('.msg-save');
+	$bDelete = $element.find('.msg-delete');
 	// Set button visibility for this row
 	if (attrs.owHandler === 'plugins.deferred') {
 	    // Deferred nodes
@@ -113,8 +113,6 @@ function owinbox($scope, $rootScope, $resource, MessageAPI, Heading) {
     // Date for this inbox allows user to see future dfrd msgs
     today = new Date();
     $scope.current_date = today;
-    ds = today.getFullYear() + '-' + (today.getMonth() + 1);
-    ds += '-' + today.getDate() + 'T23:59:59Z';
     // Find the modals for processing messages
     $scope.$task_modal = $('.modal.task');
     $scope.$delete_modal = $('.modal.delete');
@@ -123,7 +121,7 @@ function owinbox($scope, $rootScope, $resource, MessageAPI, Heading) {
     get_messages = function(e) {
 	$scope.messages = MessageAPI.query(
 	    {in_inbox: true,
-	     rcvd_date__lte: ds}
+	     now: true}
 	);
     };
     $rootScope.$on('refresh_messages', get_messages);
@@ -181,6 +179,7 @@ function owinbox($scope, $rootScope, $resource, MessageAPI, Heading) {
     };
     $scope.archive_msg = function(msg) {
 	// Remove the message from the inbox in the database
+	$scope.new_node.list = $scope.messages;
 	msg.archive($scope.new_node);
     };
     $scope.delete_modal = function(msg) {
@@ -200,18 +199,20 @@ function owinbox($scope, $rootScope, $resource, MessageAPI, Heading) {
     $scope.create_node = function() {
 	// Send the new Node to the API
 	$scope.$task_modal.modal('hide');
+	$scope.new_node.list = $scope.messages;
 	$scope.active_msg.create_node($scope.new_node);
     };
     $scope.defer_msg = function() {
 	// Reschedule this message to appear in the future
 	$scope.new_node.target_date = $scope.$defer_modal.find('#target-date').val();
-	console.log($scope.new_node);
+	$scope.new_node.list = $scope.messages;
 	$scope.active_msg.defer($scope.new_node);
 	$scope.defer_modal.modal('hide');
     };
     $scope.delete_node = function() {
 	// Delete the message in the database
 	$scope.$delete_modal.modal('hide');
+	$scope.new_node.list = $scope.messages;
 	$scope.active_msg.delete_msg($scope.new_node);
     };
 }

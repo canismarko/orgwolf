@@ -57,7 +57,7 @@
         "spawned_nodes": [], 
         "sender": "", 
         "message_text": "", 
-        "rcvd_date": "2013-12-10T00:00:00Z", 
+        "rcvd_date": "2014-01-05T03:03:07Z", 
         "in_inbox": true, 
         "owner": 1, 
         "handler_path": "plugins.quickcapture", 

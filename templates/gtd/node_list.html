@@ -47,7 +47,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 <div id="gtd-list" ng-controller="nextActionsList">
   {% verbatim %}
   <!-- List of hard scheduled items for the day -->
-  <table class="table table-condensed" id="scheduled-list">
+  <table class="table table-condensed" id="scheduled-list"
+	 ng-if="scheduled.length">
     <tr>
       <th>Time</th>
       <th>State</th>

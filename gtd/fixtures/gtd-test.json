@@ -15,6 +15,28 @@
     }
 },
 {
+    "pk": 3, 
+    "model": "gtd.context", 
+    "fields": {
+        "owner": 1, 
+        "people_required": [
+            7
+        ], 
+        "tools_available": [], 
+        "name": "Lou B", 
+        "locations_available": []
+    }
+},
+{
+    "pk": 3, 
+    "model": "gtd.scope", 
+    "fields": {
+        "owner": 1, 
+        "name": "Artios", 
+        "display": "Artios"
+    }
+},
+{
     "pk": 1, 
     "model": "gtd.node", 
     "fields": {
@@ -180,7 +202,7 @@
         "priority": "", 
         "closed": "2011-05-14T00:56:00Z", 
         "tree_id": 1, 
-        "todo_state": 2, 
+        "todo_state": 3, 
         "scope": [
             1
         ], 
@@ -252,7 +274,7 @@
         "priority": "", 
         "closed": "2011-05-14T00:56:00Z", 
         "tree_id": 3, 
-        "todo_state": 1, 
+        "todo_state": 2, 
         "scope": [
             1
         ], 
@@ -568,7 +590,7 @@
         "priority": "", 
         "closed": null, 
         "tree_id": 7, 
-        "todo_state": 5, 
+        "todo_state": 1, 
         "scope": [
             1
         ], 
@@ -825,6 +847,45 @@
         "repeats_from_completion": true, 
         "repeating_number": 3, 
         "repeats": true
+    }
+},
+{
+    "pk": 24, 
+    "model": "gtd.node", 
+    "fields": {
+        "rght": 2, 
+        "text": "", 
+        "tag_string": "", 
+        "assigned": null, 
+        "lft": 1, 
+        "deadline_date": "2011-05-13", 
+        "owner": null, 
+        "scheduled_time": null, 
+        "archived": false, 
+        "deadline_time": null, 
+        "title": "Anonymous Node", 
+        "time_needed": null, 
+        "priority": "", 
+        "closed": "2012-12-31T02:42:25.223Z", 
+        "tree_id": 10, 
+        "todo_state": null, 
+        "scope": [
+            1, 
+            2
+        ], 
+        "energy": null, 
+        "users": [
+            2
+        ], 
+        "parent": null, 
+        "repeating_unit": null, 
+        "scheduled_date": "2012-12-31", 
+        "slug": "errands", 
+        "opened": "2012-11-17T11:10:39.371Z", 
+        "level": 0, 
+        "repeats_from_completion": false, 
+        "repeating_number": null, 
+        "repeats": false
     }
 }
 ]

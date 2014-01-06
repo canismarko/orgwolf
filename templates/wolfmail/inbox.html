@@ -9,7 +9,16 @@ Inbox
 <div ng-controller="owInbox">
   {% verbatim %}
   <!-- Table shows the list of messages -->
-  <table class="table message-list">
+  <div class="container message-list"
+       ng-hide="messages.length">
+    <div class="alert alert-success">
+      <p>
+	No messages in inbox. Congratulations on reaching
+	<strong>inbox zero</strong>!
+      </p>
+    </div>
+  </div>
+  <table class="table message-list" ng-if="messages.length">
     <tr>
       <th class="col-md-2">Actions</th>
       <th>From</th>
@@ -20,29 +29,43 @@ Inbox
 	ow-handler="{{ message.fields.handler_path }}"
 	ow-message-row>
       <td>
-	<span data-title="Create New Task"
-	      ng-click="open_task_modal(message)"
-	      class="glyphicon glyphicon-tasks"></span>
+	<div class="btn-group btn-group-xs">
+	  <button class="btn btn-primary msg-task"
+		  ng-click="open_task_modal(message)">
+	    <span class="glyphicon glyphicon-tasks"
+		  data-title="New Task"></span>
+	  </button>
 
-	<span data-title="Create New Project"
-	      ng-click="create_project_modal(message)"
-	      class="glyphicon glyphicon-folder-close"></span>
+	  <button class="btn btn-info msg-project"
+		  ng-click="create_project_modal(message)">
+	    <span class="glyphicon glyphicon-folder-close"
+		  data-title="New Project"></span>
+	  </button>
 
-	<span data-title="Mark as 'Done'"
-	      ng-click="complete_task(message)"
-	      class="glyphicon glyphicon-check"></span>
+	  <button class="btn btn-success msg-complete"
+		  ng-click="complete_task(message)">
+	    <span class="glyphicon glyphicon-check"
+		  data-title="Mark as 'Done'"></span>
+	  </button>
 
-	<span data-title="Defer"
-	      ng-click="defer_modal(message)"
-	      class="glyphicon glyphicon-time"></span>
+	  <button class="btn btn-warning msg-defer"
+		  ng-click="defer_modal(message)">
+	    <span class="glyphicon glyphicon-time"
+		  data-title="Defer"></span>
+	  </button>
 
-	<span data-title="Archive"
-	      ng-click="archive_msg(message)"
-	      class="glyphicon glyphicon-save"></span>
+	  <button class="btn btn-default msg-save"
+		  ng-click="archive_msg(message)">
+	    <span class="glyphicon glyphicon-save"
+		  data-title="Archive"></span>
+	  </button>
 
-	<span data-title="Delete"
-	      ng-click="delete_modal(message)"
-	      class="glyphicon glyphicon-trash"></span>
+	  <button class="btn btn-danger msg-delete"
+		  ng-click="delete_modal(message)">
+	    <span class="glyphicon glyphicon-trash"
+		  data-title="Delete"></span>
+	  </button>
+	</div>
 
 	<!-- <span data-title="Reply" -->
 	<!--       class="glyphicon glyphicon-arrow-left"></span> -->

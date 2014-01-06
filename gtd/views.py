@@ -344,33 +344,34 @@ class NodeListView(APIView):
         return Response(serializer.data)
 
 
-@login_required
-def capture_to_inbox(request):
-    """Processes the "capture widget" that appears on each page.
-    Basically, this view adds the item as a MailTime with the Inbox label."""
-    previous_url = request.GET.get('next', '/')
-    if request.method == 'POST':
-        if request.POST['new_inbox_item'] != "":
-            new_item = MailItem()
-            new_item.sender = "Captured"
-            new_item.recipient
-            new_item.owner = request.user
-            new_item.subject = request.POST['new_inbox_item']
-            new_item.rcvd_date = datetime.datetime.now()
-            new_item.full_clean()
-            new_item.save()
-            new_item.labels.add(Label.objects.get(name="Inbox"))
-    # TODO: automatically redirect using django.messaging
-    return render_to_response('gtd/capture_success.html',
-                              locals(),
-                              RequestContext(request))
+# @login_required
+# def capture_to_inbox(request):
+#     """Processes the "capture widget" that appears on each page.
+#     Basically, this view adds the item as a MailTime with the Inbox label.
+#     """
+#     previous_url = request.GET.get('next', '/')
+#     if request.method == 'POST':
+#         if request.POST['new_inbox_item'] != "":
+#             new_item = MailItem()
+#             new_item.sender = "Captured"
+#             new_item.recipient
+#             new_item.owner = request.user
+#             new_item.subject = request.POST['new_inbox_item']
+#             new_item.rcvd_date = datetime.datetime.now()
+#             new_item.full_clean()
+#             new_item.save()
+#             new_item.labels.add(Label.objects.get(name="Inbox"))
+#     # TODO: automatically redirect using django.messaging
+#     return render_to_response('gtd/capture_success.html',
+#                               locals(),
+#                               RequestContext(request))
 
 
 class NodeView(APIView):
-    # @method_decorator(login_required)
-    # def dispatch(self, *args, **kwargs):
-    #     return super(NodeView, self).dispatch(*args, **kwargs)
-
+    """
+    API for interacting with Node objects. Unauthenticated requests
+    are permitted but do not alter the database.
+    """
     def get(self, request, *args, **kwargs):
         """Returns the details of the node as a json encoded object"""
         BOOLS = ('archived',) # Translate 'False' -> False for these fields
@@ -427,6 +428,8 @@ class NodeView(APIView):
         # Return newly saved node as json
         self.node = Node.objects.get(pk=self.node.pk)
         serializer = NodeSerializer(self.node)
+        if request.user.is_anonymous():
+            self.node.delete()
         return Response(serializer.data)
 
     def put(self, request, pk=None, *args, **kwargs):
@@ -444,16 +447,29 @@ class NodeView(APIView):
             # PUT without specifying a pk
             return HttpResponseNotAllowed(['GET', 'POST'])
         data = request.DATA.copy()
-        try:
-            self.node = Node.objects.mine(request.user,
-                                  get_archived=True).get(pk=pk)
-        except Node.DoesNotExist:
-            # If the node is not accessible return a 404
-            raise Http404()
-        self.node.set_fields(data)
-        self.node.save()
-        self.node = Node.objects.get(pk=self.node.pk)
-        serializer = NodeSerializer(self.node)
+        # Remove tree metadata from the request
+        TREE_FIELDS = ('lft', 'rght', 'level', 'tree_id')
+        for key in TREE_FIELDS:
+            try:
+                data.pop(key)
+            except KeyError:
+                pass
+        # Check the permissions of the Node
+        node = get_object_or_404(Node, pk=pk)
+        access = node.access_level(request.user)
+        if ((request.user.is_anonymous() and node.owner is not None) or
+            (not request.user.is_anonymous() and access != 'write')):
+            # Not authorized
+            return HttpResponse(
+                json.dumps({'status': 'failure',
+                            'reason': 'unauthorized'}),
+                status=401)
+        # Update and return the Node
+        node.set_fields(data)
+        if not request.user.is_anonymous():
+            node.save()
+            node = Node.objects.get(pk=node.pk)
+        serializer = NodeSerializer(node)
         return Response(serializer.data)
 
 
@@ -462,9 +478,6 @@ class UpcomingNodeView(APIView):
     Returns a list of nodes that have upcoming deadlines, based on the
     optional date passed: /gtd/node/upcoming[/year/month/day/]
     """
-    @method_decorator(login_required)
-    def dispatch(self, *args, **kwargs):
-        return super(UpcomingNodeView, self).dispatch(*args, **kwargs)
     def get(self, request, year=None, month=None, day=None):
         deadline_period = 7 # in days
         all_nodes_qs = Node.objects.mine(request.user)

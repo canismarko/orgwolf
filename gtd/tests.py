@@ -168,7 +168,7 @@ class NodeArchive(TestCase):
         node = Node.objects.get(pk=11)
         self.assertFalse(node.archived)
         self.assertFalse(node.todo_state.closed)
-        done = TodoState.objects.get(pk=3)
+        done = TodoState.objects.get(abbreviation='DONE')
         node.todo_state = done
         node.auto_update = True
         node.save()
@@ -182,7 +182,7 @@ class RepeatingNodeTest(TestCase):
 
     def test_scheduled_repetition(self):
         """Make sure the item is rescheduled properly."""
-        node = Node.objects.get(title='Buy cat food')
+        node = Node.objects.get(pk=5)
         closed = TodoState.objects.get(abbreviation='DONE')
         actionable = TodoState.objects.get(abbreviation='ACTN')
         self.assertTrue(node.repeats)
@@ -190,7 +190,7 @@ class RepeatingNodeTest(TestCase):
         node.todo_state = closed
         node.auto_update = True
         node.save()
-        node = Node.objects.get(title='Buy cat food')
+        node = Node.objects.get(pk=node.pk)
         # The state shouldn't actually change since it's repeating
         self.assertEqual(actionable, node.todo_state)
         new_date = dt.datetime(2013, 1, 3, tzinfo=get_current_timezone())
@@ -313,8 +313,8 @@ class ContextFiltering(TestCase):
         all_nodes_qs = Node.objects.filter(
             Q(tag_string=':work:')|Q(tag_string=':home:')
         )
-        work = Context.objects.get(name='Work')
-        home = Context.objects.get(name='Home')
+        work = Context.objects.get(name='Office')
+        home = Context.objects.get(name='House')
         work_nodes = Node.objects.filter(Q(pk=7)|Q(pk=18))
         self.assertEqual(
             list(work_nodes),
@@ -505,7 +505,15 @@ class NodePermissions(TestCase):
         self.assertEqual(
             'write',
             node.access_level(self.user)
-            )
+        )
+
+    def test_anonymous(self):
+        node = Node()
+        node.owner = None
+        self.assertEqual(
+            'read',
+            node.access_level(AnonymousUser())
+        )
 
 
 class UrlParse(TestCase):
@@ -614,7 +622,7 @@ class ScopeAPI(TestCase):
                 username=self.user.username, password='secret')
         )
         self.scopes = Scope.objects.filter(owner=self.user)
-        self.scopes = self.scopes | Scope.objects.filter(public=True)
+        self.scopes = Scope.objects.filter(owner=None) | self.scopes
 
     def test_get_scope_collection(self):
         response = self.client.get(self.url)
@@ -622,6 +630,16 @@ class ScopeAPI(TestCase):
         self.assertEqual(
             [x['id'] for x in json.loads(response.content)],
             [x['id'] for x in expected],
+        )
+
+    def test_get_scope_anonymous(self):
+        # Does the Scope interface return public scopes if user not logged in
+        self.client.logout()
+        response = self.client.get(self.url)
+        expected = Scope.objects.filter(owner=None)
+        self.assertEqual(
+            [x['id'] for x in json.loads(response.content)],
+            [x.pk for x in expected],
         )
 
     def test_scope_get_visible(self):
@@ -1364,6 +1382,24 @@ class NodeAPI(TestCase):
             ordered=False,
         )
 
+    def test_node_get_collection_anonymous(self):
+        """
+        Test that Nodes with user=None are returned
+        if nobody is logged in.
+        """
+        expected = Node.objects.filter(owner=None)
+        self.client.logout()
+        response = self.client.get(
+            reverse('node_object'),
+            content_type='application/json'
+        )
+        r = json.loads(response.content)
+        self.assertQuerysetEqual(
+            expected,
+            [x['title'] for x in r],
+            transform=lambda x: x.title
+        )
+
     def test_node_serializer(self):
         """Make sure that getting nodes by AJAX is database efficient"""
         nodes = Node.objects.all()
@@ -1393,6 +1429,7 @@ class NodeAPI(TestCase):
             'id': self.node.pk,
             'todo_state': 1,
             'archived': 'true',
+            'lft': 98, # Should ignore tree meta data
         })
         response = self.client.put(
             self.url,
@@ -1422,6 +1459,11 @@ class NodeAPI(TestCase):
             self.node.archived,
             'node not archived after ajax POST'
         )
+        self.assertNotEqual(
+            self.node.lft,
+            98,
+            'lft not ignored in Node PUT operation'
+        )
         put_data = json.dumps({
             'archived': 'false'
         })
@@ -1434,6 +1476,43 @@ class NodeAPI(TestCase):
         self.assertTrue(
             not self.node.archived,
             'node not un-archived after ajax POST'
+        )
+
+    def test_put_anonymous(self):
+        """
+        If the Node is public (owner=None), this API by PUT
+        should return the modified Node but not actually
+        save it to the database. Error if Node is owned.
+        """
+        # Check status code of PUTing owned nodes
+        self.client.logout()
+        new_title = 'PUT submitted fake title'
+        response = self.client.put(
+            self.url,
+            json.dumps({'title': new_title}),
+            content_type='application/json'
+        )
+        self.assertEqual(response.status_code, 401)
+        # Now check PUTing public nodes
+        anon_node = Node.objects.get(pk=24)
+        old_title = anon_node.title
+        url = reverse('node_object',
+                      kwargs={'pk': anon_node.pk})
+        response = self.client.put(
+            url,
+            json.dumps({'title': 'PUT submitted fake title'}),
+            content_type='application/json'
+        )
+        r = json.loads(response.content)
+        db_node = Node.objects.get(pk=anon_node.pk)
+        self.assertEqual(
+            db_node.title,
+            old_title,
+            'Title changed in database'
+        )
+        self.assertEqual(
+            r['title'],
+            new_title,
         )
 
     def test_archive_by_json(self):

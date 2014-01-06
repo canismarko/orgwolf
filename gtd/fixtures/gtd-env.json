@@ -3,9 +3,24 @@
     "pk": 1, 
     "model": "gtd.todostate", 
     "fields": {
+        "display_text": "Deferred", 
+        "actionable": false, 
+        "_color_rgb": 15108608, 
+        "_color_alpha": 1.0, 
+        "abbreviation": "DFRD", 
+        "closed": false, 
+        "owner": null, 
+        "order": 50, 
+        "class_size": 0
+    }
+},
+{
+    "pk": 2, 
+    "model": "gtd.todostate", 
+    "fields": {
         "display_text": "Next Action", 
         "actionable": true, 
-        "_color_rgb": 0, 
+        "_color_rgb": 13369344, 
         "_color_alpha": 1.0, 
         "abbreviation": "NEXT", 
         "closed": false, 
@@ -15,7 +30,7 @@
     }
 },
 {
-    "pk": 2, 
+    "pk": 3, 
     "model": "gtd.todostate", 
     "fields": {
         "display_text": "Future Action", 
@@ -30,12 +45,12 @@
     }
 },
 {
-    "pk": 3, 
+    "pk": 4, 
     "model": "gtd.todostate", 
     "fields": {
         "display_text": "Completed", 
         "actionable": false, 
-        "_color_rgb": 0, 
+        "_color_rgb": 31232, 
         "_color_alpha": 1.0, 
         "abbreviation": "DONE", 
         "closed": true, 
@@ -45,7 +60,7 @@
     }
 },
 {
-    "pk": 4, 
+    "pk": 5, 
     "model": "gtd.todostate", 
     "fields": {
         "display_text": "Someday Maybe", 
@@ -53,21 +68,6 @@
         "_color_rgb": 0, 
         "_color_alpha": 1.0, 
         "abbreviation": "SMDY", 
-        "closed": false, 
-        "owner": null, 
-        "order": 50, 
-        "class_size": 0
-    }
-},
-{
-    "pk": 5, 
-    "model": "gtd.todostate", 
-    "fields": {
-        "display_text": "Deferred", 
-        "actionable": false, 
-        "_color_rgb": 0, 
-        "_color_alpha": 1.0, 
-        "abbreviation": "DFRD", 
         "closed": false, 
         "owner": null, 
         "order": 50, 
@@ -95,7 +95,7 @@
     "fields": {
         "display_text": "Cancelled", 
         "actionable": false, 
-        "_color_rgb": 13260, 
+        "_color_rgb": 184, 
         "_color_alpha": 1.0, 
         "abbreviation": "CNCL", 
         "closed": true, 
@@ -110,7 +110,7 @@
     "fields": {
         "display_text": "Hard Scheduled", 
         "actionable": false, 
-        "_color_rgb": 0, 
+        "_color_rgb": 6029404, 
         "_color_alpha": 1.0, 
         "abbreviation": "HARD", 
         "closed": false, 
@@ -250,7 +250,7 @@
             3, 
             4
         ], 
-        "name": "Work", 
+        "name": "Office", 
         "locations_available": [
             1
         ]
@@ -263,63 +263,28 @@
         "owner": 1, 
         "people_required": [], 
         "tools_available": [], 
-        "name": "Home", 
+        "name": "House", 
         "locations_available": [
             2
         ]
     }
 },
 {
-    "pk": 3, 
-    "model": "gtd.context", 
-    "fields": {
-        "owner": 1, 
-        "people_required": [
-            7
-        ], 
-        "tools_available": [], 
-        "name": "Lou B", 
-        "locations_available": []
-    }
-},
-{
     "pk": 1, 
     "model": "gtd.scope", 
     "fields": {
-        "owner": 1, 
-        "public": false, 
-        "name": "joe_corp", 
-        "display": "joe_corp"
+        "owner": null, 
+        "name": "Personal", 
+        "display": "Personal"
     }
 },
 {
     "pk": 2, 
     "model": "gtd.scope", 
     "fields": {
-        "owner": 1, 
-        "public": false, 
-        "name": "Kalsec", 
-        "display": "Kalsec"
-    }
-},
-{
-    "pk": 3, 
-    "model": "gtd.scope", 
-    "fields": {
-        "owner": 2, 
-        "public": false, 
-        "name": "private scope", 
-        "display": "private"
-    }
-},
-{
-    "pk": 4, 
-    "model": "gtd.scope", 
-    "fields": {
         "owner": null, 
-        "public": true, 
-        "name": "public scope", 
-        "display": "public"
+        "name": "Work", 
+        "display": "Work"
     }
 }
 ]
