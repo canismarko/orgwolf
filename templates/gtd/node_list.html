@@ -89,7 +89,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 	<a href="#">{{ scope.display }}</a>
     </li>
   </ul>
-  <form action="" method="POST" class="form-inline" id="list-filters">
+  <form action="" method="POST" id="list-filters"
+	class="form-inline ow-unauth-hide">
     <!-- Context selection box -->
     <label for="context">Context:</label>
     <select name="context" ng-model="active_context" class="form-control"
@@ -117,6 +118,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
     <!-- Actionable Items -->
     <tr ng-repeat="heading in headings | order: 'list'"
 	ng-show="heading.is_visible()" ow-pk="{{ heading.pk }}"
+	ow-priority="{{ heading.fields.priority }}"
 	class="heading-row" archived="{{ heading.fields.archived }}" ow-list-row>
       <td ow-todo>
 	  {{ heading.todo_state.fields.abbreviation }}

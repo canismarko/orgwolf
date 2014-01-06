@@ -6,6 +6,13 @@
 @primary-pale: rgb(155, 136, 214);
 @text-color: rgb(88, 0, 176);
 
+/* Modify content if user is anonymous */
+[ow-logged-in=False] {
+    .ow-unauth-hide {
+	display: none;
+    }
+}
+
 /* Navbar */
 .navbar-brand
 {
@@ -35,15 +42,6 @@
     margin-top: 15px;
 }
 
-/* Information boxes */
-/* .ow-info-box { */
-/*     position: absolute; */
-/*     top: 0px; */
-/*     z-index: 1000; */
-/*     margin-left: auto; */
-/*     margin-right: auto; */
-/* } */
-
 b {
     position: relative;
 }
@@ -70,18 +68,6 @@ b {
     /* IE8-9 gradient filter */
     filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='@colora', endColorstr='@colorb', GradientType=0);
 }
-/* .navbar-inner { */
-/*     background-color: @primary-light; */
-/*     .gradient(@primary-light, @primary-pale); */
-/*     .nav > li { */
-/* 	> a { */
-/* 	    color: @primary; */
-/* 	} */
-/* 	> a:hover { */
-/* 	    color: @primary-dark; */
-/* 	} */
-/*     } */
-/* } */
 
 /* Search box */
 .form-search {
@@ -217,14 +203,14 @@ dd.todo
     transition: all @anim-easing @anim-speed;
     display: block !important;
     position: relative;
-    /* overflow: hidden; */
-    /* text-overflow: clip; */
-    /* white-space: nowrap; */
 }
 .outline
 {
     margin-top: 20px;
     margin-bottom: 50px;
+    .ow-hoverable[ow-level="0"] {
+	font-size: 110%;
+    }
 }
 .pointer, .ow-buttons, .add-heading, .todo-state, .todo-option
 {
@@ -275,18 +261,6 @@ dd.todo
     .opacify(0);
 }
 
-/* .expandable > .ow-hoverable > i */
-/* { */
-/*     .opacify(100) */
-/* } */
-/* .lazy-expandable > .ow-hoverable > i */
-/* { */
-/*     .opacify(75); */
-/* } */
-/* .arch-expandable > .ow-hoverable > i */
-/* { */
-/*     .opacify(30); */
-/* } */
 .heading i.twisty, .heading div.details, .heading div.loading
 {
     -webkit-transition: opacity @anim-speed, -webkit-transform @anim-speed, padding-top @anim-speed;
@@ -487,6 +461,12 @@ div.ow-hoverable, div.clickable, div.ow-buttons
     }
     td.todo-col {
 	width: 100px;
+    }
+    [ow-priority=A] {
+	font-weight: bold;
+    }
+    [ow-priority=C] {
+	font-style: italic;
     }
 }
 /* #scheduled-list { */

@@ -160,7 +160,7 @@
     {% endblock %}
     {% endif %}
   </head>
-  <body>
+  <body ow-logged-in="{{ request.user.is_authenticated }}">
     {% block nav %}
     <nav class="navbar navbar-default" role="navigation">
       <div class="navbar-header">
@@ -265,7 +265,7 @@
 	{% endblock %}
 
     {% if request.user.is_anonymous %}
-    <div class="container">
+    <div class="container" id="unauth-warn">
       <div class="row">
 	<div class="alert alert-warning col-md-5 col-md-offset-3">
 	  You are in <strong>demo mode</strong>; changes will not be

@@ -201,7 +201,8 @@ $('document').ready(function() {
     <div class="ow-hoverable" ng-click="toggle_node($event)"
 	 ng-show="!heading.editable" style="{{ heading | style }}"
 	 archived="{{ heading.fields.archived }}"
-	 actionable="{{ heading.todo_state.fields.actionable }}">
+	 actionable="{{ heading.todo_state.fields.actionable }}"
+	 ow-level="{{ heading.fields.level }}">
       <i class="twisty glyphicon glyphicon-chevron-right"
 	 expandable="{{heading.expandable}}"></i>
       <span ow-todo>
@@ -268,25 +269,27 @@ $('document').ready(function() {
 <div ng-controller="nodeOutline" id="outline-appliance"
      parent_id="{{ parent_node.pk }}" parent_tree="{{ parent_node.tree_id }}"
      level="{{ parent_node.level }}">
+  <form id="sort-field"
+	class="form-inline">
      {% verbatim %}
-  <form class="form-inline" id="sort-field">
     <div id="add-heading" class="btn btn-default"
 	 ng-click="add_heading($event)">
 	 <i class="glyphicon glyphicon-plus"></i>
 	 New Project
     </div>
-    <div id="show-all" class="btn btn-default"
+    <div id="show-all" class="btn btn-default ow-unauth-hide"
 	 ng-click="show_all($event)" ng-if="!show_arx">
 	 <i class="glyphicon glyphicon-eye-close"></i>
 	 Show Archived
     </div>
-    <div id="show-all" class="btn btn-default active"
+    <div id="show-all" class="btn btn-default active ow-unauth-hide"
 	 ng-click="show_all($event)" ng-if="show_arx">
 	 <i class="glyphicon glyphicon-eye-close"></i>
 	 Show Archived
     </div>
-    <label for="sort-field">Sort:</label>
-    <select name="sort-field" ng-model="sort_field" class="form-control"
+    <label for="sort-field" class="ow-unauth-hide">Sort:</label>
+    <select name="sort-field" ng-model="sort_field"
+	    class="form-control  ow-unauth-hide"
 	    ng-options="x.key as x.display for x in sort_fields">
     </select>
   </form>
