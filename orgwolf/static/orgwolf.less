@@ -202,7 +202,7 @@ dd.todo
     margin-top: 20px;
     margin-bottom: 50px;
     .ow-hoverable[ow-level="0"] {
-	font-size: 110%;
+	font-size: 105%;
     }
 }
 .pointer, .ow-buttons, .add-heading, .todo-state, .todo-option
@@ -382,12 +382,12 @@ div.ow-hoverable, div.clickable, div.ow-buttons
     }
 }
 
-/* Heading editing form and controls */
-.heading-form {
-    input.ng-invalid.ng-dirty {
-        background-color: #FA787E;
+/* Editing form and control validation */
+input,textarea {
+    &.ng-invalid.ng-dirty {
+	background-color: #FA787E;
     }
-    input.ng-invalid.ng-invalid-required {
+    &.ng-invalid.ng-invalid-required {
 	border-color: red;
     }
 }

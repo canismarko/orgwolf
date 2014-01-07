@@ -17,6 +17,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #######################################################################
 
+import datetime as dt
 import importlib
 
 from django.db import models
@@ -39,9 +40,9 @@ class Message(models.Model):
     recipient = models.TextField(blank=True)
     owner = models.ForeignKey(settings.AUTH_USER_MODEL)
     unread = models.BooleanField(default=True)
-    handler_path = models.CharField(max_length=100)
+    handler_path = models.CharField(max_length=100, blank=True)
     in_inbox = models.BooleanField(default=True)
-    rcvd_date = models.DateTimeField()
+    rcvd_date = models.DateTimeField(default=dt.datetime.now)
     message_text = models.TextField(blank=True)
     spawned_nodes = models.ManyToManyField('gtd.Node', blank=True)
     source_node = models.OneToOneField('gtd.Node', null=True, blank=True,

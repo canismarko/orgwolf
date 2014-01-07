@@ -1,4 +1,23 @@
+#######################################################################
+# Copyright 2012 Mark Wolf
+#
+# This file is part of OrgWolf.
+#
+# OrgWolf is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+#######################################################################
 from __future__ import unicode_literals
+import json
 
 from django.core.urlresolvers import reverse
 from django.test import TestCase
@@ -9,6 +28,7 @@ from orgwolf.models import OrgWolfUser as User
 from orgwolf import wsgi # For unit testing code coverage
 from orgwolf.models import HTMLEscaper
 from orgwolf.forms import RegistrationForm
+from wolfmail.models import Message
 
 class HTMLParserTest(TestCase):
     """Check OrgWolf's HTML Parsing object that is used to escape
@@ -218,3 +238,58 @@ class UserMutators(TestCase):
             username,
             user.get_display()
             )
+
+
+class FeedbackAPI(TestCase):
+    """
+    Tests the ability to save user submitted feedback
+    """
+    fixtures = ['test-users.json']
+    def setUp(self):
+        self.user = User.objects.get(pk=1)
+        self.client.login(
+            username=self.user.get_username(),
+            password='secret'
+        )
+    def test_permissions(self):
+        # User must be logged in or else 403
+        self.client.logout()
+        response = self.client.post(
+            reverse('feedback'),
+            {'body': 'Here is some feedback'}
+        )
+        self.assertEqual(
+            response.status_code,
+            403
+        )
+    def test_post_feedback(self):
+        data = {'body': 'You are all idiots!'}
+        response = self.client.post(
+            reverse('feedback'),
+            data
+        )
+        # Check saved message attributes
+        msg = Message.objects.filter(message_text=data['body'])
+        self.assertEqual(
+            msg.count(),
+            1,
+            'Message not created'
+        )
+        msg = msg[0]
+        self.assertEqual(
+            msg.owner.pk,
+            1,
+            'Incorrect owner: {}'.format(msg.owner)
+        )
+        self.assertEqual(
+            msg.subject,
+            'Site feedback'
+        )
+        self.assertEqual(
+            msg.handler_path,
+            '',
+        )
+        self.assertEqual(
+            msg.sender,
+            self.user.get_username()
+        )

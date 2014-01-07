@@ -135,6 +135,7 @@ TEMPLATE_CONTEXT_PROCESSORS += (
     )
 
 ROOT_URLCONF = 'orgwolf.urls'
+APPEND_SLASH = False
 
 # TEMPLATE_CONTEXT_PROCESSORS = (
 #     'django.core.context_processors.debug',

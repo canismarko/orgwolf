@@ -30,10 +30,14 @@ from django.contrib.auth import forms as authforms
 from django.contrib.auth.hashers import is_password_usable
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponse
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.response import Response
+from rest_framework.views import APIView
 
 from orgwolf import settings
 from orgwolf.models import OrgWolfUser as User
 from orgwolf.forms import RegistrationForm, ProfileForm, PasswordForm
+from wolfmail.models import Message
 
 def home(request):
     if request.user.is_authenticated():
@@ -75,28 +79,21 @@ def new_user(request):
                                   locals(),
                                   RequestContext(request))
 
-@login_required
-def feedback(request):
-    """Allows the user to quickly provide feedback about
-    the operation of the site."""
-    next_page = request.GET['next']
-    if request.method == "POST":
-        form = FeedbackForm(request.POST)
-        if form.is_valid():
-            mail_item = MailItem()
-            mail_item.sender = "Feedback"
-            mail_item.owner = User.objects.get(id=1)
-            mail_item.subject = form.cleaned_data['subject']
-            mail_item.rcvd_date = datetime.now()
-            mail_item.message_text = form.cleaned_data['message_text']
-            mail_item.save()
-            mail_item.labels.add(Label.objects.get(id=1))
-            return redirect(request.POST['next'])
-    else:
-        form = FeedbackForm()
-    return render_to_response('feedback.html',
-                              locals(),
-                              RequestContext(request))
+
+class FeedbackView(APIView):
+    """
+    Allows the user to quickly provide feedback about
+    the operation of the site.
+    """
+    permission_classes = (IsAuthenticated,)
+    def post(self, request):
+        msg = Message(subject='Site feedback',
+                      message_text=request.DATA['body'],
+                      owner=User.objects.get(pk=1),
+                      sender=request.user.get_username())
+        msg.save()
+        return Response()
+
 
 @login_required
 def profile(request):
@@ -179,6 +176,11 @@ def persona_login(request):
             user.username = r['email']
             user.password = '!'
             user.save()
+            # Copy public nodes
+            for node in Node.objects.filter(owner=None):
+                del node.pk
+                node.owner = user
+                node.save()
         else:
             # Ambiguous e-mail address, multiple users
             r['status'] = 'failure'

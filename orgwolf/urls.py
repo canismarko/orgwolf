@@ -22,13 +22,15 @@ from django.contrib.auth.views import login, logout
 from django.contrib.staticfiles.urls import staticfiles_urlpatterns
 
 from orgwolf.forms import RegistrationForm
+from orgwolf.views import FeedbackView
 
 # Uncomment the next two lines to enable the admin:
 from django.contrib import admin
 admin.autodiscover()
 urlpatterns = patterns('',
                        url(r'^$', 'orgwolf.views.home', name='home'),
-                       url(r'^feedback/$', 'orgwolf.views.feedback'),
+                       url(r'^feedback/?$', FeedbackView.as_view(),
+                           name='feedback'),
                        url(r'^gtd/', include('gtd.urls')),
                        url(r'^messaging/', include('wolfmail.urls')),
                        url(r'^wolfmail/', include('wolfmail.urls')),

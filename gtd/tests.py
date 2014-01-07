@@ -1683,11 +1683,6 @@ class NodeAPI(TestCase):
             0,
             'Node was saved to database'
         )
-        self.assertRaises(
-            KeyError,
-            lambda x: x['id'],
-            r
-        )
 
 
 class UpcomingAPI(TestCase):

@@ -216,3 +216,33 @@ function owinbox($scope, $rootScope, $resource, MessageAPI, Heading) {
 	$scope.active_msg.delete_msg($scope.new_node);
     };
 }
+
+/*************************************************
+* Angular controller for delivering feedback
+*
+**************************************************/
+gtd_module.controller(
+    'owFeedback',
+    ['$scope', '$rootScope', '$resource',
+    function ($scope, $rootScope, $resource) {
+	$scope.feedback = {};
+	$scope.send_feedback = function(feedback) {
+	    $.post(
+		'/feedback/', {body: feedback.text},
+		function() {
+		    $scope.$apply(function() {
+			// Confirmation feedback to the user
+			var $modal;
+			$modal = $('#feedbackModal');
+			$scope.success = true;
+			setTimeout(function() {
+			    $scope.$apply(function() {
+				$scope.success = false;
+				$scope.feedback = {};
+				$modal.modal('hide');
+			    });
+			}, 1200);
+		    });
+		});
+	};
+}]);
