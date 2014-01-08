@@ -26,7 +26,6 @@ from django.core.urlresolvers import reverse
 from django.shortcuts import render_to_response, redirect
 from django.template import RequestContext
 from django.contrib.auth import authenticate, login, logout
-from django.contrib.auth import forms as authforms
 from django.contrib.auth.hashers import is_password_usable
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponse
@@ -176,11 +175,11 @@ def persona_login(request):
             user.username = r['email']
             user.password = '!'
             user.save()
-            # Copy public nodes
-            for node in Node.objects.filter(owner=None):
-                del node.pk
-                node.owner = user
-                node.save()
+            # # Copy public nodes
+            # for node in Node.objects.filter(owner=None):
+            #     del node.pk
+            #     node.owner = user
+            #     node.save()
         else:
             # Ambiguous e-mail address, multiple users
             r['status'] = 'failure'

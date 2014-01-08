@@ -19,9 +19,7 @@
 
 from django.conf.urls import patterns, include, url
 from django.contrib.auth.views import login, logout
-from django.contrib.staticfiles.urls import staticfiles_urlpatterns
 
-from orgwolf.forms import RegistrationForm
 from orgwolf.views import FeedbackView
 
 # Uncomment the next two lines to enable the admin:

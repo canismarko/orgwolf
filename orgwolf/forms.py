@@ -18,7 +18,7 @@
 #######################################################################
 
 from django import forms
-from django.contrib.auth import forms as authforms, authenticate
+from django.contrib.auth import authenticate
 from orgwolf.models import OrgWolfUser as User
 
 class UserForm(forms.ModelForm):

@@ -22,17 +22,14 @@ from __future__ import unicode_literals, absolute_import, print_function
 import datetime as dt
 
 from django.contrib.auth.decorators import login_required
-from django.contrib.auth.models import User
 from django.http import HttpResponseNotAllowed
-from django.shortcuts import render_to_response, redirect
+from django.shortcuts import render_to_response
 from django.template import RequestContext
 from django.utils.decorators import method_decorator
 from django.utils.timezone import get_current_timezone
-from rest_framework.parsers import JSONParser
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from gtd.forms import NodeForm
 from gtd.models import Node, TodoState
 from wolfmail.models import Message
 from wolfmail.serializers import MessageSerializer

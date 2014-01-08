@@ -18,6 +18,6 @@
 #######################################################################
 
 from django.contrib import admin
-from wolfmail.models import *
+from wolfmail.models import Message
 
 admin.site.register(Message)

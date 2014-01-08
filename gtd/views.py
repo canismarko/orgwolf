@@ -24,24 +24,18 @@ import json
 import logging
 import math
 import re
-from itertools import chain
 
 from django.contrib.auth.decorators import login_required
 from django.core import serializers
 from django.core.urlresolvers import reverse
 from django.db.models import Q
-from django.forms.models import model_to_dict
-from django.http import (HttpResponse, HttpResponseRedirect, Http404,
+from django.http import (HttpResponse, Http404,
                          HttpResponseBadRequest, HttpResponseNotAllowed)
 from django.shortcuts import render_to_response, redirect, get_object_or_404
 from django.template import RequestContext
-from django.template.loader import render_to_string
-from django.utils.decorators import method_decorator
 from django.utils.timezone import get_current_timezone
 from django.views.generic import View
 from django.views.generic.detail import DetailView
-from django.views.generic.list import ListView
-from rest_framework import status
 from rest_framework.views import APIView
 from rest_framework.response import Response
 
@@ -49,11 +43,8 @@ from gtd.forms import NodeForm
 from gtd.models import TodoState, Node, Context, Scope
 from gtd.shortcuts import (parse_url, generate_url, get_todo_abbrevs,
                            order_nodes)
-from gtd.templatetags.gtd_extras import escape_html
 from gtd.serializers import ContextSerializer, ScopeSerializer, NodeSerializer
-from mptt.exceptions import InvalidMove
 from orgwolf import settings
-from orgwolf.models import OrgWolfUser as User
 
 # Prepare logger
 logger = logging.getLogger('gtd.views')
@@ -344,29 +335,6 @@ class NodeListView(APIView):
         return Response(serializer.data)
 
 
-# @login_required
-# def capture_to_inbox(request):
-#     """Processes the "capture widget" that appears on each page.
-#     Basically, this view adds the item as a MailTime with the Inbox label.
-#     """
-#     previous_url = request.GET.get('next', '/')
-#     if request.method == 'POST':
-#         if request.POST['new_inbox_item'] != "":
-#             new_item = MailItem()
-#             new_item.sender = "Captured"
-#             new_item.recipient
-#             new_item.owner = request.user
-#             new_item.subject = request.POST['new_inbox_item']
-#             new_item.rcvd_date = datetime.datetime.now()
-#             new_item.full_clean()
-#             new_item.save()
-#             new_item.labels.add(Label.objects.get(name="Inbox"))
-#     # TODO: automatically redirect using django.messaging
-#     return render_to_response('gtd/capture_success.html',
-#                               locals(),
-#                               RequestContext(request))
-
-
 class NodeView(APIView):
     """
     API for interacting with Node objects. Unauthenticated requests
@@ -600,7 +568,7 @@ class ProjectView(DetailView):
               request.POST.get('function') == 'reorder'):
             # User is trying to move the node up or down
             if 'move_up' in request.POST:
-                self.node.move_to(node.get_previous_sibling(),
+                self.node.move_to(self.node.get_previous_sibling(),
                              position='left'
                              )
             elif 'move_down' in request.POST:
@@ -636,7 +604,7 @@ class ProjectView(DetailView):
                 redirect_url = reverse('projects', kwargs=url_kwargs)
                 return redirect(redirect_url)
         else: # Blank form
-            form = NodeForm(instance=node)
+            form = NodeForm(instance=self.node)
         if request.is_mobile:
             template = 'gtd/node_edit_m.html'
         else:

@@ -1,4 +1,24 @@
+#######################################################################
+# Copyright 2012 Mark Wolf
+#
+# This file is part of OrgWolf.
+#
+# OrgWolf is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+#######################################################################
+
 from __future__ import unicode_literals
+
 import django
 from django.conf import settings
 from django.contrib.admin.util import lookup_field, display_for_field
@@ -7,7 +27,7 @@ from django.core.exceptions import ObjectDoesNotExist
 from django.db import models
 from django.utils.html import escape, conditional_escape
 from django.utils.safestring import mark_safe
-import collections
+
 try:
     from django.utils.encoding import smart_text, force_text
 except ImportError:

@@ -20,21 +20,16 @@
 
 from __future__ import unicode_literals
 
-import pytz # At least as a reminder to have it installed
 import re
 import io
 from io import StringIO
 
-from django.core.exceptions import ValidationError
-from django.db.models import signals
-from django.utils import unittest
 from datetime import datetime
 from django.utils import timezone
 
 from orgwolf.models import OrgWolfUser as User
 from orgwolf.stack import Stack
-from gtd.models import Node, TodoState, Scope, node_timestamp, node_repeat
-from gtd.views import get_todo_abbrevs
+from gtd.models import Node, TodoState, Scope
 
 ## Regular expressions used in this module for finding org-mode content
 # Find headings (eg * TODO [#A] Heading :tag:)
@@ -262,7 +257,6 @@ def import_structure(file=None, string=None, request=None, scope=None):
 
 def heading_as_string(current_node, level):
     heading_string = "*" * level + " "
-    date_data = {}
     if hasattr(current_node.todo_state, 'abbreviation'):
         heading_string += current_node.todo_state.abbreviation + " "
     if current_node.priority != "":
@@ -314,7 +308,6 @@ def export_to_string(node=None):
     that's a string.
     """
     output_string = ""
-    current_level = 1 # Tracks how many *'s are at the begging of a heading
     if node == None:
        root_nodes_qs = Node.objects.filter(parent=None)
     else:

@@ -17,13 +17,10 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #######################################################################
 
-import datetime as dt
-
 from django.contrib.auth.models import AnonymousUser
 from django.core.exceptions import ValidationError
 from django import forms
 from django.forms import widgets
-from django.utils import timezone
 from gtd.models import Node
 
 from gtd.models import TodoState
@@ -75,9 +72,6 @@ class NodeForm(forms.ModelForm):
         parent = kwargs.pop('parent', None)
         user = kwargs.pop('user', AnonymousUser())
         super(NodeForm, self).__init__(*args, **kwargs)
-        # Set initial values if node already exists
-        if self.instance.pk:
-            local_tz = timezone.get_current_timezone()
         # Set initial values if node does not exist
         if parent and not self.instance.pk: # A new node with a parent
             related = parent.related_projects.all()
@@ -85,8 +79,6 @@ class NodeForm(forms.ModelForm):
             self.fields['scope'].initial = parent.scope.all()
         # Limit todo states to those valid to the user
         self.fields['todo_state'].queryset = TodoState.get_visible(user=user)
-        # Remove the node's main project (if it exists) from possible values
-        instance = dir(self.instance)
 
     def clean_related_projects(self):
         data = self.cleaned_data['related_projects']
@@ -116,7 +108,6 @@ class NodeForm(forms.ModelForm):
         return num
     def clean(self):
         # Combine date and time fields for scheduled and deadline info
-        local_tz = timezone.get_current_timezone()
         cleaned_data = super(NodeForm, self).clean()
         # Make sure that if this Node repeats then the repeating
         #   information is included.

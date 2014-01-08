@@ -11,12 +11,10 @@ import pytz
 
 from django.core.urlresolvers import reverse
 from django.test import TestCase
-from django.test.client import Client, RequestFactory
 from django.utils.timezone import get_current_timezone
 
 from gtd.models import Node
 from orgwolf.models import OrgWolfUser as User
-from plugins.deferred import MessageHandler as DeferredHandler
 from wolfmail.models import Message
 from wolfmail.serializers import MessageSerializer
 
@@ -105,13 +103,12 @@ class MessageAPI(TestCase):
         message = Message.objects.get(pk=1)
         node = message.source_node
         url = reverse('messages', kwargs={'pk': message.pk})
-        response = self.client.put(
+        self.client.put(
             url,
             json.dumps({'action': 'create_node',
                         'close': True}),
             content_type='application/json'
         )
-        r = json.loads(response.content)
         node = Node.objects.get(pk=node.pk)
         self.assertEqual(
             node.todo_state.abbreviation,
@@ -120,9 +117,8 @@ class MessageAPI(TestCase):
 
     def test_convert_repeating_to_node(self):
         message = Message.objects.get(pk=2)
-        node = message.source_node
         url = reverse('messages', kwargs={'pk': message.pk})
-        response = self.client.put(
+        self.client.put(
             url,
             json.dumps({'action': 'create_node'}),
             content_type='application/json'
@@ -210,9 +206,9 @@ class MessageAPI(TestCase):
             msg.in_inbox,
             'Message starts out with in_inbox=False (bad fixture?)'
         )
-        response = self.client.put(url,
-                                   json.dumps({'action': 'archive'}),
-                                   content_type='application/json')
+        self.client.put(url,
+                        json.dumps({'action': 'archive'}),
+                        content_type='application/json')
         msg = Message.objects.get(pk=1)
         self.assertTrue(
             not msg.in_inbox,
@@ -231,7 +227,7 @@ class MessageAPI(TestCase):
         # Send the API call to defer the Message()
         future_date = now + dt.timedelta(days=3)
         future_str = future_date.strftime('%Y-%m-%d')
-        response = self.client.put(
+        self.client.put(
             url,
             json.dumps({'action': 'defer',
                         'target_date': future_str}),

@@ -18,27 +18,24 @@
 #######################################################################
 
 from __future__ import unicode_literals, absolute_import, print_function
-import re
 import math
 import operator
 import json
 import datetime as dt
 from datetime import datetime, timedelta
 import dateutil.parser
-from warnings import warn
 
 from django.contrib.auth.models import AnonymousUser
 from django.core import serializers
 from django.core.exceptions import ValidationError
-from django.db import models, transaction
+from django.db import models
 from django.db.models import Q, signals, query
 from django.dispatch import receiver
-from django.forms.models import model_to_dict
 from django.template.defaultfilters import slugify
 from django.utils.encoding import python_2_unicode_compatible
 from django.utils.html import conditional_escape
 from django.utils.safestring import mark_safe
-from django.utils.timezone import get_current_timezone, utc
+from django.utils.timezone import get_current_timezone
 
 from mptt.managers import TreeManager
 from mptt.models import MPTTModel, TreeForeignKey
@@ -221,7 +218,6 @@ class Context(models.Model):
         if queryset == "blank":
             queryset = Node.objects.all()
         final_queryset = queryset
-        final_Q = Q()
         # Set some lists of tags to be used later
         excluded_tools = Tool.objects.all() # TODO: filter for current user
         included_tools = self.tools_available.all()
@@ -237,9 +233,9 @@ class Context(models.Model):
             excluded_locations = excluded_locations.exclude(id=location.id)
         # Filter based on excluded tools and locations
         for tool in excluded_tools:
-            tag_string = tool.tag_string
             final_queryset = final_queryset.exclude(
-                tag_string__icontains=tool.tag_string)
+                tag_string__icontains=tool.tag_string
+            )
         for location in excluded_locations:
             final_queryset = final_queryset.exclude(
                 tag_string__icontains=location.tag_string)
@@ -426,11 +422,11 @@ class Node(MPTTModel):
         else:
             return False
 
-    def is_actionable(self):
-        if self.todo_state:
-            return todo_state.actionable
-        else:
-            return False
+    # def is_actionable(self):
+    #     if self.todo_state:
+    #         return self.todo_state.actionable
+    #     else:
+    #         return False
 
     def is_closed(self):
         return getattr(self.todo_state, 'closed', False)

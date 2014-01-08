@@ -26,33 +26,29 @@ from the command line.
 from __future__ import unicode_literals, absolute_import, print_function
 import datetime as dt
 import json
-import re
 
 from django.contrib.auth.models import AnonymousUser
 from django.core import serializers
 from django.core.exceptions import ValidationError
 from django.core.urlresolvers import reverse
 from django.db.models import Q
-from django.forms.models import model_to_dict
 from django.http import Http404
 from django.template.defaultfilters import slugify
 from django.test import TestCase
-from django.test.client import Client, RequestFactory
+from django.test.client import RequestFactory
 from django.utils.html import conditional_escape
-from django.utils.timezone import get_current_timezone, utc
+from django.utils.timezone import get_current_timezone
 from django.views.generic import View
 from rest_framework.renderers import JSONRenderer
 
-from gtd.forms import NodeForm
-from gtd.models import Node, TodoState, node_repeat, Location
-from gtd.models import Tool, Context, Scope, Contact
+from gtd.models import Node, TodoState
+from gtd.models import Context, Scope
 from gtd.serializers import NodeSerializer
-from gtd.shortcuts import parse_url, generate_url, get_todo_abbrevs
+from gtd.shortcuts import parse_url, generate_url
 from gtd.shortcuts import order_nodes
 from gtd.templatetags.gtd_extras import escape_html
 from gtd.templatetags.gtd_extras import add_scope, breadcrumbs
 from gtd.views import Descendants, NodeListView, NodeView
-from orgwolf.preparation import translate_old_text
 from orgwolf.models import OrgWolfUser as User
 from plugins.deferred import MessageHandler as DeferredMessageHandler
 from wolfmail.models import Message
@@ -333,7 +329,6 @@ class ContextFiltering(TestCase):
             list(contexts)
             )
     def test_context_person(self):
-        lou_node = Node.objects.get(pk=21)
         context = Context.objects.get(pk=3)
         result = context.apply()
         self.assertEqual(
@@ -966,7 +961,6 @@ class ListAPI(TestCase):
             HTTP_ACCEPT='application/json',
         )
         r = json.loads(response.content)
-        assigned = Node.objects.assigned(self.user)
         qs = parent.get_descendants().assigned(self.user)
         self.assertQuerysetEqual(
             qs,
@@ -1169,7 +1163,7 @@ class DBOptimization(TestCase):
         )
 
     def test_display_list(self):
-        response = self.client.get(
+        self.client.get(
             reverse('list_display')
         )
         self.assertNumQueries(
@@ -1672,12 +1666,11 @@ class NodeAPI(TestCase):
         """
         self.client.logout()
         data = {'title': 'anonymous new project'}
-        response = self.client.post(
+        self.client.post(
             reverse('node_object'),
             json.dumps(data),
             content_type='application/json'
         )
-        r = json.loads(response.content)
         self.assertEqual(
             Node.objects.filter(title=data['title']).count(),
             0,
@@ -1709,7 +1702,6 @@ class UpcomingAPI(TestCase):
             response.status_code,
             200,
             )
-        r = json.loads(response.content)
         self.assertContains(
             response,
             'non-context child'

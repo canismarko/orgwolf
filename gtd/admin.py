@@ -17,7 +17,6 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #######################################################################
 
-from django import forms
 from django.contrib import admin
 
 import gtd.models as gtd

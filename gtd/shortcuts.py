@@ -22,7 +22,6 @@ import re
 
 from django.contrib.auth.models import AnonymousUser
 from django.db import DatabaseError
-from django.db import transaction
 from django.db.models.query import QuerySet
 from django.shortcuts import get_object_or_404
 from django.http import Http404
@@ -34,8 +33,6 @@ def get_todo_abbrevs(todo_state_list=None):
     to TodoState models. If a list of TodoState objects is passed,
     it will use that instead of retrieving a new list. This is recommended
     to avoid hitting the database unnecessarily."""
-    if not todo_state_list:
-        todo_state_list = get_todo_states()
     abbreviation_list = []
     for todo_state in todo_state_list:
         abbreviation_list.append(todo_state.abbreviation)

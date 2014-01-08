@@ -24,13 +24,11 @@ other attributes.
 """
 
 from __future__ import unicode_literals, absolute_import, print_function
-import datetime as dt
 import re
 
 from django import template
 from django.utils.html import conditional_escape
 from django.utils.safestring import mark_safe
-from django.utils.timezone import get_current_timezone
 
 from orgwolf.models import HTMLEscaper
 
@@ -110,7 +108,6 @@ def nodes_as_hierarchy_table(qs, base_url, autoescape=None):
 @register.filter()
 def breadcrumbs(qs, base_url):
     """Returns a breadcrumb trail given a queryset of ancestors."""
-    first = True
     h = ''
     for obj in qs:
         h += '&nbsp;&gt; '
@@ -149,7 +146,7 @@ def overdue_deadline(node, agenda_dt=None):
                          future=False)
 
 @register.filter()
-def upcoming_deadline(node, agenda_dt=None):
+def upcoming_scheduled(node, agenda_dt=None):
     """Pretty prints how many days until the
     scheduled date comes up.
     """
@@ -158,7 +155,7 @@ def upcoming_deadline(node, agenda_dt=None):
                          future=True)
 
 @register.filter()
-def overdue_deadline(node, agenda_dt=None):
+def overdue_scheduled(node, agenda_dt=None):
     """Pretty prints how many days overdue the scheduled date is"""
     return node.overdue('scheduled',
                          agenda_dt=agenda_dt,

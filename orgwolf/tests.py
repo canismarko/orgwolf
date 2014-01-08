@@ -17,15 +17,12 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #######################################################################
 from __future__ import unicode_literals
-import json
 
 from django.core.urlresolvers import reverse
 from django.test import TestCase
-from django.test.client import Client, RequestFactory
 
-from gtd.models import Node, TodoState
 from orgwolf.models import OrgWolfUser as User
-from orgwolf import wsgi # For unit testing code coverage
+# from orgwolf import wsgi # For unit testing code coverage
 from orgwolf.models import HTMLEscaper
 from orgwolf.forms import RegistrationForm
 from wolfmail.models import Message
@@ -264,7 +261,7 @@ class FeedbackAPI(TestCase):
         )
     def test_post_feedback(self):
         data = {'body': 'You are all idiots!'}
-        response = self.client.post(
+        self.client.post(
             reverse('feedback'),
             data
         )

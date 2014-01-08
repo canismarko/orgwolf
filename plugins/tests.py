@@ -20,11 +20,9 @@
 
 from __future__ import unicode_literals
 
-import re
 import datetime as dt
 
 from django.test import TestCase
-from django.utils.timezone import get_current_timezone
 
 from gtd.models import Node, TodoState
 from orgwolf.models import OrgWolfUser as User
@@ -204,7 +202,6 @@ Some texts for heading 0-1
             self.org_file).split('\n')
         output_string = orgmode.standardize_string(
             orgmode.export_to_string()).split('\n')
-        node = Node.objects.get(title='Heading 1-1')
         self.assertEqual(input_string, output_string)
         self.assertEqual(len(input_string), len(output_string))
         for line_index in range(0, len(input_string)):
@@ -278,7 +275,6 @@ class DeferredHandlerTest(TestCase):
         repeats.
         """
         message = Message.objects.get(pk=2)
-        old_date = message.rcvd_date
         self.assertEqual(
             message.spawned_nodes.all().count(),
             0,
