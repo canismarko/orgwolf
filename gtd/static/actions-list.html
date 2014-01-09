@@ -83,7 +83,7 @@
 	      class="glyphicon glyphicon-repeat pull-right"></span>
       </td>
       <td>
-	<a href="/gtd/project/{{ heading.pk }}/{{ heading.fields.slug }}/">
+	<a href="/gtd/project/#{{ heading.pk }}-{{ heading.fields.slug }}">
           {{ heading.fields.title}}</a>
 	{{ heading | deadline_str }}
       </td>

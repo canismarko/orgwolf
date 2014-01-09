@@ -1,6 +1,6 @@
 <!-- Table shows the list of messages -->
 <div class="container message-list"
-     ng-hide="messages.length">
+     ng-show="messages.length === 0 && messages.$resolved">
   <div class="alert alert-success">
     <p>
       No messages in inbox. Congratulations on reaching
@@ -61,9 +61,8 @@
       <!--       class="glyphicon glyphicon-arrow-left"></span> -->
     </td>
     <td ng-bind-html="message | format_sender"></td>
-    <!-- <td>{{ message | format_sender }}</td> -->
     <td>{{ message.fields.subject }}</td>
-    <td>{{ message.fields.rcvd_date }}</td>
+    <td>{{ message.fields.rcvd_date | format_date }}</td>
   </tr>
 </table>
 

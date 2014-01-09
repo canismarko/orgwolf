@@ -1,0 +1,252 @@
+<!-- Main container for the outline -->
+<div id="outline-appliance">
+  <div class="container">
+    <div class="row">
+      <!-- Search box -->
+      <div class="col-sm-5 col-md-4 pull-right">
+      </div>
+
+      <form id="sort-field"
+	    class="form-inline">
+	<div class="col-md-4">
+	  <div id="add-heading" class="btn btn-default"
+	       ng-click="add_heading($event)">
+	    <i class="glyphicon glyphicon-plus"></i>
+	    New Project
+	  </div>
+	  <div id="show-all" class="btn btn-default ow-unauth-hide"
+	       ng-click="show_all($event)" ng-if="!show_arx">
+	    <i class="glyphicon glyphicon-eye-close"></i>
+	    Show Archived
+	  </div>
+	  <div id="show-all" class="btn btn-default active ow-unauth-hide"
+	       ng-click="show_all($event)" ng-if="show_arx">
+	    <i class="glyphicon glyphicon-eye-close"></i>
+	    Show Archived
+	  </div>
+	</div>
+	<div class="col-md-4 col-sm-3">
+	  <label for="sort-field" class="ow-unauth-hide">Sort:</label>
+	  <select name="sort-field" ng-model="sort_field"
+		  class="form-control  ow-unauth-hide"
+		  ng-options="x.key as x.display for x in sort_fields">
+	  </select>
+	</div>
+      </form>
+    </div>
+
+  </div><!-- /.container -->
+
+  <ul ow-scope-tabs>
+    <li scope_id="0" ng-click="change_scope($event)"><a href="#">All</a></li>
+    <li ng-repeat="scope in scopes" scope_id="{{ scope.id }}"
+	ng-click="change_scope($event)">
+      <a href="#">{{ scope.display }}</a>
+    </li>
+  </ul>
+  <div class="outline">
+    <div ng-repeat="heading in children | order:sort_field" class="children"
+	 ng-show="heading.is_visible()">
+      <div ng-include="'outline-tree'"></div>
+    </div>
+  </div>
+</div><!-- /#outline-appliance -->
+
+<!-- Recursive template for tree of Tasks -->
+<script type="text/ng-template" id="outline-tree">
+  <div class="heading {{heading.state}}" node_id="{{heading.pk}}"
+       id="{{heading.pk}}-{{heading.fields.slug}}">
+    <div class="ow-hoverable" ng-click="toggle_node($event)"
+	 ng-show="!heading.editable" style="{{ heading | style }}"
+	 ow-target="{{ heading | is_target:target_heading }}"
+	 archived="{{ heading.fields.archived }}"
+	 actionable="{{ heading.todo_state.fields.actionable }}"
+	 ow-level="{{ heading.fields.level }}">
+      <i class="twisty glyphicon glyphicon-chevron-right"
+	 expandable="{{heading.expandable}}"></i>
+      <span ow-todo>
+      </span>
+      <span ng-if="heading.fields.repeats"
+	    class="glyphicon glyphicon-repeat"></span>
+      <div class="clickable ow-title">
+	{{heading.fields.title}}
+      </div>
+
+      <div class="ow-buttons btn-group btn-group-xs">
+
+	<button type="button" class="btn btn-default">
+	  <i class="glyphicon glyphicon-pencil edit-btn" title="Edit"></i>
+	</button>
+
+	<a href="/gtd/lists/parent{{ heading.pk }}/next/"
+	   class="btn btn-default">
+	  <i class="glyphicon glyphicon-th-list list-btn"
+	     title="View As List">
+	  </i>
+	</a>
+
+	<button type="button" class="btn btn-default">
+	  <i class="glyphicon glyphicon-eye-close archive-btn"
+	     title="Archive"
+	     ng-hide="heading.fields.archived">
+	  </i>
+	  <i class="glyphicon glyphicon-eye-open archive-btn"
+	     title="Un-archive"
+	     ng-show="heading.fields.archived">
+	  </i>
+	</button>
+
+	<button type="button" class="btn btn-default">
+	  <i class="glyphicon glyphicon-plus new-btn"
+	     title="New subheading">
+	  </i>
+	</button>
+      </div>
+    </div>
+    <div ng-include="'editable'"></div>
+    <div class="details ow-text"
+	 ng-show="heading.state == 'open' && !heading.editable"
+	 ng-if="heading.fields.text"
+	 ng-bind-html="heading.fields.text | asHtml">
+    </div>
+    <div ng-show="heading.state.lazy == 'lazy' && heading.parent_obj.state == 'open'">
+      Loading...
+    </div>
+    <div class="children"
+	 ng-repeat="heading in heading.children"
+	 ng-show="heading.is_visible()"
+	 ng-include="'outline-tree'">
+    </div>
+  </div>
+</script>
+
+<!-- Inline dialog to allow heading edits -->
+<script type="text/ng-template" id="editable">
+  <div class="editable info" ng-if="heading.editable" ow-editable node-id="{{heading.pk}}">
+    <form novalidate class="heading-form" name="form">
+    <div class="header">
+      <i class="twisty glyphicon glyphicon-chevron-down" expandable="disabled"></i>
+      <span ng-if="heading.fields.title">{{heading.fields.title}}</span>
+      <span ng-if="!heading.fields.title">New Heading</span>
+      <button class="btn btn-primary btn-xs" ng-click="save($event)"
+      	      ng-disabled="form.$invalid">
+	Save
+      </button>
+      <button class="btn btn-default btn-xs" ng-click="cancel_edit($event)">
+	Don't Save
+      </button>
+    </div>
+    <div class="body">
+	<div class="row">
+	  <div class="col-md-3">
+	    <label for="title">Title:</label>
+	    <input type="text" ng-model="fields.title"
+		   id="title" class="form-control" required></input>
+		   </div>
+	  <div class="col-md-3">
+	    <label for="todo_state">Todo State:</label>
+	    <select id="todo_state" ng-model="fields.todo_state"
+		    class="form-control"
+		    ng-options="state.pk as (state.fields.abbreviation + ' - ' + state.fields.display_text) for state in todo_states">
+		    <option value="">----------</option>
+	    </select>
+	  </div>
+	  <div class="col-md-2">
+	    <label for="tag_string">Tag String:</label>
+	    <input type="text" id="tag_string" placeholder="eg. :home:"
+		   ng-model="fields.tag_string" class="form-control"></input>
+	  </div>
+	  <div class="col-md-2">
+	    <label for="priority">Priority:</label>
+	    <select id="priority" ng-model="fields.priority"
+		    class="form-control"
+		    ng-options="x.sym as x.display for x in priorities">
+	    </select>
+	  </div>
+	  <div class="col-md-1">
+	    <label for="archived">Archived:
+	    </label>
+	    <div class="make-switch" data-on-label="Yes" data-off-label="No">
+	      <input type="checkbox" id="archived"
+		     ng-model="fields.archived">
+		     </input>
+	    </div>
+	  </div>
+	</div>
+	<div class="row">
+	  <div class="col-md-3">
+	    <label for="scheduled_date">Scheduled:</label>
+	    <div class="row">
+	      <div class="col-md-6">
+		<input type="text" id="scheduled_date" placeholder="YYYY-MM-DD"
+		       class="form-control datepicker" value="{{ fields.scheduled_date }}"
+		       ng-model="fields.scheduled_date"></input>
+	      </div>
+	      <div class="col-md-6">
+		<input type="text" id="scheduled_time" placeholder="HH:MM"
+		       class="form-control timepicker"
+		       ng-model="fields.scheduled_time"></input>
+	      </div>
+	    </div>
+	  </div>
+	  <div class="col-md-3">
+	    <label for="deadline_date">Deadline:</label>
+	    <div class="row">
+	      <div class="col-md-6">
+		<input type="text" id="deadline_date" placeholder="YYYY-MM-DD"
+		       class="form-control datepicker"
+		       ng-model="fields.deadline_date"></input>
+	      </div>
+	      <div class="col-md-6">
+		<input type="text" id="deadline_time" placeholder="HH:MM"
+		       class="form-control timepicker"
+		       ng-model="fields.deadline_time"></input>
+	      </div>
+	    </div>
+	  </div>
+	  <div class="col-md-2">
+	    <label>Scope:</label>
+	    <select id="scope" multiple class="form-control"
+		    ng-model="fields.scope"
+		    ng-options="a.id as a.display for a in scopes">
+		    </select>
+	  </div>
+	  <div class="col-md-1">
+	    <label for="repeats">
+	      Repeats...
+	    </label>
+	    <div class="make-switch">
+	      <input type="checkbox" ng-model="fields.repeats" id="repeats" />
+	    </div>
+	  </div>
+	  <div class="col-md-1">
+	    <label for="repeating_number">...every...
+	    </label>
+	    <input type="text" id="repeating_number" placeholder="number..."
+		     ng-model="fields.repeating_number"
+		     class="input-small form-control">
+		   </input>
+	    <select id="repeating_unit" class="form-control"
+		    ng-model="fields.repeating_unit"
+		    ng-options="unit.value as unit.label for unit in time_units">
+		    </select>
+	  </div>
+	  <div class="col-md-2">
+	    <label for="repeat_from_completion">
+	      ...from...
+	    </label>
+	    <select id="repeat_from_completion" class="form-control"
+		    ng-model="fields.repeats_from_completion"
+		    ng-options="x.value as x.label for x in repeat_schemes">
+	    </select>
+	  </div>
+	</div>
+	<div class="row">
+	  <div class="col-md-12">
+	    <label>Addition information:</label>
+	    <div class="edit-text" ng-bind-html="fields.text | asHtml"></div>
+	  </div>
+	</div>
+    </form>
+  </div>
+</script>

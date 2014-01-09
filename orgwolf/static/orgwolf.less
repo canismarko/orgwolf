@@ -201,8 +201,17 @@ dd.todo
 {
     margin-top: 20px;
     margin-bottom: 50px;
-    .ow-hoverable[ow-level="0"] {
+    .ow-hoverable {
+	border-radius: 5px;
+	&[ow-level="0"] {
 	font-size: 105%;
+	}
+	&[ow-target="ancestor"] {
+	    background: rgb(252, 240, 176);
+	}
+	&[ow-target="yes"] {
+	    background: rgb(223, 240, 216);
+	}
     }
 }
 .pointer, .ow-buttons, .add-heading, .todo-state, .todo-option

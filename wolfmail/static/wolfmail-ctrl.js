@@ -38,9 +38,9 @@ gtd_module.filter('format_sender', ['$sce', function($sce) {
 	var s;
 	if (msg.fields.handler_path === 'plugins.deferred') {
 	    // Message from a deferred Node
-	    s = '<a href="/gtd/project/';
-	    s += msg.fields.source_node + '/';
-	    s += msg.fields.node_slug + '/">';
+	    s = '<a href="/gtd/project/#';
+	    s += msg.fields.source_node + '-';
+	    s += msg.fields.node_slug + '">';
 	    s += '<span class="dfrd">DFRD</span> Node';
 	    s += '</a>';
 	    s = $sce.trustAsHtml(s);
@@ -52,6 +52,17 @@ gtd_module.filter('format_sender', ['$sce', function($sce) {
 	return s;
     };
 }]);
+
+/*************************************************
+* Filter that displays various date fields
+**************************************************/
+gtd_module.filter('format_date', function() {
+    return function(date_str) {
+	var d;
+	d = new Date(date_str);
+	return d.toDateString();
+    };
+});
 
 /*************************************************
 * Filter that shows a parent select option with
@@ -110,6 +121,8 @@ gtd_module.controller(
 );
 function owinbox($scope, $rootScope, $resource, MessageAPI, Heading) {
     var ds, today, get_messages;
+    $('.ow-active').removeClass('active');
+    $('#nav-inbox').addClass('active');
     // Date for this inbox allows user to see future dfrd msgs
     today = new Date();
     $scope.current_date = today;

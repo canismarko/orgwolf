@@ -25,6 +25,10 @@ gtd_module.config(
 	     when('/wolfmail/inbox/', {
 		 templateUrl: '/static/inbox.html',
 		 controller: 'owInbox'
+	     }).
+	     when('/gtd/project/', {
+		 templateUrl: '/static/project-outline.html',
+		 controller: 'nodeOutline'
 	     });
 }]);
 
@@ -143,6 +147,27 @@ function GtdListFactory($resource, $http) {
     );
     return res;
 }
+
+/*************************************************
+* Filter that determines object color
+*
+**************************************************/
+gtd_module.filter('is_target', function() {
+    return function(obj, active) {
+	var answer = '';
+	if (active) {
+	    if ( obj.pk === active.id ) {
+		answer = 'yes';
+	    } else if ( obj.fields.tree_id === active.tree_id &&
+			obj.fields.lft < active.lft &&
+			obj.fields.rght > active.rght) {
+		// Mark ancestors
+		answer = 'ancestor';
+	    }
+	}
+	return answer;
+    };
+});
 
 /*************************************************
 * Filter that determines object color
@@ -463,7 +488,7 @@ gtd_module.directive('owTodo', ['$filter', function($filter) {
     }
     return {
 	link: link,
-	templateUrl: 'todo-state-selector',
+	templateUrl: '/static/todo-state-selector.html',
     };
 }]);
 
@@ -536,11 +561,17 @@ gtd_module.controller(
 gtd_module.controller(
     'nodeOutline',
     ['$scope', '$http', '$resource', 'OldHeading', 'Heading',
-     '$element', '$location', '$anchorScroll', outlineCtrl]
+     '$location', '$anchorScroll', outlineCtrl]
 );
 function outlineCtrl($scope, $http, $resource, OldHeading, Heading,
-		     $element, $location, $anchorScroll) {
-    var TodoState, Scope, url, get_heading, Parent, Tree, parent_tree_id, parent_level, target_headings, main_headings;
+		     $location, $anchorScroll) {
+    var TodoState, Scope, url, get_heading, Parent, Tree, parent_tree_id, parent_level, target_headings, target_id, main_headings;
+    $('.ow-active').removeClass('active');
+    $('#nav-projects').addClass('active');
+    target_id = $location.hash().split('-')[0];
+    if ( target_id ) {
+	$scope.target_heading = $resource('/gtd/node/:id/').get({id: target_id});
+    }
     // modified array to hold all the tasks
     main_headings = Heading.query({'parent_id': 0,
 				   'archived': false});
@@ -555,7 +586,6 @@ function outlineCtrl($scope, $http, $resource, OldHeading, Heading,
 	{key: '-title', display: 'Title (reverse)'},
     ];
     // Get id of parent heading
-    $scope.parent_id = $element.attr('parent_id');
     if ($scope.parent_id === '') {
 	$scope.parent_id = 0;
     } else {
@@ -573,8 +603,6 @@ function outlineCtrl($scope, $http, $resource, OldHeading, Heading,
     test_headings = $scope.todo_states;
     // If a parent node was passed
     if ( $scope.parent_id ) {
-	parent_tree_id = parseInt($element.attr('parent_tree'), 10);
-	parent_level = parseInt($element.attr('level'), 10);
 	target_headings = Heading.query({'tree_id': parent_tree_id,
 					 'level__lte': parent_level + 1});
 	$scope.headings.add(target_headings);
@@ -694,6 +722,8 @@ gtd_module.controller(
 );
 function listCtrl($sce, $scope, $resource, $location, $routeParams, $rootScope, GtdList, Heading, Upcoming) {
     var i, TodoState, Context, today, update_url, get_list, parent_id, todo_states;
+    $('.ow-active').removeClass('active');
+    $('#nav-actions').addClass('active');
     $scope.list_params = {};
     // Context filtering
     if (typeof $routeParams.context_id !== 'undefined') {

@@ -422,12 +422,6 @@ class Node(MPTTModel):
         else:
             return False
 
-    # def is_actionable(self):
-    #     if self.todo_state:
-    #         return self.todo_state.actionable
-    #     else:
-    #         return False
-
     def is_closed(self):
         return getattr(self.todo_state, 'closed', False)
 

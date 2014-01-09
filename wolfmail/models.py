@@ -25,6 +25,7 @@ from django.dispatch import receiver
 from django.utils.encoding import python_2_unicode_compatible
 
 from orgwolf import settings
+import plugins
 
 
 @python_2_unicode_compatible
@@ -55,6 +56,8 @@ class Message(models.Model):
 @receiver(models.signals.post_init, sender=Message)
 def add_handler(sender, instance, **kwargs):
     """Add the appropriate Handler() object as an attribute"""
-    if not instance.handler_path == '':
+    if instance.handler_path == '':
+        instance.handler = plugins.BaseMessageHandler(instance)
+    else:
         module = importlib.import_module(instance.handler_path)
         instance.handler = module.MessageHandler(instance)

@@ -142,20 +142,6 @@
 	$('.util-dropdown').parent().prev('a.dropdown-toggle').append(
 	    '<b class="caret" />');
 	{% endif %}
-	// Tweak document for context filtering
-	$('#nav-actions').append('<b id="btn-actions" class="caret"></b>');
-	// $('#lblContext').hide();
-	$('#nav-actions').bind('click', function(e) {
-	    console.log(e.target.className);
-	    if ( e.target.className !== 'caret' ) {
-		// Redirect if the caret was not clicked
-		window.location = e.currentTarget.href;
-		return false;
-	    } else {
-		// Otherwise just show the dropdown
-		return true;
-	    }
-	});
     });
     </script>
     {% endblock %}
@@ -185,29 +171,30 @@
       <div class="collapse navbar-collapse navbar-ex1-collapse">
 	<ul class="nav navbar-nav">
 	  <!-- Next actions -->
-	  <li{% if 'actions' in request.get_full_path %} class="active"{% endif %}>
+	  <li id="nav-actions" class="ow-active{% if 'actions' in request.get_full_path %} active{% endif %}">
 	    {% if request.session.context_id %}
 	    <a href="{% url 'list_display' context_id=request.session.context_id context_slug=request.session.context_name|slugify %}">
 	      <span class="glyphicon glyphicon-list"></span>
 	      {{ request.session.context_name }} Actions
 	    </a>
 	    {% else %}
-	    <a href="{% url 'list_display' %}" target="_self">
+	    <a href="{% url 'list_display' %}">
 	      <span class="glyphicon glyphicon-list"></span>
 	      Next Actions
 	    </a>
 	    {% endif %}
 	  </li>
 	  <!-- Inbox -->
-	  <li{% if 'inbox' in request.get_full_path %} class="active"{% endif %}>
-	    <a href="{% url 'inbox' %}" target="_self">
+	  <li id="nav-inbox"
+	      class="ow-active {% if 'inbox' in request.get_full_path %} active{% endif %}">
+	    <a href="{% url 'inbox' %}">
 	      <span class="glyphicon glyphicon-inbox"></span>
 	      Inbox
 	    </a>
 	  </li>
 	  <!-- Project Outline -->
-	  <li{% if 'project' in request.get_full_path %} class="active"{% endif %}>
-	    <a href="{% url 'projects' %}" target="_self">
+	  <li id="nav-projects" class="ow-active {% if 'project' in request.get_full_path %} active{% endif %}">
+	    <a href="{% url 'projects' %}">
 	      <span class="glyphicon glyphicon-tasks"></span>
 	      Projects</a>
 	  </li>
@@ -243,14 +230,14 @@
 
 	  {% if request.user.is_staff %}
 	  <li class="util-dropdown" role="menuitem">
-	    <a href="/admin/">Admin</a>
+	    <a href="/admin/" target="_self">Admin</a>
 	  </li>
 	  {% endif %}
 	  <li class="util-dropdown" role="menuitem">
-	    <a href="/accounts/profile/">Account</a>
+	    <a href="/accounts/profile/" target="_self">Account</a>
 	  </li>
 	  <li class="util-dropdown" role="menuitem">
-	    <a href="#" id="logout">Logout</a>
+	    <a href="#" id="logout" target="_self">Logout</a>
 	  </li>
 	  {% else %}
 	  {{ settings }}
