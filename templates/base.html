@@ -89,6 +89,7 @@
     <script src="{{ STATIC_URL }}angular/angular-animate.js"></script>
     <script src="{{ STATIC_URL }}angular/angular-resource.js"></script>
     <script src="{{ STATIC_URL }}angular/angular-sanitize.js"></script>
+    <script src="{{ STATIC_URL }}angular/angular-route.js"></script>
     {% else %}
     <script src="http://code.jquery.com/jquery-1.9.1.min.js"></script>
     <script src="//cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.0.0/js/bootstrap.min.js"></script>
@@ -97,6 +98,7 @@
     <script src="http://code.angularjs.org/1.2.0-rc.3/angular-animate.min.js"></script>
     <script src="http://code.angularjs.org/1.2.0-rc.3/angular-sanitize.min.js"></script>
     <script src="http://code.angularjs.org/1.2.0-rc.3/angular-resource.js"></script>
+    <script src="http://code.angularjs.org/1.2.0-rc.3/angular-route.js"></script>
     {% endif %}
 
     <script src="https://login.persona.org/include.js"></script>
@@ -190,7 +192,7 @@
 	      {{ request.session.context_name }} Actions
 	    </a>
 	    {% else %}
-	    <a href="{% url 'list_display' %}">
+	    <a href="{% url 'list_display' %}" target="_self">
 	      <span class="glyphicon glyphicon-list"></span>
 	      Next Actions
 	    </a>
@@ -198,14 +200,14 @@
 	  </li>
 	  <!-- Inbox -->
 	  <li{% if 'inbox' in request.get_full_path %} class="active"{% endif %}>
-	    <a href="{% url 'inbox' %}">
+	    <a href="{% url 'inbox' %}" target="_self">
 	      <span class="glyphicon glyphicon-inbox"></span>
 	      Inbox
 	    </a>
 	  </li>
 	  <!-- Project Outline -->
 	  <li{% if 'project' in request.get_full_path %} class="active"{% endif %}>
-	    <a href="{% url 'projects' %}">
+	    <a href="{% url 'projects' %}" target="_self">
 	      <span class="glyphicon glyphicon-tasks"></span>
 	      Projects</a>
 	  </li>

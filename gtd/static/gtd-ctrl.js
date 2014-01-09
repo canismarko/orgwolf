@@ -7,11 +7,29 @@ var test_headings, owConfig, HeadingFactory, GtdListFactory, UpcomingFactory, ou
 *
 **************************************************/
 var gtd_module = angular.module('orgWolf',
-				['ngAnimate', 'ngResource', 'ngSanitize']);
+				['ngAnimate', 'ngResource', 'ngSanitize', 'ngRoute']);
+
+/*************************************************
+* Angular routing
+*
+**************************************************/
+gtd_module.config(
+    ['$routeProvider', '$locationProvider',
+     function($routeProvider, $locationProvider) {
+	 $locationProvider.html5Mode(true);
+	 $routeProvider.
+	     when('/gtd/actions/:context_id?/:context_slug?', {
+		 templateUrl: '/static/actions-list.html',
+		 controller: 'nextActionsList',
+	     }).
+	     when('/wolfmail/inbox/', {
+		 templateUrl: '/static/inbox.html',
+		 controller: 'owInbox'
+	     });
+}]);
 
 gtd_module.config(['$httpProvider', '$locationProvider', owConfig]);
 function owConfig($httpProvider, $locationProvider) {
-    // $locationProvider.html5Mode(true);
     // Add custom headers to $http objects
     $httpProvider.defaults.headers.common['X-Request-With'] = 'XMLHttpRequest';
     // Add django CSRF token to all jQuery.ajax() requests
@@ -672,18 +690,18 @@ function outlineCtrl($scope, $http, $resource, OldHeading, Heading,
 **************************************************/
 gtd_module.controller(
     'nextActionsList',
-    ['$sce', '$scope', '$resource', '$location', 'GtdList', 'Heading', 'Upcoming', 'parent_id', 'context_id', 'context_name', listCtrl]
+    ['$sce', '$scope', '$resource', '$location', '$routeParams', '$rootScope', 'GtdList', 'Heading', 'Upcoming', listCtrl]
 );
-function listCtrl($sce, $scope, $resource, $location, GtdList, Heading, Upcoming, parent_id, context_id, context_name) {
-    var i, TodoState, Context, today;
-    $scope.list_params = {todo_state: 2};
-    $scope.active_context = null;
-    if ( context_id !== 'None' ) {
-	$scope.active_context = parseInt(context_id, 10);
-	$scope.context_name = context_name;
-	if ($scope.active_context) {
-	    $scope.list_params.context = $scope.active_context;
-	}
+function listCtrl($sce, $scope, $resource, $location, $routeParams, $rootScope, GtdList, Heading, Upcoming) {
+    var i, TodoState, Context, today, update_url, get_list, parent_id, todo_states;
+    $scope.list_params = {};
+    // Context filtering
+    if (typeof $routeParams.context_id !== 'undefined') {
+	$scope.active_context = parseInt($routeParams.context_id, 10);
+	$scope.context_name = $routeParams.context_slug;
+	$scope.list_params.context = $scope.active_context;
+    } else {
+	$scope.active_context = null;
     }
     $scope.show_list = true;
     // No-op to prevent function-not-found error
@@ -691,13 +709,32 @@ function listCtrl($sce, $scope, $resource, $location, GtdList, Heading, Upcoming
     // Get list of todo states
     TodoState = $resource('/gtd/todostate/');
     $scope.todo_states = TodoState.query();
-    // Get list of root level nodes
-    $scope.parents = new HeadingManager($scope);
-    $scope.parents.add(Heading.query({level: 0}));
     // See if there's a parent specified
+    parent_id = $location.search().parent;
     if ( parent_id ) {
-	$scope.list_params.parent = parseInt(parent_id, 10);
+	parent_id = parseInt(parent_id, 10);
+	$scope.parent_id = parent_id;
+	$scope.list_params.parent = parent_id;
+	$scope.parent = $resource('/gtd/node/:id/')
+	    .get({id: parent_id});
     }
+    // Set todo_states
+    todo_states = $location.search().todo_state;
+    if ( todo_states ) {
+	// Pull from URL if provided
+	if ( !Array.isArray(todo_states) ) {
+	    todo_states = [todo_states];
+	}
+	// Convert strings to int
+	todo_states = todo_states.map(function(v) {
+	    return parseInt(v, 10);
+	});
+    } else {
+	todo_states = [2];
+    }
+    $scope.cached_states = todo_states.slice(0);
+    $scope.active_states = todo_states.slice(0);
+    $scope.list_params.todo_state = $scope.active_states;
     // Get list of hard scheduled commitments
     today = new Date();
     $scope.scheduled = new HeadingManager($scope);
@@ -705,22 +742,18 @@ function listCtrl($sce, $scope, $resource, $location, GtdList, Heading, Upcoming
 	{scheduled_date__lte: today.ow_date(),
 	 todo_state: 8}
     ));
-    // Get list of headings
-    $scope.headings = new HeadingManager($scope);
-    $scope.cached_states = [2];
-    $scope.active_states = [2];
-    $scope.headings.add(GtdList.query($scope.list_params));
-    $scope.headings.add(Upcoming.query());
+    // Helper function that retrieves new GTD list from server
+    get_list = function(scp) {
+	$scope.headings = new HeadingManager(scp);
+	scp.headings.add(GtdList.query(scp.list_params));
+	$scope.headings.add(Upcoming.query());
+    };
+    get_list($scope);
+    // Get list of contexts for filtering against
     Context = $resource('/gtd/context/');
     $scope.contexts = Context.query();
     $scope.show_arx = true;
     $scope.active_scope = 0;
-    // Set the parent attribute on each list item
-    for ( i; i<$scope.headings.length; i+=1 ) {
-	$scope.headings[i].parent = $scope.parents.get(
-	    {pk: $scope.headings[i].fields.parent}
-	);
-    }
     // Todo state filtering
     $scope.toggle_todo_state = function(e) {
 	var i, state_pk, state, state_url;
@@ -739,40 +772,50 @@ function listCtrl($sce, $scope, $resource, $location, GtdList, Heading, Upcoming
 	    $scope.headings.add(GtdList.query($scope.list_params));
 	}
     };
-    function build_states_url() {
-	var url, i, state;
-	url = '';
-	for ( i=0; i<$scope.active_states.length; i+=1 ) {
-	    state = $scope.todo_states.get({pk: $scope.active_states[i]});
-	    url += state.fields.abbreviation.toLowerCase();
-	    url += '/';
+    // Helper function for setting the browser URL for routing
+    update_url = function(params) {
+	var path, search;
+	path = '/gtd/actions';
+	if (params.active_context) {
+	    /*jslint regexp: true */
+	    path += '/' + params.active_context;
+	    path += '/' + params.context_name
+		.toLowerCase()
+		.replace(/ /g,'-')
+		.replace(/[^\w\-]+/g,'');
+	    /*jslint regexp: false */
 	}
-	return url;
-    }
-    function build_context_url() {
-	var url;
-	if ( $scope.active_context ) {
-	    url = 'context' + $scope.active_context + '/';
-	} else {
-	    url = '';
+	$location.path(path);
+	search = {};
+	if ($scope.parent_id) {
+	    search.parent = $scope.parent_id;
 	}
-	return url;
-    }
+	search.todo_state = $scope.active_states;
+	$location.search(search);
+    };
     // Handler for changing the context
     $scope.change_context = function(e) {
 	// Get new list of headings for this context
 	$scope.headings = new HeadingManager($scope);
 	$scope.list_params.context = $scope.active_context;
+	if ($scope.active_context) {
+	    $scope.context_name = $scope.contexts.get(
+		{id: $scope.active_context}
+	    ).name;
+	} else {
+	    delete $scope.context_name;
+	}
 	$scope.list_params.todo_state = $scope.active_states;
 	$scope.headings.add(GtdList.query($scope.list_params));
+	update_url($scope);
     };
     // Handler for only showing one parent
     $scope.filter_parent = function(h) {
 	if ( h === null ) {
-	    delete $scope.active_root;
+	    delete $scope.parent_id;
 	} else {
-	    var root = $scope.parents.get({tree_id: h.fields.tree_id});
-	    $scope.active_root = root;
+	    $scope.parent_id = h.fields.root_id;
 	}
+	update_url($scope);
     };
 }

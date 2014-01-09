@@ -26,6 +26,14 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 {% block content %}
 
+<!-- Search box -->
+<div class="col-sm-5 col-md-4 pull-right">
+  {% include 'gtd/search_box.html' %}
+</div>
+
+<div ng-view>
+</div>
+
 {# Hierarchy, breadcrumb trail #}
   {{ breadcrumb_list|breadcrumbs:base_node_url }}
 
@@ -37,119 +45,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 	</span>
 </script>
 {% endverbatim %}
-<!-- Angular app for gtd list -->
-<script>
-  // Pass in some context variables
-  gtd_module.constant('parent_id', '{{ parent.pk }}');
-  gtd_module.constant('context_id', '{{ request.session.context_id }}');
-  gtd_module.constant('context_name', '{{ request.session.context_name }}');
-</script>
-
-<!-- Search box -->
-<div class="col-sm-5 col-md-4 pull-right">
-  {% include 'gtd/search_box.html' %}
-</div>
-
-<div id="gtd-list" ng-controller="nextActionsList">
-  {% verbatim %}
-  <!-- List of hard scheduled items for the day -->
-  <table class="table table-condensed" id="scheduled-list"
-	 ng-if="scheduled.length">
-    <tr>
-      <th>Time</th>
-      <th>State</th>
-      <th>&nbsp;</th>
-      <th>Description</th>
-      <th>Project</th>
-      <th>Tags</th>
-    </tr>
-    <tr ng-repeat="heading in scheduled"
-	archived="{{ heading.fields.archived }}">
-      <td>{{ heading.fields.scheduled_date }} {{ heading.fields.scheduled_time }}</td>
-      <td ow-todo>{{ heading.todo_state.fields.abbreviation }}</td>
-      <td>
-	<span ng-if="heading.fields.repeats"
-	      class="glyphicon glyphicon-repeat pull-right"></span>
-      </td>
-      <td>
-	<a href="/gtd/project/{{ heading.pk }}/{{ heading.fields.slug }}/">
-          {{ heading.fields.title}}</a>
-      </td>
-      <td>&nbsp;</td>
-      <td>{{ heading.fields.tag_string }}</td>
-    </tr>
-  </table>
-
-  <h4 ng-if="context_name">{{ context_name }}</h4>
-  <form action="" method="POST" id="list-filters"
-	class="form-inline ow-unauth-hide">
-    <!-- Context selection box -->
-    <label for="context">Context:</label>
-    <select name="context" ng-model="active_context" class="form-control"
-	    ng-options="x.id as x.name for x in contexts"
-	    ng-change="change_context($event)">
-	    <option value="">None</option>
-    </select>
-    <!-- TodoState selection checkboxes -->
-    <label class="checkbox-inline" ng-repeat="state in todo_states" style="{{ state | style }}">
-      <input type="checkbox" ow-state="{{ state.pk }}"
-	     ng-click="toggle_todo_state($event)"
-	     ng-checked="active_states.indexOf(state.pk) > -1"></input>
-	     {{ state.fields.abbreviation }}
-    </label>
-  </form>
-
-  <!-- Indicator for current active project -->
-  <span ng-if="active_root">
-    Project:
-    <a href="/gtd/project/{{ active_root.pk }}/">
-      {{ active_root.fields.title }}
-    </a>
-    [<a ng-click="filter_parent(null)">&times;</a>]
-  </span>
-  <!-- Scope Tabs -->
-  <ul ow-scope-tabs>
-    <li scope_id="0" ng-click="change_scope($event)"><a href="#">All</a></li>
-    <li ng-repeat="scope in scopes" scope_id="{{ scope.id }}"
-	ng-click="change_scope($event)">
-	<a href="#">{{ scope.display }}</a>
-    </li>
-  </ul>
-
-  <table class="table table-condensed" id="gtd-list">
-    <tr>
-      <th>State</th>
-      <th>&nbsp;</th>
-      <th>Description</th>
-      <th>Project</th>
-      <th>Tags</th>
-    </tr>
-    <!-- Actionable Items -->
-    <tr ng-repeat="heading in headings | order: 'list'"
-	ng-show="heading.is_visible()" ow-pk="{{ heading.pk }}"
-	ow-priority="{{ heading.fields.priority }}"
-	class="heading-row" archived="{{ heading.fields.archived }}" ow-list-row>
-      <td ow-todo>
-	  {{ heading.todo_state.fields.abbreviation }}
-      </td>
-      <td>
-	<span ng-if="heading.fields.repeats"
-	      class="glyphicon glyphicon-repeat pull-right"></span>
-      </td>
-      <td>
-	<a href="/gtd/project/{{ heading.pk }}/{{ heading.fields.slug }}/">
-          {{ heading.fields.title}}</a>
-	{{ heading | deadline_str }}
-      </td>
-      <td ng-bind-html="heading | root_cell" ng-click="filter_parent(heading)">
-      </td>
-      <td>
-	{{ heading.fields.tag_string }}
-      </td>
-    </tr>
-  </table>
-  {% endverbatim %}
-</div>
 
 <noscript>
 {# Scope tabs #}

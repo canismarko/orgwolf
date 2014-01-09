@@ -961,12 +961,45 @@ class ListAPI(TestCase):
             HTTP_ACCEPT='application/json',
         )
         r = json.loads(response.content)
-        qs = parent.get_descendants().assigned(self.user)
+        qs = parent.get_descendants(include_self=True).assigned(self.user)
         self.assertQuerysetEqual(
             qs,
             ['{0} - {1}'.format(x['id'], x['title']) for x in r],
             transform=lambda x: '{0} - {1}'.format(x.pk, x.title),
             ordered=False
+        )
+
+    def test_fields(self):
+        """Very that only the correct fields are returned as json"""
+        excluded = ['energy']
+        included = ['id', 'tree_id', 'todo_state', 'tag_string', 'slug',
+                    'deadline_date', 'deadline_time',
+                    'scheduled_date', 'scheduled_time',
+                    'root_id', 'root_name', 'scope']
+        response = self.client.get(
+            reverse('list_api'),
+            content_type='application/json'
+        )
+        r = json.loads(response.content)[0]
+        node = Node.objects.get(pk=r['id'])
+        for key in excluded:
+            self.assertFalse(
+                key in r.keys(),
+                '"{}" returned from serializer'.format(key)
+            )
+        for key in included:
+            self.assertTrue(
+                key in r.keys(),
+                '"{}" not returned from serializer'.format(key)
+            )
+        # Check root_id and root_name field values
+        self.assertEqual(
+            r['root_id'],
+            node.get_root().pk,
+        )
+        self.assertEqual(
+            r['root_name'],
+            node.get_root().title
         )
 
 

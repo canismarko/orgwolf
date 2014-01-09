@@ -34,6 +34,7 @@ class ContextSerializer(serializers.ModelSerializer):
         model = Context
         fields = ('id', 'name')
 
+
 class NodeSerializer(serializers.ModelSerializer):
     def __init__(self, qs, *args, **kwargs):
         # Perform some optimization before hitting the database
@@ -43,3 +44,23 @@ class NodeSerializer(serializers.ModelSerializer):
         return super(NodeSerializer, self).__init__(qs, *args, **kwargs)
     class Meta:
         model = Node
+
+
+class NodeListSerializer(NodeSerializer):
+    """Returns values relevant for next actions lists"""
+    root_id = serializers.SerializerMethodField('get_root_id')
+    root_name = serializers.SerializerMethodField('get_root_name')
+    class Meta:
+        model = Node
+        fields = ['id', 'title', 'tree_id', 'todo_state', 'tag_string',
+                  'slug', 'scope', 'root_id', 'root_name',
+                  'deadline_date', 'deadline_time',
+                  'scheduled_date', 'scheduled_time']
+
+    def get_root_id(self, obj):
+        root = obj.get_root()
+        return root.pk
+
+    def get_root_name(self, obj):
+        root = obj.get_root()
+        return root.title

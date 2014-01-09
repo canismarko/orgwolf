@@ -43,7 +43,8 @@ from gtd.forms import NodeForm
 from gtd.models import TodoState, Node, Context, Scope
 from gtd.shortcuts import (parse_url, generate_url, get_todo_abbrevs,
                            order_nodes)
-from gtd.serializers import ContextSerializer, ScopeSerializer, NodeSerializer
+from gtd.serializers import (ContextSerializer, ScopeSerializer,
+                             NodeSerializer, NodeListSerializer)
 from orgwolf import settings
 
 # Prepare logger
@@ -218,7 +219,7 @@ def actions(request, context_id, context_slug):
 
 class NodeListView(APIView):
     """
-    Interacts with next-action style lists of <Node>s
+    Interacts with next-action style lists of <Node> objects
     """
     model = Node
     def dispatch(self, request, *args, **kwargs):
@@ -239,7 +240,7 @@ class NodeListView(APIView):
         parent_id = self.request.GET.get('parent', None)
         if parent_id is not None:
             parent = Node.objects.get(pk=parent_id)
-            nodes = parent.get_descendants()
+            nodes = parent.get_descendants(include_self=True)
         else:
             nodes = Node.objects.all()
         nodes = nodes.assigned(self.request.user).select_related(
@@ -331,7 +332,7 @@ class NodeListView(APIView):
             request.session['context_name'] = new_context.name
         request.session['context_id'] = new_context_id
         nodes = self.get_queryset()
-        serializer = NodeSerializer(nodes, many=True)
+        serializer = NodeListSerializer(nodes, many=True)
         return Response(serializer.data)
 
 
@@ -461,7 +462,7 @@ class UpcomingNodeView(APIView):
         upcoming_deadline_Q = Q(deadline_date__lte = deadline) # TODO: fix this
         deadline_nodes = all_nodes_qs.filter(undone_Q, upcoming_deadline_Q)
         deadline_nodes = deadline_nodes.order_by("deadline_date")
-        serializer = NodeSerializer(deadline_nodes, many=True)
+        serializer = NodeListSerializer(deadline_nodes, many=True)
         return Response(serializer.data)
 
 

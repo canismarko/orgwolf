@@ -248,11 +248,14 @@ GtdHeading.prototype.is_expandable = function() {
 
 GtdHeading.prototype.is_visible = function(view) {
     // Determine if the heading is visible in the current view.
-    var visibility, showall, active_states, active_root, is_active, is_recent, is_closed, deadline_days, deadline_limit, is_due;
+    var visibility, showall, active_states, active_tree, is_active, is_recent, is_closed, deadline_days, deadline_limit, is_due;
     visibility = true; // Assume visible unless we think otherwise
     this.update();
     // Check if this heading is within the active scope
     if ( this.workspace.active_scope ) {
+	if (this.pk === 22) {
+	    console.log(this.workspace.active_scope);
+	}
 	if ( this.fields.scope.indexOf(this.workspace.active_scope) === -1 ) {
 	    visibility = false;
 	}
@@ -283,13 +286,6 @@ GtdHeading.prototype.is_visible = function(view) {
     showall = this.workspace ? this.workspace.show_arx : false;
     if ( this.fields.archived && ! showall ) {
 	visibility = false;
-    }
-    // Check if heading is in active_root's tree
-    active_root = this.workspace.active_root;
-    if ( active_root ) {
-	if ( active_root.fields.tree_id !== this.fields.tree_id ) {
-	    visibility = false;
-	}
     }
     // Check if parent is open
     if ( this.parent_obj && !this.workspace.show_list ) {
