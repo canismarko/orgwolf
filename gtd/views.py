@@ -200,11 +200,7 @@ def list_display(request, url_string=""):
             node.root_title = root_node[0].title
         node.deadline_str = node.overdue('deadline_date')
     # And serve response
-    if request.is_mobile:
-        template = 'gtd/gtd_list_m.html'
-    else:
-        template = 'gtd/gtd_list.html'
-    return render_to_response(template,
+    return render_to_response('gtd/gtd_list.html',
                               locals(),
                               RequestContext(request))
 
@@ -535,11 +531,7 @@ class ProjectView(DetailView):
             full=True,
             user=request.user
             )
-        if request.is_mobile:
-            template = 'gtd/node_view_m.html'
-        else:
-            template = 'gtd/node_view.html'
-        return render_to_response(template,
+        return render_to_response('gtd/node_view.html',
                                   locals(),
                                   RequestContext(request))
 
@@ -606,11 +598,7 @@ class ProjectView(DetailView):
                 return redirect(redirect_url)
         else: # Blank form
             form = NodeForm(instance=self.node)
-        if request.is_mobile:
-            template = 'gtd/node_edit_m.html'
-        else:
-            template = 'gtd/node_edit.html'
-        return render_to_response(template,
+        return render_to_response('gtd/node_edit.html',
                                   locals(),
                                   RequestContext(request))
 
@@ -736,22 +724,16 @@ def node_search(request):
                         'display': 'Prev',
                         'icon': 'arrow-l'}
                 pages.append(prev)
-            if request.is_mobile:
-                pages.append({
-                    'url': '#',
-                    'display': 'Page {0} of {1}'.format(page, num_pages)
-                })
-            else:
-                for x in range(num_pages):
-                    page_num = x+1
-                    new_page = {
-                        'url': search_url.format(page_num),
-                        'display': page_num
-                    }
-                    if page_num == page:
-                        new_page['class'] = 'active'
-                        del new_page['url']
-                    pages.append(new_page)
+            for x in range(num_pages):
+                page_num = x+1
+                new_page = {
+                    'url': search_url.format(page_num),
+                    'display': page_num
+                }
+                if page_num == page:
+                    new_page['class'] = 'active'
+                    del new_page['url']
+                pages.append(new_page)
             if page != num_pages:
                 nextt = {'url': search_url.format(page+1),
                          'display': 'Next',
@@ -767,10 +749,6 @@ def node_search(request):
     else:
         query = ''
     base_url = reverse('projects')
-    if request.is_mobile:
-        template = 'gtd/node_search_m.html'
-    else:
-        template = 'gtd/node_search.html'
-    return render_to_response(template,
+    return render_to_response('gtd/node_search.html',
                               locals(),
                               RequestContext(request))
