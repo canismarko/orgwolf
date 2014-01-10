@@ -83,24 +83,24 @@
     {% block all_script %}
 
     {% if local_net %}
-    <script src="{{ STATIC_URL }}jquery-1.8.3.min.js"></script>
+    <script src="{{ STATIC_URL }}jquery-2.0.3.js"></script>
     <script src="{{ STATIC_URL }}bootstrap/js/bootstrap.min.js"></script>
     <script src="{{ STATIC_URL }}bootstrap-switch.min.js"></script>
-    <script src="{{ STATIC_URL }}angular/angular.js"></script>
-    <script src="{{ STATIC_URL }}angular/angular-animate.js"></script>
-    <script src="{{ STATIC_URL }}angular/angular-resource.js"></script>
-    <script src="{{ STATIC_URL }}angular/angular-sanitize.js"></script>
-    <script src="{{ STATIC_URL }}angular/angular-route.js"></script>
+    <script src="{{ STATIC_URL }}angular-1.2.7/angular.js"></script>
+    <script src="{{ STATIC_URL }}angular-1.2.7/angular-animate.js"></script>
+    <script src="{{ STATIC_URL }}angular-1.2.7/angular-resource.js"></script>
+    <script src="{{ STATIC_URL }}angular-1.2.7/angular-sanitize.js"></script>
+    <script src="{{ STATIC_URL }}angular-1.2.7/angular-route.js"></script>
     {% else %}
     <script src="//cdnjs.cloudflare.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
     <script src="//cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.0.0/js/bootstrap.min.js"></script>
     <script src="//cdnjs.cloudflare.com/ajax/libs/bootstrap-switch/1.8/js/bootstrap-switch.min.js"></script>
     <!-- Angular and its modules -->
-    <script src="//ajax.googleapis.com/ajax/libs/angularjs/1.2.5/angular.min.js"></script>
-    <script src="//ajax.googleapis.com/ajax/libs/angularjs/1.2.5/angular-animate.min.js"></script>
-    <script src="//ajax.googleapis.com/ajax/libs/angularjs/1.2.5/angular-sanitize.min.js"></script>
-    <script src="//ajax.googleapis.com/ajax/libs/angularjs/1.2.5/angular-resource.min.js"></script>
-    <script src="//ajax.googleapis.com/ajax/libs/angularjs/1.2.5/angular-route.min.js"></script>
+    <script src="//ajax.googleapis.com/ajax/libs/angularjs/1.2.7/angular.min.js"></script>
+    <script src="//ajax.googleapis.com/ajax/libs/angularjs/1.2.7/angular-animate.min.js"></script>
+    <script src="//ajax.googleapis.com/ajax/libs/angularjs/1.2.7/angular-sanitize.min.js"></script>
+    <script src="//ajax.googleapis.com/ajax/libs/angularjs/1.2.7/angular-resource.min.js"></script>
+    <script src="//ajax.googleapis.com/ajax/libs/angularjs/1.2.7/angular-route.min.js"></script>
 
     {% endif %}
 

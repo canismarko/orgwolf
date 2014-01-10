@@ -18,6 +18,7 @@ function MessageFactory($resource, $http) {
 			var i, new_message;
 			for ( i=0; i<data.length; i+=1 ) {
 			    new_message = new Message(data[i]);
+			    console.log(data[i]);
 			    data[i] = new_message;
 			}
 			return data;
@@ -27,6 +28,11 @@ function MessageFactory($resource, $http) {
 	    },
 	}
     );
+    // Attach custom methods to the prototype
+    res.prototype.create_node = Message.prototype.create_node;
+    res.prototype.delete_msg = Message.prototype.delete_msg;
+    res.prototype.archive = Message.prototype.archive;
+    res.prototype.defer = Message.prototype.defer;
     return res;
 }
 
@@ -139,6 +145,7 @@ function owinbox($scope, $rootScope, $resource, MessageAPI, Heading) {
     };
     $rootScope.$on('refresh_messages', get_messages);
     get_messages();
+    console.log($scope.messages);
     // Get list of top level projects
     $scope.projects = Heading.query({'parent_id': 0,
 				     'archived': false});
