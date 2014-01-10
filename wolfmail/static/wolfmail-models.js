@@ -50,7 +50,6 @@ Message.prototype.delete_msg = function(obj) {
     var success, that;
     that = this;
     success = function() {
-	console.log(obj.list);
 	obj.list.remove(that);
     };
     jQuery.ajax(this.url, {

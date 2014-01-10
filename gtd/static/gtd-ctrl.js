@@ -64,6 +64,24 @@ function owConfig($httpProvider, $locationProvider) {
 }
 
 /*************************************************
+* Run setup gets some app-wide data
+*
+**************************************************/
+gtd_module.run(['$rootScope', '$resource', function($rootScope, $resource) {
+    // Get todo states
+    var TodoState, Context, Scope;
+    TodoState = $resource('/gtd/todostate/');
+    $rootScope.todo_states = TodoState.query();
+    // Get list of contexts for filtering against
+    Context = $resource('/gtd/context/');
+    $rootScope.contexts = Context.query();
+    // Get list of scopes for tabs
+    Scope = $resource('/gtd/scope/');
+    $rootScope.scopes = Scope.query();
+}]);
+
+
+/*************************************************
 * Factory creates GtdHeading objects
 *
 **************************************************/
@@ -392,9 +410,6 @@ gtd_module.directive('owScopeTabs', ['$resource', function($resource) {
     // Directive creates tabs that allow a user to filter by scope
     function link(scope, element, attrs) {
 	var Scope;
-	// Get Scope objects
-	Scope = $resource('/gtd/scope/');
-	scope.scopes = Scope.query();
 	// Build tabs in DOM
 	element.addClass('nav').addClass('nav-tabs');
 	// Set initial active scope tab
@@ -597,9 +612,9 @@ function outlineCtrl($scope, $http, $resource, OldHeading, Heading,
     $scope.update = function() {
 	$scope.children = $scope.headings.filter_by({parent: null});
     };
-    // Get all TodoState's for later use
-    TodoState = $resource('/gtd/todostate/');
-    $scope.todo_states = TodoState.query();
+    // // Get all TodoState's for later use
+    // TodoState = $resource('/gtd/todostate/');
+    // $scope.todo_states = TodoState.query();
     test_headings = $scope.todo_states;
     // If a parent node was passed
     if ( $scope.parent_id ) {
@@ -696,7 +711,6 @@ function outlineCtrl($scope, $http, $resource, OldHeading, Heading,
     // Handler for adding a new node
     $scope.add_heading = function(e) {
 	var new_heading;
-	console.log($scope.children.get({pk: 0}));
 	new_heading = new OldHeading(
 	    {
 		id: 0,
@@ -708,7 +722,6 @@ function outlineCtrl($scope, $http, $resource, OldHeading, Heading,
 	new_heading.editable = true;
 	$scope.headings.add(new_heading);
 	$scope.children.add(new_heading);
-	console.log($scope.children.get({pk: 0}));
     };
 }
 
@@ -718,9 +731,9 @@ function outlineCtrl($scope, $http, $resource, OldHeading, Heading,
 **************************************************/
 gtd_module.controller(
     'nextActionsList',
-    ['$sce', '$scope', '$resource', '$location', '$routeParams', '$rootScope', 'GtdList', 'Heading', 'Upcoming', listCtrl]
+    ['$sce', '$scope', '$resource', '$location', '$routeParams', 'GtdList', 'Heading', 'Upcoming', listCtrl]
 );
-function listCtrl($sce, $scope, $resource, $location, $routeParams, $rootScope, GtdList, Heading, Upcoming) {
+function listCtrl($sce, $scope, $resource, $location, $routeParams, GtdList, Heading, Upcoming) {
     var i, TodoState, Context, today, update_url, get_list, parent_id, todo_states;
     $('.ow-active').removeClass('active');
     $('#nav-actions').addClass('active');
@@ -736,9 +749,6 @@ function listCtrl($sce, $scope, $resource, $location, $routeParams, $rootScope, 
     $scope.show_list = true;
     // No-op to prevent function-not-found error
     $scope.update = function() {};
-    // Get list of todo states
-    TodoState = $resource('/gtd/todostate/');
-    $scope.todo_states = TodoState.query();
     // See if there's a parent specified
     parent_id = $location.search().parent;
     if ( parent_id ) {
@@ -779,9 +789,6 @@ function listCtrl($sce, $scope, $resource, $location, $routeParams, $rootScope, 
 	$scope.headings.add(Upcoming.query());
     };
     get_list($scope);
-    // Get list of contexts for filtering against
-    Context = $resource('/gtd/context/');
-    $scope.contexts = Context.query();
     $scope.show_arx = true;
     $scope.active_scope = 0;
     // Todo state filtering
