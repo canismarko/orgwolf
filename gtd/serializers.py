@@ -53,7 +53,7 @@ class NodeListSerializer(NodeSerializer):
     class Meta:
         model = Node
         fields = ['id', 'title', 'tree_id', 'todo_state', 'tag_string',
-                  'slug', 'scope', 'root_id', 'root_name',
+                  'slug', 'scope', 'root_id', 'root_name', 'priority',
                   'deadline_date', 'deadline_time',
                   'scheduled_date', 'scheduled_time']
 
