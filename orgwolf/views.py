@@ -38,6 +38,7 @@ from orgwolf.models import OrgWolfUser as User
 from orgwolf.forms import RegistrationForm, ProfileForm, PasswordForm
 from wolfmail.models import Message
 
+
 def home(request):
     if request.user.is_authenticated():
         url = reverse(request.user.home)

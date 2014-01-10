@@ -17,7 +17,13 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #######################################################################
 
+import importlib
+
+from django.db import models
+from django.dispatch import receiver
+
 from gtd.models import Node
+from wolfmail.models import Message
 
 class BaseMessageHandler():
     """
@@ -47,3 +53,12 @@ class BaseMessageHandler():
         """
         self._msg.in_inbox = False
         self._msg.save()
+
+@receiver(models.signals.post_init, sender=Message)
+def add_handler(sender, instance, **kwargs):
+    """Add the appropriate Handler() object as an attribute"""
+    if instance.handler_path == '':
+        instance.handler = BaseMessageHandler(instance)
+    else:
+        module = importlib.import_module(instance.handler_path)
+        instance.handler = module.MessageHandler(instance)
