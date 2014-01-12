@@ -36,15 +36,22 @@ class ContextSerializer(serializers.ModelSerializer):
 
 
 class NodeSerializer(serializers.ModelSerializer):
+    read_only = serializers.SerializerMethodField('get_read_only')
     def __init__(self, qs, *args, **kwargs):
         # Perform some optimization before hitting the database
         if kwargs.get('many', False):
             # Prefetch related fields only if passing a queryset
-            qs = qs.prefetch_related('scope', 'users')
+            qs = qs.select_related('owner').prefetch_related('scope', 'users')
         return super(NodeSerializer, self).__init__(qs, *args, **kwargs)
+
+    def get_read_only(self, obj):
+        if obj.owner:
+            return False
+        else:
+            return True
+
     class Meta:
         model = Node
-
 
 class NodeListSerializer(NodeSerializer):
     """Returns values relevant for next actions lists"""

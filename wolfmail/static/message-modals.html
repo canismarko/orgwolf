@@ -1,0 +1,86 @@
+<!-- Modal for adding a new Node/task -->
+<div class="modal fade task">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+	<button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+	<h4 class="modal-title" ng-if="modal_task">New Task</h4>
+	<h4 class="modal-title" ng-if="!modal_task">New Project</h4>
+      </div>
+      <div class="modal-body">
+	<div class="form-group">
+	  <label for="title">Title</label>
+	  <input id="title" class="form-control" ng-model="new_node.title" />
+	</div>
+	<div class="form-group" ng-if="modal_task">
+	  <label for="project">Project</label>
+	  <select id="project" class="form-control"
+		  ng-model="project"
+		  ng-change="change_project(project)"
+		  ng-options="x.title for x in projects | order: 'title'"
+		  >
+	  </select>
+	</div>
+	<div class="form-group" ng-if="modal_task">
+	  <label for="parent">Parent</label>
+	  <select id="parent" class="form-control"
+		  ng-model="parent"
+		  ng-options="x | parent_label for x in parents"
+		  ng-change="change_parent(parent)">
+	  </select>
+	</div>
+      </div>
+      <div class="modal-footer">
+	<button type="button" class="btn btn-default" data-dismiss="modal">Discard Changes</button>
+	<button type="button" class="btn btn-primary" ng-click="create_node()">Create</button>
+      </div>
+    </div><!-- /.modal-content -->
+  </div><!-- /.modal-dialog -->
+</div><!-- /.modal for new node/task -->
+
+<!-- Modal for deleting a Node -->
+<div class="modal fade delete">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+	<button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+	<h4 class="modal-title">Delete Message?</h4>
+      </div>
+      <div class="modal-body">
+	<p>
+	  Are you sure you want to delete
+	  &ldquo;{{ active_msg.fields.subject }}&rdquo;?
+	</p>
+	<p>
+	  This action cannot be undone.
+	</p>
+      </div>
+      <div class="modal-footer">
+	<button type="button" class="btn btn-default" data-dismiss="modal">Don't Delete</button>
+	<button type="button" class="btn btn-danger" ng-click="delete_node()">Delete</button>
+      </div>
+    </div><!-- /.modal-content -->
+  </div><!-- /.modal-dialog -->
+</div><!-- /.modal.delete -->
+
+<!-- Modal for deferring a message for later -->
+<div class="modal fade defer">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+	<button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+	<h4>Defer Message to Future</h4>
+      </div>
+      <div class="modal-body">
+	<label for="target-date">Scheduled Date:</label>
+	<input id="target-date" type="text"
+	       class="form-control datepicker"
+	       placeholder="YYYY-MM-DD" />
+      </div>
+      <div class="modal-footer">
+	<button type="button" class="btn btn-default" data-dismiss="modal">Don't Defer</button>
+	<button type="button" class="btn btn-primary" ng-click="defer_msg()">Defer</button>
+      </div>
+    </div><!-- /.modal-content -->
+  </div><!-- /.modal-dialog -->
+</div><!-- /.modal.defer -->

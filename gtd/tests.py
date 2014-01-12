@@ -131,6 +131,7 @@ class NodeManagers(TestCase):
         )
 
     def test_mine(self):
+        # Test owned node
         qs = Node.objects.filter(pk=1)
         mine = qs.mine(self.user)
         self.assertQuerysetEqual(
@@ -141,6 +142,12 @@ class NodeManagers(TestCase):
             Node.objects.mine(self.user),
             [repr(x) for x in Node.objects.all().mine(self.user)],
             ordered=False
+        )
+        qs = Node.objects.filter(owner=None)
+        mine = qs.mine(self.user)
+        self.assertQuerysetEqual(
+            mine,
+            [repr(x) for x in qs],
         )
 
     def test_owned(self):
@@ -1445,6 +1452,18 @@ class NodeAPI(TestCase):
             node.pk
         )
 
+    def test_read_only(self):
+        node = Node.objects.filter(owner=None)[0]
+        url = reverse('node_object', kwargs={'pk': node.pk})
+        response = self.client.get(
+            url,
+            content_type='application/json'
+        )
+        r = json.loads(response.content)
+        self.assertTrue(
+            r['read_only']
+        )
+
     def test_json_put(self):
         """Check if setting attributes by ajax works as expected"""
         self.assertNotEqual(
@@ -1690,6 +1709,10 @@ class NodeAPI(TestCase):
         self.assertEqual(
             new_node.title,
             new_data['title']
+        )
+        self.assertEqual(
+            new_node.slug,
+            slugify(new_data['title'])
         )
 
     def test_post_anonymous(self):

@@ -54,13 +54,8 @@
     [<a ng-click="filter_parent(null)">&times;</a>]
   </span>
   <!-- Scope Tabs -->
-  <ul ow-scope-tabs>
-    <li scope_id="0" ng-click="change_scope($event)"><a href="#">All</a></li>
-    <li ng-repeat="scope in scopes" scope_id="{{ scope.id }}"
-	ng-click="change_scope($event)">
-	<a href="#">{{ scope.display }}</a>
-    </li>
-  </ul>
+  <div ow-scope-tabs>
+  </div>
 
   <table class="table table-condensed" id="gtd-list">
     <tr>

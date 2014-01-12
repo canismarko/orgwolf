@@ -66,5 +66,22 @@
         "subject": "quick captured message",
 	"source_node": null
     }
+},
+{
+    "pk": 5, 
+    "model": "wolfmail.message", 
+    "fields": {
+        "spawned_nodes": [], 
+        "sender": "", 
+        "message_text": "", 
+        "rcvd_date": "2014-01-05T03:03:07Z", 
+        "in_inbox": true, 
+        "owner": 2, 
+        "handler_path": "plugins.quickcapture", 
+        "unread": true, 
+        "recipient": "", 
+        "subject": "secret other user message",
+	"source_node": null
+    }
 }
 ]

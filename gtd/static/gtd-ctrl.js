@@ -22,10 +22,6 @@ gtd_module.config(
 		 templateUrl: '/static/actions-list.html',
 		 controller: 'nextActionsList',
 	     }).
-	     when('/wolfmail/inbox/', {
-		 templateUrl: '/static/inbox.html',
-		 controller: 'owInbox'
-	     }).
 	     when('/gtd/project/', {
 		 templateUrl: '/static/project-outline.html',
 		 controller: 'nodeOutline'
@@ -79,7 +75,6 @@ gtd_module.run(['$rootScope', '$resource', function($rootScope, $resource) {
     Scope = $resource('/gtd/scope/');
     $rootScope.scopes = Scope.query();
 }]);
-
 
 /*************************************************
 * Factory creates GtdHeading objects
@@ -220,11 +215,12 @@ gtd_module.filter('style', function() {
 	    /*jslint bitwise: false*/
 	} else {// gtd.node model
 	    // Determine color based on node.rank
-	    colors = ['rgb(88, 0, 176)', 'rgb(80, 0, 0)', 'rgb(0, 44, 19)',
-		      'teal', 'slateblue', 'brown'];
-
-	    color_i = (obj.fields.level) % colors.length;
-	    style += 'color: ' + colors[color_i] + '; ';
+	    if ( obj.level > 0 ) {
+		colors = ['rgb(88, 0, 176)', 'rgb(80, 0, 0)', 'rgb(0, 44, 19)',
+			  'teal', 'slateblue', 'brown'];
+		color_i = (obj.fields.level) % colors.length;
+		style += 'color: ' + colors[color_i] + '; ';
+	    }
 	}
 	return style;
     };
@@ -410,20 +406,23 @@ gtd_module.directive('owScopeTabs', ['$resource', function($resource) {
     // Directive creates tabs that allow a user to filter by scope
     function link(scope, element, attrs) {
 	var Scope;
-	// Build tabs in DOM
-	element.addClass('nav').addClass('nav-tabs');
 	// Set initial active scope tab
 	element.find('[scope_id="'+scope.active_scope+'"]').addClass('active');
-	scope.change_scope = function(e) {
+	scope.change_scope = function(ow_scope) {
 	    var new_scope;
 	    // User has requested a different scope
 	    element.find('[scope_id="'+scope.active_scope+'"]').removeClass('active');
-	    scope.active_scope = parseInt($(e.currentTarget).attr('scope_id'), 10);
+	    if ( ow_scope ) {
+		scope.active_scope = ow_scope.id;
+	    } else {
+		scope.active_scope = 0;
+	    }
 	    element.find('[scope_id="'+scope.active_scope+'"]').addClass('active');
 	};
     }
     return {
-	link: link
+	link: link,
+	templateUrl: '/static/scope-tabs.html'
     };
 }]);
 
@@ -612,10 +611,6 @@ function outlineCtrl($scope, $http, $resource, OldHeading, Heading,
     $scope.update = function() {
 	$scope.children = $scope.headings.filter_by({parent: null});
     };
-    // // Get all TodoState's for later use
-    // TodoState = $resource('/gtd/todostate/');
-    // $scope.todo_states = TodoState.query();
-    test_headings = $scope.todo_states;
     // If a parent node was passed
     if ( $scope.parent_id ) {
 	target_headings = Heading.query({'tree_id': parent_tree_id,
@@ -649,47 +644,42 @@ function outlineCtrl($scope, $http, $resource, OldHeading, Heading,
 	heading = $scope.headings.get({pk: node_id});
 	return heading;
     };
-    // Handler for when a heading is clicked...
-    $scope.toggle_node = function(e) {
-	var $target, $heading, heading, new_heading;
-	$target = $(e.target);
-	heading = get_heading(e);
-	// Handlers for clicking different parts of the heading
-	if ( $target.hasClass('edit-btn') ) {
-	    // Edit button
-	    heading.populate_children();
-	    heading.editable = true;
-	} else if ( $target.hasClass('todo-state') ) {
-	    // No-op for todo_state button
-	    console.log('todo-state clicked');
-	} else if ( $target.hasClass('archive-btn') ) {
-	    // Archive heading button
-	    if ( heading.fields.archived ) {
-		heading.fields.archived = false;
-	    } else {
-		heading.fields.archived = true;
-	    }
-	    heading.save();
-	} else if ( $target.hasClass('new-btn') ) {
-	    // New heading button
-	    new_heading = new OldHeading(
-		{
-		    id: 0,
-		    workspace: heading.workspace,
-		    title: '',
-		    parent: heading.pk,
-		    level: heading.fields.level + 1,
-		    scope: heading.fields.scope,
-		});
-	    new_heading.editable = true;
-	    new_heading.expandable = 'no';
-	    heading.children.add(new_heading);
-	    $scope.headings.add(new_heading);
-	    heading.toggle('open');
+    // Handlers for when a heading is clicked...
+    $scope.edit_heading = function(heading) {
+	// Edit button
+	heading.populate_children();
+	heading.editable = true;
+    };
+    $scope.archive_heading = function(heading) {
+	// Archive heading button
+	if ( heading.fields.archived ) {
+	    heading.fields.archived = false;
 	} else {
-	    // Default action: opening the heading
-	    heading.toggle();
+	    heading.fields.archived = true;
 	}
+	heading.save();
+    };
+    $scope.new_heading = function(heading) {
+	// New heading button
+	var new_heading;
+	new_heading = new OldHeading(
+	    {
+		id: 0,
+		workspace: heading.workspace,
+		title: '',
+		parent: heading.pk,
+		level: heading.fields.level + 1,
+		scope: heading.fields.scope,
+	    });
+	new_heading.editable = true;
+	new_heading.expandable = 'no';
+	heading.children.add(new_heading);
+	$scope.headings.add(new_heading);
+	heading.toggle('open');
+    };
+    $scope.toggle_node = function(heading) {
+	// Default action: opening the heading
+	heading.toggle();
     };
     // Handler for toggling archived nodes
     $scope.show_all = function(e) {

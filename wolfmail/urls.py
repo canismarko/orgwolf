@@ -27,5 +27,6 @@ admin.autodiscover()
 urlpatterns = patterns(
     'wolfmail.views',
     url(r'^inbox/?$', 'inbox', name='inbox'),
+    url(r'^inbox/(?:\d+)/?', 'inbox'),
     url(r'^message(?:/(?P<pk>\d+))?/?$', MessageView.as_view(), name='messages')
 )

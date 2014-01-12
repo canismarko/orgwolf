@@ -92,7 +92,7 @@ class FeedbackView(APIView):
                       owner=User.objects.get(pk=1),
                       sender=request.user.get_username())
         msg.save()
-        return Response()
+        return Response({})
 
 
 @login_required

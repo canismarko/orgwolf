@@ -23,29 +23,41 @@ from rest_framework import serializers
 
 from wolfmail.models import Message
 
-
 class MessageSerializer(serializers.ModelSerializer):
+    """
+    Serialize message objects with full set of data attributes
+    """
+    class Meta:
+        model = Message
 
+
+class InboxSerializer(serializers.ModelSerializer):
+    """
+    Serialize queryset of message objects with only the fields
+    necessary for displaying the inbox.
+    """
     def __init__(self, qs=None, *args, **kwargs):
         # prefetch_related to cut down on db hits
         if kwargs.get('many', False):
             qs = qs.select_related('source_node')
-        return super(MessageSerializer, self).__init__(qs, *args, **kwargs)
+        return super(InboxSerializer, self).__init__(qs, *args, **kwargs)
 
     # Custom fields
-    node_tree_id = serializers.SerializerMethodField('get_node_tree_id')
+    source_node = serializers.SerializerMethodField('get_node_id')
     node_slug = serializers.SerializerMethodField('get_node_slug')
 
     class Meta:
         model = Message
-        exclude = ('spawned_nodes',)
+        fields = ['id', 'subject', 'sender',
+                  'unread', 'handler_path', 'rcvd_date',
+                  'source_node', 'node_slug']
 
-    def get_node_tree_id(self, msg):
+    def get_node_id(self, msg):
         if msg.source_node is not None:
-            tree_id = msg.source_node.tree_id
+            pk = msg.source_node.pk
         else:
-            tree_id = None
-        return tree_id
+            pk = None
+        return pk
 
     def get_node_slug(self, msg):
         if msg.source_node is not None:

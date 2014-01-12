@@ -307,15 +307,16 @@ class NodeQuerySet(query.QuerySet):
         """Get all the objects that have `user` as the owner or assigned,
         or have `user` in the related_users relationship."""
         qs = self
+        public = Q(owner=None)
         if user.is_anonymous():
-            qs = qs.filter(owner=None)
+            qs = qs.filter(public)
         else:
             owned = Q(owner=user)
             others = Q(users=user)
             # Look for assigned nodes
             contact = user.contact_set.all()
             assigned = Q(assigned__in=contact)
-            qs = qs.filter(owned | others | assigned)
+            qs = qs.filter(owned | others | assigned | public)
         if not get_archived:
             qs = qs.filter(archived=False)
         return qs
@@ -629,7 +630,7 @@ class Node(MPTTModel):
 
     # Override superclass save methods
     def save(self, *args, **kwargs):
-        if self.slug is None:
+        if self.slug == '':
             # set slug field on newly created nodes
             new_slug = slugify(self.title)
             if len(new_slug) > 50:

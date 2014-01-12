@@ -22,7 +22,7 @@ from __future__ import unicode_literals, absolute_import, print_function
 import datetime as dt
 
 from django.contrib.auth.decorators import login_required
-from django.http import HttpResponseNotAllowed
+from django.http import HttpResponseForbidden, HttpResponseNotAllowed
 from django.shortcuts import render_to_response
 from django.template import RequestContext
 from django.utils.decorators import method_decorator
@@ -32,7 +32,7 @@ from rest_framework.views import APIView
 
 from gtd.models import Node, TodoState
 from wolfmail.models import Message
-from wolfmail.serializers import MessageSerializer
+from wolfmail.serializers import InboxSerializer, MessageSerializer
 
 
 def inbox(request):
@@ -49,17 +49,28 @@ class MessageView(APIView):
     def dispatch(self, *args, **kwargs):
         return super(MessageView, self).dispatch(*args, **kwargs)
 
-    def get(self, request, pk=None):
+    def get_queryset(self, request):
         data = request.GET.copy()
         if data.get('now', False):
             data.pop('now')
             data['rcvd_date__lte'] = dt.datetime.now()
-        # No pk so list as collection
         qs = Message.objects.filter(owner=request.user)
         # Filter by get params
         qs = qs.filter(**data.dict())
-        # Return results as serialized JSON
-        serializer = MessageSerializer(qs, many=True)
+        return qs
+
+    def get(self, request, pk=None):
+        if pk is None:
+            # Return collection as serialized JSON
+            qs = self.get_queryset(request)
+            serializer = InboxSerializer(qs, many=True)
+        else:
+            # Return specified message as serialized JSON
+            msg = Message.objects.get(pk=pk)
+            # Test authorization
+            if msg.owner != request.user:
+                return HttpResponseForbidden()
+            serializer = MessageSerializer(msg)
         return Response(serializer.data)
 
     def put(self, request, pk):

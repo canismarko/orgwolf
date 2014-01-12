@@ -16,7 +16,7 @@ from django.utils.timezone import get_current_timezone
 from gtd.models import Node
 from orgwolf.models import OrgWolfUser as User
 from wolfmail.models import Message
-from wolfmail.serializers import MessageSerializer
+from wolfmail.serializers import InboxSerializer, MessageSerializer
 
 
 class MessageAPI(TestCase):
@@ -51,6 +51,28 @@ class MessageAPI(TestCase):
             [x['subject'] for x in r],
             transform=lambda x: x.subject,
             ordered=False,
+        )
+
+    def test_get_message(self):
+        msg = Message.objects.get(pk=1)
+        response = self.client.get(
+            reverse('messages', kwargs={'pk': msg.pk}),
+        )
+        r = json.loads(response.content)
+        self.assertEqual(
+            r['subject'],
+            msg.subject
+        )
+
+    def test_get_unauthorized_message(self):
+        """Ensure that other people's messages aren't retrievable"""
+        msg = Message.objects.get(pk=5)
+        response = self.client.get(
+            reverse('messages', kwargs={'pk': msg.pk}),
+        )
+        self.assertEqual(
+            response.status_code,
+            403
         )
 
     def test_convert_to_node(self):
@@ -138,7 +160,7 @@ class MessageAPI(TestCase):
                               4, 0, 0,
                               tzinfo=pytz.utc)
         tz_str = curr_dt.astimezone(get_current_timezone()).isoformat()
-        qs = Message.objects.filter(rcvd_date__lte=curr_dt)
+        qs = Message.objects.filter(owner=self.user, rcvd_date__lte=curr_dt)
         response = self.client.get(self.url, {'rcvd_date__lte': tz_str})
         r = json.loads(response.content)
         self.assertQuerysetEqual(
@@ -241,7 +263,7 @@ class MessageAPI(TestCase):
         )
 
 
-class MessageSerializerTest(TestCase):
+class InboxSerializerTest(TestCase):
     """
     Check that the MessageSerializer works as expected for API calls
     """
@@ -250,7 +272,7 @@ class MessageSerializerTest(TestCase):
 
     def test_db_optimization(self):
         messages = Message.objects.all()
-        serializer = MessageSerializer(messages, many=True)
+        serializer = InboxSerializer(messages, many=True)
         def eval_queryset():
             list(serializer.data)
         self.assertNumQueries(
@@ -258,15 +280,26 @@ class MessageSerializerTest(TestCase):
             eval_queryset
         )
 
-    def test_node_tree_id(self):
+    def test_source_node(self):
         message = Message.objects.get(pk=1)
         node = message.source_node
-        serializer = MessageSerializer(message)
+        serializer = InboxSerializer(message)
         self.assertEqual(
-            serializer.data['node_tree_id'],
-            node.tree_id
+            serializer.data['source_node'],
+            node.pk
         )
         self.assertEqual(
             serializer.data['node_slug'],
             node.slug
+        )
+
+    def test_message_fields(self):
+        messages = Message.objects.all()
+        serializer = InboxSerializer(messages[0])
+        included = ['id', 'subject', 'sender', 'unread',
+                    'handler_path', 'rcvd_date',
+                    'source_node', 'node_slug']
+        self.assertEqual(
+            included,
+            serializer.data.keys(),
         )

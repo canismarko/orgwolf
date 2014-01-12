@@ -2,6 +2,7 @@
 <div id="outline-appliance">
   <div class="container">
     <div class="row">
+
       <!-- Search box -->
       <div class="col-sm-5 col-md-4 pull-right">
       </div>
@@ -37,55 +38,57 @@
 
   </div><!-- /.container -->
 
-  <ul ow-scope-tabs>
-    <li scope_id="0" ng-click="change_scope($event)"><a href="#">All</a></li>
-    <li ng-repeat="scope in scopes" scope_id="{{ scope.id }}"
-	ng-click="change_scope($event)">
-      <a href="#">{{ scope.display }}</a>
-    </li>
-  </ul>
+  <div ow-scope-tabs>
+  </div>
+
   <div class="outline">
     <div ng-repeat="heading in children | order:sort_field" class="children"
 	 ng-show="heading.is_visible()">
       <div ng-include="'outline-tree'"></div>
     </div>
   </div>
+
 </div><!-- /#outline-appliance -->
 
 <!-- Recursive template for tree of Tasks -->
 <script type="text/ng-template" id="outline-tree">
   <div class="heading {{heading.state}}" node_id="{{heading.pk}}"
        id="{{heading.pk}}-{{heading.fields.slug}}">
-    <div class="ow-hoverable" ng-click="toggle_node($event)"
-	 ng-show="!heading.editable" style="{{ heading | style }}"
+    <div class="ow-hoverable"
+	 ng-show="!heading.editable"
+	 style="{{ heading | style }}"
 	 ow-target="{{ heading | is_target:target_heading }}"
 	 archived="{{ heading.fields.archived }}"
 	 actionable="{{ heading.todo_state.fields.actionable }}"
 	 ow-level="{{ heading.fields.level }}">
       <i class="twisty glyphicon glyphicon-chevron-right"
-	 expandable="{{heading.expandable}}"></i>
-      <span ow-todo>
-      </span>
+	 expandable="{{heading.expandable}}"
+	 ng-click="toggle_node(heading)"></i>
+      <span ow-todo></span>
       <span ng-if="heading.fields.repeats"
 	    class="glyphicon glyphicon-repeat"></span>
-      <div class="clickable ow-title">
+      <div class="clickable ow-title"
+	   ng-click="toggle_node(heading)">
 	{{heading.fields.title}}
       </div>
 
       <div class="ow-buttons btn-group btn-group-xs">
 
-	<button type="button" class="btn btn-default">
+	<button type="button" class="btn btn-default"
+		ng-disabled="{{ heading.fields.read_only }}"
+		ng-click="edit_heading(heading)">
 	  <i class="glyphicon glyphicon-pencil edit-btn" title="Edit"></i>
 	</button>
 
-	<a href="/gtd/lists/parent{{ heading.pk }}/next/"
+	<a href="/gtd/actions/?parent={{heading.pk}}"
 	   class="btn btn-default">
 	  <i class="glyphicon glyphicon-th-list list-btn"
 	     title="View As List">
 	  </i>
 	</a>
 
-	<button type="button" class="btn btn-default">
+	<button type="button" class="btn btn-default"
+		ng-click="archive_heading(heading)">
 	  <i class="glyphicon glyphicon-eye-close archive-btn"
 	     title="Archive"
 	     ng-hide="heading.fields.archived">
@@ -96,7 +99,8 @@
 	  </i>
 	</button>
 
-	<button type="button" class="btn btn-default">
+	<button type="button" class="btn btn-default"
+		ng-click="new_heading(heading)">
 	  <i class="glyphicon glyphicon-plus new-btn"
 	     title="New subheading">
 	  </i>
@@ -128,11 +132,11 @@
       <i class="twisty glyphicon glyphicon-chevron-down" expandable="disabled"></i>
       <span ng-if="heading.fields.title">{{heading.fields.title}}</span>
       <span ng-if="!heading.fields.title">New Heading</span>
-      <button class="btn btn-primary btn-xs" ng-click="save($event)"
+      <button class="btn btn-primary btn-sm" ng-click="save($event)"
       	      ng-disabled="form.$invalid">
 	Save
       </button>
-      <button class="btn btn-default btn-xs" ng-click="cancel_edit($event)">
+      <button class="btn btn-default btn-sm" ng-click="cancel_edit($event)">
 	Don't Save
       </button>
     </div>

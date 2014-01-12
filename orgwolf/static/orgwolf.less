@@ -1,11 +1,9 @@
 /* Colors */
-@primary: rgb(69, 41, 159);
-@primary-faded: rgb(59, 51, 83);
-@primary-dark: rgb(13, 1, 53);
-@primary-light: rgb(127, 100, 214);
-@primary-pale: rgb(155, 136, 214);
-@text-color: rgb(88, 0, 176);
-
+@primary: #3C1366; /* Purple */
+@primary-dark: #260745; /* Purple */
+@primary-dark-faded: #361D4F;
+@primary-light: #B17BE8; /* lavender */
+@primary-light-pale: #D1BBE8;
 /* Modify content if user is anonymous */
 [ow-logged-in=False] {
     .ow-unauth-hide {
@@ -182,21 +180,29 @@ dd.todo
 }
 /* Javascript outline appliance */
 @anim-speed: 350ms;
+@route-speed: 600ms;
 /* @anim-easing: cubic-bezier(0.68, -0.55, 0.27, 1.55); */
 @anim-easing: cubic-bezier(0.68, 0, 0.27, 1);
 .opacify (@opacity) { /* 0 to 100 */
     opacity: (@opacity/100);
     filter:alpha(opacity=@opacity);
 }
-.animate () {
-    -webkit-transition: all @anim-easing @anim-speed;
-    -moz-transition: all @anim-easing @anim-speed;
-    -ms-transition: all @anim-easing @anim-speed;
-    -o-transition: all @anim-easing @anim-speed;
-    transition: all @anim-easing @anim-speed;
+.animate (@duration) {
+    -webkit-transition: all @anim-easing @duration;
+    -moz-transition: all @anim-easing @duration;
+    -ms-transition: all @anim-easing @duration;
+    -o-transition: all @anim-easing @duration;
+    transition: all @anim-easing @duration;
     display: block !important;
     position: relative;
 }
+/* Tabs for scope filtering */
+.ow-scope-tabs {
+    a {
+	color: @primary;
+    }
+}
+
 .outline
 {
     margin-top: 20px;
@@ -204,7 +210,8 @@ dd.todo
     .ow-hoverable {
 	border-radius: 5px;
 	&[ow-level="0"] {
-	font-size: 105%;
+	    color: @primary;
+	    font-size: 105%;
 	}
 	&[ow-target="ancestor"] {
 	    background: rgb(252, 240, 176);
@@ -279,12 +286,12 @@ dd.todo
 /* Transitions to uncover details, children and edit-box */
 .children,.heading,.details,.ow-hoverable {
     &.ng-hide-remove,&.ng-hide-add {
-	.animate();
+	.animate(@anim-speed);
     }
 }
 .editable,.heading {
     &.ng-enter,&.ng-leave {
-	.animate();
+	.animate(@anim-speed);
     }
 }
 /* Hidden transition state */
@@ -328,6 +335,31 @@ dd.todo
 	.opacify(100);
 	height: 261px;
 	padding-bottom: 10px;
+    }
+}
+/* Routing animations */
+.view-animate {
+    &.ng-enter {
+	position: absolute;
+	.animate(@route-speed);
+	.opacify(0);
+    }
+    &.ng-enter.ng-enter-active {
+	.opacify(100);
+    }
+    &.ng-leave.ng-leave-active {
+	left: 100%;
+	/* .opacify(0) */
+    }
+    &.ng-leave {
+	.animate(@route-speed);
+	position: absolute;
+	.opacify(100);
+	top: 66px;
+	width: 100%;
+	background: white;
+	width: 100%;
+	left: 0px;
     }
 }
 
@@ -376,16 +408,22 @@ div.ow-hoverable, div.clickable, div.ow-buttons
 	margin-right: 5px;
     }
     .body {
-	color: black;
-	background: pink;
+	color: @primary;
+	background: @primary-light-pale;
 	border-bottom-left-radius: 10px;
 	border-bottom-right-radius: 10px;
     }
     .body,.header {
 	padding: 3px 5px 3px 5px;
     }
+    .twisty {
+	.opacify(100);
+	font-size: 67%;
+    }
     .header {
-	background: rgb(192, 192, 192);
+	font-size: 150%;
+	color: @primary-light-pale;
+	background: @primary-dark;
 	border-top-left-radius: 10px;
 	border-top-right-radius: 10px;
     }
@@ -471,9 +509,6 @@ input,textarea {
 	font-style: italic;
     }
 }
-/* #scheduled-list { */
-/*     width: 50%; */
-/* } */
 
 /* List of message (e.g. Inbox) */
 .message-list {
@@ -482,5 +517,8 @@ input,textarea {
     }
     .dfrd {
 	font-weight: bold;
+    }
+    &.inbox-zero {
+	margin-top: 64px;
     }
 }

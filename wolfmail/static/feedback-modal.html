@@ -1,0 +1,30 @@
+<div class="modal fade" id="feedbackModal">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <form name="form" novalidate>
+	<div class="modal-header">
+	  <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+	  <h4 class="modal-title">Feedback</h4>
+	</div>
+	<div class="modal-body">
+	  <textarea class="form-control" rows="5"
+		    placeholder="What's on your mind?"
+		    ng-model="feedback.text"
+		    required
+		    ng-hide="success"></textarea>
+	  <div class="alert alert-success"
+	       ng-show="success">Thank you for your feedback.</div>
+	</div>
+	<div class="modal-footer">
+	  <button type="button" class="btn btn-primary"
+		  name="feedback_text"
+		  ng-click="send_feedback(feedback)"
+		  ng-disabled="form.$invalid">
+	    Submit Feedback
+	  </button>
+	  <button type="button" class="btn btn-link" data-dismiss="modal">Cancel</button>
+	</div>
+      </form>
+    </div><!-- /.modal-content -->
+  </div><!-- /.modal-dialog -->
+</div><!-- /.modal -->
