@@ -492,6 +492,17 @@ class Shortcuts(TestCase):
         node = Node.objects.filter(pk=13)
         breadcrumbs(node, '/')
 
+    # def test_load_json(self):
+    #     """
+    #     Test the shortcut function that loads json from files
+    #     """
+    #     f = open('gtd/fixtures/gtd-test.json')
+    #     r = load_fixture(f, 'json')
+    #     self.assertEqual(
+    #         r.__class__.__name__,
+    #         'Queryset'
+    #     )
+
 
 class NodePermissions(TestCase):
     fixtures = ['test-users.json', 'gtd-test.json', 'gtd-env.json']

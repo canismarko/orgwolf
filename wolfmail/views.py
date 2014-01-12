@@ -45,16 +45,19 @@ class MessageView(APIView):
     """
     RESTFUL API for interacting with wolfmail.models.Message objects.
     """
-    @method_decorator(login_required)
-    def dispatch(self, *args, **kwargs):
-        return super(MessageView, self).dispatch(*args, **kwargs)
+    # @method_decorator(login_required)
+    # def dispatch(self, *args, **kwargs):
+    #     return super(MessageView, self).dispatch(*args, **kwargs)
 
     def get_queryset(self, request):
         data = request.GET.copy()
         if data.get('now', False):
             data.pop('now')
             data['rcvd_date__lte'] = dt.datetime.now()
-        qs = Message.objects.filter(owner=request.user)
+        if request.user.is_anonymous():
+            qs = Message.objects.none()
+        else:
+            qs = Message.objects.filter(owner=request.user)
         # Filter by get params
         qs = qs.filter(**data.dict())
         return qs

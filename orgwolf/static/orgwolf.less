@@ -9,6 +9,22 @@
     .ow-unauth-hide {
 	display: none;
     }
+    .outline {
+	margin-left: 50px;
+	margin-top: 50px;
+	.heading.open > .ow-hoverable[ow-level="0"] {
+	    background: white;
+	    border: none;
+	}
+	.ow-hoverable[ow-level="0"] {
+	    font-size: 130%;
+	    padding: 15px;
+	    background-color: @primary-light-pale;
+	    /* background-color: #d9edf7; /\* light blue *\/ */
+	    border: 1px solid @primary-light; /* blue */
+	    /* border: 1px solid #bce8f1; /\* blue *\/ */
+	}
+    }
 }
 
 /* Navbar */
@@ -208,16 +224,17 @@ dd.todo
     margin-top: 20px;
     margin-bottom: 50px;
     .ow-hoverable {
+	padding-left: 7px;
 	border-radius: 5px;
 	&[ow-level="0"] {
 	    color: @primary;
 	    font-size: 105%;
 	}
 	&[ow-target="ancestor"] {
-	    background: rgb(252, 240, 176);
+	    background: rgb(252, 240, 176); /* yellow */
 	}
 	&[ow-target="yes"] {
-	    background: rgb(223, 240, 216);
+	    background: rgb(223, 240, 216); /* green */
 	}
     }
 }
