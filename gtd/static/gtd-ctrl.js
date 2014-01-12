@@ -1,4 +1,4 @@
-/*globals document, $, jQuery, Aloha, window, alert, GtdHeading, HeadingManager, angular*/
+/*globals document, $, jQuery, Aloha, window, alert, GtdHeading, HeadingManager, angular, ga*/
 "use strict";
 var test_headings, owConfig, HeadingFactory, GtdListFactory, UpcomingFactory, outlineCtrl, listCtrl, ow_waiting;
 
@@ -25,6 +25,9 @@ gtd_module.config(
 	     when('/gtd/project/', {
 		 templateUrl: '/static/project-outline.html',
 		 controller: 'nodeOutline'
+	     }).
+	     when('/', {
+		 redirectTo: '/gtd/project/'
 	     });
 }]);
 
@@ -74,6 +77,19 @@ gtd_module.run(['$rootScope', '$resource', function($rootScope, $resource) {
     // Get list of scopes for tabs
     Scope = $resource('/gtd/scope/');
     $rootScope.scopes = Scope.query();
+}]);
+
+/*************************************************
+* Handler sends goole analytics tracking on
+* angular route change
+**************************************************/
+gtd_module.run(['$rootScope', '$location', function($rootScope, $location) {
+    $rootScope.$on('$routeChangeSuccess', function() {
+	// Only active if django DEBUG == True
+	if ( typeof ga !== 'undefined' ) {
+	    ga('send', 'pageview', {'page': $location.path()});
+	}
+    });
 }]);
 
 /*************************************************
@@ -215,7 +231,7 @@ gtd_module.filter('style', function() {
 	    /*jslint bitwise: false*/
 	} else {// gtd.node model
 	    // Determine color based on node.rank
-	    if ( obj.level > 0 ) {
+	    if ( obj.fields.level > 0 ) {
 		colors = ['rgb(88, 0, 176)', 'rgb(80, 0, 0)', 'rgb(0, 44, 19)',
 			  'teal', 'slateblue', 'brown'];
 		color_i = (obj.fields.level) % colors.length;
@@ -591,7 +607,6 @@ function outlineCtrl($scope, $http, $resource, OldHeading, Heading,
 				   'archived': false});
     $scope.headings = new HeadingManager($scope);
     $scope.children = new HeadingManager($scope);
-    $scope.headings.add(main_headings);
     $scope.headings.add(main_headings);
     $scope.active_scope = 0;
     $scope.sort_field = 'title';

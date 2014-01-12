@@ -36,11 +36,13 @@ $(document).ready(function() {
 	    // Tear down the user's session by redirecting the user or making a call to your backend.
 	    // Also, make sure loggedInUser will get set to null on the next page load.
 	    // (That's a literal JavaScript null. Not false, 0, or undefined. null.)
+	    ow_waiting('spinner');
 	    $.ajax({
 		type: 'POST',
 		url: '/accounts/logout/persona/', // This is a URL on your website.
 		success: function(res, status, xhr) { location.reload(); },
-		error: function(xhr, status, err) { alert("Logout failure: " + err); }
+		error: function(xhr, status, err) { alert("Logout failure: " + err); },
+		complete: function(jqXHR, status) { ow_waiting('clear'); }
 	    });
 	}
     });

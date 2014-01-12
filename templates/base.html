@@ -145,6 +145,18 @@
 	$('.util-dropdown').parent().prev('a.dropdown-toggle').append(
 	    '<b class="caret" />');
 	{% endif %}
+
+	// Google analytics
+	{% if not debug %}
+	(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+	    (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+				 m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+				})(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+	ga('create', 'UA-47040758-1', 'orgwolf.com');
+	ga('send', 'pageview');
+	{% endif %}
+
     });
     </script>
     {% endblock %}
@@ -243,7 +255,6 @@
 	    <a href="#" id="logout" target="_self">Logout</a>
 	  </li>
 	  {% else %}
-	  {{ settings }}
 	  <li>
 	    <a href="#" class="persona-button navbar-brand">
 	      <img src="{{ STATIC_URL }}/persona-button.png" />

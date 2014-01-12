@@ -45,7 +45,6 @@ def home(request):
         print(request.user.home)
     else:
         url = reverse('list_display')
-    print(url)
     return redirect(url)
 
 def new_user(request):
@@ -201,8 +200,8 @@ def persona_login(request):
     return response
 
 def persona_logout(request):
-    logout(request)
-    return HttpResponse()
+    print(logout(request))
+    return HttpResponse(json.dumps({'status': 'success'}))
 
 def jstest(request):
     """Executes the javascript test runner (QUnit).

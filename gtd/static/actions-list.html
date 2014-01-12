@@ -49,7 +49,7 @@
   <!-- Indicator for current active project -->
   <span ng-if="parent">
     Project:
-    <a id="active_project" href="/gtd/projects/parent.pk">
+    <a id="active_project" href="/gtd/project/#{{parent.id}}-{{parent.slug}}">
       {{ parent.title }}</a>
     [<a ng-click="filter_parent(null)">&times;</a>]
   </span>

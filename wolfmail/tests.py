@@ -53,6 +53,19 @@ class MessageAPI(TestCase):
             ordered=False,
         )
 
+    def test_get_inbox_anonymous(self):
+        self.client.logout()
+        response = self.client.get(self.url, {'in_inbox': True})
+        self.assertEqual(
+            response.status_code,
+            200
+        )
+        r = json.loads(response.content)
+        self.assertEqual(
+            len(r),
+            0
+        )
+
     def test_get_message(self):
         msg = Message.objects.get(pk=1)
         response = self.client.get(
