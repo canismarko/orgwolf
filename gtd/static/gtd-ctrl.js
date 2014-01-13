@@ -410,7 +410,8 @@ gtd_module.directive('owEditable', function() {
 	});
     }
     return {
-	link: link
+	link: link,
+	templateUrl: '/static/editable.html'
     };
 });
 

@@ -1,0 +1,127 @@
+<div class="editable info" node-id="{{heading.pk}}">
+  <form novalidate class="heading-form" name="form">
+    <div class="header">
+      <i class="twisty glyphicon glyphicon-chevron-down" expandable="disabled"></i>
+      <span ng-if="heading.fields.title">{{heading.fields.title}}</span>
+      <span ng-if="!heading.fields.title">New Heading</span>
+      <button class="btn btn-primary btn-sm" ng-click="save($event)"
+      	      ng-disabled="form.$invalid">
+	Save
+      </button>
+      <button class="btn btn-default btn-sm" ng-click="cancel_edit($event)">
+	Don't Save
+      </button>
+    </div>
+    <div class="body">
+      <div class="row">
+	<div class="col-md-3">
+	  <label for="title">Title:</label>
+	  <input type="text" ng-model="fields.title"
+		 id="title" class="form-control" required></input>
+	</div>
+	<div class="col-md-3">
+	  <label for="todo_state">Todo State:</label>
+	  <select id="todo_state" ng-model="fields.todo_state"
+		  class="form-control"
+		  ng-options="state.pk as (state.fields.abbreviation + ' - ' + state.fields.display_text) for state in todo_states">
+	    <option value="">----------</option>
+	  </select>
+	</div>
+	<div class="col-md-2">
+	  <label for="tag_string">Tag String:</label>
+	  <input type="text" id="tag_string" placeholder="eg. :home:"
+		 ng-model="fields.tag_string" class="form-control"></input>
+	</div>
+	<div class="col-md-2">
+	  <label for="priority">Priority:</label>
+	  <select id="priority" ng-model="fields.priority"
+		  class="form-control"
+		  ng-options="x.sym as x.display for x in priorities">
+	  </select>
+	</div>
+	<div class="col-md-1">
+	  <label for="archived">Archived:
+	  </label>
+	  <div class="make-switch" data-on-label="Yes" data-off-label="No">
+	    <input type="checkbox" id="archived"
+		   ng-model="fields.archived">
+		     </input>
+	  </div>
+	</div>
+      </div>
+      <div class="row">
+	<div class="col-md-3">
+	  <label for="scheduled_date">Scheduled:</label>
+	  <div class="row">
+	    <div class="col-md-6">
+	      <input type="text" id="scheduled_date" placeholder="YYYY-MM-DD"
+		     class="form-control datepicker" value="{{ fields.scheduled_date }}"
+		     ng-model="fields.scheduled_date"></input>
+	    </div>
+	    <div class="col-md-6">
+	      <input type="text" id="scheduled_time" placeholder="HH:MM"
+		     class="form-control timepicker"
+		     ng-model="fields.scheduled_time"></input>
+	    </div>
+	  </div>
+	</div>
+	<div class="col-md-3">
+	  <label for="deadline_date">Deadline:</label>
+	  <div class="row">
+	    <div class="col-md-6">
+	      <input type="text" id="deadline_date" placeholder="YYYY-MM-DD"
+		     class="form-control datepicker"
+		     ng-model="fields.deadline_date"></input>
+	    </div>
+	    <div class="col-md-6">
+	      <input type="text" id="deadline_time" placeholder="HH:MM"
+		     class="form-control timepicker"
+		     ng-model="fields.deadline_time"></input>
+	    </div>
+	  </div>
+	</div>
+	<div class="col-md-2">
+	  <label>Scope:</label>
+	  <select id="scope" multiple class="form-control"
+		  ng-model="fields.scope"
+		  ng-options="a.id as a.display for a in scopes">
+	  </select>
+	</div>
+	<div class="col-md-1">
+	  <label for="repeats">
+	    Repeats...
+	  </label>
+	  <div class="make-switch">
+	    <input type="checkbox" ng-model="fields.repeats" id="repeats" />
+	  </div>
+	</div>
+	<div class="col-md-1">
+	  <label for="repeating_number">...every...
+	  </label>
+	  <input type="text" id="repeating_number" placeholder="number..."
+		 ng-model="fields.repeating_number"
+		 class="input-small form-control">
+		   </input>
+		   <select id="repeating_unit" class="form-control"
+			   ng-model="fields.repeating_unit"
+			   ng-options="unit.value as unit.label for unit in time_units">
+		   </select>
+	</div>
+	<div class="col-md-2">
+	  <label for="repeat_from_completion">
+	    ...from...
+	  </label>
+	  <select id="repeat_from_completion" class="form-control"
+		  ng-model="fields.repeats_from_completion"
+		  ng-options="x.value as x.label for x in repeat_schemes">
+	  </select>
+	</div>
+      </div>
+      <div class="row">
+	<div class="col-md-12">
+	  <label>Addition information:</label>
+	  <div class="edit-text" ng-bind-html="fields.text | asHtml"></div>
+	</div>
+      </div>
+  </form>
+  </div>
