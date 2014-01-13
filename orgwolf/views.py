@@ -44,7 +44,7 @@ def home(request):
         url = reverse(request.user.home)
         print(request.user.home)
     else:
-        url = reverse('list_display')
+        url = reverse('projects')
     return redirect(url)
 
 def new_user(request):
@@ -175,11 +175,8 @@ def persona_login(request):
             user.username = r['email']
             user.password = '!'
             user.save()
-            # # Copy public nodes
-            # for node in Node.objects.filter(owner=None):
-            #     del node.pk
-            #     node.owner = user
-            #     node.save()
+            # Copy public nodes as help system
+            load_fixture(open('gtd/fixtures/public-data.json')).update(owner=user)
         else:
             # Ambiguous e-mail address, multiple users
             r['status'] = 'failure'

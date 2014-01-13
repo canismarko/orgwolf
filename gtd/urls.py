@@ -32,8 +32,6 @@ urlpatterns = patterns(
     'gtd.views',
     url(r'^$', 'home'),
 
-    # url(r'^toinbox/$', 'capture_to_inbox'),
-
     url(r'^node/search/', 'node_search'),
 
     # New API urls below

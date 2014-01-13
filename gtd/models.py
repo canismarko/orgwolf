@@ -582,7 +582,8 @@ class Node(MPTTModel):
     def set_fields(self, fields):
         """
         Accepts a dictionary of fields and updates them on this instance.
-        Does not commit new values to the database.
+        Does not commit new values to the database. Node must be in the
+        database already so that foreign keys can be assigned.
         """
         boolean_fields = ['archived', 'auto_update']
         date_fields = ['scheduled_date', 'deadline_date']
@@ -592,7 +593,7 @@ class Node(MPTTModel):
             # Convert 'None' to None singleton
             if value == 'None':
                 value = None
-            # resolve todo_state foreign key
+            # Resolve foreign keys
             if key == 'todo_state':
                 if isinstance(value, list):
                     value = value[0]
@@ -604,6 +605,8 @@ class Node(MPTTModel):
                 self.owner = User.objects.get(pk=value)
             elif key == 'parent' and isinstance(value, (int, long)):
                 self.parent = Node.objects.get(pk=value)
+            elif key == 'assigned' and isinstance(value, (int, long)):
+                self.assigned = Contact.objects.get(pk=value)
             # Resolve boolean fields to singletons
             elif key in boolean_fields:
                 if isinstance(value, list):

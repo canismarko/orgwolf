@@ -32,6 +32,7 @@ from django.core import serializers
 from django.core.exceptions import ValidationError
 from django.core.urlresolvers import reverse
 from django.db.models import Q
+from django.db.models.query import QuerySet
 from django.http import Http404
 from django.template.defaultfilters import slugify
 from django.test import TestCase
@@ -44,8 +45,7 @@ from rest_framework.renderers import JSONRenderer
 from gtd.models import Node, TodoState
 from gtd.models import Context, Scope
 from gtd.serializers import NodeSerializer
-from gtd.shortcuts import parse_url, generate_url
-from gtd.shortcuts import order_nodes
+from gtd.shortcuts import parse_url, generate_url, order_nodes, load_fixture
 from gtd.templatetags.gtd_extras import escape_html
 from gtd.templatetags.gtd_extras import add_scope, breadcrumbs
 from gtd.views import Descendants, NodeListView, NodeView
@@ -492,16 +492,43 @@ class Shortcuts(TestCase):
         node = Node.objects.filter(pk=13)
         breadcrumbs(node, '/')
 
-    # def test_load_json(self):
-    #     """
-    #     Test the shortcut function that loads json from files
-    #     """
-    #     f = open('gtd/fixtures/gtd-test.json')
-    #     r = load_fixture(f, 'json')
-    #     self.assertEqual(
-    #         r.__class__.__name__,
-    #         'Queryset'
-    #     )
+    def test_load_json(self):
+        """
+        Test the shortcut function that loads json from files
+        """
+        node_1 = Node.objects.get(pk=1)
+        f = open('gtd/fixtures/gtd-test.json')
+        json_data = json.loads(f.read())
+        f.seek(0)
+        qs = load_fixture(f)
+        self.assertTrue(
+            isinstance(qs, QuerySet),
+            'load_fixture() does not return a queryset'
+        )
+        # Are the correct items processed
+        self.assertQuerysetEqual(
+            qs,
+            [x['fields']['title'] for x in json_data if x['model'] == 'gtd.node'],
+            transform=lambda x: x.title,
+            ordered=False,
+        )
+        # Make sure that tree structure is preserved and duplicated
+        node_2 = Node.objects.exclude(pk=node_1.pk).get(title=node_1.title)
+        self.assertNotEqual(
+            node_1.tree_id,
+            node_2.tree_id
+        )
+        self.assertQuerysetEqual(
+            Node.objects.filter(tree_id=node_1.tree_id),
+            [repr(x) for x in Node.objects.filter(tree_id=node_2.tree_id)],
+            ordered=False
+        )
+        self.assertQuerysetEqual(
+            node_1.get_children(),
+            [repr(x) for x in node_2.get_children()],
+            ordered=False
+        )
+
 
 
 class NodePermissions(TestCase):

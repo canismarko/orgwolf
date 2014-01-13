@@ -18,6 +18,8 @@
 #######################################################################
 
 from __future__ import unicode_literals, absolute_import, print_function
+
+import json
 import re
 
 from django.contrib.auth.models import AnonymousUser
@@ -178,3 +180,50 @@ def reset_env(commit=False):
         print('pass commit=True if you are sure you want to continue.')
 
 
+def load_fixture(f):
+    """
+    Load a list of Node objects from a json file (f). Requires that
+    MPTT fields are set correctly in fixture.
+    """
+    TREE_FIELDS = ['tree_id', 'lft', 'rght', 'level']
+    # Keep track of primary keys to build queryset later
+    pk_list = []
+    json_list = json.loads(f.read())
+    def create_node(data, parent=None):
+        """
+        Recursive function for seting a Node and then processing its children.
+        """
+        node = Node(title=data['title'])
+        node.save()
+        node.set_fields(data)
+        # Remove tree fields so they can be set by MPTT framework
+        for field in TREE_FIELDS:
+            setattr(node, field, None)
+        node.parent = parent
+        node.save()
+        pk_list.append(node.pk)
+        children = [x for x in json_list if (x['tree_id'] == data['tree_id'] and
+                                             x['lft'] > data['lft'] and
+                                             x['rght'] < data['rght'] and
+                                             x['level'] == data['level']+1)]
+        for child in children:
+            create_node(child, node)
+    # Remove non-Node objects
+    json_list = [x for x in json_list if x['model'] == 'gtd.node']
+    json_list = [x['fields'] for x in json_list]
+    # Separate nodes into trees and process each one
+    tree_ids = set([x['tree_id'] for x in json_list])
+    for tree_id in tree_ids:
+        root = [x for x in json_list if (x['level'] == 0 and
+                                         x['tree_id'] == tree_id)]
+        assert len(root) == 1, 'Duplicate tree roots found'
+        create_node(root[0])
+            # # Remove problematic fields
+            # for field in EXCLUDE:
+            #     json_data['fields'].pop(field)
+            # node = Node(title=json_data['fields'].pop('title'))
+            # node.save()
+            # node.set_fields(json_data['fields'])
+            # pk_list.append(node.pk)
+    qs = Node.objects.filter(pk__in=pk_list)
+    return qs

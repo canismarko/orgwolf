@@ -770,7 +770,7 @@
         "users": [], 
         "parent": null, 
         "repeating_unit": null, 
-        "scheduled_date": null, 
+        "scheduled_date": "2013-01-01", 
         "slug": "talk-to-lou", 
         "opened": "2013-04-06T01:16:45.704Z", 
         "level": 0, 
