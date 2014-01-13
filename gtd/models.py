@@ -307,16 +307,15 @@ class NodeQuerySet(query.QuerySet):
         """Get all the objects that have `user` as the owner or assigned,
         or have `user` in the related_users relationship."""
         qs = self
-        public = Q(owner=None)
         if user.is_anonymous():
-            qs = qs.filter(public)
+            qs = qs.filter(owner=None)
         else:
             owned = Q(owner=user)
             others = Q(users=user)
             # Look for assigned nodes
             contact = user.contact_set.all()
             assigned = Q(assigned__in=contact)
-            qs = qs.filter(owned | others | assigned | public)
+            qs = qs.filter(owned | others | assigned)
         if not get_archived:
             qs = qs.filter(archived=False)
         return qs

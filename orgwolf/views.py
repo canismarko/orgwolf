@@ -33,6 +33,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+from gtd.shortcuts import load_fixture
 from orgwolf import settings
 from orgwolf.models import OrgWolfUser as User
 from orgwolf.forms import RegistrationForm, ProfileForm, PasswordForm

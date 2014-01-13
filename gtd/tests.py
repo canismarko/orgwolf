@@ -145,9 +145,9 @@ class NodeManagers(TestCase):
         )
         qs = Node.objects.filter(owner=None)
         mine = qs.mine(self.user)
-        self.assertQuerysetEqual(
-            mine,
-            [repr(x) for x in qs],
+        self.assertEqual(
+            mine.count(),
+            0
         )
 
     def test_owned(self):
