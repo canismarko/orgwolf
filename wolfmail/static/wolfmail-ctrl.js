@@ -302,6 +302,9 @@ function owinbox($scope, $rootScope, $resource, MessageAPI, Heading) {
     };
     $rootScope.$on('refresh_messages', $scope.get_messages);
     $scope.get_messages();
+    // Get top level projects for "New task" modal
+    $scope.projects = Heading.query({'parent_id': 0,
+				     'archived': false});
     // Call back for when a message is processed
     $scope.success = function(msg) {
 	$scope.messages.remove(msg);

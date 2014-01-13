@@ -1,40 +1,48 @@
 <!-- Modal for adding a new Node/task -->
 <div class="modal fade task">
   <div class="modal-dialog">
-    <div class="modal-content">
-      <div class="modal-header">
-	<button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
-	<h4 class="modal-title" ng-if="modal_task">New Task</h4>
-	<h4 class="modal-title" ng-if="!modal_task">New Project</h4>
-      </div>
-      <div class="modal-body">
-	<div class="form-group">
-	  <label for="title">Title</label>
-	  <input id="title" class="form-control" ng-model="new_node.title" />
+    <form name="new_node_form" novalidate>
+      <div class="modal-content">
+	<div class="modal-header">
+	  <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+	  <h4 class="modal-title" ng-if="modal_task">New Task</h4>
+	  <h4 class="modal-title" ng-if="!modal_task">New Project</h4>
 	</div>
-	<div class="form-group" ng-if="modal_task">
-	  <label for="project">Project</label>
-	  <select id="project" class="form-control"
-		  ng-model="project"
-		  ng-change="change_project(project)"
-		  ng-options="x.title for x in projects | order: 'title'"
-		  >
-	  </select>
+	<div class="modal-body">
+	  <div class="form-group">
+	    <label for="title">Title</label>
+	    <input id="title" class="form-control"
+		   ng-model="new_node.title" required/>
+	  </div>
+	  <div class="form-group" ng-if="modal_task">
+	    <label for="project">Project</label>
+	    <select id="project" class="form-control"
+		    ng-model="project"
+		    ng-change="change_project(project)"
+		    ng-options="x.title for x in projects | order: 'title'"
+		    required
+		    >
+	    </select>
+	  </div>
+	  <div class="form-group" ng-if="modal_task">
+	    <label for="parent">Parent</label>
+	    <select id="parent" class="form-control"
+		    ng-model="parent"
+		    ng-options="x | parent_label for x in parents"
+		    ng-change="change_parent(parent)"
+		    required>
+	    </select>
+	  </div>
 	</div>
-	<div class="form-group" ng-if="modal_task">
-	  <label for="parent">Parent</label>
-	  <select id="parent" class="form-control"
-		  ng-model="parent"
-		  ng-options="x | parent_label for x in parents"
-		  ng-change="change_parent(parent)">
-	  </select>
+	<div class="modal-footer">
+	  <button type="button" class="btn btn-default" data-dismiss="modal">Discard Changes</button>
+	  <button type="button" class="btn btn-primary"
+		  ng-click="create_node()" ng-disabled="new_node_form.$invalid">
+	    Create
+	  </button>
 	</div>
-      </div>
-      <div class="modal-footer">
-	<button type="button" class="btn btn-default" data-dismiss="modal">Discard Changes</button>
-	<button type="button" class="btn btn-primary" ng-click="create_node()">Create</button>
-      </div>
-    </div><!-- /.modal-content -->
+      </div><!-- /.modal-content -->
+    </form>
   </div><!-- /.modal-dialog -->
 </div><!-- /.modal for new node/task -->
 

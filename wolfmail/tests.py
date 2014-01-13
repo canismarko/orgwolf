@@ -100,7 +100,8 @@ class MessageAPI(TestCase):
             url,
             json.dumps({'action': 'create_node',
                         'title': 'man of action',
-                        'parent': 1}),
+                        'parent': 1,
+                        'close': 'false'}),
             content_type='application/json'
         )
         r = json.loads(response.content)
@@ -141,7 +142,7 @@ class MessageAPI(TestCase):
         self.client.put(
             url,
             json.dumps({'action': 'create_node',
-                        'close': True}),
+                        'close': 'true'}),
             content_type='application/json'
         )
         node = Node.objects.get(pk=node.pk)
