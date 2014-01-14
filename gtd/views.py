@@ -603,33 +603,6 @@ class ProjectView(DetailView):
                                   RequestContext(request))
 
 
-class Descendants(View):
-    """Manages the retrieval of descendants of a given node"""
-    def get(self, request, *args, **kwargs):
-        ancestor_pk = self.kwargs['ancestor_pk']
-        offset = request.GET.get('offset', 1)
-        if int(ancestor_pk) > 0:
-            parent = get_object_or_404(Node, pk=ancestor_pk)
-            all_descendants = parent.get_descendants()
-            level = parent.level + int(offset)
-        elif int(ancestor_pk) == 0:
-            parent = None
-            all_descendants = Node.objects.all()
-            level = int(offset)-1
-        nodes_qs = all_descendants.filter(level=level)
-        nodes_qs = nodes_qs & Node.objects.mine(request.user, get_archived=True)
-        if request.is_ajax() or not settings.DEBUG_BAR:
-            return HttpResponse(
-                serializers.serialize('json', nodes_qs)
-            )
-        else:
-            serializers.serialize('json', nodes_qs)
-            # Non-ajax returns the base template to show django-debug-toolbar
-            return render_to_response('base.html',
-                                      locals(),
-                                      RequestContext(request))
-
-
 class TodoStateView(View):
     """Handles RESTful retrieval of TodoState objects"""
     def get(self, request, *args, **kwargs):

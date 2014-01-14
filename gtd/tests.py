@@ -48,7 +48,7 @@ from gtd.serializers import NodeSerializer
 from gtd.shortcuts import parse_url, generate_url, order_nodes, load_fixture
 from gtd.templatetags.gtd_extras import escape_html
 from gtd.templatetags.gtd_extras import add_scope, breadcrumbs
-from gtd.views import Descendants, NodeListView, NodeView
+from gtd.views import NodeListView, NodeView
 from orgwolf.models import OrgWolfUser as User
 from plugins.deferred import MessageHandler as DeferredMessageHandler
 from wolfmail.models import Message
@@ -1251,61 +1251,6 @@ class DBOptimization(TestCase):
         )
 
 
-class DescendantsAPI(TestCase):
-    """Tests for getting a list of descendants of a given node
-    of varying levels."""
-    fixtures = ['test-users.json', 'gtd-test.json', 'gtd-env.json']
-
-    def setUp(self):
-        self.node = Node.objects.get(pk=1)
-        self.url = reverse('node_descendants',
-                           kwargs={'ancestor_pk': self.node.pk})
-        self.assertTrue(
-            self.client.login(username='test', password='secret')
-        )
-
-    def test_basic_view_behavior(self):
-        """Make sure that the view uses the class based system"""
-        desc_view = Descendants()
-        self.assertTrue(
-            isinstance(desc_view, View),
-            u'Descendants is not a subclass of generic View'
-        )
-        response = self.client.get(self.url)
-        self.assertEqual(
-            200,
-            response.status_code,
-        )
-
-    def test_return_offset1(self):
-        self.maxDiff = None
-        response = self.client.get(
-            self.url,
-            HTTP_X_REQUESTED_WITH='XMLHttpRequest')
-        response_text = response.content
-        response = json.loads(response_text)
-        self.assertTrue(
-            isinstance(response, list),
-            'request did not return a list (got {0})'.format(response.__class__)
-        )
-        target = Node.objects.get(pk=1).get_descendants().filter(
-            level = self.node.level + 1
-        )
-        response_qs = Node.objects.filter(
-            id__in=[node['pk'] for node in response]
-        )
-        # Test that response returns the right nodes
-        self.assertEqual(
-            list(target),
-            list(response_qs),
-        )
-        json_target = json.loads(serializers.serialize('json', target))
-        self.assertEqual(
-            json_target,
-            response
-        )
-
-
 class ProjectView(TestCase):
     """
     Check the /gtd/node/<node_pk>/<slug>/ functionality.
@@ -1462,7 +1407,7 @@ class NodeAPI(TestCase):
         expected = Node.objects.filter(owner=None)
         self.client.logout()
         response = self.client.get(
-            reverse('node_object'),
+           reverse('node_object'),
             content_type='application/json'
         )
         r = json.loads(response.content)
@@ -1597,6 +1542,20 @@ class NodeAPI(TestCase):
         self.assertEqual(
             r['title'],
             new_title,
+        )
+
+    def test_put_clear_date(self):
+        node = Node(title='scheduled node',
+                    scheduled_date=dt.date(2014, 01, 01),
+                    owner=self.user)
+        node.save()
+        response = self.client.put(reverse('node_object', kwargs={'pk': node.pk}),
+                                   json.dumps({'scheduled_date': '',}),
+                                   content_type='application/json')
+        node = Node.objects.get(pk=node.pk)
+        self.assertEqual(
+            node.scheduled_date,
+            None
         )
 
     def test_archive_by_json(self):

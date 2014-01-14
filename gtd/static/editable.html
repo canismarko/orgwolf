@@ -54,8 +54,9 @@
 	  <label for="scheduled_date">Scheduled:</label>
 	  <div class="row">
 	    <div class="col-md-6">
-	      <input type="text" id="scheduled_date" placeholder="YYYY-MM-DD"
-		     class="form-control datepicker" value="{{ fields.scheduled_date }}"
+	      <input type="text" placeholder="YYYY-MM-DD"
+		     ow-datepicker
+		     class="form-control" value="{{ fields.scheduled_date }}"
 		     ng-model="fields.scheduled_date"></input>
 	    </div>
 	    <div class="col-md-6">
@@ -70,7 +71,8 @@
 	  <div class="row">
 	    <div class="col-md-6">
 	      <input type="text" id="deadline_date" placeholder="YYYY-MM-DD"
-		     class="form-control datepicker"
+		     ow-datepicker
+		     class="form-control"
 		     ng-model="fields.deadline_date"></input>
 	    </div>
 	    <div class="col-md-6">

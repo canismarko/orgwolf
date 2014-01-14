@@ -48,6 +48,7 @@ node2 = {
     archived: false,
     related_projects: [],
     tree_id: 2,
+    scheduled_date: '',
 };
 node3 = {
     id: 3,
@@ -162,7 +163,7 @@ test('constructor', function() {
 });
 
 test('set_fields() method', function() {
-    var heading, key;
+    var heading, key, expected;
     heading = new GtdHeading();
     heading.set_fields(node2);
     equal(
@@ -175,13 +176,14 @@ test('set_fields() method', function() {
 	node2.scope,
 	'Scope set'
     );
+    expected = $.extend({}, node2);
     // Check all the keys set on the reference object
-    for ( var i=0; i<Object.keys(node2).length; i+=1 ) {
-	key = Object.keys(node2)[i];
+    for ( var i=0; i<Object.keys(expected).length; i+=1 ) {
+	key = Object.keys(expected)[i];
 	if ( key !== 'id' && key !== 'workspace' ) {
 	    equal(
 		heading.fields[key],
-		node2[key],
+		expected[key],
 		'field ' + key + ' set'
 	    );
 	}

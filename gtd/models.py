@@ -589,6 +589,10 @@ class Node(MPTTModel):
         time_fields = ['scheduled_time', 'deadline_time']
         datetime_fields = ['opened', 'closed']
         for key, value in fields.iteritems():
+            # {datetime_field: ''} -> {datetime_field: None}
+            if (key in (datetime_fields + date_fields + time_fields)
+                and value == ''):
+                value = None
             # Convert 'None' to None singleton
             if value == 'None':
                 value = None
@@ -601,7 +605,7 @@ class Node(MPTTModel):
                 else:
                     self.todo_state = None
             elif key == 'owner' and isinstance(value, (int, long)):
-                self.owner = User.objects.get(pk=value)
+                self.owner =  User.objects.get(pk=value)
             elif key == 'parent' and isinstance(value, (int, long)):
                 self.parent = Node.objects.get(pk=value)
             elif key == 'assigned' and isinstance(value, (int, long)):
@@ -616,7 +620,6 @@ class Node(MPTTModel):
                     setattr(self, key, False)
                 else:
                     setattr(self, key, value)
-            # Resolve datetime fields to datetime objects
             elif key in datetime_fields and value is not None:
                 # Convert to datetime object
                 setattr(self, key, dateutil.parser.parse(value))
@@ -624,7 +627,7 @@ class Node(MPTTModel):
                 # Convert to date object
                 setattr(self, key, dateutil.parser.parse(value).date())
             elif key in time_fields and value is not None:
-                # Convert to datetime object
+                # Convert to time object
                 setattr(self, key, dateutil.parser.parse(value).time())
             # Set other things
             else:

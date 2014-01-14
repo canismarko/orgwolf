@@ -24,7 +24,7 @@ from django.conf.urls import patterns, url
 from django.contrib import admin
 admin.autodiscover()
 
-from gtd.views import (Descendants, NodeView, TodoStateView,
+from gtd.views import (NodeView, TodoStateView,
                        ScopeView, NodeListView, ContextView,
                        ProjectView, UpcomingNodeView)
 
@@ -48,11 +48,6 @@ urlpatterns = patterns(
     url(r'^node/upcoming/?',
         UpcomingNodeView.as_view(),
         name='upcoming'
-    ),
-
-    url(r'^node/descendants/(?P<ancestor_pk>\d+)/$',
-        Descendants.as_view(),
-        name='node_descendants'
     ),
 
     url(r'^todostate(?:/(?P<pk>\d+))?/?$',
