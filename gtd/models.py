@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 #######################################################################
 # Copyright 2012 Mark Wolf
 #
@@ -677,11 +678,12 @@ def node_timestamp(sender, **kwargs):
 @receiver(signals.pre_save, sender=Node)
 def validate_deferred_date(sender, instance, **kwargs):
     """
-    If the Node is deferred, validate that the scheduled_date field is set."""
+    If the Node is deferred, make sure that the scheduled_date field is set.
+    """
     if not kwargs['raw']:
-        if (getattr(instance.todo_state, 'abbreviation', None) == 'DFRD' and
-            instance.scheduled_date is None):
-            raise ValidationError('Node is DFRD but scheduled_date not set')
+        if (getattr(instance.todo_state, 'abbreviation', None) == 'DFRD'
+            and instance.scheduled_date is None):
+            instance.scheduled_date = dt.date.today()
 
 @receiver(signals.post_save, sender=Node)
 def set_deferred_message(sender, instance, **kwargs):

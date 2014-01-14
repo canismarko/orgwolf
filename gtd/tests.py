@@ -1785,8 +1785,8 @@ class MessageIntegration(TestCase):
         )
         # Set to deferred state and check that Message is created
         node.todo_state = dfrd
-        self.assertRaises(ValidationError, node.save)
-        node.scheduled_date = dt.datetime.today().date()
+        node.scheduled_date = None
+        # node.scheduled_date = dt.datetime.today().date()
         node.save()
         node = Node.objects.get(pk=node.pk)
         self.assertTrue(
@@ -1799,6 +1799,10 @@ class MessageIntegration(TestCase):
         self.assertTrue(
             isinstance(node.deferred_message.handler, DeferredMessageHandler),
             'new message is not a deferred message'
+        )
+        self.assertEqual(
+            node.scheduled_date,
+            dt.date.today()
         )
         # Change the deferred date and check that the Message is updated
         node = Node.objects.get(pk=node.pk)
