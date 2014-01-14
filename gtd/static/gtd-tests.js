@@ -284,7 +284,7 @@ test('is_visible() method with deadline', function() {
     // Make heading due now and test visibility
     var now = new Date();
     var ds = now.getFullYear() + '-' + (now.getMonth()+1) + '-' + now.getDate();
-    heading.fields.deadline_date = ds;
+    heading.set_fields({'deadline_date': ds});
     ok(
 	heading.is_visible(),
 	'Heading is visible if due today'
@@ -300,8 +300,7 @@ test('is_visible() method with deadline', function() {
     // Make heading completed and test that it's not visible
     var completed = scope.todo_states.get({abbreviation: 'DONE'});
     var next = scope.todo_states.get({abbreviation: 'NEXT'});
-    console.log(heading.fields.todo_state);
-    heading.fields.todo_state = completed.pk;
+    heading.set_fields({todo_state: completed.pk});
     ok(
 	! heading.is_visible(),
 	'Heading that is completed is not visible if overdue'

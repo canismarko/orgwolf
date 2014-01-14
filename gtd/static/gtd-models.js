@@ -27,6 +27,7 @@ GtdHeading = function (args) {
 	tree_id: null,
     };
     this.pk = 0;
+    this.workspace = {};
     this.archived = false;
     this.populated = false;
     this.expandable = 'lazy';
@@ -75,6 +76,7 @@ GtdHeading.prototype.set_fields = function( vals ) {
     }
     // Set fields
     jQuery.extend(this.fields, node);
+    this.update();
 };
 
 GtdHeading.prototype.get_todo_state = function() {
@@ -151,7 +153,7 @@ GtdHeading.prototype.get_previous_sibling = function() {
 
 GtdHeading.prototype.get_parent = function() {
     var parent;
-    if ( this.rank > 0 && this.workspace ) {
+    if ( this.rank > 0 && this.workspace.headings ) {
 	if ( this.fields.parent === null ) {
 	    // null parent attribute means return workspace
 	    parent = this.workspace;
@@ -250,7 +252,6 @@ GtdHeading.prototype.is_visible = function(view) {
     // Determine if the heading is visible in the current view.
     var visibility, showall, active_states, active_tree, is_active, is_recent, is_closed, deadline_days, deadline_limit, is_due;
     visibility = true; // Assume visible unless we think otherwise
-    this.update();
     // Check if this heading is within the active scope
     if ( this.workspace.active_scope ) {
 	if (this.pk === 22) {
@@ -334,9 +335,13 @@ GtdHeading.prototype.update = function() {
 	}
     }
     // Now update todostate
-    this.todo_state = this.workspace.todo_states.get({pk: this.fields.todo_state});
+    if ( typeof this.workspace.todo_states !== 'undefined' ) {
+	this.todo_state = this.workspace.todo_states.get({pk: this.fields.todo_state});
+    }
     // Update children
-    this.children = this.workspace.headings.filter_by({parent: this.pk});
+    if ( typeof this.workspace.headings !== 'undefined' ) {
+	this.children = this.workspace.headings.filter_by({parent: this.pk});
+    }
     // Update parent_obj
     this.parent_obj = this.get_parent();
 };
