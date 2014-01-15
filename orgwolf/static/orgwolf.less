@@ -221,8 +221,20 @@ dd.todo
 
 .outline
 {
+    margin-left: 14px;
     margin-top: 20px;
     margin-bottom: 50px;
+    .heading {
+	/* padding-left: 14px; */
+	padding-right: 8px;
+	overflow: hidden;
+	> .details {
+	    color: black;
+	}
+	> .details {
+	    margin-left: 30px;
+	}
+    }
     .ow-hoverable {
 	padding-left: 7px;
 	border-radius: 5px;
@@ -383,17 +395,6 @@ dd.todo
 .hidden {
     height: 0px;
 }
-.heading {
-    padding-left: 14px;
-    padding-right: 8px;
-    overflow: hidden;
-    > .details {
-	color: black;
-    }
-    > .details {
-	margin-left: 14px;
-    }
-}
 .heading.open {
     padding-top: 3px;
     > .ow-hoverable > i {
@@ -419,7 +420,7 @@ div.ow-hoverable, div.clickable, div.ow-buttons
 }
 .editable {
     position: relative;
-    left: -5px;
+    /* left: -5px; */
     padding-bottom: 10px;
     .edit-title {
 	margin-right: 5px;
@@ -431,7 +432,7 @@ div.ow-hoverable, div.clickable, div.ow-buttons
 	border-bottom-right-radius: 10px;
     }
     .body,.header {
-	padding: 3px 5px 3px 5px;
+	padding: 3px 5px 3px 5px;;
     }
     .twisty {
 	.opacify(100);
@@ -443,6 +444,9 @@ div.ow-hoverable, div.clickable, div.ow-buttons
 	background: @primary-dark;
 	border-top-left-radius: 10px;
 	border-top-right-radius: 10px;
+    }
+    .edit-text {
+	margin-bottom: 10px;
     }
 }
 

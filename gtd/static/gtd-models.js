@@ -745,11 +745,21 @@ Array.prototype.order_by = function(field) {
     // Accepts a string and orders according to
     // the field represented by that string.
     // '-field' reverses the order.
-    var fields, sorted, compare, key;
+    var fields, sorted, compare, key, DATEFIELDS, direction;
+    DATEFIELDS = ['opened', 'closed', 'scheduled_date', 'deadline_date'];
     fields = /^(-)?(\S*)$/.exec(field);
     key = fields[2];
     sorted = this.slice(0);
+    // Determine forward or reverse sort
+    if ( fields[1] === '-' ) {
+	direction = -1;
+    } else {
+	direction =1;
+    }
     compare = function( a, b ) {
+	if ( b.pk === 0 ) {
+	    console.log('merica');
+	}
 	var a_val, b_val, num_a, num_b, response;
 	// Test whether key is in heading.fields
 	if ( typeof a.fields === 'undefined' || typeof b.fields === 'undefined' ){
@@ -765,7 +775,17 @@ Array.prototype.order_by = function(field) {
 	}
 	num_a = Number(a_val);
 	num_b = Number(b_val);
-	if ( num_a && num_b ) {
+	// First check for new nodes
+	if (a.pk === 0) {
+	    response = -1;
+	    direction = 1;
+	} else if (b.pk === 0) {
+	    response = 1;
+	    direction =1;
+	} else if ( DATEFIELDS.indexOf(key) > -1 ) {
+	    // Sorting by date
+	    response = new Date(a_val) - new Date(b_val);
+	} else if ( num_a && num_b ) {
 	    // Sorting by number
 	    response = num_a - num_b;
 	} else {
@@ -780,12 +800,10 @@ Array.prototype.order_by = function(field) {
 		response = 0;
 	    }
 	}
-	return response;
+	return response * direction;
     };
+    // Initiate sorting
     sorted.sort(compare);
-    if ( fields[1] === '-' ) {
-	sorted.reverse();
-    }
     return sorted;
 }; // end of order_by method
 

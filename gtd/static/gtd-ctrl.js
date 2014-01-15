@@ -440,9 +440,11 @@ gtd_module.directive('owEditable', function() {
 	    $(this).bootstrapSwitch('setState', scope.fields[field]);
 	});
 	element.find('.make-switch').on('switch-change', function(e, data) {
-	    var field;
-	    field = $(e.target).find('input').attr('ng-model').split('.')[1];
-	    scope.fields[field] = data.value;
+	    scope.$apply(function() {
+		var field;
+		field = $(e.target).find('input').attr('ng-model').split('.')[1];
+		scope.fields[field] = data.value;
+	    });
 	});
 	// Attach datepicker and timepicker
 	element.find('.timepicker').timepicker({
@@ -677,6 +679,8 @@ function outlineCtrl($scope, $http, $resource, OldHeading, Heading,
     $scope.sort_fields = [
 	{key: 'title', display: 'Title'},
 	{key: '-title', display: 'Title (reverse)'},
+	{key: '-opened', display: 'Creation date'},
+	{key: 'opened', display: 'Creation date (oldest first)'},
     ];
     // Get id of parent heading
     if ($scope.parent_id === '') {

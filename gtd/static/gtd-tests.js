@@ -657,6 +657,42 @@ test('Headings manager order_by method (fields.title)', function() {
     );
 });
 
+test('Headings manager order_by method (fields.opened)', function() {
+    var response, heading1, heading2, heading3, heading4, array, datetime;
+    heading1 = scope.headings.get({pk: 1});
+    heading2 = scope.headings.get({pk: 2});
+    heading3 = scope.headings.get({pk: 3});
+    heading4 = scope.headings.get({pk: 4});
+    // Set date fields for sorting
+    datetime = new Date(2014, 1, 15, 12, 0, 0);
+    array = [heading1, heading2, heading3, heading4];
+    heading1.fields.opened = datetime;
+    heading2.fields.opened = datetime + 1;
+    heading3.fields.opened = datetime - 1;
+    heading4.pk = 0;
+    heading4.fields.opened = datetime + 2;
+    var expected = [heading4, heading3, heading1, heading2];
+    var ordered = array.order_by('opened');
+    deepEqual(
+	ordered[0],
+	heading4,
+	'heading.pk=0 ordered to the front'
+    );
+    for (var i=0; i<array.length; i+=1) {
+	deepEqual(
+	    ordered[i],
+	    expected[i],
+	    'Array index ' + i + ' not correct'
+	);
+    }
+    var ordered = array.order_by('-opened');
+    deepEqual(
+	ordered[0],
+	heading4,
+	'heading.pk=0 ordered to the front with reverse sort'
+    )
+});
+
 
 test('workspace.headings.add() method', function() {
     var heading, heading_new, new_heading, index, old_length;

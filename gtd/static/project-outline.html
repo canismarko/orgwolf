@@ -109,19 +109,45 @@
     </div>
     <!-- <div ng-include="'editable'"></div> -->
     <div ow-editable ng-if="heading.editable"></div>
-    <div class="details ow-text"
-	 ng-show="heading.state == 'open' && !heading.editable"
-	 ng-if="heading.fields.text"
-	 ng-bind-html="heading.fields.text | asHtml">
-    </div>
-    <div ng-show="heading.state.lazy == 'lazy' && heading.parent_obj.state == 'open'">
-      Loading...
-    </div>
-    <div class="children"
-	 ng-repeat="heading in heading.children"
-	 ng-show="heading.is_visible()"
-	 ng-include="'outline-tree'">
-    </div>
+    <div class="details" ng-if="heading.state == 'open' && !heading.editable">
+      <div ng-if="heading.fields.tag_string">
+	{{ heading.fields.tag_string }}
+      </div>
+      <div ng-if="heading.fields.scheduled_date">
+	Scheduled: {{ heading.fields.scheduled_date }}
+	<span ng-if="heading.fields.scheduled_time">
+	  {{ heading.fields.scheduled_time }}
+	</span>
+      </div>
+      <div ng-if="heading.fields.deadline_date">
+	Deadline: {{ heading.fields.deadline_date }}
+	<span ng-if="heading.fields.deadline_time">
+	  {{ heading.fields.deadline_time }}
+	</span>
+      </div>
+      <div ng-if="heading.fields.repeats">
+	Repeats every {{ heading.fields.repeating_number }}{{ heading.fields.repeating_unit }}
+	<span ng-if="heading.fields.repeats_from_completed">
+	  from completion date
+	</span>
+	<span ng-if="!heading.fields.repeats_from_completed">
+	  from scheduled date
+	</span>
+      </div>
+      <div class="ow-text"
+	   ng-show="heading.state == 'open' && !heading.editable"
+	   ng-if="heading.fields.text"
+	   ng-bind-html="heading.fields.text | asHtml">
+      </div>
+      <div ng-show="heading.state == 'lazy'">
+	Loading...
+      </div>
+      <div class="children"
+	   ng-repeat="heading in heading.children"
+	   ng-show="heading.is_visible()"
+	   ng-include="'outline-tree'">
+      </div>
+    </div><!-- /.details -->
   </div><!-- /.heading -->
 </script>
 
