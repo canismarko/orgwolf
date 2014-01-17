@@ -107,8 +107,9 @@
 	</button>
       </div>
     </div>
-    <!-- <div ng-include="'editable'"></div> -->
+
     <div ow-editable ng-if="heading.editable"></div>
+
     <div class="details" ng-if="heading.state == 'open' && !heading.editable">
       <div ng-if="heading.fields.tag_string">
 	{{ heading.fields.tag_string }}

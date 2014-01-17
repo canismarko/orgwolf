@@ -91,6 +91,7 @@ class MessageView(APIView):
             # Close this Node if requested
             if request.DATA.get('close', 'false') == 'true':
                 node.todo_state = TodoState.objects.get(abbreviation='DONE')
+                node.auto_update = True
                 node.save()
         elif action == 'archive':
             # Archive this Message
