@@ -165,6 +165,29 @@ class MessageAPI(TestCase):
             'Deferred message deleted after repeating node is created'
         )
 
+    def test_convert_repeat_from_completion_node(self):
+        """
+        A repeats_from_completion=True node should stay DFRD if completed
+        from inbox.
+        """
+        message = Message.objects.get(pk=2)
+        node = message.source_node
+        node.repeats_from_completion = True
+        node.save()
+        url = reverse('messages', kwargs={'pk': message.pk})
+        self.client.put(
+            url,
+            json.dumps({'action': 'create_node',
+                        'close': 'true'}),
+            content_type='application/json'
+        )
+        node = Node.objects.get(pk=node.pk)
+        self.assertEqual(
+            node.todo_state.abbreviation,
+            'DFRD'
+        )
+
+
     def test_filter_inbox_by_date(self):
         """
         Make sure that the view handles string dates appropriately.
