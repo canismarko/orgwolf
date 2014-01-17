@@ -177,7 +177,7 @@ def persona_login(request):
             user.password = '!'
             user.save()
             # Copy public nodes as help system
-            load_fixture(open('gtd/fixtures/public-data.json')).update(owner=user)
+            load_fixture(open('/srv/orgwolf/gtd/fixtures/public-data.json')).update(owner=user)
         else:
             # Ambiguous e-mail address, multiple users
             r['status'] = 'failure'
