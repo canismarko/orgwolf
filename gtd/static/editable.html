@@ -61,8 +61,10 @@
 	    </div>
 	    <div class="col-lg-6">
 	      <input type="text" id="scheduled_time" placeholder="HH:MM"
+		     ow-timepicker
 		     class="form-control timepicker"
-		     ng-model="fields.scheduled_time"></input>
+		     ng-model="fields.scheduled_time"
+		     ng-disabled="!fields.scheduled_date"></input>
 	    </div>
 	  </div>
 	</div>
@@ -78,7 +80,8 @@
 	    <div class="col-lg-6">
 	      <input type="text" id="deadline_time" placeholder="HH:MM"
 		     class="form-control timepicker"
-		     ng-model="fields.deadline_time"></input>
+		     ng-model="fields.deadline_time"
+		     ng-disabled="!fields.deadline_date"></input>
 	    </div>
 	  </div>
 	</div>

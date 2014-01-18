@@ -319,11 +319,14 @@
     },
 
     getTime: function() {
-      if (this.hour === '') {
-        return '';
-      }
-
-      return this.hour + ':' + (this.minute.toString().length === 1 ? '0' + this.minute : this.minute) + (this.showSeconds ? ':' + (this.second.toString().length === 1 ? '0' + this.second : this.second) : '') + (this.showMeridian ? ' ' + this.meridian : '');
+	var time;
+	if (this.hour === '') {
+            time = '';
+	} else {
+	    time =this.hour + ':' + (this.minute.toString().length === 1 ? '0' + this.minute : this.minute) + (this.showSeconds ? ':' + (this.second.toString().length === 1 ? '0' + this.second : this.second) : '') + (this.showMeridian ? ' ' + this.meridian : '');
+	}
+	console.log(this.hour);
+	return time;
     },
 
     hideWidget: function() {
@@ -716,7 +719,7 @@
           this.update();
 
         } else if (defaultTime === false) {
-          this.hour = 0;
+          this.hour = '';
           this.minute = 0;
           this.second = 0;
           this.meridian = 'AM';
@@ -880,15 +883,6 @@
       this.place();
       if (this.disableFocus) {
         this.$element.blur();
-      }
-
-      // widget shouldn't be empty on open
-      if (this.hour === '') {
-        if (this.defaultTime) {
-          this.setDefaultTime(this.defaultTime);
-        } else {
-          this.setTime('0:0:0');
-        }
       }
 
       if (this.template === 'modal' && this.$widget.modal) {

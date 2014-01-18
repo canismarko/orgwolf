@@ -757,9 +757,6 @@ Array.prototype.order_by = function(field) {
 	direction =1;
     }
     compare = function( a, b ) {
-	if ( b.pk === 0 ) {
-	    console.log('merica');
-	}
 	var a_val, b_val, num_a, num_b, response;
 	// Test whether key is in heading.fields
 	if ( typeof a.fields === 'undefined' || typeof b.fields === 'undefined' ){
