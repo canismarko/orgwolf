@@ -330,18 +330,13 @@ gtd_module.filter('deadline_str', ['$sce', function($sce) {
 }]);
 
 /*************************************************
-* Directive that lets a user edit a node
+* Directive that attaches a bootstrap datepicker
 *
 **************************************************/
 gtd_module.directive('owDatepicker', function() {
     // Directive creates the pieces that allow the user to edit a heading
     function link($scope, element, attrs, model) {
         var updateModel, onblur, $element;
-
-	// Add button
-	// $element = $(element);
-	// $element.wrap('<div class="input-group"></div>');
-	// $element.after('<span class="input-group-btn"><button class="btn btn-default" type="button"><span class="glyphicon glyphicon-remove"></span></button></span>');
 
 	// Define model interatctions
 	// https://gist.github.com/danbarua/5356062
@@ -380,9 +375,8 @@ gtd_module.directive('owDatepicker', function() {
 	    var options;
 	    options = {
 		format: 'yyyy-mm-dd',
-		startView: 1,
 		orientation: 'auto',
-		autoclose: true,
+		// autoclose: true,
 		clearBtn: true,
 		todayBtn: true,
 		todayHighlight: true,
@@ -394,6 +388,80 @@ gtd_module.directive('owDatepicker', function() {
                 options = angular.fromJson(value);
             }
             return element.datepicker(options).on('changeDate', updateModel).on('blur', onblur);
+	});
+    }
+    return {
+	require: '?ngModel',
+	link: link
+    };
+});
+
+/*************************************************
+* Directive that attaches a bootstrap timepicker
+*
+**************************************************/
+gtd_module.directive('owTimepicker', function() {
+    // Directive creates the pieces that allow the user to edit a heading
+    function link($scope, element, attrs, model) {
+        var updateModel, onblur, $element;
+
+	// Define model interatctions
+	// https://gist.github.com/danbarua/5356062
+	if (model !== null) {
+	    updateModel = function () {
+		element.blur();
+            };
+
+            onblur = function (e) {
+		//we'll update the model in the blur() handler
+		//because it's possible the user put in an invalid date
+		//in the input box directly.
+		//Bootstrap datepicker will have overwritten invalid values
+		//on blur with today's date so we'll stick that in the model.
+		//this assumes that the forceParse option has been left as default(true)
+		//https://github.com/eternicode/bootstrap-datepicker#forceparse
+		var time = element.val();
+		// Hide timepicker if shifting to another element
+		if (e.relatedTarget) {
+		    element.timepicker('hideWidget');
+		}
+		if ( time === '' ) {
+		    time = null;
+		}
+		return $scope.$apply(function () {
+                    return model.$setViewValue(time);
+		});
+            };
+            model.$render = function () {
+		var time = model.$viewValue;
+		if (angular.isDefined(time) && time !== null && angular.isDate(time))
+		{
+                    element.timepicker().data().timepicker.date = time;
+                    element.timepicker('setValue');
+                    element.timepicker('update');
+		} else if (angular.isDefined(time)) {
+                    throw new Error('ng-Model value must be a Date object - currently it is a ' + typeof time + ' - use ui-date-format to convert it from a string');
+		}
+		return model.$viewValue;
+            };
+	}
+	return attrs.$observe('ow-timepicker', function(value) {
+	    var options;
+	    options = {
+		showMeridian: false,
+		defaultTime: false,
+		showInputs: false,
+	    };
+	    if (angular.isObject(value)) {
+		options = value;
+	    }
+            if (typeof (value) === "string" && value.length > 0) {
+                options = angular.fromJson(value);
+            }
+            return element.timepicker(options)
+		.on('changeTime', updateModel)
+		.on('blur', onblur)
+		.on('hide.timepicker', onblur);
 	});
     }
     return {
@@ -446,11 +514,11 @@ gtd_module.directive('owEditable', function() {
 		scope.fields[field] = data.value;
 	    });
 	});
-	// Attach datepicker and timepicker
-	element.find('.timepicker').timepicker({
-	    showMeridian: false,
-	    showSeconds: true,
-	});
+	// // Attach datepicker and timepicker
+	// element.find('.timepicker').timepicker({
+	//     showMeridian: false,
+	//     showSeconds: true,
+	// });
 	// Focus on the title field
 	element.find('#title').focus();
 	// Event handlers for the editable dialog
