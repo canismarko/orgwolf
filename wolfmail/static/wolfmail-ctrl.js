@@ -189,8 +189,6 @@ gtd_module.directive('owMsgActions', ['Heading', function(Heading) {
 	scope.create_task_modal = function(msg) {
 	    // Abstract handler: shows modal for creating a new task
 	    scope.new_node.title = msg.fields.subject;
-	    delete scope.new_node.tree_id;
-	    delete scope.new_node.parent;
 	    if ( msg.fields.handler_path === 'plugins.deferred' ) {
 		// Deferred nodes don't show the modal
 		msg.create_node(scope.new_node);
@@ -255,6 +253,7 @@ gtd_module.directive('owMsgActions', ['Heading', function(Heading) {
 	scope.create_node = function() {
 	    // Send the new Node to the API
 	    scope.$task_modal.modal('hide').one('hidden.bs.modal', function() {
+		console.log(scope.new_node);
 		scope.active_msg.create_node(scope.new_node);
 	    });
 	};
