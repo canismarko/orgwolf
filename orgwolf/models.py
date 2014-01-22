@@ -95,6 +95,7 @@ class Color:
         """Sets the alpha value (between 0 and 1)."""
         self._alpha = int(new_alpha * 100)
 
+
 class HTMLEscaper(HTMLParser):
     # Default list of html tags to allow
     ALLOWED_TAGS = ['h1', 'h2', 'h3', 'h4', 'h5', 'h6',

@@ -1,0 +1,33 @@
+{% extends 'registration/settings.html' %}
+
+{% block content %}
+{{ block.super }}
+<h3>Active Accounts</h3>
+<table class="accounts">
+  {% for account in accounts %}
+  <tr>
+  <td class="pull-right">
+    {{ account.uid }}
+    <span class="icon {{account.provider}}">&nbsp;</span>
+  </td>
+  <td>
+    <!-- <a class="btn btn-default btn-sm"> -->
+    <!--   <span class="glyphicon glyphicon-remove"></span> Disconnect -->
+    <!-- </a> -->
+  </td>
+  </tr>
+  {% endfor %}
+</table>
+
+<!-- New account -->
+<p>
+  Add account:
+  {% for backend in backends %}
+  <a class="btn-auth {{ backend.class }}"
+     href="{% url 'socialauth_begin' backend.view %}"
+     target="_self">
+    {{ backend.title }}
+  </a>
+  {% endfor %}
+</p>
+{% endblock %}

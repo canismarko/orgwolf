@@ -20,7 +20,7 @@
 from django.conf.urls import patterns, include, url
 from django.contrib.auth.views import login, logout
 
-from orgwolf.views import FeedbackView
+from orgwolf.views import FeedbackView, AccountsView
 
 # Uncomment the next two lines to enable the admin:
 from django.contrib import admin
@@ -33,7 +33,7 @@ urlpatterns = patterns('',
                        url(r'^messaging/', include('wolfmail.urls')),
                        url(r'^wolfmail/', include('wolfmail.urls')),
                        # Authentication stuff
-                       # url(r'', include('social_auth.urls')),
+                       url(r'', include('social_auth.urls')),
                        url(r'^accounts/login/$',
                            login,
                            name='login',
@@ -41,8 +41,12 @@ urlpatterns = patterns('',
                        url(r'^accounts/logout/$', logout),
                        url(r'^accounts/register/',
                            'orgwolf.views.new_user'),
+                       # orgwolf settings
                        url(r'^accounts/profile/',
                            'orgwolf.views.profile'),
+                       url(r'^accounts/accounts/',
+                           AccountsView.as_view(),
+                           name='ow-accounts'),
                        url(r'^accounts/password/',
                            'orgwolf.views.change_password',
                            name='change_password'),

@@ -29,6 +29,7 @@ from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.hashers import is_password_usable
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponse
+from django.views.generic import TemplateView
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -136,6 +137,23 @@ def profile(request):
     return render_to_response('registration/profile.html',
                               locals(),
                               RequestContext(request))
+
+
+class AccountsView(TemplateView):
+    """
+    View for setting or disabling social login inboxes.
+    """
+    template_name = 'registration/inboxes.html'
+
+    def get_context_data(self, **kwargs):
+        """
+        Return a list of current accounts, etc.
+        """
+        context = super(AccountsView, self).get_context_data(**kwargs)
+        context['backends'] = list(settings.SOCIAL_AUTH_BACKENDS)
+        context['accounts'] = self.request.user.social_auth.all()
+        return context
+
 
 def change_password(request):
     """Provides the change password form or changes password based on

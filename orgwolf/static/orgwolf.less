@@ -542,3 +542,28 @@ input,textarea {
 	margin-top: 64px;
     }
 }
+
+/* Account settings pages */
+table.accounts {
+    /* list-style-type: none; */
+    td .icon {
+	display: inline-block;
+	width: 22px;
+	height: 22px;
+	background-image: url('/static/social/auth-icons.png');
+	background-repeat: no-repeat;
+	background-clip: content-box;
+	&.facebook {
+	    background-color: #5872a7; /* Facebook blue */
+	}
+	&.twitter {
+	    background-position: -22px 0px;
+	}
+	&.github {
+	    background-position: -44px 0px;
+	}
+	&.google-oauth2 {
+	    background-position: -88px 0px;
+	}
+    }
+}
