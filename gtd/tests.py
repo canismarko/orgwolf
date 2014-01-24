@@ -1020,7 +1020,8 @@ class ListAPI(TestCase):
         included = ['id', 'tree_id', 'todo_state', 'tag_string', 'slug',
                     'deadline_date', 'deadline_time',
                     'scheduled_date', 'scheduled_time',
-                    'root_id', 'root_name', 'scope', 'priority']
+                    'root_id', 'root_name', 'scope', 'priority',
+                    'repeats']
         response = self.client.get(
             reverse('list_api'),
             content_type='application/json'

@@ -40,13 +40,6 @@
 	  </select>
 	</div>
 	<div class="col-md-1">
-	  <!-- <label for="archived">Archived: -->
-	  <!-- </label> -->
-	  <!-- <div class="make-switch" data-on-label="Yes" data-off-label="No"> -->
-	  <!--   <input type="checkbox" id="archived" -->
-	  <!-- 	   ng-model="fields.archived"> -->
-	  <!-- 	     </input> -->
-	  <!-- </div> -->
 	</div>
       </div>
       <div class="row">
@@ -94,12 +87,14 @@
 	</div>
 	<div class="col-md-4">
 	  <div class="row">
-	    <div class="col-lg-3">
+	    <div class="col-lg-4">
 	      <label for="repeats">
 		Repeats...
 	      </label>
-	      <div class="make-switch">
-		<input type="checkbox" ng-model="fields.repeats" id="repeats" />
+	      <div class="ow-switch" ow-switch ng-model="fields.repeats">
+		<input type="checkbox"
+		       id="repeats"
+		        />
 	      </div>
 	    </div>
 	    <div class="col-lg-4">
@@ -117,7 +112,7 @@
 			   ng-options="unit.value as unit.label for unit in time_units">
 		   </select>
 	    </div>
-	    <div class="col-lg-5">
+	    <div class="col-lg-4">
 	      <label for="repeat_from_completion">
 		...from...
 	      </label>
@@ -127,7 +122,7 @@
 		      ng-options="x.value as x.label for x in repeat_schemes">
 	      </select>
 	    </div>
-	  </div>
+	  </div><!-- /.row -->
 	</div>
       </div>
       <div class="row">
@@ -136,5 +131,6 @@
 	  <div class="edit-text" ng-bind-html="fields.text | asHtml"></div>
 	</div>
       </div>
+    </div>
   </form>
-  </div>
+</div>

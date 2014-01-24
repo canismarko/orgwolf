@@ -77,12 +77,12 @@
 	<button type="button" class="btn btn-default"
 		ng-disabled="{{ heading.fields.read_only }}"
 		ng-click="edit_heading(heading)">
-	  <i class="glyphicon glyphicon-pencil edit-btn" title="Edit"></i>
+	  <i class="glyphicon glyphicon-edit edit-btn" title="Edit"></i>
 	</button>
 
 	<a href="/gtd/actions/?parent={{heading.pk}}"
 	   class="btn btn-default">
-	  <i class="glyphicon glyphicon-th-list list-btn"
+	  <i class="glyphicon glyphicon-list list-btn"
 	     title="View As List">
 	  </i>
 	</a>
@@ -108,7 +108,8 @@
       </div>
     </div>
 
-    <div ow-editable ng-if="heading.editable"></div>
+    <div ow-editable ng-if="heading.editable" ow-node-id="{{ heading.pk }}">
+    </div>
 
     <div class="details" ng-if="heading.state == 'open' && !heading.editable">
       <div ng-if="heading.fields.tag_string">

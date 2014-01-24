@@ -1,3 +1,17 @@
+<script type="text/ng-template" id="action-buttons">
+  <div class="btn-group action-buttons">
+    <button class="btn btn-default btn-xs"
+	    ng-click="edit(heading)">
+      <span class="glyphicon glyphicon-edit"></span>
+      <span class="collapse-label">Edit</span>
+    </button>
+    <button class="btn btn-default btn-xs">
+      <span class="glyphicon glyphicon-folder-open"></span>
+      <span class="collapse-label">Project</span>
+    </button>
+  </div>
+</script>
+
 <div id="gtd-list">
   <!-- List of hard scheduled items for the day -->
   <table class="table table-condensed" id="scheduled-list"
@@ -57,38 +71,89 @@
   <div ow-scope-tabs>
   </div>
 
-  <table class="table table-condensed" id="gtd-list">
-    <tr>
-      <th>State</th>
-      <th>&nbsp;</th>
-      <th>Description</th>
-      <th>Project</th>
-      <th>Tags</th>
-    </tr>
-    <!-- Actionable Items -->
-    <tr ng-repeat="heading in headings | order: 'list'"
-	ng-show="heading.is_visible()" ow-pk="{{ heading.pk }}"
-	ow-priority="{{ heading.fields.priority }}"
-	class="heading-row" archived="{{ heading.fields.archived }}" ow-list-row>
-      <td ow-todo>
-	  {{ heading.todo_state.fields.abbreviation }}
-      </td>
-      <td>
-	<span ng-if="heading.fields.repeats"
-	      class="glyphicon glyphicon-repeat pull-right"></span>
-      </td>
-      <td>
-	<a href="/gtd/project/#{{ heading.pk }}-{{ heading.fields.slug }}">
-          {{ heading.fields.title}}</a>
-	{{ heading | deadline_str }}
-      </td>
-      <td>
-	<a ng-click="filter_parent(heading)">
-	{{ heading.fields.root_name }}
-      </td>
-      <td>
-	{{ heading.fields.tag_string }}
-      </td>
-    </tr>
-  </table>
+  <!-- Actionable Items -->
+  <div class="container">
+    <div class="table-heading row hidden-sm hidden-xs">
+      <div class="col-md-6">
+	  Description
+	</div>
+	<div class="col-md-3">
+	  Deadline
+	</div>
+	<div class="col-md-3">
+	  Project
+	</div>
+      </div>
+      <div class="heading-row"
+    	   ow-list-row
+	   ng-repeat="heading in headings | order: 'list'"
+	   ng-show="heading.is_visible()" ow-pk="{{ heading.pk }}"
+    	   ow-priority="{{ heading.fields.priority }}"
+	   archived="{{ heading.fields.archived }}">
+	<div class="row" ng-hide="heading.editable">
+	  <div class="col-md-5 collapse-heading">
+	    <span ow-todo>
+    	      {{ heading.todo_state.fields.abbreviation }}
+	    </span>
+    	    <a href="/gtd/project/#{{ heading.pk }}-{{ heading.fields.slug }}">
+	      {{ heading.fields.title}}</a>
+    	    <span ng-if="heading.fields.repeats"
+    		  class="glyphicon glyphicon-repeat"></span>
+	  </div>
+	  <div class="col-md-1">
+    	    <span ng-include="'action-buttons'"></span>
+	  </div>
+	  <div class="col-md-3">
+	    <span class="overdue">
+    	      {{ heading | deadline_str }}
+	    </span>
+	  </div>
+	  <div class="col-md-3 project">
+	    <span class="collapse-label">Project:</span>
+    	    <a ng-click="filter_parent(heading)">
+    	      {{ heading.fields.root_name }}
+	    </a>
+	  </div>
+	</div><!-- /.row -->
+	<div ow-editable ng-if="heading.editable" ow-node-id="{{ heading.pk }}">
+	</div>
+      </div><!-- /.heading-row -->
+    </div><!-- /.container -->
+  </div><!-- /.table -->
+
+    <!-- <tr> -->
+    <!--   <th>State</th> -->
+    <!--   <th>&nbsp;</th> -->
+    <!--   <th>Description</th> -->
+    <!--   <th>Project</th> -->
+    <!--   <th>Tags</th> -->
+    <!-- </tr> -->
+    <!-- <\!-- Actionable Items -\-> -->
+    <!-- <tr ng-repeat="heading in headings | order: 'list'" -->
+    <!-- 	ng-show="heading.is_visible()" ow-pk="{{ heading.pk }}" -->
+    <!-- 	ow-priority="{{ heading.fields.priority }}" -->
+    <!-- 	class="heading-row" archived="{{ heading.fields.archived }}" -->
+    <!-- 	ow-list-row> -->
+    <!--   <td ow-editable ng-if="heading.editable">American, fuck yeah!</td> -->
+    <!--   <td ow-todo> -->
+    <!-- 	  {{ heading.todo_state.fields.abbreviation }} -->
+    <!--   </td> -->
+    <!--   <td> -->
+    <!-- 	<span ng-if="heading.fields.repeats" -->
+    <!-- 	      class="glyphicon glyphicon-repeat pull-right"></span> -->
+    <!--   </td> -->
+    <!--   <td> -->
+    <!-- 	<a href="/gtd/project/#{{ heading.pk }}-{{ heading.fields.slug }}"> -->
+    <!--       {{ heading.fields.title}}</a> -->
+    <!-- 	{{ heading | deadline_str }} -->
+    <!-- 	<span ng-include="'action-buttons'"></span> -->
+    <!--   </td> -->
+    <!--   <td> -->
+    <!-- 	<a ng-click="filter_parent(heading)"> -->
+    <!-- 	{{ heading.fields.root_name }} -->
+    <!--   </td> -->
+    <!--   <td> -->
+    <!-- 	{{ heading.fields.tag_string }} -->
+    <!--   </td> -->
+    <!-- </tr> -->
 </div><!-- /#gtd-list -->

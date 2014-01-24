@@ -471,14 +471,49 @@ gtd_module.directive('owTimepicker', function() {
 });
 
 /*************************************************
+* Directive that turns checkboxes into switches
+*
+**************************************************/
+gtd_module.directive('owSwitch', function() {
+    function link(scope, element, attrs, model) {
+	// Set switch state when model changes
+	function formatter(value) {
+	    element.bootstrapSwitch('setState', value);
+	}
+	model.$formatters.push(formatter);
+	// Set model state when switch changes
+	element.on('switch-change', function (e, data) {
+	    if (!scope.$$phase) {
+		scope.$apply(function() {
+		    model.$setViewValue(data.value);
+		});
+	    }
+	});
+	// Attach switch plugin
+	element.bootstrapSwitch();
+    }
+    return {
+	link: link,
+	require: '?ngModel',
+    };
+});
+
+/*************************************************
 * Directive that lets a user edit a node
 *
 **************************************************/
-gtd_module.directive('owEditable', function() {
+gtd_module.directive('owEditable', function($resource) {
     // Directive creates the pieces that allow the user to edit a heading
     function link(scope, element, attrs) {
-	var $text, heading, $save;
-	scope.fields = jQuery.extend(true, {}, scope.heading.fields);
+	var $text, heading, $save, Heading;
+	// Initiate wait indicator
+	ow_waiting();
+	// Get the full fieldset
+	Heading = $resource('/gtd/node/:id/', {id: '@id'});
+	scope.fields = Heading.get({id: attrs.owNodeId});
+	scope.fields.$promise.then(function() {
+	    ow_waiting('clear');
+	});
 	scope.priorities = [{sym: 'A',
 			     display: 'A - high'},
 			    {sym: 'B',
@@ -500,25 +535,6 @@ gtd_module.directive('owEditable', function() {
 	$save = element.find('#edit-save');
 	// Scroll so element is in view
 	$('body').animate({scrollTop: element.offset().top - 27}, '500');
-	// Convert checkboxes to switches
-	element.find('.make-switch').each(function() {
-	    var field;
-	    field = $(this).find('input').attr('ng-model').split('.')[1];
-	    $(this).bootstrapSwitch();
-	    $(this).bootstrapSwitch('setState', scope.fields[field]);
-	});
-	element.find('.make-switch').on('switch-change', function(e, data) {
-	    scope.$apply(function() {
-		var field;
-		field = $(e.target).find('input').attr('ng-model').split('.')[1];
-		scope.fields[field] = data.value;
-	    });
-	});
-	// // Attach datepicker and timepicker
-	// element.find('.timepicker').timepicker({
-	//     showMeridian: false,
-	//     showSeconds: true,
-	// });
 	// Focus on the title field
 	element.find('#title').focus();
 	// Event handlers for the editable dialog
@@ -544,6 +560,7 @@ gtd_module.directive('owEditable', function() {
     }
     return {
 	link: link,
+	require: '?ngModel',
 	templateUrl: '/static/editable.html'
     };
 });
@@ -662,9 +679,10 @@ gtd_module.directive('owTodo', ['$filter', function($filter) {
 **************************************************/
 gtd_module.directive('owListRow', function() {
     function link(scope, element, attrs) {
-	var node_pk, heading, parent, $parent, html, due, row_cls;
+	var node_pk, heading, $element, due, row_cls;
 	node_pk = parseInt(attrs.owPk, 10);
 	heading = scope.headings.get({pk: node_pk});
+	$element = $(element);
 	// Determine bootstrap row style based on overdue status
 	due = heading.due();
 	if ( due === null ) {
@@ -675,6 +693,10 @@ gtd_module.directive('owListRow', function() {
 	    row_cls = 'warning';
 	}
 	element.addClass(row_cls);
+	// Handlers for action buttons
+	scope.edit = function(h) {
+	    h.editable = true;
+	};
     }
     return {
 	link: link,

@@ -62,7 +62,8 @@ class NodeListSerializer(NodeSerializer):
         fields = ['id', 'title', 'tree_id', 'todo_state', 'tag_string',
                   'slug', 'scope', 'root_id', 'root_name', 'priority',
                   'deadline_date', 'deadline_time',
-                  'scheduled_date', 'scheduled_time']
+                  'scheduled_date', 'scheduled_time',
+                  'repeats']
 
     def get_root_id(self, obj):
         root = obj.get_root()
