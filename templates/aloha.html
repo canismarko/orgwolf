@@ -1,5 +1,6 @@
 <!-- Requirements for aloha HTML 5 editor -->
 
+{% if not local_net %}
 <!-- Fix jQuery clashes -->
 <script src="//d3gzqqhcn53l2y.cloudfront.net/latest/lib/vendor/jquery-1.7.2.js"></script>
 <script>
@@ -48,3 +49,4 @@
 	}
     };
 </script>
+{% endif %}

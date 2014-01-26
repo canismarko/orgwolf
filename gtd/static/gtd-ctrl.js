@@ -376,7 +376,6 @@ gtd_module.directive('owDatepicker', function() {
 	    options = {
 		format: 'yyyy-mm-dd',
 		orientation: 'auto',
-		// autoclose: true,
 		clearBtn: true,
 		todayBtn: true,
 		todayHighlight: true,
@@ -688,11 +687,11 @@ gtd_module.directive('owListRow', function() {
 	if ( due === null ) {
 	    row_cls = '';
 	} else if ( due <= 0 ) {
-	    row_cls = 'danger';
+	    row_cls = 'overdue';
 	} else if ( due > 0 ) {
-	    row_cls = 'warning';
+	    row_cls = 'upcoming';
 	}
-	element.addClass(row_cls);
+	element.find('.heading-row').addClass(row_cls);
 	// Handlers for action buttons
 	scope.edit = function(h) {
 	    h.editable = true;

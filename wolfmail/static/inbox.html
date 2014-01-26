@@ -1,81 +1,71 @@
-<!-- Message to show if inbox is empty -->
-<div class="container message-list inbox-zero"
-     ng-show="messages.length === 0 && messages.$resolved">
-  <div class="alert alert-success">
+<div id="inbox">
+  <!-- Message to show if inbox is empty -->
+  <div class="inbox-zero"
+       ng-show="messages.length === 0 && messages.$resolved">
     <p>
       No messages in inbox. Congratulations on reaching
       <strong>inbox zero</strong>!
     </p>
   </div>
-</div>
+  <!-- Table shows the list of messages -->
+  <div class="message-list" ng-if="messages.length && messages.$resolved">
+    <!-- Refresh button -->
+    <button class="btn btn-default" ng-click="get_messages()">
+      <span class="glyphicon glyphicon-refresh"></span>
+      Refresh
+    </button>
 
+    <div class="table-heading">
+      <div class="action-buttons">Actions</div>
+      <div class="from">From</div>
+      <div class="subject">Subject</div>
+      <div class="received">Received</div>
+    </div>
 
-<!-- Table shows the list of messages -->
-<div ng-if="messages.length && messages.$resolved" class="message-list">
-  <!-- Refresh button -->
-  <button class="btn btn-default" ng-click="get_messages()">
-    <span class="glyphicon glyphicon-refresh"></span>
-    Refresh
-  </button>
+    <div ng-repeat="message in messages" unread="{{ message.unread }}"
+	 ow-handler="{{ message.fields.handler_path }}"
+	 class="message-row"
+	 ow-message-row>
+      <div class="action-buttons btn-group btn-group-xs">
+	<button class="msg-task btn btn-primary"
+		ng-click="open_task_modal(message)">
+	  <span class="glyphicon glyphicon-unchecked"
+		data-title="New Task"></span>
+	</button>
+	<button class="msg-project btn btn-info"
+		ng-click="create_project_modal(message)">
+	  <span class="glyphicon glyphicon-folder-close"
+		data-title="New Project"></span>
+	</button>
+	<button class="msg-complete btn btn-success"
+		ng-click="complete_task(message)">
+	  <span class="glyphicon glyphicon-check"
+		data-title="Mark as 'Done'"></span>
+	</button>
+	<button class="msg-defer btn btn-warning"
+		ng-click="defer_modal(message)">
+	  <span class="glyphicon glyphicon-time"
+		data-title="Defer"></span>
+	</button>
+	<button class="msg-save btn btn-default"
+		ng-click="archive_msg(message)">
+	  <span class="glyphicon glyphicon-save"
+		data-title="Archive"></span>
+	</button>
+	<button class="msg-delete btn btn-danger"
+		ng-click="delete_modal(message)">
+	  <span class="glyphicon glyphicon-trash"
+		data-title="Delete"></span>
+	</button>
+      </div><!-- /.action-buttons -->
 
-  <table class="table message-list" ng-if="messages.length">
-    <tr>
-      <th class="col-md-2">Actions</th>
-      <th>From</th>
-      <th>Subject</th>
-      <th>Received</th>
-    </tr>
-    <tr ng-repeat="message in messages" unread="{{ message.unread }}"
-	ow-handler="{{ message.fields.handler_path }}"
-	ow-message-row>
-      <td>
-	<div class="btn-group btn-group-xs">
-	  <button class="btn btn-primary msg-task"
-		  ng-click="open_task_modal(message)">
-	    <span class="glyphicon glyphicon-unchecked"
-		  data-title="New Task"></span>
-	  </button>
-
-	  <button class="btn btn-info msg-project"
-		  ng-click="create_project_modal(message)">
-	    <span class="glyphicon glyphicon-folder-close"
-		  data-title="New Project"></span>
-	  </button>
-
-	  <button class="btn btn-success msg-complete"
-		  ng-click="complete_task(message)">
-	    <span class="glyphicon glyphicon-check"
-		  data-title="Mark as 'Done'"></span>
-	  </button>
-
-	  <button class="btn btn-warning msg-defer"
-		  ng-click="defer_modal(message)">
-	    <span class="glyphicon glyphicon-time"
-		  data-title="Defer"></span>
-	  </button>
-
-	  <button class="btn btn-default msg-save"
-		  ng-click="archive_msg(message)">
-	    <span class="glyphicon glyphicon-save"
-		  data-title="Archive"></span>
-	  </button>
-
-	  <button class="btn btn-danger msg-delete"
-		  ng-click="delete_modal(message)">
-	    <span class="glyphicon glyphicon-trash"
-		  data-title="Delete"></span>
-	  </button>
-	</div>
-
-	<!-- <span data-title="Reply" -->
-	<!--       class="glyphicon glyphicon-arrow-left"></span> -->
-      </td>
-      <td ng-bind-html="message | format_sender"></td>
-      <td ng-bind-html="message | format_subject"></td>
-      <td>{{ message.fields.rcvd_date | format_date }}</td>
-    </tr>
-  </table>
-</div>
+      <div class="from" ng-bind-html="message | format_sender"></div>
+      <div class="subject" ng-bind-html="message | format_subject"></div>
+      <div class="received"
+	   ng-bind-html="message.fields.rcvd_date | format_date"></div>
+    </div><!-- /.message-row -->
+  </div><!-- /.message-list -->
+</div><!-- /#inbox -->
 
 <div ow-msg-actions>
 </div>

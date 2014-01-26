@@ -224,38 +224,69 @@ dd.todo
     }
 }
 
-.outline
-{
-    margin-left: 14px;
-    margin-top: 20px;
-    margin-bottom: 50px;
-    .heading {
-	/* padding-left: 14px; */
-	padding-right: 8px;
-	overflow: hidden;
-	> .details {
-	    color: black;
-	}
-	> .details {
-	    margin-left: 30px;
+/* Global grid layout style */
+.table-heading,.heading-row,.message-row {
+    .make-row();
+    padding: 5px 0px 5px 0px;
+    border-color: @gray-light;
+    border-bottom-style: solid;
+    border-width: 1px 0px;
+}
+.heading-row,.message-row,.ow-hoverable {
+    .action-buttons {
+	.opacify(15);
+	.btn-labels {
+	    display: none;
 	}
     }
-    .ow-hoverable {
-	padding-left: 7px;
-	border-radius: 5px;
-	&[ow-level="0"] {
-	    color: @primary;
-	    font-size: 105%;
-	}
-	&[ow-target="ancestor"] {
-	    background: rgb(252, 240, 176); /* yellow */
-	}
-	&[ow-target="yes"] {
-	    background: rgb(223, 240, 216); /* green */
+    &:hover {
+	background-color: @gray-lighter !important;
+	.action-buttons {
+	    .opacify(100);
 	}
     }
 }
-.pointer, .ow-buttons, .add-heading, .todo-state, .todo-option
+.table-heading {
+    .hidden-sm;
+    .hidden-xs;
+    font-weight: bold;
+}
+
+#outline-appliance {
+    .container;
+    .outline {
+	margin-left: 14px;
+	margin-top: 20px;
+	margin-bottom: 50px;
+	.heading {
+	    /* padding-left: 14px; */
+	    padding-right: 8px;
+	    overflow: hidden;
+	    > .details {
+		color: black;
+	    }
+	    > .details {
+		margin-left: 30px;
+	    }
+	}
+	.ow-hoverable {
+	    padding-left: 7px;
+	    border-radius: 5px;
+	    &[ow-level="0"] {
+		color: @primary;
+		font-size: 105%;
+	    }
+	    &[ow-target="ancestor"] {
+		background: rgb(252, 240, 176); /* yellow */
+	    }
+	    &[ow-target="yes"] {
+		background: rgb(223, 240, 216); /* green */
+	    }
+	}
+    }
+}
+
+.pointer, .add-heading, .todo-state, .todo-option
 {
     cursor: pointer;
 }
@@ -271,20 +302,6 @@ dd.todo
 .input-medium {
     width: 150px;
     display: inline-block;
-}
-.ow-hoverable
-{
-    cursor: default;
-    > .ow-buttons {
-	visibility: hidden;
-	a {
-	    text-decoration: none;
-	    color: inherit;
-	}
-    }
-    &:hover > .ow-buttons {
-	visibility: visible;
-    }
 }
 .expandable > .ow-hoverable,.lazy-expandable > .ow-hoverable
 {
@@ -509,52 +526,57 @@ input,textarea {
 }
 
 /* Next actions list */
-#gtd-list,#scheduled-list {
-    [archived="true"] {
-	text-decoration: line-through;
-    }
-}
 #gtd-list {
-
+    .container;
     a {
 	cursor: pointer;
-    }
-    .table-heading {
-	font-weight: bold;
     }
     .collapse-label {
 	display: none;
     }
-    .action-buttons {
-	.opacify(15);
-	.btn-labels {
-	    display: none;
+    [archived="true"] div {
+	text-decoration: line-through;
+    }
+    /* Rows in the actions table */
+    .table-heading,.heading-row {
+	/* Cell properties and layout */
+	.description {
+	    .make-md-column(5);
+	}
+	.buttons {
+	    .make-md-column(1);
+	}
+	.deadline {
+	    .make-md-column(3);
+	}
+	.project {
+	    .make-md-column(3);
 	}
     }
-    .heading-row:hover {
-	background-color: #f5f5f5; /* light grey */
-	.action-buttons {
-	    .opacify(100);
+    .heading-row {
+	&.upcoming {
+	    background-color: @state-warning-bg;
+	}
+	&.overdue {
+	    background-color: @state-danger-bg;
+	}
+	[ow-priority=A] {
+	    font-weight: bold;
+	}
+	[ow-priority=C] {
+	    font-style: italic;
 	}
     }
-    [ow-priority=A] {
-	font-weight: bold;
-    }
-    [ow-priority=C] {
-	font-style: italic;
+    #scheduled-list {
+	margin-bottom: 15px;
     }
     /* Collapsed accordian row */
     @media (max-width: 992px) {
-	/* .heading-row { */
-	/*     border-color: @primary-dark; */
-	/*     border-width: 1px 0px 1px 0px; */
-	/*     border-style: solid; */
-	/* } */
 	color: @primary;
 	a {
 	    color: @primary;
 	}
-	.collapse-heading {
+	.description {
 	    font-size: 120%;
 	    background-color: @primary-light-pale;
 	}
@@ -573,22 +595,47 @@ input,textarea {
 		.opacify(100);
 	    }
 	}
-	.overdue {
-	    display: block;
+    }
+}
+
+/* Wolfmail inbox */
+#inbox {
+    /* Alert if there are no message */
+    .inbox-zero {
+	.container;
+	.alert;
+	.alert-success;
+    }
+    /* List of message (e.g. Inbox) */
+    .message-list {
+	.container;
+	.action-buttons {
+	    .make-md-column(2);
+	}
+	.from {
+	    .make-md-column(4);
+	}
+	.subject {
+	    .make-md-column(4);
+	}
+	.received {
+	    .make-md-column(2);
+	}
+	.glyphicon {
+	    cursor: pointer;
+	}
+	.dfrd {
+	    font-weight: bold;
 	}
     }
 }
 
-/* List of message (e.g. Inbox) */
-.message-list {
-    .glyphicon {
-	cursor: pointer;
-    }
-    .dfrd {
-	font-weight: bold;
-    }
-    &.inbox-zero {
-	margin-top: 64px;
+/* Shows full inbox message details */
+#message-detail {
+    .container;
+    .back-button {
+	.btn;
+	.btn-default;
     }
 }
 
