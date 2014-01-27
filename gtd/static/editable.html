@@ -46,16 +46,16 @@
 	<div class="col-md-3">
 	  <label for="scheduled_date">Scheduled:</label>
 	  <div class="row">
-	    <div class="col-lg-6">
-	      <input type="text" placeholder="YYYY-MM-DD"
-		     ow-datepicker
-		     class="form-control" value="{{ fields.scheduled_date }}"
+	    <div class="col-lg-9">
+	      <input type="date" placeholder="YYYY-MM-DD"
+		     class="form-control"
 		     ng-model="fields.scheduled_date"></input>
 	    </div>
-	    <div class="col-lg-6">
-	      <input type="text" id="scheduled_time" placeholder="HH:MM"
-		     ow-timepicker
-		     class="form-control timepicker"
+	  </div>
+	  <div class="row">
+	    <div class="col-lg-9">
+	      <input type="time" id="scheduled_time"
+		     class="form-control"
 		     ng-model="fields.scheduled_time"
 		     ng-disabled="!fields.scheduled_date"></input>
 	    </div>
@@ -64,14 +64,15 @@
 	<div class="col-md-3">
 	  <label for="deadline_date">Deadline:</label>
 	  <div class="row">
-	    <div class="col-lg-6">
-	      <input type="text" id="deadline_date" placeholder="YYYY-MM-DD"
-		     ow-datepicker
+	    <div class="col-lg-9">
+	      <input type="date" id="deadline_date"
 		     class="form-control"
 		     ng-model="fields.deadline_date"></input>
 	    </div>
-	    <div class="col-lg-6">
-	      <input type="text" id="deadline_time" placeholder="HH:MM"
+	  </div>
+	  <div class="row">
+	    <div class="col-lg-9">
+	      <input type="time" id="deadline_time"
 		     class="form-control timepicker"
 		     ng-model="fields.deadline_time"
 		     ng-disabled="!fields.deadline_date"></input>
