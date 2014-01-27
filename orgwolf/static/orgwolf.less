@@ -42,15 +42,6 @@
     margin-right: auto;
     width: auto;
 }
-#new_inbox_form .input-append
-{
-    margin-top: 5px;
-    margin-bottom: 5px;
-}
-#new_inbox_item + .btn
-{
-    height: 30px;
-}
 .navbar {
     margin-bottom: 15px;
     form {
@@ -59,20 +50,6 @@
 }
 .nav-tabs {
     margin-top: 15px;
-}
-
-b {
-    position: relative;
-}
-#btn-actions:after {
-    content: "";
-    padding-top: 20px;
-    padding-bottom: 20px;
-    padding-left: 8px;
-    padding-right: 20px;
-    position: absolute;
-    left: -9px;
-    top: -22px;
 }
 .gradient(@colora, @colorb) {
     /* Gradients for modern browsers, replace as you see fit */
@@ -123,82 +100,15 @@ b {
 	top: 50%;
     }
 }
-/* Registration */
-a.btn-auth
-{
-    margin-top: 5px;
-}
-ul.social-auth
-{
-    margin-left: 0px;
-    list-style-type: none;
-}
-/* Node form */
-.required label:before {
-    content: "*"
-}
-.required label
-{
-    font-weight: bold;
-}
-form table input[type="checkbox"],label
-{
-    margin-top: 2px;
-    margin-bottom: 2px;
-}
-.datepicker
-{
-    padding: 0px;
-}
 .dropdown-menu
 {
     z-index: 1100;
-}
-span.add-on.disabled
-{
-    pointer-events: none;
-}
-span.alt
-{
-    display: none;
-}
-.spacer
-{
-    visibility: hidden;
-}
-.invalid
-{
-    background-color: #F2DEDE !important;
-}
-.error, .errorlist
-{
-    color: red;
-    font-size: 14px;
-}
-/* Node_view */
-.odd-heading
-{
-    background-color: #B6D6DB;
-}
-.even-heading
-{
-    background-color: white;
-   /* Todo: figure out how to do this using background: transparent */
-}
-.ow-move form
-{
-    margin: 0px;
 }
 dd.todo
 {
     display: inline-block;
 }
-/* For moving node */
-.tree
-{
-    margin: 0px;
-    padding: 0px;
-}
+
 /* Javascript outline appliance */
 @anim-speed: 350ms;
 @route-speed: 600ms;
@@ -252,6 +162,7 @@ dd.todo
     font-weight: bold;
 }
 
+/* Outline tree of headings in project view */
 #outline-appliance {
     .container;
     .outline {
@@ -440,9 +351,9 @@ div.ow-hoverable, div.clickable, div.ow-buttons
     display: inline-block;
     cursor: pointer;
 }
+/* Box for editing a node (used on various pages) */
 .editable {
     position: relative;
-    /* left: -5px; */
     padding-bottom: 10px;
     .edit-title {
 	margin-right: 5px;
@@ -469,6 +380,32 @@ div.ow-hoverable, div.clickable, div.ow-buttons
     }
     .edit-text {
 	margin-bottom: 10px;
+    }
+    input,select {
+	.form-control;
+	&[multiple] {
+	    height: 100px;
+	}
+    }
+    /* Grid layout classes */
+    .title,.todo-state {
+	.make-md-column(3);
+    }
+    .tag-string,.scope {
+	.make-md-column(2);
+    }
+    .priority {
+	.make-lg-column(1);
+	.make-md-column(2);
+    }
+    .repeats-group {
+	.make-md-column(4);
+	.repeats {
+	    .make-lg-column(4);
+	}
+    }
+    .edit-text-container {
+	.make-md-column(12);
     }
 }
 

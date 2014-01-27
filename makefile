@@ -21,10 +21,8 @@ normal = `tput sgr0`
 
 all: $(ORGWOLF_CSS) $(MOBILE_CSS) $(MIN_JS) $(MOBILE_MIN_JS)
 
-$(ORGWOLF_CSS): $(STATIC)orgwolf.less $(STATIC)timepicker/timepicker.css $(STATIC)datepicker/datepicker.css $(STATIC)social/auth-buttons.css
+$(ORGWOLF_CSS): $(STATIC)orgwolf.less $(STATIC)social/auth-buttons.css
 	@echo "$(bold)Building stylesheet $(ORGWOLF_CSS)...$(normal)"
-	$(YUI) $(STATIC)datepicker/datepicker.css > $(ORGWOLF_CSS)
-	$(YUI) $(STATIC)timepicker/timepicker.css >> $(ORGWOLF_CSS)
 	$(YUI) $(STATIC)social/auth-buttons.css >> $(ORGWOLF_CSS)
 	$(LESS) $(STATIC)orgwolf.less >> $(ORGWOLF_CSS)
 	$(DIVIDER)
@@ -35,7 +33,7 @@ $(MOBILE_CSS): $(STATIC)orgwolf_m.less $(STATIC)social/auth-buttons.css $(STATIC
 	$(LESS) $(STATIC)orgwolf_m.less >> $(MOBILE_CSS)
 	$(DIVIDER)
 
-$(MIN_JS): $(OW_JS) $(GTD_MODELS) $(GTD_CTRL) $(WM_MODELS) $(WM_CTRL) $(STATIC)persona.js $(STATIC)jquery.cookie.js $(STATIC)datepicker/bootstrap-datepicker.js $(STATIC)timepicker/bootstrap-timepicker.js
+$(MIN_JS): $(OW_JS) $(GTD_MODELS) $(GTD_CTRL) $(WM_MODELS) $(WM_CTRL) $(STATIC)persona.js $(STATIC)jquery.cookie.js
 	@echo "$(bold)Preparing javascript files...$(normal)"
 	$(JSLINT) $(OW_JS)
 	$(JSLINT) $(GTD_MODELS)
@@ -44,8 +42,6 @@ $(MIN_JS): $(OW_JS) $(GTD_MODELS) $(GTD_CTRL) $(WM_MODELS) $(WM_CTRL) $(STATIC)p
 	$(JSLINT) $(WM_CTRL)
 	$(JSLINT) $(STATIC)persona.js
 	$(YUI) $(STATIC)jquery.cookie.js > $(MIN_JS)
-	$(YUI) $(STATIC)datepicker/bootstrap-datepicker.js >> $(MIN_JS)
-	$(YUI) $(STATIC)timepicker/bootstrap-timepicker.js >> $(MIN_JS)
 	$(YUI) $(OW_JS) >> $(MIN_JS)
 	$(YUI) $(GTD_MODELS) >> $(MIN_JS)
 	$(YUI) $(GTD_CTRL) >> $(MIN_JS)
