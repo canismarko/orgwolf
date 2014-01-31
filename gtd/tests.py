@@ -1436,6 +1436,23 @@ class NodeAPI(TestCase):
             node.pk
         )
 
+    def test_node_list_serializer(self):
+        """
+        Ensure that API allows for selecting the actions list serializer
+        """
+        url = reverse('node_object')
+        response = self.client.get(
+            url, {'field_group': 'actions_list'},
+            HTTP_X_REQUESTED_WITH='XMLHttpRequest',
+            HTTP_ACCEPT='application/json'
+        )
+        r = json.loads(response.content)[0]
+        node = Node.objects.get(pk=r['id'])
+        self.assertEqual(
+            r['root_name'],
+            node.get_root().title
+        )
+
     def test_read_only(self):
         node = Node.objects.filter(owner=None)[0]
         url = reverse('node_object', kwargs={'pk': node.pk})

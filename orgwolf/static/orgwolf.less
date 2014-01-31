@@ -219,16 +219,13 @@ dd.todo
     cursor: pointer;
 }
 /* Twisty icon for outline nodes */
-.twisty[expandable='lazy'] {
+.twisty[expandable='undefined'] {
     .opacify(75);
 }
-.twisty[expandable='yes'] {
+.twisty[expandable='true'] {
     .opacify(100);
 }
-.twisty[expandable='disabled'] {
-    .opacify(25);
-}
-.twisty[expandable='no'] {
+.twisty[expandable='false'] {
     .opacify(0);
 }
 
@@ -340,6 +337,12 @@ dd.todo
 	font-style: italic;
 	.opacify(80);
     }
+}
+.priority-A {
+    font-weight: bold;
+}
+.priority-C {
+    font-style: italic;
 }
 .ow-hoverable,.todo-state {
     &[actionable="true"] {
@@ -471,7 +474,7 @@ input,textarea {
     .collapse-label {
 	display: none;
     }
-    [archived="true"] div {
+    .archived div {
 	text-decoration: line-through;
     }
     /* Rows in the actions table */
@@ -484,10 +487,10 @@ input,textarea {
 	    .make-md-column(1);
 	}
 	.deadline {
-	    .make-md-column(3);
+	    .make-md-column(2);
 	}
 	.project {
-	    .make-md-column(3);
+	    .make-md-column(4);
 	}
     }
     .heading-row {
@@ -496,12 +499,6 @@ input,textarea {
 	}
 	&.overdue {
 	    background-color: @state-danger-bg;
-	}
-	[ow-priority=A] {
-	    font-weight: bold;
-	}
-	[ow-priority=C] {
-	    font-style: italic;
 	}
     }
     #scheduled-list {

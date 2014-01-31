@@ -199,15 +199,15 @@ test('update() method', function() {
     heading1.update();
     equal(
 	heading1.expandable,
-	'no',
-	'Populated heading with no children or text is not expandable'
+	heading1.is_expandable(),
+	'Populated heading with no children or text has is_expandable() set'
     );
     // Check the expandable property if the heading has text
     heading2 = scope.headings.get({pk: 2});
     heading2.update();
     equal(
 	heading2.expandable,
-	'yes',
+	heading2.is_expandable(),
 	'Heading with text is expandable'
     );
     equal(
@@ -313,6 +313,43 @@ test('is_visible() method with deadline', function() {
 	'Archived but actionable heading is not visible'
     );
 
+});
+
+test('is_expandable() method', function() {
+    var heading;
+    heading = scope.headings.get({pk: 1});
+    // Check for scheduled_date
+    heading.fields.scheduled_date = '2013-01-01';
+    equal(
+	heading.is_expandable(),
+	true,
+	'heading with scheduled_date is expandable'
+    );
+    heading.fields.scheduled_date = null;
+    // Check for deadline_date
+    heading.fields.deadline_date = '2013-01-01';
+    equal(
+	heading.is_expandable(),
+	true,
+	'heading with deadline_date is expandable'
+    );
+    heading.fields.deadline_date = null;
+    // Check for text
+    heading.fields.text = 'hello';
+    equal(
+	heading.is_expandable(),
+	true,
+	'heading with text is expandable'
+    );
+    heading.fields.text = '';
+    // Check for tag_string
+    heading.fields.tag_string = 'hello';
+    equal(
+	heading.is_expandable(),
+	true,
+	'heading with tag_string is expandable'
+    );
+    heading.fields.tag_string = '';
 });
 
 test('MPTT: is_leaf_node', function() {

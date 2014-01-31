@@ -400,7 +400,7 @@ gtd_module.directive('owEditable', function($resource) {
 	scope.save = function(e) {
 	    // Tasks for when the user saves the edited heading
 	    scope.fields.text = element.find('.edit-text')[0].innerHTML;
-	    scope.heading.fields = scope.fields;
+	    $.extend(scope.heading.fields, scope.fields);
 	    scope.heading.update();
 	    scope.heading.editable = false;
 	    scope.heading.save();
@@ -538,28 +538,55 @@ gtd_module.directive('owTodo', ['$filter', function($filter) {
 **************************************************/
 gtd_module.directive('owListRow', function() {
     function link(scope, element, attrs) {
-	var node_pk, heading, $element, due, row_cls;
-	node_pk = parseInt(attrs.owPk, 10);
-	heading = scope.headings.get({pk: node_pk});
+	var node_pk, $element;
 	$element = $(element);
 	// Determine bootstrap row style based on overdue status
-	due = heading.due();
-	if ( due === null ) {
-	    row_cls = '';
-	} else if ( due <= 0 ) {
-	    row_cls = 'overdue';
-	} else if ( due > 0 ) {
-	    row_cls = 'upcoming';
-	}
-	element.find('.heading-row').addClass(row_cls);
+	scope.$watch(
+	    function() {return scope.heading.fields.deadline_date;},
+	    function() {
+		var row_cls, due;
+		due = scope.heading.due();
+		if ( due === null ) {
+		    row_cls = '';
+		} else if ( due <= 0 ) {
+		    row_cls = 'overdue';
+		} else if ( due > 0 ) {
+		    row_cls = 'upcoming';
+		}
+		element.addClass(row_cls);
+	    }
+	);
+	// CSS class based on archived status
+	scope.$watch(
+	    'heading.fields.archived',
+	    function(archived) {
+		if (archived) {
+		    element.addClass('archived');
+		}
+	    }
+	);
+	// CSS class based on priority
+	scope.$watch(
+	    'heading.fields.priority',
+	    function(new_priority, old_priority) {
+		// Remove old CSS class
+		if (old_priority) {
+		    element.removeClass('priority-' + old_priority);
+		}
+		// And add new one
+		if (new_priority) {
+		    element.addClass('priority-' + new_priority);
+		}
+	    }
+	);
 	// Handlers for action buttons
 	scope.edit = function(h) {
-	    console.log(h);
 	    h.editable = true;
 	};
     }
     return {
 	link: link,
+	scope: true,
     };
 });
 
@@ -802,8 +829,11 @@ function listCtrl($sce, $scope, $resource, $location, $routeParams, GtdList, Hea
     today = new Date();
     $scope.scheduled = new HeadingManager($scope);
     $scope.scheduled.add(Heading.query(
-	{scheduled_date__lte: today.ow_date(),
-	 todo_state: 8}
+	{
+	    field_group: 'actions_list',
+	    scheduled_date__lte: today.ow_date(),
+	    todo_state: 8
+	}
     ));
     // Helper function that retrieves new GTD list from server
     get_list = function(scp) {

@@ -341,6 +341,17 @@ class NodeView(APIView):
         """Returns the details of the node as a json encoded object"""
         BOOLS = ('archived',) # Translate 'False' -> False for these fields
         get_dict = request.QUERY_PARAMS.copy()
+        # Check for alternate serializer
+        serializers = {
+            'default': NodeSerializer,
+            'actions_list': NodeListSerializer
+        }
+        field_group = get_dict.get('field_group', None)
+        if field_group:
+            serializer = serializers[field_group]
+            get_dict.pop('field_group')
+        else:
+            serializer = serializers['default']
         node_id = kwargs.get('pk')
         parent_id = get_dict.get('parent_id', None)
         if parent_id == '0':
@@ -354,11 +365,11 @@ class NodeView(APIView):
                     value = False
                 query = {param: value}
                 nodes = nodes.filter(**query)
-            serializer = NodeSerializer(nodes, many=True)
+            serial_node = serializer(nodes, many=True)
         else:
             node = get_object_or_404(Node, pk=node_id)
-            serializer = NodeSerializer(node)
-        return Response(serializer.data)
+            serial_node = serializer(node)
+        return Response(serial_node.data)
 
     def post(self, request, pk=None, *args, **kwargs):
         """

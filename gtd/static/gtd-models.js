@@ -209,43 +209,23 @@ GtdHeading.prototype.is_leaf_node = function() {
 GtdHeading.prototype.is_expandable = function() {
     // Return true if the heading has information that
     // can be seen by expanding a twisty.
-    var expandable, children, response;
-    expandable = false;
-    if ( this.rank === 0 ) {
-	// The main workspace is always expandable
+    var expandable, response, re;
+    expandable = undefined;
+    re = /\S+/;
+    if ( re.test(this.fields.text) ||
+	 re.test(this.fields.tag_string) ||
+	 this.fields.scheduled_date ||
+	 this.fields.deadline_date ) {
 	expandable = true;
-    }
-    if  ( this.text ) {
-	// Anything with text is always expandable
-	expandable = true;
-    } else if ( this.workspace.show_all ) {
-	// Any children are visible
-	if ( this.workspace.active_scope ) {
-	    expandable = this.get_children().filter_by(
-		{scope: this.workspace.active_scope} ).length;
+    } else if (this.populated) {
+	// Inspect the number of descendants for correct tree structure
+	if (this.children.length > 0) {
+	    expandable = true;
 	} else {
-	    expandable = ! this.is_leaf_node();
-	}
-    } else {
-	// Only non-archived children are visible
-	children = this.get_children();
-	if ( this.workspace.active_scope ) {
-	    children = children.filter_by(
-		{ scope: this.workspace.active_scope }
-	    );
-	}
-	if ( children.filter_by({archived: false}).length ) {
-	    expandable = true;
-	} else if ( this.populated === false && !this.is_leaf_node() ) {
-	    expandable = true;
+	    expandable = false;
 	}
     }
-    if ( expandable ) {
-	response = true;
-    } else {
-	response = false;
-    }
-    return response;
+    return expandable;
 };
 
 GtdHeading.prototype.is_visible = function(view) {
@@ -323,17 +303,7 @@ GtdHeading.prototype.update = function() {
     // if necessary.
 
     // First update expandability
-    re = /\S+/;
-    if ( re.test(this.fields.text) ) {
-	this.expandable = 'yes';
-    } else if (this.populated) {
-	// Inspect the number of descendants for correct tree structure
-	if (this.children.length > 0) {
-	    this.expandable = 'yes';
-	} else {
-	    this.expandable = 'no';
-	}
-    }
+    this.expandable = this.is_expandable();
     // Now update todostate
     if ( typeof this.workspace.todo_states !== 'undefined' ) {
 	this.todo_state = this.workspace.todo_states.get({pk: this.fields.todo_state});
