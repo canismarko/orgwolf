@@ -7,7 +7,8 @@
       <span class="collapse-label">Edit</span>
     </button>
     <a href="/gtd/project/#{{heading.pk}}-{{heading.fields.slug}}"
-       class="btn btn-default btn-xs">
+       class="btn btn-default btn-xs"
+       title="View this task in the project view">
       <span class="glyphicon glyphicon-folder-open"></span>
       <span class="collapse-label">Project</span>
     </a>
@@ -44,9 +45,10 @@
       <div class="project">
 	<span class="collapse-label">Project:</span>
     	{{ heading.fields.root_name }}
-    	<a ng-click="filter_parent(heading)">
-	  [filter]
-	</a>
+    	<button class="filter-button btn" ng-click="filter_parent(heading)">
+	  <span class="icon"></span>
+	  Filter
+	</button>
       </div>
     </div><!-- /ow-list-row -->
     <div ow-editable ng-if="heading.editable" ow-node-id="{{ heading.pk }}"
@@ -117,9 +119,10 @@
     <div class="project">
       <span class="collapse-label">Project:</span>
       {{ heading.fields.root_name }}
-      <a ng-click="filter_parent(heading)">
-	[filter]
-      </a>
+      <button class="filter-button btn" ng-click="filter_parent(heading)">
+	<span class="icon"></span>
+	Filter
+      </button>
     </div>
   </div><!-- /.heading-row -->
   <div ow-editable ng-if="heading.editable" ow-node-id="{{ heading.pk }}"

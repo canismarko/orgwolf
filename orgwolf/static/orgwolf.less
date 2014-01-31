@@ -143,6 +143,15 @@ dd.todo
     border-width: 1px 0px;
 }
 .heading-row,.message-row,.ow-hoverable {
+    .filter-button {
+	.opacify(15);
+	.btn-default;
+	.btn-xs;
+	.icon {
+	    .glyphicon;
+	    .glyphicon-filter;
+	}
+    }
     .action-buttons {
 	.opacify(15);
 	.btn-labels {
@@ -151,7 +160,7 @@ dd.todo
     }
     &:hover {
 	background-color: @gray-lighter !important;
-	.action-buttons {
+	.action-buttons,.filter-button {
 	    .opacify(100);
 	}
     }
