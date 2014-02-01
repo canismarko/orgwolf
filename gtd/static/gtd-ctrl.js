@@ -361,7 +361,7 @@ gtd_module.directive('owSwitch', function() {
 * Directive that lets a user edit a node
 *
 **************************************************/
-gtd_module.directive('owEditable', function($resource) {
+gtd_module.directive('owEditable', ['$resource', function($resource) {
     // Directive creates the pieces that allow the user to edit a heading
     function link(scope, element, attrs) {
 	var $text, heading, $save, Heading;
@@ -422,7 +422,7 @@ gtd_module.directive('owEditable', function($resource) {
 	require: '?ngModel',
 	templateUrl: '/static/editable.html'
     };
-});
+}]);
 
 /*************************************************
 * Directive that shows a list of Scopes tabs
