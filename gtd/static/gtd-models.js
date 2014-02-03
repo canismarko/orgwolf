@@ -318,7 +318,7 @@ GtdHeading.prototype.update = function() {
 
 GtdHeading.prototype.save = function(args) {
     // Method sends changes back to the server
-    var url, method, data, auto_update, heading;
+    var url, method, data, auto_update, heading, old_deadline, old_scheduled;
     heading = this;
     if ( args === undefined ) {
 	args = {};
@@ -327,6 +327,9 @@ GtdHeading.prototype.save = function(args) {
     url = '/gtd/node/';
     heading.fields.auto_update = auto_update;
     data = jQuery.extend({}, heading.fields, {id: heading.pk});
+    // Save for checking against the returned JSON
+    old_deadline = heading.fields.deadline_date;
+    old_scheduled = heading.fields.scheduled_date;
     if ( heading.pk > 0 ) {
 	// Existing Node instance
 	url += heading.pk + '/';
@@ -341,7 +344,8 @@ GtdHeading.prototype.save = function(args) {
 	contentType: 'application/json',
 	success: function(data, status, jqXHR) {
 	    heading.workspace.$apply(function() {
-		var new_heading;
+		var new_heading, s;
+		heading.workspace.notify('Saved!', 'success');
 		if ( typeof data === 'string' ) {
 		    data = jQuery.parseJSON(data);
 		}
@@ -349,10 +353,16 @@ GtdHeading.prototype.save = function(args) {
 		heading.pk = data.pk;
 		heading.set_fields(data);
 		heading.update();
+		// Notify the user if the Node is rescheduled
+		if ( heading.fields.scheduled_date !== old_scheduled ) {
+		    s = '"' + heading.fields.title + '" rescheduled for ';
+		    s += heading.fields.scheduled_date;
+		    heading.workspace.notify(s, 'info');
+		}
 	    });
 	},
 	error: function(data, status, jqXHR) {
-	    alert('Not saved');
+	    heading.workspace.notify('Oh no! Something went wrong. If you feel this is a bug, please send us some feedback', 'danger');
 	    console.error(data.responseText);
 	},
     });

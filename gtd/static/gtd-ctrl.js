@@ -35,6 +35,9 @@ gtd_module.config(['$httpProvider', '$locationProvider', owConfig]);
 function owConfig($httpProvider, $locationProvider) {
     // Add custom headers to $http objects
     $httpProvider.defaults.headers.common['X-Request-With'] = 'XMLHttpRequest';
+    // Add django CSRF token to all $http objects
+    $httpProvider.defaults.xsrfCookieName = 'csrftoken';
+    $httpProvider.defaults.xsrfHeaderName = 'X-CSRFToken';
     // Add django CSRF token to all jQuery.ajax() requests
     function getCookie(name) {
 	var cookieValue, cookies, i, cookie;
@@ -77,6 +80,28 @@ gtd_module.run(['$rootScope', '$resource', function($rootScope, $resource) {
     // Get list of scopes for tabs
     Scope = $resource('/gtd/scope/');
     $rootScope.scopes = Scope.query();
+}]);
+
+/*************************************************
+* Setup notification box for action results
+*
+**************************************************/
+gtd_module.run(['$rootScope', function($rootScope) {
+    var NOTIFY_TIMEOUT, key;
+    NOTIFY_TIMEOUT = 4000;
+    $rootScope.notifications = [];
+    $rootScope.notify = function(msg, cls) {
+	key = key + 1;
+	$rootScope.notifications.push({pk: key,
+					msg: msg,
+					cls: cls});
+	/* Clear the message after NOTIFY_TIMEOUT */
+	setTimeout(function() {
+	    $rootScope.$apply(function() {
+		$rootScope.notifications.splice(0, 1);
+	    });
+	}, NOTIFY_TIMEOUT);
+    };
 }]);
 
 /*************************************************
@@ -294,42 +319,6 @@ gtd_module.filter('root_cell', ['$sce', function($sce) {
 }]);
 
 /*************************************************
-* Filter that displays the deadline for a heading
-*
-**************************************************/
-gtd_module.filter('deadline_str', ['$sce', function($sce) {
-    return function(heading) {
-	var str, date, today, time_delta, day_delta;
-	str = '';
-	if ( heading.fields.deadline_date ) {
-	    str = 'Due ';
-	    date = new Date(heading.fields.deadline_date + 'T12:00:00');
-	    today = new Date();
-	    today.setHours(12, 0, 0, 0);
-	    time_delta = date.getTime() - today.getTime();
-	    day_delta = Math.ceil(time_delta / (1000 * 3600 * 24));
-	    if ( day_delta === 0 ) {
-		// Is today
-		str += 'today';
-	    } else if (day_delta === -1) {
-		// Is yesterday
-		str += 'yesterday';
-	    } else if (day_delta < 0) {
-		// Is farther in the past
-		str += Math.abs(day_delta) + ' days ago';
-	    } else if (day_delta === 1) {
-		// Is tomorrow
-		str += 'tomorrow';
-	    } else if (day_delta > 0) {
-		// Is farther in the future
-		str += 'in ' + day_delta + ' days';
-	    }
-	}
-	return str;
-    };
-}]);
-
-/*************************************************
 * Directive that turns checkboxes into switches
 *
 **************************************************/
@@ -413,9 +402,11 @@ gtd_module.directive('owEditable', ['$resource', function($resource) {
 	    }
 	};
 	// Attach aloha editor
-	Aloha.ready( function() {
-	    Aloha.jQuery(element.find('.edit-text')).aloha();
-	});
+	if ( typeof Aloha !== 'undefined' ) {
+	    Aloha.ready( function() {
+		Aloha.jQuery(element.find('.edit-text')).aloha();
+	    });
+	}
     }
     return {
 	link: link,
@@ -589,6 +580,42 @@ gtd_module.directive('owListRow', function() {
 	scope: true,
     };
 });
+
+/*************************************************
+* Filter that displays the deadline for a heading
+*
+**************************************************/
+gtd_module.filter('deadline_str', ['$sce', function($sce) {
+    return function(heading) {
+	var str, date, today, time_delta, day_delta;
+	str = '';
+	if ( heading.fields.deadline_date ) {
+	    str = 'Due ';
+	    date = new Date(heading.fields.deadline_date + 'T12:00:00');
+	    today = new Date();
+	    today.setHours(12, 0, 0, 0);
+	    time_delta = date.getTime() - today.getTime();
+	    day_delta = Math.ceil(time_delta / (1000 * 3600 * 24));
+	    if ( day_delta === 0 ) {
+		// Is today
+		str += 'today';
+	    } else if (day_delta === -1) {
+		// Is yesterday
+		str += 'yesterday';
+	    } else if (day_delta < 0) {
+		// Is farther in the past
+		str += Math.abs(day_delta) + ' days ago';
+	    } else if (day_delta === 1) {
+		// Is tomorrow
+		str += 'tomorrow';
+	    } else if (day_delta > 0) {
+		// Is farther in the future
+		str += 'in ' + day_delta + ' days';
+	    }
+	}
+	return str;
+    };
+}]);
 
 /*************************************************
 * Angular controller for capturing quick thoughts

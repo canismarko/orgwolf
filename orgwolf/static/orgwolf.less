@@ -109,6 +109,37 @@ dd.todo
     display: inline-block;
 }
 
+/* Notifications boxes */
+.notifications {
+    position: fixed;
+    top: 0px;
+    width: 100%;
+    z-index: 999;
+    .text-center;
+    .notification {
+	.alert;
+	border-radius: 0px;
+	margin-bottom: 0px;
+	/* Last notification should have rounded corners restored */
+	&:last-child {
+	    border-bottom-right-radius: @alert-border-radius;
+	    border-bottom-left-radius: @alert-border-radius;
+	}
+	/* Tablet/phone notifications */
+	@media (max-width: @screen-md-max) {
+	    width: 100%;
+	}
+	/* Desktop notifications */
+	@media (min-width: @screen-md-min) {
+	    width: 300px;
+	    /* margin-left: -150px; */
+	    /* left: 50%; */
+	    margin-left: auto;
+	    margin-right: auto;
+	}
+    }
+}
+
 /* Javascript outline appliance */
 @anim-speed: 350ms;
 @route-speed: 600ms;
