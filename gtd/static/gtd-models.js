@@ -234,9 +234,6 @@ GtdHeading.prototype.is_visible = function(view) {
     visibility = true; // Assume visible unless we think otherwise
     // Check if this heading is within the active scope
     if ( this.workspace.active_scope ) {
-	if (this.pk === 22) {
-	    console.log(this.workspace.active_scope);
-	}
 	if ( this.fields.scope.indexOf(this.workspace.active_scope) === -1 ) {
 	    visibility = false;
 	}

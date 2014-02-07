@@ -19,6 +19,7 @@
 
 from django.conf.urls import patterns, include, url
 from django.contrib.auth.views import login, logout
+from django.views.generic import TemplateView
 
 from orgwolf.views import FeedbackView, AccountsView
 
@@ -62,9 +63,11 @@ urlpatterns = patterns('',
                        url(r'^admin/',
                            include(admin.site.urls)),
 
-                       # Javascript unit tests (QUnit)
-                       url(r'^test/js/$',
+                       # Javascript unit tests
+                       url(r'^test/qunit/$',
                            'orgwolf.views.jstest'),
+                       url(r'^test/jasmine/$',
+                           TemplateView.as_view(template_name='jasmine.html'))
 )
 
 # Deprecated: ? # urlpatterns += staticfiles_urlpatterns()

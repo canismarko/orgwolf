@@ -1,4 +1,4 @@
-/*globals document, $, jQuery, gtd_module, Message*/
+/*globals document, $, jQuery, owMain, Message*/
 "use strict";
 var MessageFactory, owinbox, owmessage;
 
@@ -6,7 +6,7 @@ var MessageFactory, owinbox, owmessage;
 * Angular routing
 *
 **************************************************/
-gtd_module.config(
+owMain.config(
     ['$routeProvider', '$locationProvider',
      function($routeProvider, $locationProvider) {
 	 $locationProvider.html5Mode(true);
@@ -25,7 +25,7 @@ gtd_module.config(
 * Factor that creates a message object
 *
 **************************************************/
-gtd_module.factory('MessageAPI', ['$resource', '$http', MessageFactory]);
+owMain.factory('MessageAPI', ['$resource', '$http', MessageFactory]);
 function MessageFactory($resource, $http) {
     var res = $resource(
 	'/wolfmail/message/:id', {id: '@id'},
@@ -65,7 +65,7 @@ function MessageFactory($resource, $http) {
 /*************************************************
 * Filter that displays the "From" field
 **************************************************/
-gtd_module.filter('format_sender', ['$sce', function($sce) {
+owMain.filter('format_sender', ['$sce', function($sce) {
     return function(msg) {
 	var s;
 	if (msg.fields.handler_path === 'plugins.deferred') {
@@ -85,7 +85,7 @@ gtd_module.filter('format_sender', ['$sce', function($sce) {
 /*************************************************
 * Filter that formats the "Subject" field
 **************************************************/
-gtd_module.filter('format_subject', ['$sce', function($sce) {
+owMain.filter('format_subject', ['$sce', function($sce) {
     return function(msg) {
 	var s;
 	s = '';
@@ -112,7 +112,7 @@ gtd_module.filter('format_subject', ['$sce', function($sce) {
 /*************************************************
 * Filter that displays various date fields
 **************************************************/
-gtd_module.filter('format_date', function() {
+owMain.filter('format_date', function() {
     return function(date_str) {
 	var d;
 	d = new Date(date_str);
@@ -124,7 +124,7 @@ gtd_module.filter('format_date', function() {
 * Filter that shows a parent select option with
 *   tree indentation
 **************************************************/
-gtd_module.filter('parent_label', function() {
+owMain.filter('parent_label', function() {
     return function(parent) {
 	var s, i;
 	s = ' ' + parent.title;
@@ -139,7 +139,7 @@ gtd_module.filter('parent_label', function() {
 * Directive sets the parameters of next
 * actions table row
 **************************************************/
-gtd_module.directive('owMessageRow', function() {
+owMain.directive('owMessageRow', function() {
     function link(scope, element, attrs) {
 	var $element, $bTask, $bProject, $bComplete, $bDefer, $bArchive, $bDelete;
 	$element = $(element);
@@ -171,7 +171,7 @@ gtd_module.directive('owMessageRow', function() {
 * Directive that handles actions on messages
 *
 **************************************************/
-gtd_module.directive('owMsgActions', ['Heading', function(Heading) {
+owMain.directive('owMsgActions', ['Heading', function(Heading) {
     // Directive handles actions modal on message object
     function link(scope, element, attrs) {
 	var $element;
@@ -281,7 +281,7 @@ gtd_module.directive('owMsgActions', ['Heading', function(Heading) {
 * Angular inbox controller
 *
 **************************************************/
-gtd_module.controller(
+owMain.controller(
     'owInbox',
     ['$scope', '$rootScope', '$resource', 'MessageAPI', 'Heading', owinbox]
 );
@@ -314,7 +314,7 @@ function owinbox($scope, $rootScope, $resource, MessageAPI, Heading) {
 * Angular controller for viewing a specific message
 *
 **************************************************/
-gtd_module.controller(
+owMain.controller(
     'owMessage',
     ['$scope', '$routeParams', '$location', 'MessageAPI', owmessage]
 );
@@ -332,7 +332,7 @@ function owmessage($scope, $routeParams, $location, MessageAPI) {
 * Angular controller for delivering feedback
 *
 **************************************************/
-gtd_module.directive('owFeedback', function() {
+owMain.directive('owFeedback', function() {
     function link(scope, element, attrs) {
 	var $element, $modal;
 	$element = $(element);
