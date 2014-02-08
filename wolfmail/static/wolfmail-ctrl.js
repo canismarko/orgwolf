@@ -290,17 +290,29 @@ function owinbox($scope, $rootScope, $resource, MessageAPI, Heading) {
     $('.ow-active').removeClass('active');
     $('#nav-inbox').addClass('active');
     // Date for this inbox allows user to see future dfrd msgs
-    today = new Date();
-    $scope.current_date = today;
+    $scope.currentDate = new Date();
+    $scope.$watch('currentDate', function(new_date, old_date) {
+	$scope.$emit('refresh_messages');
+    }, true);
     // Get list of messages
     $scope.get_messages = function(e) {
+	ow_waiting('spinner');
 	$scope.messages = MessageAPI.query(
 	    {in_inbox: true,
-	     now: true}
+	     rcvd_date__lte: $scope.currentDate.ow_date(),
+	    }
 	);
+	console.log($scope.messages);
+	// Promise callbacks
+	$scope.messages.$promise['finally'](function() {
+	    ow_waiting('clear');
+	});
+	$scope.messages.$promise.catch(function() {
+	    $scope.notify('Could not get messages. Check your internet connection and try again', 'danger');
+	});
     };
     $rootScope.$on('refresh_messages', $scope.get_messages);
-    $scope.get_messages();
+    $scope.$emit('refresh_messages');
     // Get top level projects for "New task" modal
     $scope.projects = Heading.query({'parent_id': 0,
 				     'archived': false});

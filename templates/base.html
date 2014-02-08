@@ -293,11 +293,14 @@
     {% verbatim %}
     <div class="notifications">
       <div class="notification alert-{{ msg.cls }}"
-	   ng-repeat="msg in _notifications">
+	   ng-repeat="msg in notifications">
 	{{ msg.msg }}
       </div>
     </div>
     {% endverbatim %}
+
+    <!-- <button class="btn btn-default" ng-click="notify('hello, all', 'info')">Notify!</button> -->
+    <!-- <button class="btn btn-default" ng-click="notify('world', 'danger')">Notify!</button> -->
 
     <!-- View for angular controller to fill in -->
     <div ng-view class="view-animate">

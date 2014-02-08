@@ -94,6 +94,7 @@ owMain.run(['$rootScope', function($rootScope) {
     NOTIFY_TIMEOUT = 4000;
     $rootScope.notifications = [];
     $rootScope.notify = function(msg, cls) {
+	console.log(msg);
 	key = key + 1;
 	$rootScope.notifications.push({pk: key,
 					msg: msg,
@@ -356,24 +357,26 @@ function listCtrl($sce, $scope, $resource, $location, $routeParams,
     }
     $scope.cached_states = todo_states.slice(0);
     $scope.active_states = todo_states.slice(0);
+    $scope.currentDate = new Date();
+    $scope.$watch('currentDate', function() {
+	$scope.$emit('refresh_list');
+    }, true);
     $scope.list_params.todo_state = $scope.active_states;
-    // Get list of hard scheduled commitments
-    today = new Date();
-    $scope.scheduled = new HeadingManager($scope);
-    $scope.scheduled.add(Heading.query(
-	{
-	    field_group: 'actions_list',
-	    scheduled_date__lte: today.ow_date(),
-	    todo_state: 8
-	}
-    ));
-    // Helper function that retrieves new GTD list from server
-    get_list = function(scp) {
-	$scope.headings = new HeadingManager(scp);
-	scp.headings.add(GtdList.query(scp.list_params));
+    // Receiver that retrieves new GTD list from server
+    $scope.$on('refresh_list', function() {
+	$scope.headings = new HeadingManager($scope);
+	$scope.headings.add(GtdList.query($scope.list_params));
 	$scope.headings.add(Upcoming.query());
-    };
-    get_list($scope);
+	// Get list of hard scheduled commitments
+	$scope.scheduled = new HeadingManager($scope);
+	$scope.scheduled.add(Heading.query(
+	    {
+		field_group: 'actions_list',
+		scheduled_date__lte: $scope.currentDate.ow_date(),
+		todo_state: 8
+	    }
+	));
+    });
     $scope.show_arx = true;
     $scope.active_scope = 0;
     // Todo state filtering

@@ -202,6 +202,18 @@ dd.todo
     font-weight: bold;
 }
 
+/* Widget for changing the current date of lists and inbox */
+.current-date {
+    h2 {
+	margin-top: 0px;
+	display: inline-block;
+	font-size: 24px;
+    }
+    input {
+	.form-control;
+    }
+}
+
 /* Outline tree of headings in project view */
 #outline-appliance {
     .container;
@@ -583,6 +595,19 @@ input,textarea {
     /* List of message (e.g. Inbox) */
     .message-list {
 	.container;
+	.controls {
+	    .make-row();
+	    input {
+		.form-control;
+	    }
+	    .refresh {
+		.make-md-column(2);
+	    }
+	    .current-date {
+		.make-lg-column(2);
+		.make-md-column(3);
+	    }
+	}
 	.action-buttons {
 	    .make-md-column(2);
 	}

@@ -9,11 +9,18 @@
   </div>
   <!-- Table shows the list of messages -->
   <div class="message-list" ng-if="messages.length && messages.$resolved">
-    <!-- Refresh button -->
-    <button class="btn btn-default" ng-click="get_messages()">
-      <span class="glyphicon glyphicon-refresh"></span>
-      Refresh
-    </button>
+    <div class="controls">
+      <!-- Refresh button -->
+      <div class="refresh">
+	<button class="btn btn-default" ng-click="get_messages()">
+	  <span class="glyphicon glyphicon-refresh"></span>
+	  Refresh
+	</button>
+      </div>
+
+      <div class="current-date" ow-current-date>
+      </div>
+    </div>
 
     <div class="table-heading">
       <div class="action-buttons">Actions</div>

@@ -1,0 +1,8 @@
+<span ng-hide="isEditable">
+  <a ng-click="isEditable = true" href="#">
+    <h2>
+      {{ dateString }}
+    </h2>
+  </a>
+</span>
+<input type="date" ng-model="dateModel" ng-show="isEditable"></input>
