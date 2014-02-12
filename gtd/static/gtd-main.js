@@ -1,6 +1,6 @@
 /*globals document, $, jQuery, Aloha, window, alert, GtdHeading, HeadingManager, angular, ga*/
 "use strict";
-var test_headings, owConfig, HeadingFactory, GtdListFactory, UpcomingFactory, outlineCtrl, listCtrl, ow_waiting;
+var test_headings, owConfig, HeadingFactory, GtdListFactory, UpcomingFactory, outlineCtrl, listCtrl;
 
 /*************************************************
 * Angular module for all GTD components
@@ -127,24 +127,25 @@ owMain.run(['$rootScope', '$location', function($rootScope, $location) {
 **************************************************/
 owMain.controller(
     'inboxCapture',
-    ['$scope', '$rootScope',
-    function ($scope, $rootScope) {
+    ['$scope', '$rootScope', 'owWaitIndicator',
+    function ($scope, $rootScope, owWaitIndicator) {
 	$scope.capture = function(e) {
 	    // Send a captured inbox item to the server for processing
 	    var text, data, $textbox;
 	    data = {handler_path: 'plugins.quickcapture'};
 	    $textbox = $(e.target).find('#new_inbox_item');
 	    data.subject = $textbox.val();
-	    ow_waiting('spinner.inbox');
+	    owWaitIndicator.start_wait('medium', 'quickcapture');
 	    $.ajax(
 		'/wolfmail/message/',
 		{type: 'POST',
 		 data: data,
 		 complete: function() {
-		     ow_waiting('clear.inbox');
+		     owWaitIndicator.end_wait('quickcapture');
 		 },
 		 success: function() {
 		     $textbox.val('');
+		     owWaitIndicator.start_wait('medium', 'get-messages');
 		     $rootScope.$emit('refresh_messages');
 		 },
 		 error: function(jqXHR, status, error) {
@@ -165,10 +166,10 @@ owMain.controller(
 owMain.controller(
     'nodeOutline',
     ['$scope', '$http', '$resource', 'OldHeading', 'Heading',
-     '$location', '$anchorScroll', outlineCtrl]
+     '$location', '$anchorScroll', 'owWaitIndicator',  outlineCtrl]
 );
 function outlineCtrl($scope, $http, $resource, OldHeading, Heading,
-		     $location, $anchorScroll) {
+		     $location, $anchorScroll, owWaitIndicator) {
     var TodoState, Scope, url, get_heading, Parent, Tree, parent_tree_id, parent_level, target_headings, target_id, main_headings;
     $('.ow-active').removeClass('active');
     $('#nav-projects').addClass('active');

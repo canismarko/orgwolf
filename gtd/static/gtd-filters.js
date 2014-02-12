@@ -62,11 +62,11 @@ owFilters.filter('style', function() {
 	    /*jslint bitwise: false*/
 	} else {// gtd.node model
 	    // Determine color based on node.rank
-	    if ( obj.fields.level > 0 ) {
-		colors = ['rgb(88, 0, 176)', 'rgb(80, 0, 0)', 'rgb(0, 44, 19)',
+	    if ( obj.fields.level > 0 ) { // Root headings style by CSS
+		colors = ['rgb(80, 0, 0)', 'rgb(0, 44, 19)',
 			  'teal', 'slateblue', 'brown'];
 		color_i = (obj.fields.level) % colors.length;
-		style += 'color: ' + colors[color_i] + '; ';
+		style += 'color: ' + colors[color_i - 1] + '; ';
 	    }
 	}
 	return style;

@@ -1,9 +1,9 @@
-/*globals angular, $, ow_waiting, Aloha*/
+/*globals angular, $, Aloha*/
 "use strict";
 
 var owDirectives = angular.module(
     'owDirectives',
-    ['ngAnimate', 'ngResource']
+    ['ngAnimate', 'ngResource', 'owServices']
 );
 
 /*************************************************
@@ -11,28 +11,72 @@ var owDirectives = angular.module(
 *
 **************************************************/
 owDirectives.directive('owSwitch', function() {
-    function link(scope, element, attrs, model) {
+    function link($scope, $element, attrs, model) {
+	var $input;
+	$input = $element.find('input');
 	// Set switch state when model changes
 	function formatter(value) {
-	    element.bootstrapSwitch('setState', value);
+	    $input.bootstrapSwitch('setState', value);
 	}
 	model.$formatters.push(formatter);
 	// Set model state when switch changes
-	element.on('switch-change', function (e, data) {
-	    if (!scope.$$phase) {
-		scope.$apply(function() {
+	$input.on('switch-change', function (e, data) {
+	    if (!$scope.$$phase) {
+		$scope.$apply(function() {
 		    model.$setViewValue(data.value);
 		});
 	    }
 	});
 	// Attach switch plugin
-	element.bootstrapSwitch();
+	$input.bootstrapSwitch();
     }
     return {
 	link: link,
 	require: '?ngModel',
     };
 });
+
+/*************************************************
+* Directive modifies the DOM after calls to
+* waitIndicator service
+*
+**************************************************/
+owDirectives.directive('owWaitFeedback', ['owWaitIndicator', function(owWaitIndicator) {
+    // Directive creates the pieces that allow the user to edit a heading
+    function link($scope, $element, attrs) {
+	var $mask;
+	$mask = $element.find('.mask');
+	$mask.hide();
+	$element.hide();
+	// Respond to each waiting list by showing the appropriate setting
+	$scope.$watchCollection(
+	    function() { return owWaitIndicator.waitLists.quick.length; },
+	    function(newLength) {
+		if (newLength > 0) {
+		    $element.show();
+		} else {
+		    $element.hide();
+		}
+	    }
+	);
+	$scope.$watchCollection(
+	    function() { return owWaitIndicator.waitLists.medium.length; },
+	    function(newLength) {
+		if (newLength > 0) {
+		    $element.show();
+		    $mask.show();
+		} else {
+		    $element.hide();
+		    $mask.hide();
+		}
+	    }
+	);
+    }
+    return {
+	link: link,
+	scope: {},
+    };
+}]);
 
 /*************************************************
 * Directive that lets a user change the current
@@ -42,7 +86,7 @@ owDirectives.directive('owSwitch', function() {
 owDirectives.directive('owCurrentDate', function() {
     // Directive creates the pieces that allow the user to edit a heading
     function link($scope, $element, attrs) {
-	var $input, set_strings;
+	var $input;
 	$input = $element.find('input');
 	$scope.isEditable = false;
 	// Set some strings for the DOM
@@ -66,9 +110,9 @@ owDirectives.directive('owCurrentDate', function() {
 		    set_strings($scope.currentDate);
 		} else {
 		    // Valid date: update parent scope (valid dates only)
-		    $scope.currentDate.setDate(newDate.getUTCDate())
-		    $scope.currentDate.setMonth(newDate.getUTCMonth())
-		    $scope.currentDate.setYear(newDate.getUTCFullYear())
+		    $scope.currentDate.setDate(newDate.getUTCDate());
+		    $scope.currentDate.setMonth(newDate.getUTCMonth());
+		    $scope.currentDate.setYear(newDate.getUTCFullYear());
 		}
 	    });
 	});
@@ -84,17 +128,17 @@ owDirectives.directive('owCurrentDate', function() {
 * Directive that lets a user edit a node
 *
 **************************************************/
-owDirectives.directive('owEditable', ['$resource', function($resource) {
+owDirectives.directive('owEditable', ['$resource', 'owWaitIndicator', function($resource, owWaitIndicator) {
     // Directive creates the pieces that allow the user to edit a heading
     function link(scope, element, attrs) {
 	var $text, heading, $save, Heading;
 	// Initiate wait indicator
-	ow_waiting();
+	owWaitIndicator.start_wait('quick', 'editable');
 	// Get the full fieldset
 	Heading = $resource('/gtd/node/:id/', {id: '@id'});
 	scope.fields = Heading.get({id: attrs.owNodeId});
 	scope.fields.$promise.then(function() {
-	    ow_waiting('clear');
+	    owWaitIndicator.end_wait('editable');
 	});
 	scope.priorities = [{sym: 'A',
 			     display: 'A - high'},

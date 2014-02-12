@@ -53,8 +53,7 @@
 	  <link rel="stylesheet" type="text/css" href="//cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.0.3/css/bootstrap.min.css" />
 	  <link rel="stylesheet" type="text/css" href="//d3gzqqhcn53l2y.cloudfront.net/latest/css/aloha.css" />
 	  <!-- <link rel="stylesheet" type="text/css" href="http://cdn.aloha-editor.org/latest/css/aloha.css" /> -->
-	  <link rel="stylesheet" type="text/css" href="//cdnjs.cloudflare.com/ajax/libs/bootstrap-switch/1.8/css/bootstrap-switch.css" />
-
+	  <link rel="stylesheet" type="text/css" href="//cdnjs.cloudflare.com/ajax/libs/bootstrap-switch/2.0.1/css/bootstrap3/bootstrap-switch.min.css" />
 
 	{% endif %}
 
@@ -82,9 +81,12 @@
     {% if local_net %}
     <!-- <script src="{{ STATIC_URL }}modernizr.min.js"></script> -->
     <script src="{{ STATIC_URL }}require.min.js"></script>
-    <script src="{{ STATIC_URL }}jquery-2.0.3.js"></script>
-    <script src="{{ STATIC_URL }}bootstrap-3.0.3/dist/js/bootstrap.min.js"></script>
-    <script src="{{ STATIC_URL }}bootstrap-switch.min.js"></script>
+    <script type="text/javascript"
+	    src="{{ STATIC_URL }}jquery-2.0.3.js"></script>
+    <script type="text/javascript"
+	    src="{{ STATIC_URL }}bootstrap-3.0.3/dist/js/bootstrap.min.js"></script>
+    <script type="text/javascript"
+	    src="{{ STATIC_URL }}bootstrap-switch.min.js"></script>
     <script src="{{ STATIC_URL }}angular-1.2.7/angular.js"></script>
     <script src="{{ STATIC_URL }}angular-1.2.7/angular-animate.js"></script>
     <script src="{{ STATIC_URL }}angular-1.2.7/angular-resource.js"></script>
@@ -95,8 +97,7 @@
     <script src="//cdnjs.cloudflare.com/ajax/libs/require.js/2.1.10/require.min.js"></script>
     <script src="//cdnjs.cloudflare.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
     <script src="//cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.0.3/js/bootstrap.min.js"></script>
-    <!-- <script src="//cdnjs.cloudflare.com/ajax/libs/bootstrap-switch/1.8/js/bootstrap-switch.min.js"></script> -->
-    <script src="//cdnjs.cloudflare.com/ajax/libs/bootstrap-switch/1.8/js/bootstrap-switch.min.js"></script>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/bootstrap-switch/2.0.1/js/bootstrap-switch.min.js"></script>
     <!-- Angular and its modules -->
     <script src="//ajax.googleapis.com/ajax/libs/angularjs/1.2.7/angular.min.js"></script>
     <script src="//ajax.googleapis.com/ajax/libs/angularjs/1.2.7/angular-animate.min.js"></script>
@@ -118,6 +119,9 @@
       <script type="text/javascript" src="{{ STATIC_URL }}gtd-filters.js"></script>
       <script type="text/javascript" src="{{ STATIC_URL }}gtd-main.js"></script>
       <script type="text/javascript" src="{{ STATIC_URL }}wolfmail-models.js"></script>
+      <script type="text/javascript" src="{{ STATIC_URL }}wolfmail-services.js"></script>
+      <script type="text/javascript" src="{{ STATIC_URL }}wolfmail-directives.js"></script>
+      <script type="text/javascript" src="{{ STATIC_URL }}wolfmail-filters.js"></script>
       <script type="text/javascript" src="{{ STATIC_URL }}wolfmail-ctrl.js"></script>
       <script src="{{ STATIC_URL }}persona.js"></script>
     {% else %}
@@ -288,6 +292,15 @@
       </div>
     </div>
     {% endif %}
+
+    <!-- Displays indicators if there's a noticeable wait time -->
+    <div ow-wait-feedback class="wait-indicator">
+      <div class="mask">
+	<div id="dark"></div>
+	<img class="spinner" alt="loading"
+	     src="{{ STATIC_URL }}/ajax-loader.gif"></img>
+      </div>
+    </div>
 
     <!-- Boxes display results of actions -->
     {% verbatim %}

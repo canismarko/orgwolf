@@ -22,270 +22,15 @@ owMain.config(
 }]);
 
 /*************************************************
-* Factor that creates a message object
-*
-**************************************************/
-owMain.factory('MessageAPI', ['$resource', '$http', MessageFactory]);
-function MessageFactory($resource, $http) {
-    var res = $resource(
-	'/wolfmail/message/:id', {id: '@id'},
-	{
-	    'query': {
-		method: 'GET',
-		transformResponse: $http.defaults.transformResponse.concat([
-		    function (data, headersGetter) {
-			var i, new_message;
-			for ( i=0; i<data.length; i+=1 ) {
-			    new_message = new Message(data[i]);
-			    data[i] = new_message;
-			}
-			return data;
-		    }
-		]),
-		isArray: true
-	    },
-	    'get': {
-		method: 'GET',
-		transformResponse: $http.defaults.transformResponse.concat([
-		    function(data) {
-			return new Message(data);
-		    }
-		])
-	    }
-	}
-    );
-    // Attach custom methods to the prototype
-    res.prototype.create_node = Message.prototype.create_node;
-    res.prototype.delete_msg = Message.prototype.delete_msg;
-    res.prototype.archive = Message.prototype.archive;
-    res.prototype.defer = Message.prototype.defer;
-    return res;
-}
-
-/*************************************************
-* Filter that displays the "From" field
-**************************************************/
-owMain.filter('format_sender', ['$sce', function($sce) {
-    return function(msg) {
-	var s;
-	if (msg.fields.handler_path === 'plugins.deferred') {
-	    // Message from a deferred Node
-	    s = '';
-	    s += '<span class="dfrd">DFRD</span> Node';
-	    s = $sce.trustAsHtml(s);
-	} else if (msg.fields.handler_path === 'plugins.quickcapture' ) {
-	    s = 'Quick capture';
-	} else {
-	    s = msg.fields.sender;
-	}
-	return s;
-    };
-}]);
-
-/*************************************************
-* Filter that formats the "Subject" field
-**************************************************/
-owMain.filter('format_subject', ['$sce', function($sce) {
-    return function(msg) {
-	var s;
-	s = '';
-	if (msg.fields.handler_path === 'plugins.deferred') {
-	    // Message from a deferred Node
-	    s = '<a href="/gtd/project/#';
-	    s += msg.fields.source_node + '-';
-	    s += msg.fields.node_slug + '">';
-	    s += msg.fields.subject;
-	    s += '</a>';
-	    s = $sce.trustAsHtml(s);
-	} else if (msg.fields.handler_path === 'plugins.quickcapture' ) {
-	    // Quick-captured message
-	    s = msg.fields.subject;
-	} else {
-	    s = '<a href="/wolfmail/inbox/' + msg.pk + '/">';
-	    s += msg.fields.subject;
-	    s += '</a>';
-	}
-	return s;
-    };
-}]);
-
-/*************************************************
-* Filter that displays various date fields
-**************************************************/
-owMain.filter('format_date', function() {
-    return function(date_str) {
-	var d;
-	d = new Date(date_str);
-	return d.toDateString();
-    };
-});
-
-/*************************************************
-* Filter that shows a parent select option with
-*   tree indentation
-**************************************************/
-owMain.filter('parent_label', function() {
-    return function(parent) {
-	var s, i;
-	s = ' ' + parent.title;
-	for ( i=0; i<parent.level; i+=1 ) {
-	    s = '---' + s;
-	}
-	return s;
-    };
-});
-
-/*************************************************
-* Directive sets the parameters of next
-* actions table row
-**************************************************/
-owMain.directive('owMessageRow', function() {
-    function link(scope, element, attrs) {
-	var $element, $bTask, $bProject, $bComplete, $bDefer, $bArchive, $bDelete;
-	$element = $(element);
-	$element.find('.glyphicon').tooltip();
-	// Find buttons
-	$bTask = $element.find('.msg-task');
-	$bProject = $element.find('.msg-project');
-	$bComplete = $element.find('.msg-complete');
-	$bDefer = $element.find('.msg-defer');
-	$bArchive = $element.find('.msg-save');
-	$bDelete = $element.find('.msg-delete');
-	// Set button visibility for this row
-	if (attrs.owHandler === 'plugins.deferred') {
-	    // Deferred nodes
-	    $bProject.remove();
-	    $bDefer.remove();
-	    $bArchive.remove();
-	    $bDelete.remove();
-	} else {
-	    $bComplete.remove();
-	}
-    }
-    return {
-	link: link,
-    };
-});
-
-/*************************************************
-* Directive that handles actions on messages
-*
-**************************************************/
-owMain.directive('owMsgActions', ['Heading', function(Heading) {
-    // Directive handles actions modal on message object
-    function link(scope, element, attrs) {
-	var $element;
-	// Find jQuery elements
-	$element = $(element);
-	scope.$task_modal = $element.find('.modal.task');
-	scope.$delete_modal = $element.find('.modal.delete');
-	scope.$defer_modal = $element.find('.modal.defer');
-	// Object tracks the new node that's being created
-	if ( scope.new_node === undefined ) {
-	    scope.new_node = {};
-	}
-	scope.new_node.$scope = scope;
-	// Handlers for showing modals
-	scope.create_task_modal = function(msg) {
-	    // Abstract handler: shows modal for creating a new task
-	    scope.new_node.title = msg.fields.subject;
-	    if ( msg.fields.handler_path === 'plugins.deferred' ) {
-		// Deferred nodes don't show the modal
-		msg.create_node(scope.new_node);
-	    } else {
-		// Show a modal for creating a new Node
-		scope.active_msg = msg;
-		scope.modal_task = true;
-		scope.$task_modal.modal();
-	    }
-	};
-	scope.open_task_modal = function(msg) {
-	    // Shows modal for creating a new NEXT task
-	    scope.new_node.close = false;
-	    scope.create_task_modal(msg);
-	};
-	scope.complete_task = function(msg) {
-	    // Shows modal for creating a DONE task (from DFRD Nodes)
-	    scope.new_node.close = true;
-	    scope.create_task_modal(msg);
-	};
-	scope.create_project_modal = function(msg) {
-	    // Shows modal for creating a new project (root Node)
-	    delete scope.new_node.tree_id;
-	    delete scope.new_node.parent;
-	    scope.new_node.title = msg.fields.subject;
-	    scope.active_msg = msg;
-	    scope.modal_task = false;
-	    scope.$task_modal.modal();
-	};
-	scope.defer_modal = function(msg) {
-	    // Show modal for rescheduling a Message for a future date
-	    var today;
-	    today = new Date();
-	    scope.active_msg = msg;
-	    scope.$defer_modal.modal();
-	    scope.$defer_modal.find('.datepicker').datepicker({
-		format: 'yyyy-mm-dd',
-		todayBtn: true,
-		todayHighlight: true,
-		startDate: today,
-	    });
-	};
-	scope.delete_modal = function(msg) {
-	    scope.active_msg = msg;
-	    scope.$delete_modal.modal();
-	};
-	// Handlers for commiting actions
-	scope.archive_msg = function(msg) {
-	    // Remove the message from the inbox in the database
-	    msg.archive(scope.new_node);
-	};
-	scope.change_project = function(project) {
-	    // Get a list of descendants for the selected project(tree)
-	    scope.parents = Heading.query({tree_id: project.tree_id,
-					    archived: false});
-	    scope.parent = project;
-	};
-	scope.change_parent = function(parent) {
-	    // User picked a new project for the Node()
-	    scope.new_node.parent = parent.id;
-	};
-	scope.create_node = function() {
-	    // Send the new Node to the API
-	    scope.$task_modal.modal('hide').one('hidden.bs.modal', function() {
-		console.log(scope.new_node);
-		scope.active_msg.create_node(scope.new_node);
-	    });
-	};
-	scope.defer_msg = function() {
-	    // Reschedule this message to appear in the future
-	    scope.new_node.target_date = scope.$defer_modal.find('#target-date').val();
-	    scope.$defer_modal.modal('hide').one('hidden.bs.modal', function() {
-		scope.active_msg.defer(scope.new_node);
-	    });
-	};
-	scope.delete_node = function() {
-	    // Delete the message in the database
-	    scope.$delete_modal.modal('hide').one('hidden.bs.modal', function() {
-		scope.active_msg.delete_msg(scope.new_node);
-	    });
-	};
-    }
-    return {
-	link: link,
-	templateUrl: '/static/message-modals.html'
-    };
-}]);
-
-/*************************************************
 * Angular inbox controller
 *
 **************************************************/
 owMain.controller(
     'owInbox',
-    ['$scope', '$rootScope', '$resource', 'MessageAPI', 'Heading', owinbox]
+    ['$scope', '$rootScope', '$resource',
+     'MessageAPI', 'Heading', 'owWaitIndicator', owinbox]
 );
-function owinbox($scope, $rootScope, $resource, MessageAPI, Heading) {
+function owinbox($scope, $rootScope, $resource, MessageAPI, Heading, owWaitIndicator) {
     var ds, today, get_messages;
     $('.ow-active').removeClass('active');
     $('#nav-inbox').addClass('active');
@@ -296,18 +41,17 @@ function owinbox($scope, $rootScope, $resource, MessageAPI, Heading) {
     }, true);
     // Get list of messages
     $scope.get_messages = function(e) {
-	ow_waiting('spinner');
+	owWaitIndicator.start_wait('medium', 'get-messages');
 	$scope.messages = MessageAPI.query(
 	    {in_inbox: true,
 	     rcvd_date__lte: $scope.currentDate.ow_date(),
 	    }
 	);
-	console.log($scope.messages);
-	// Promise callbacks
+	// Callbacks after resolving message API
 	$scope.messages.$promise['finally'](function() {
-	    ow_waiting('clear');
+	    owWaitIndicator.end_wait('get-messages');
 	});
-	$scope.messages.$promise.catch(function() {
+	$scope.messages.$promise['catch'](function() {
 	    $scope.notify('Could not get messages. Check your internet connection and try again', 'danger');
 	});
     };

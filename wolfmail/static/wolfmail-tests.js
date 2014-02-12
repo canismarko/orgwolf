@@ -1,143 +1,136 @@
-var scope;
+describe('filters in wolfmail-filters.js:', function() {
 
-var msg1 = {
-    "id": 1,
-    "subject": "Deferred item 1",
-    "sender": "",
-    "recipient": "",
-    "owner": 1,
-    "unread": true,
-    "handler_path": "plugins.deferred",
-    "in_inbox": true,
-    "rcvd_date": "2013-12-15T22:05:27Z",
-    "message_text": "",
-    "source_node": null,
-    "spawned_nodes": []
-};
+    describe('the "format_sender" filter', function() {
+	var format_senderFilter;
+	beforeEach(module('owFilters'));
+	beforeEach(inject(function(_format_senderFilter_) {
+	    format_senderFilter = _format_senderFilter_;
+	}));
 
-module('Message model', {
-    setup: function() {
-	scope = {};
-	scope.messages = [];
-	scope.messages.push(new Message(msg1));
-    }
-});
+	it('formats a DFRD node', function() {
+	    var dfrdMsg = {
+		fields: {
+		    handler_path: 'plugins.deferred',
+		},
+	    };
+	    expect(format_senderFilter(dfrdMsg).toString())
+		.toEqual('<span class="dfrd">DFRD</span> Node');
+	});
 
-test('set_fields() method', function() {
-    var message = new Message();
-    message.set_fields(msg1);
-    equal(
-	message.pk,
-	msg1.id,
-	'Primary key set'
-    );
-    equal(
-	message.fields.subject,
-	msg1.subject,
-	'fields.subject set'
-    );
-    // Sets URL based on primary key
-    equal(
-	message.url,
-	'/wolfmail/message/' + msg1.id + '/',
-	'this.url set correctly'
-    );
-});
+	it('formats a quick-capture node', function() {
+	    var qcMsg = {
+		fields: { handler_path: 'plugins.quickcapture' }
+	    };
+	    expect(format_senderFilter(qcMsg)).toEqual('Quick capture');
+	});
 
-asyncTest('create_node() method', function() {
-    expect(3);
-    var msg = scope.messages.get({pk: 1});
-    // Actual tests live in the mocked AJAX callback
-    var mock_id = $.mockjax({
-	url: '/wolfmail/message/1/',
-	type: 'put',
-	responseTime: 0,
-	response: function(e) {
-	    start();
-	    equal(
-		e.data.action,
-		'create_node',
-		'action sent as \'create_node\''
-	    );
-	    equal(
-		e.data.title,
-		'meet David at the ski hill',
-		'title sent via JSON'
-	    );
-	    equal(
-		e.data.close,
-		true,
-		'close attribute sent via JSON'
-	    );
-	}
+	it('formats a generic message', function() {
+	    var qcMsg = {
+		fields: { sender: 'Malcolm Reynolds' }
+	    };
+	    expect(format_senderFilter(qcMsg)).toEqual('Malcolm Reynolds');
+	});
     });
-    msg.create_node({title: 'meet David at the ski hill',
-		     close: true});
-    $.mockjaxClear(mock_id);
-});
 
-asyncTest('archive() method', function() {
-    expect(1);
-    var msg = scope.messages.get({pk: 1});
-    var mock_id = $.mockjax({
-	url: '/wolfmail/message/1/',
-	type: 'put',
-	responseTime: 0,
-	response: function(e) {
-	    start();
-	    equal(
-		e.data.action,
-		'archive',
-		'action sent as JSON'
-	    );
-	}
-    });
-    msg.archive({list: scope.messages});
-    $.mockjaxClear(mock_id);
-});
+    describe('the "format_subject" filter', function() {
+	var format_subjectFilter;
+	beforeEach(module('owFilters'));
+	beforeEach(inject(function(_format_subjectFilter_) {
+	    format_subjectFilter = _format_subjectFilter_;
+	}));
 
-asyncTest('defer() method', function() {
-    expect(2);
-    var msg = scope.messages.get({pk: 1});
-    var mock_id = $.mockjax({
-	url: '/wolfmail/message/1/',
-	type: 'put',
-	responseTime: 0,
-	response: function(e) {
-	    start();
-	    equal(
-		e.data.action,
-		'defer',
-		'action sent as JSON'
-	    );
-	    equal(
-		e.data.target_date,
-		'2013-01-04',
-		'new target_date sent as JSON'
-	    );
-	}
-    });
-    msg.defer({list: scope.messages,
-	      target_date: '2013-01-04'});
-    $.mockjaxClear(mock_id);
-});
+	it('formats a quick-capture node', function() {
+	    var qcNode = {
+		fields: {
+		    subject: 'QC Msg',
+		    handler_path: 'plugins.quickcapture'
+		}
+	    };
+	    expect(format_subjectFilter(qcNode)).toEqual('QC Msg');
+	});
 
-asyncTest('delete() method', function() {
-    expect(1);
-    var msg = scope.messages.get({pk: 1});
-    var mock_id = $.mockjax({
-	url: '/wolfmail/message/1/',
-	type: 'delete',
-	responseTime: 0,
-	response: function(e) {
-	    start();
-	    equal(
-		e.data.action,
-		'delete',
-		'action sent as JSON'
-	    );
-	}
+	it('formats a DFRD node', function() {
+	    var dfrdNode, subject;
+	    dfrdNode = {
+		fields: {
+		    subject: 'DFRD Node',
+		    handler_path: 'plugins.deferred',
+		    source_node: 1,
+		    node_slug: 'dfrd-node',
+		}
+	    };
+	    expect(format_subjectFilter(dfrdNode).toString())
+		.toEqual('<a href="/gtd/project/#1-dfrd-node">DFRD Node</a>');
+	});
+
+	it('formats a generic message', function() {
+	    var msg;
+	    msg = {
+		pk: 1,
+		fields: {
+		    subject: 'hello, world',
+		}
+	    };
+	    expect(format_subjectFilter(msg))
+		.toEqual('<a href="/wolfmail/inbox/1/">hello, world</a>');
+	});
     });
-    msg.delete_msg({list: scope.messages});
-    $.mockjaxClear(mock_id);
-});
+
+    describe('the "format_date" filter', function() {
+	var format_dateFilter;
+	beforeEach(module('owFilters'));
+	beforeEach( inject(function(_format_dateFilter_) {
+	    format_dateFilter = _format_dateFilter_;
+	}));
+
+	it('returns a formatted date string', function() {
+	    var date_string, date;
+	    date_string = '2014-02-08';
+	    date = new Date(date_string);
+	    expect(format_dateFilter(date_string)).toEqual(date.toDateString());
+	});
+    });
+
+    describe('the "parent_label" filter', function() {
+	var parent_labelFilter;
+	beforeEach(module('owFilters'));
+	beforeEach(inject(function(_parent_labelFilter_) {
+	    parent_labelFilter = _parent_labelFilter_;
+	}));
+
+	it('returns a root-level heading\'s title', function() {
+	    var rootNode = {
+		title: 'Shiny',
+		level: 0,
+	    };
+	    expect(parent_labelFilter(rootNode)).toEqual(rootNode.title);
+	});
+
+	it('indents a level-1 heading', function() {
+	    var lvlOneNode = {
+		title: 'Steamboat springs',
+		level: 1
+	    };
+	    expect(parent_labelFilter(lvlOneNode))
+		.toEqual('--- ' + lvlOneNode.title);
+	});
+
+	it('indents a level-2 heading twice', function() {
+	    var lvlTwoNode = {
+		title: 'margins of steel',
+		level: 2,
+	    };
+	    expect(parent_labelFilter(lvlTwoNode))
+		.toEqual('------ ' + lvlTwoNode.title);
+	});
+    });
+
+}); // End of wolfmail-filters.js tests
+
+describe('directives in wolfmail-directives.js', function() {
+
+}); // End of wolfmail-directives.js tests
+
+describe('services in wolfmail-services.js', function() {
+
+}); // End of wolfmail-services.js test

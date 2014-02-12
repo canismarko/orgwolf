@@ -4,9 +4,8 @@
 STATIC = orgwolf/static/
 ORGWOLF_CSS = $(STATIC)orgwolf.css
 MIN_JS = $(STATIC)orgwolf-min.js
-OW_JS = $(STATIC)orgwolf.js
 GTD_JS = gtd/static/gtd-models.js gtd/static/gtd-services.js gtd/static/gtd-directives.js gtd/static/gtd-filters.js gtd/static/gtd-main.js
-WM_JS = wolfmail/static/wolfmail-models.js wolfmail/static/wolfmail-ctrl.js
+WM_JS = wolfmail/static/wolfmail-models.js wolfmail/static/wolfmail-services.js wolfmail/static/wolfmail-directives.js wolfmail/static/wolfmail-filters.js wolfmail/static/wolfmail-ctrl.js
 LESS = lessc --yui-compress
 DIVIDER = @echo "========================="
 YUI = yuicompressor
@@ -22,10 +21,10 @@ $(ORGWOLF_CSS): $(STATIC)orgwolf.less $(STATIC)social/auth-buttons.css
 	$(YUI) $(STATIC)social/auth-buttons.css >> $(ORGWOLF_CSS)
 	$(LESS) $(STATIC)orgwolf.less >> $(ORGWOLF_CSS)
 
-$(MIN_JS): $(OW_JS) $(GTD_JS) $(WM_JS) $(STATIC)persona.js $(STATIC)jquery.cookie.js
+$(MIN_JS): $(GTD_JS) $(WM_JS) $(STATIC)persona.js $(STATIC)jquery.cookie.js
 	$(DIVIDER)
 	@echo "$(bold)Linting javascript files...$(normal)"
-	$(JSLINT) $(OW_JS) $(GTD_JS) $(WM_JS)
+	$(JSLINT) $(GTD_JS) $(WM_JS)
 	$(DIVIDER)
 	@echo "$(bold)Minifying javascript files...$(normal)"
-	cat $(STATIC)jquery.cookie.js $(OW_JS) $(GTD_JS) $(WM_JS) $(STATIC)persona.js | $(YUI) --type js -o $(MIN_JS)
+	cat $(STATIC)jquery.cookie.js $(GTD_JS) $(WM_JS) $(STATIC)persona.js | $(YUI) --type js -o $(MIN_JS)
