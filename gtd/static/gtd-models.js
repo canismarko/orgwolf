@@ -571,7 +571,7 @@ GtdHeading.prototype.populate_children = function(options) {
 			    }
 			}
 		    }
-		    // Used to make sure ow_waiting works right during page load
+		    // Used to make sure waitIndicator works right during page load
 		    if ( ancestor.rank === 0 ) {
 			ancestor.populated = true;
 		    }
