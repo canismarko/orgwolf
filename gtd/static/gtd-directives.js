@@ -21,11 +21,9 @@ owDirectives.directive('owSwitch', function() {
 	model.$formatters.push(formatter);
 	// Set model state when switch changes
 	$input.on('switch-change', function (e, data) {
-	    if (!$scope.$$phase) {
-		$scope.$apply(function() {
-		    model.$setViewValue(data.value);
-		});
-	    }
+	    $scope.$apply(function() {
+		model.$setViewValue(data.value);
+	    });
 	});
 	// Attach switch plugin
 	$input.bootstrapSwitch();
@@ -128,18 +126,26 @@ owDirectives.directive('owCurrentDate', function() {
 * Directive that lets a user edit a node
 *
 **************************************************/
-owDirectives.directive('owEditable', ['$resource', 'owWaitIndicator', function($resource, owWaitIndicator) {
+owDirectives.directive('owEditable', ['$resource', '$rootScope', 'owWaitIndicator', function($resource, $rootScope, owWaitIndicator) {
     // Directive creates the pieces that allow the user to edit a heading
     function link(scope, element, attrs) {
-	var $text, heading, $save, Heading;
-	// Initiate wait indicator
-	owWaitIndicator.start_wait('quick', 'editable');
-	// Get the full fieldset
-	Heading = $resource('/gtd/node/:id/', {id: '@id'});
-	scope.fields = Heading.get({id: attrs.owNodeId});
-	scope.fields.$promise.then(function() {
-	    owWaitIndicator.end_wait('editable');
-	});
+	var $text, heading, $save, Heading, heading_id, parent;
+	scope.scopes = $rootScope.scopes;
+	// Get the full fieldset if node is specified
+	if ( scope.heading.pk > 0 ) {
+	    // Initiate wait indicator
+	    owWaitIndicator.start_wait('quick', 'editable');
+	    // Retrieve object from API
+	    Heading = $resource('/gtd/node/:id/', {id: '@id'});
+	    scope.fields = Heading.get({id: scope.heading.pk});
+	    scope.fields.$promise.then(function() {
+		owWaitIndicator.end_wait('editable');
+	    });
+	} else {
+	    // Else inherit some attributes from parents
+	    parent = scope.heading.get_parent();
+	    scope.fields = {scope: parent.fields.scope};
+	}
 	scope.priorities = [{sym: 'A',
 			     display: 'A - high'},
 			    {sym: 'B',
@@ -188,6 +194,9 @@ owDirectives.directive('owEditable', ['$resource', 'owWaitIndicator', function($
     }
     return {
 	link: link,
+	scope: {
+	    heading: '=owHeading',
+	},
 	require: '?ngModel',
 	templateUrl: '/static/editable.html'
     };

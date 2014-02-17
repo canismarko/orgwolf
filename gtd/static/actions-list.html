@@ -53,7 +53,7 @@
 	</button>
       </div>
     </div><!-- /ow-list-row -->
-    <div ow-editable ng-if="heading.editable" ow-node-id="{{ heading.pk }}"
+    <div ow-editable ng-if="heading.editable" ow-heading="heading"
 	 ng-repeat-end>
     </div>
     <!-- end repeating scheduled list -->
@@ -127,7 +127,7 @@
       </button>
     </div>
   </div><!-- /.heading-row -->
-  <div ow-editable ng-if="heading.editable" ow-node-id="{{ heading.pk }}"
+  <div ow-editable ng-if="heading.editable" ow-heading="heading"
        ng-repeat-end>
   </div>
 </div><!-- /#gtd-list -->

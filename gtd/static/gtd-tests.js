@@ -99,29 +99,36 @@ describe('filters in gtd-filters.js', function() {
 });
 
 describe('directives in gtd-directives.js', function() {
-    var $compile, $rootScope, element;
+    var $compile, $rootScope, $httpBackend, $templateCache, element;
     beforeEach(module('owDirectives'));
+    beforeEach(inject(function($injector) {
+	$compile = $injector.get('$compile');
+	$rootScope = $injector.get('$rootScope');
+	$httpBackend = $injector.get('$httpBackend');
+	$templateCache = $injector.get('$templateCache');
+    }));
+    // Reset httpBackend calls
+    afterEach(function() {
+	$httpBackend.verifyNoOutstandingExpectation();
+    });
+
     describe('the owWaitFeedback directive', function() {
-    	beforeEach(inject(function(_$compile_, _$rootScope_) {
-    	    $compile = _$compile_;
-    	    $rootScope = _$rootScope_;
+    	beforeEach(function() {
     	    element = $compile(
     		'<div ow-wait-feedback><</div>'
     	    )($rootScope);
-    	}));
+    	});
 
     });
 
     describe('the owSwitch directive', function() {
-	beforeEach(module('owDirectives'));
-	beforeEach(inject(function(_$compile_, _$rootScope_) {
-	    $compile = _$compile_;
-	    $rootScope = _$rootScope_;
+	beforeEach(function() {
 	    $rootScope.modelValue = false;
 	    element = $compile(
 		'<div ow-switch ng-model="modelValue"><input ng-model="modelValue"></input></div>'
 	    )($rootScope);
-	}));
+	});
+
 	it('attaches the bootstrap-switch plugin', function() {
 	    expect(element.children('input')).toHaveClass('has-switch');
 	});
@@ -131,6 +138,50 @@ describe('directives in gtd-directives.js', function() {
     });
 
     describe('the owEditable directive', function() {
+	var parentScopes;
+	beforeEach(function() {
+	    // Mock the templateUrl lookup
+	    $templateCache.put('/static/editable.html',
+			       '<div class="editable"></div>');
+	    // Prepare the DOM element
+	    element = $compile(
+		'<div ow-editable ow-heading="heading"></div>'
+	    )($rootScope);
+	    // Fake heading for processing the directive
+	    parentScopes = [1, 2];
+	    $rootScope.heading = {
+		pk: 0,
+		get_parent: function() {
+		    // Mocked method that returns a fake parent heading
+		    return {
+			fields: {
+			    scope: parentScopes,
+			},
+		    };
+		},
+	    };
+	});
+
+	it('inherits the parent $rootScope.scopes attribute', function() {
+	    var dummyScopes = [{pk: 1, title: 'scp 1'},
+			       {pk: 2, title: 'scp 2'}];
+	    $rootScope.scopes = dummyScopes;
+	    $rootScope.$digest();
+	    expect(element.isolateScope().scopes).toEqual(dummyScopes);
+
+	});
+
+	it('should inherit parent\'s "scopes" field if creating a new node', function() {
+	    $rootScope.$digest();
+	    expect(element.isolateScope().fields.scope).toEqual(parentScopes);
+	});
+
+	it('hits the API if node\'s pk is greater than 0', function() {
+	    $rootScope.heading.pk = 1;
+	    // Define the expected http expectation
+	    $httpBackend.expectGET('/gtd/node/1').respond(201, '');
+	    $rootScope.$digest();
+	});
     });
 
     describe('the owScopeTabs directive', function() {
