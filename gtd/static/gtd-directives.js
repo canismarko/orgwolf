@@ -144,9 +144,12 @@ owDirectives.directive('owEditable', ['$resource', '$rootScope', 'owWaitIndicato
 		owWaitIndicator.end_wait('editable');
 	    });
 	} else {
-	    // Else inherit some attributes from parents
+	    // Else inherit some attributes from parents and set defaults
 	    parent = scope.heading.get_parent();
-	    scope.fields = {scope: parent.fields.scope};
+	    scope.fields = {
+		scope: parent.fields.scope,
+		priority: 'B',
+	    };
 	}
 	scope.priorities = [{sym: 'A',
 			     display: 'A - high'},

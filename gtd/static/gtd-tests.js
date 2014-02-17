@@ -176,6 +176,11 @@ describe('directives in gtd-directives.js', function() {
 	    expect(element.isolateScope().fields.scope).toEqual(parentScopes);
 	});
 
+	it('sets defaults if creating a new node', function() {
+	    $rootScope.$digest();
+	    expect(element.isolateScope().fields.priority).toEqual('B');
+	});
+
 	it('hits the API if node\'s pk is greater than 0', function() {
 	    $rootScope.heading.pk = 1;
 	    // Define the expected http expectation
