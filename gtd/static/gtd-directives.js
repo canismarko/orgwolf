@@ -19,11 +19,13 @@ owDirectives.directive('owSwitch', function() {
 	    $input.bootstrapSwitch('setState', value);
 	}
 	model.$formatters.push(formatter);
-	// Set model state when switch changes
+	// Set model state when switch changes (compare to $modelValue)
 	$input.on('switch-change', function (e, data) {
-	    $scope.$apply(function() {
-		model.$setViewValue(data.value);
-	    });
+	    if (data.value !== model.$modelValue) {
+		$scope.$apply(function() {
+		    model.$setViewValue(data.value);
+		});
+	    }
 	});
 	// Attach switch plugin
 	$input.bootstrapSwitch();

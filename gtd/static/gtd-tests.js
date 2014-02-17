@@ -130,7 +130,7 @@ describe('directives in gtd-directives.js', function() {
 	});
 
 	it('attaches the bootstrap-switch plugin', function() {
-	    expect(element.children('input')).toHaveClass('has-switch');
+	    expect(element.children('div')).toHaveClass('has-switch');
 	});
     });
 
