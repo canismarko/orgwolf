@@ -10,6 +10,11 @@
 /* Import bootstrap mixins, variables, etc */
 @import "bootstrap-3.0.3/less/bootstrap.less";
 
+.opacify (@opacity) { /* 0 to 100 */
+    opacity: (@opacity/100);
+    filter:alpha(opacity=@opacity);
+}
+
 /* Modify content if user is anonymous */
 [ow-logged-in=False] {
     .ow-unauth-hide {
@@ -140,24 +145,6 @@ dd.todo
     }
 }
 
-/* Javascript outline appliance */
-@anim-speed: 350ms;
-@route-speed: 600ms;
-/* @anim-easing: cubic-bezier(0.68, -0.55, 0.27, 1.55); */
-@anim-easing: cubic-bezier(0.68, 0, 0.27, 1);
-.opacify (@opacity) { /* 0 to 100 */
-    opacity: (@opacity/100);
-    filter:alpha(opacity=@opacity);
-}
-.animate (@duration) {
-    -webkit-transition: all @anim-easing @duration;
-    -moz-transition: all @anim-easing @duration;
-    -ms-transition: all @anim-easing @duration;
-    -o-transition: all @anim-easing @duration;
-    transition: all @anim-easing @duration;
-    display: block !important;
-    position: relative;
-}
 /* Tabs for scope filtering */
 .ow-scope-tabs {
     a {
@@ -281,98 +268,6 @@ dd.todo
     .opacify(0);
 }
 
-.heading i.twisty, .heading div.details, .heading div.loading
-{
-    -webkit-transition: opacity @anim-speed, -webkit-transform @anim-speed, padding-top @anim-speed;
-    -moz-transition: opacity @anim-speed, -moz-transform @anim-speed, padding-top @anim-speed;
-    -o-transition: opacity @anim-speed, -o-transform @anim-speed, padding-top @anim-speed;
-    transition: opacity @anim-speed, transform @anim-speed, padding-top @anim-speed;
-}
-.rotate (@angle) {
-    -moz-transform: rotate(@angle);
-    -webkit-transform: rotate(@angle);
-    -o-transform: rotate(@angle);
-    transform: rotate(@angle);
-}
-/* Transitions to uncover details, children and edit-box */
-.children,.heading,.details,.ow-hoverable {
-    &.ng-hide-remove,&.ng-hide-add {
-	.animate(@anim-speed);
-    }
-}
-.editable,.heading {
-    &.ng-enter,&.ng-leave {
-	.animate(@anim-speed);
-    }
-}
-/* Hidden transition state */
-.ng-hide-remove,
-.ng-hide-add-active.ng-hide-add {
-    &.heading,&.children,&.ow-hoverable,&.details {
-	.opacify(0);
-	height: 0px;
-    }
-}
-/* Uncreated transition state */
-.ng-enter,
-.ng-leave.ng-leave-active {
-    &.heading {
-	.opacify(0);
-	height: 0px;
-    }
-    &.ow-text,&.editable {
-	.opacify(0);
-	height: 0px;
-	padding-bottom: 0px;
-    }
-}
-/* Visible transition state */
-.ng-hide-add,
-.ng-hide-remove-active.ng-hide-remove {
-    &.heading,&.children,&.ow-hoverable,&.details {
-	.opacify(100);
-	height: 20px;
-    }
-}
-/* Existent transition state */
-.ng-leave,
-.ng-enter-active.ng-enter
-{
-    &.heading {
-	.opacify(100);
-	height: 20px;
-    }
-    &.ow-text,&.editable {
-	.opacify(100);
-	height: 261px;
-	padding-bottom: 10px;
-    }
-}
-/* Routing animations */
-.view-animate {
-    &.ng-enter {
-	position: absolute;
-	.animate(@route-speed);
-	.opacify(0);
-    }
-    &.ng-enter.ng-enter-active {
-	.opacify(100);
-    }
-    &.ng-leave.ng-leave-active {
-	left: 100%;
-	/* .opacify(0) */
-    }
-    &.ng-leave {
-	.animate(@route-speed);
-	position: absolute;
-	.opacify(100);
-	top: 66px;
-	width: 100%;
-	background: white;
-	width: 100%;
-	left: 0px;
-    }
-}
 
 .hidden {
     height: 0px;
@@ -410,9 +305,6 @@ div.ow-hoverable, div.clickable, div.ow-buttons
 .editable {
     position: relative;
     padding-bottom: 10px;
-    .edit-title {
-	margin-right: 5px;
-    }
     .body {
 	color: @primary;
 	background: @primary-light-pale;

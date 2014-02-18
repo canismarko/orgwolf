@@ -187,6 +187,11 @@ describe('directives in gtd-directives.js', function() {
 	    $httpBackend.expectGET('/gtd/node/1').respond(201, '');
 	    $rootScope.$digest();
 	});
+
+	it('adds the ow-editable class (for animations)', function() {
+	    $rootScope.$digest();
+	    expect(element).toHaveClass('ow-editable');
+	});
     });
 
     describe('the owScopeTabs directive', function() {
