@@ -131,7 +131,15 @@ owDirectives.directive('owCurrentDate', function() {
 owDirectives.directive('owEditable', ['$resource', '$rootScope', 'owWaitIndicator', function($resource, $rootScope, owWaitIndicator) {
     // Directive creates the pieces that allow the user to edit a heading
     function link(scope, element, attrs) {
-	var $text, heading, $save, Heading, heading_id, parent;
+	var defaultParent, $text, heading, $save, Heading, heading_id, parent;
+	// Default fields for when creating a new "top-level" node.
+	// (Additional fields must also be set to the model below)
+	defaultParent = {
+	    fields: {
+		priority: 'B',
+		scope: [],
+	    }
+	};
 	scope.scopes = $rootScope.scopes;
 	scope.todo_states = $rootScope.todo_states;
 	element.addClass('ow-editable'); // For animations
@@ -146,11 +154,15 @@ owDirectives.directive('owEditable', ['$resource', '$rootScope', 'owWaitIndicato
 		owWaitIndicator.end_wait('editable');
 	    });
 	} else {
-	    // Else inherit some attributes from parents and set defaults
+	    // Else inherit some attributes from parents...
 	    parent = scope.heading.get_parent();
+	    // ...or use defaults if no parent
+	    if ( !parent.pk ) {
+		parent = defaultParent;
+	    }
 	    scope.fields = {
 		scope: parent.fields.scope,
-		priority: 'B',
+		priority: parent.fields.priority
 	    };
 	}
 	scope.priorities = [{sym: 'A',

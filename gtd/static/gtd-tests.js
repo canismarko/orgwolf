@@ -154,8 +154,10 @@ describe('directives in gtd-directives.js', function() {
 		get_parent: function() {
 		    // Mocked method that returns a fake parent heading
 		    return {
+			pk: 1,
 			fields: {
 			    scope: parentScopes,
+			    priority: 'A',
 			},
 		    };
 		},
@@ -179,13 +181,20 @@ describe('directives in gtd-directives.js', function() {
 	    expect(element.isolateScope().todo_states).toEqual(todo_states);
 	});
 
-	it('should inherit parent\'s "scopes" field if creating a new node', function() {
+	it('inherits parent\' fields if creating a new node (priority and scope)', function() {
 	    $rootScope.$digest();
 	    expect(element.isolateScope().fields.scope).toEqual(parentScopes);
+	    expect(element.isolateScope().fields.priority).toEqual('A');
 	});
 
-	it('sets defaults if creating a new node', function() {
+
+	it('creates a new root-level node', function() {
+	    // Simulate the $scope the is return from get_parent() for a top-level node
+	    $rootScope.heading.get_parent = function() {
+		return {active_scope: 0};
+	    };
 	    $rootScope.$digest();
+	    expect(element.isolateScope().fields.scope).toEqual([]);
 	    expect(element.isolateScope().fields.priority).toEqual('B');
 	});
 
