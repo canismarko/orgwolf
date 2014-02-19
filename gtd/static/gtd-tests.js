@@ -171,6 +171,14 @@ describe('directives in gtd-directives.js', function() {
 
 	});
 
+	it('inherites the parent $rootScope.todo_states attribute', function() {
+	    var todo_states = [{pk: 1, title: 'state 1'},
+			       {pk: 2, title: 'state 2'}];
+	    $rootScope.todo_states = todo_states;
+	    $rootScope.$digest();
+	    expect(element.isolateScope().todo_states).toEqual(todo_states);
+	});
+
 	it('should inherit parent\'s "scopes" field if creating a new node', function() {
 	    $rootScope.$digest();
 	    expect(element.isolateScope().fields.scope).toEqual(parentScopes);

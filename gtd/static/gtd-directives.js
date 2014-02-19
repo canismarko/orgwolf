@@ -133,6 +133,7 @@ owDirectives.directive('owEditable', ['$resource', '$rootScope', 'owWaitIndicato
     function link(scope, element, attrs) {
 	var $text, heading, $save, Heading, heading_id, parent;
 	scope.scopes = $rootScope.scopes;
+	scope.todo_states = $rootScope.todo_states;
 	element.addClass('ow-editable'); // For animations
 	// Get the full fieldset if node is specified
 	if ( scope.heading.pk > 0 ) {
