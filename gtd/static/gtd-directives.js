@@ -1,4 +1,4 @@
-/*globals angular, $, Aloha*/
+/*globals angular, $, Aloha, tinyMCE, tinymce*/
 "use strict";
 
 var owDirectives = angular.module(
@@ -128,10 +128,10 @@ owDirectives.directive('owCurrentDate', function() {
 * Directive that lets a user edit a node
 *
 **************************************************/
-owDirectives.directive('owEditable', ['$resource', '$rootScope', 'owWaitIndicator', function($resource, $rootScope, owWaitIndicator) {
+owDirectives.directive('owEditable', ['$resource', '$rootScope', '$timeout', 'owWaitIndicator', function($resource, $rootScope, $timeout, owWaitIndicator) {
     // Directive creates the pieces that allow the user to edit a heading
     function link(scope, element, attrs) {
-	var defaultParent, $text, heading, $save, Heading, heading_id, parent;
+	var defaultParent, $text, heading, $save, Heading, heading_id, parent, editorId;
 	// Default fields for when creating a new "top-level" node.
 	// (Additional fields must also be set to the model below)
 	defaultParent = {
@@ -191,7 +191,7 @@ owDirectives.directive('owEditable', ['$resource', '$rootScope', 'owWaitIndicato
 	// Event handlers for the editable dialog
 	scope.save = function(e) {
 	    // Tasks for when the user saves the edited heading
-	    scope.fields.text = element.find('.edit-text')[0].innerHTML;
+	    scope.fields.text = tinyMCE.get(editorId).getContent();
 	    $.extend(scope.heading.fields, scope.fields);
 	    scope.heading.update();
 	    scope.heading.editable = false;
@@ -204,12 +204,24 @@ owDirectives.directive('owEditable', ['$resource', '$rootScope', 'owWaitIndicato
 		scope.heading.pk = -1;
 	    }
 	};
-	// Attach aloha editor
-	if ( typeof Aloha !== 'undefined' ) {
-	    Aloha.ready( function() {
-		Aloha.jQuery(element.find('.edit-text')).aloha();
+	$timeout(function() {
+	    // Attach TinyMCE4 WYSIWYG editor
+	    editorId = 'edit-text-' + scope.heading.pk;
+	    tinymce.init({
+		plugins: 'charmap fullscreen hr image link table textcolor',
+		toolbar: 'undo redo | fullscreen | styleselect | bold italic forecolor backcolor superscript subscript | alignleft aligncenter alignright alignjustify | bullist numlist outdent indent | hr link image',
+		tools: 'inserttable',
+		mode: 'exact',
+		elements: editorId,
 	    });
-	}
+	    // Set TinyMCE4 content if source data changes
+	    scope.$watch('fields.text', function(newText) {
+		var editor = tinyMCE.get(editorId);
+		if (newText && editor) {
+		    editor.setContent(newText);
+		}
+	    });
+	});
     }
     return {
 	link: link,

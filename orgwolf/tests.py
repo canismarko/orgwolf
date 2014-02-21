@@ -101,6 +101,20 @@ class HTMLParserTest(TestCase):
             self.parser.clean('<hr />')
             )
 
+    def test_style_attribute(self):
+        """Check that <p style="..."> is allowed to pass"""
+        self.assertEqual(
+            self.parser.clean('<p style="color: red">'),
+            '<p style="color: red">'
+        )
+
+    def test_forbidden_attribute(self):
+        """Check that <p onclick="..."> is not allowed to pass"""
+        self.assertEqual(
+            self.parser.clean('<p onclick="do_some_evil_stuff()">'),
+            '<p>'
+        )
+
 class NewUser(TestCase):
     """Check new user registration"""
     fixtures = ['gtd-env.json']

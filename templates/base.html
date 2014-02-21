@@ -47,12 +47,8 @@
 		href="{{ STATIC_URL }}bootstrap-3.0.3/dist/css/bootstrap.min.css" />
 	  <link rel="stylesheet" type="text/css"
 		href="{{ STATIC_URL }}bootstrap-switch.css" />
-	  <link rel="stylesheet" type="text/css"
-		href="{{ STATIC_URL }}aloha/css/aloha.css" />
 	{% else %}
 	  <link rel="stylesheet" type="text/css" href="//cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.0.3/css/bootstrap.min.css" />
-	  <link rel="stylesheet" type="text/css" href="//d3gzqqhcn53l2y.cloudfront.net/latest/css/aloha.css" />
-	  <!-- <link rel="stylesheet" type="text/css" href="http://cdn.aloha-editor.org/latest/css/aloha.css" /> -->
 	  <link rel="stylesheet" type="text/css" href="//cdnjs.cloudflare.com/ajax/libs/bootstrap-switch/2.0.1/css/bootstrap3/bootstrap-switch.min.css" />
 
 	{% endif %}
@@ -89,6 +85,8 @@
 	    src="{{ STATIC_URL }}bootstrap-3.0.3/dist/js/bootstrap.min.js"></script>
     <script type="text/javascript"
 	    src="{{ STATIC_URL }}bootstrap-switch.min.js"></script>
+    <script type="text/javascript"
+	    src="{{ STATIC_URL }}tinymce-4.0.16/tinymce.min.js"></script>
     <script src="{{ STATIC_URL }}angular-1.2.7/angular.js"></script>
     <script src="{{ STATIC_URL }}angular-1.2.7/angular-animate.js"></script>
     <script src="{{ STATIC_URL }}angular-1.2.7/angular-resource.js"></script>
@@ -100,6 +98,7 @@
     <script src="//cdnjs.cloudflare.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
     <script src="//cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.0.3/js/bootstrap.min.js"></script>
     <script src="//cdnjs.cloudflare.com/ajax/libs/bootstrap-switch/2.0.1/js/bootstrap-switch.min.js"></script>
+    <script src="//tinymce.cachefly.net/4.0/tinymce.min.js"></script>
     <!-- Angular and its modules -->
     <script src="//ajax.googleapis.com/ajax/libs/angularjs/1.2.7/angular.min.js"></script>
     <script src="//ajax.googleapis.com/ajax/libs/angularjs/1.2.7/angular-animate.min.js"></script>
@@ -129,7 +128,6 @@
     {% else %}
       <script src="{{ STATIC_URL }}orgwolf-min.js"></script>
     {% endif %}
-    {% include 'aloha.html' %}
     <script type="text/javascript">
     // Page specific persona setup
     persona_user = {% if request.user.is_authenticated %}"{{ request.user.username }}"{% else %}null{% endif %};

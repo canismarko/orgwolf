@@ -101,10 +101,11 @@ class HTMLEscaper(HTMLParser):
     ALLOWED_TAGS = ['h1', 'h2', 'h3', 'h4', 'h5', 'h6',
                     'b', 'i', 'del', 'sup', 'sub',
                     'ul', 'ol', 'li',
-                    'div', 'p', 'hr', 'a', 'br',
+                    'div', 'p', 'span', 'hr', 'a', 'br',
                     'table', 'tbody', 'tr', 'td', 'th',
-                    'caption', 'pre',
+                    'caption', 'pre', 'img',
                     ]
+    ALLOWED_ATTRS = ['style', 'href', 'src', 'alt', 'width', 'height']
     def __init__(self, white_tags=None):
         HTMLParser.__init__(self)
         self.found = False
@@ -117,7 +118,13 @@ class HTMLEscaper(HTMLParser):
         return self._cleaned
     def handle_starttag(self, tag, attrs):
         self.found = True
-        new_string = '<' + tag + '>'
+        new_string = '<' + tag
+        # Remove forbidden attributes
+        for attr in attrs:
+            if attr[0] in self.ALLOWED_ATTRS:
+                new_string += ' {0}="{1}"'.format(attr[0], attr[1])
+        new_string += '>'
+        # Escape forbidden tags
         if not tag in self.ALLOWED_TAGS:
             new_string = escape(new_string)
         self._cleaned += new_string
