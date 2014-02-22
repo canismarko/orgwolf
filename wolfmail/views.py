@@ -45,15 +45,17 @@ class MessageView(APIView):
     """
     RESTFUL API for interacting with wolfmail.models.Message objects.
     """
-    # @method_decorator(login_required)
-    # def dispatch(self, *args, **kwargs):
-    #     return super(MessageView, self).dispatch(*args, **kwargs)
-
     def get_queryset(self, request):
         data = request.GET.copy()
-        if data.get('now', False):
-            data.pop('now')
-            data['rcvd_date__lte'] = dt.datetime.now()
+        # convert filter by rcvd_date__lte to proper datetime object
+        rcvd_date = False
+        if data.get('rcvd_date__lte', False):
+            rcvd_date = data.pop('rcvd_date__lte')[0]
+            data['rcvd_date__lte'] = dt.datetime.combine(
+                dt.datetime.strptime(rcvd_date[0:10], '%Y-%m-%d'),
+                dt.time(23, 59, 59, tzinfo=get_current_timezone())
+            )
+        # Check for user authentication status
         if request.user.is_anonymous():
             qs = Message.objects.none()
         else:
@@ -109,8 +111,6 @@ class MessageView(APIView):
         return Response(r)
 
     def post(self, request, pk):
-        # data = JSONParser().parse(request.DATA.dict())
-        # msg = Message(**data)
         data = request.DATA.dict()
         data['rcvd_date'] = dt.datetime.now(get_current_timezone())
         data['owner'] = request.user

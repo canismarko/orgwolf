@@ -1,10 +1,3 @@
-"""
-This file demonstrates writing tests using the unittest module. These will pass
-when you run "manage.py test".
-
-Replace this with more appropriate tests for your application.
-"""
-
 import datetime as dt
 import json
 import pytz
@@ -187,6 +180,21 @@ class MessageAPI(TestCase):
             'DFRD'
         )
 
+    def test_inbox_date_edge_cases(self):
+        """
+        Make sure that the view correctly handles dates where timezone
+        details may become important.
+        """
+        msg = Message.objects.get(pk=1)
+        msg.rcvd_date = dt.datetime(2014, 2, 22, 19, 7, 4, tzinfo=pytz.utc)
+        msg.save()
+        response = self.client.get(self.url, {'in_inbox': True,
+                                              'rcvd_date__lte': '2014-02-22'})
+        r = json.loads(response.content)
+        self.assertIn(
+            msg.pk,
+            [x['id'] for x in r]
+        )
 
     def test_filter_inbox_by_date(self):
         """

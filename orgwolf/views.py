@@ -18,7 +18,7 @@
 #######################################################################
 
 from __future__ import unicode_literals, print_function, absolute_import
-from datetime import datetime
+import datetime as dt
 import json
 import urllib
 
@@ -54,8 +54,8 @@ def new_user(request):
     if request.method == 'POST':
         # Validate and create new user
         data = request.POST.copy()
-        data['last_login'] = data.get('last_login', datetime.now())
-        data['date_joined'] = data.get('date_joined', datetime.now())
+        data['last_login'] = data.get('last_login', dt.datetime.now())
+        data['date_joined'] = data.get('date_joined', dt.datetime.now())
         data['home'] = data.get('home', 'projects')
         new_user_form = RegistrationForm(data)
         if new_user_form.is_valid():
@@ -93,6 +93,7 @@ class FeedbackView(APIView):
                       owner=User.objects.get(pk=1),
                       sender=request.user.get_username())
         msg.save()
+        msg = Message.objects.get(pk=msg.pk)
         return Response({})
 
 

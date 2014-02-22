@@ -141,11 +141,12 @@ owMain.controller(
 		{type: 'POST',
 		 data: data,
 		 complete: function() {
-		     owWaitIndicator.end_wait('quickcapture');
+		     $scope.$apply( function() {
+			 owWaitIndicator.end_wait('quickcapture');
+		     });
 		 },
 		 success: function() {
 		     $textbox.val('');
-		     owWaitIndicator.start_wait('medium', 'get-messages');
 		     $rootScope.$emit('refresh_messages');
 		 },
 		 error: function(jqXHR, status, error) {

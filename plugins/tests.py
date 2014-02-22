@@ -23,6 +23,7 @@ from __future__ import unicode_literals
 import datetime as dt
 
 from django.test import TestCase
+import pytz
 
 from gtd.models import Node, TodoState
 from orgwolf.models import OrgWolfUser as User
@@ -215,7 +216,7 @@ class BaseMessageHandlerTest(TestCase):
         message = Message()
         message.owner = User.objects.get(pk=1)
         message.subject = 'ordinary message'
-        message.rcvd_date = dt.datetime.now()
+        message.rcvd_date = dt.datetime.now(pytz.utc)
         message.save()
         handler = BaseMessageHandler(message)
         node = handler.create_node()
