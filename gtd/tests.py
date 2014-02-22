@@ -163,6 +163,13 @@ class NodeManagers(TestCase):
             ordered=False
         )
 
+    def test_get_collections(self):
+        """Test that <Node>.get_deescendants() etc... returns a NodeQuerySet"""
+        node = Node.objects.get(pk=1)
+        self.assertEqual(
+            node.get_descendants().__class__.__name__,
+            'NodeQuerySet'
+        )
 
 class NodeArchive(TestCase):
     fixtures = ['test-users.json', 'gtd-test.json', 'gtd-env.json']
@@ -178,6 +185,18 @@ class NodeArchive(TestCase):
         node = Node.objects.get(pk=11)
         self.assertTrue(node.todo_state.closed)
         self.assertTrue(node.archived)
+
+    def test_keep_node_with_text(self):
+        """If a Node is closed but has text, don't archive"""
+        node = Node.objects.get(pk=11)
+        done = TodoState.objects.get(abbreviation='DONE')
+        node.todo_state = done
+        node.text = 'Some text, yo.'
+        node.auto_update = True
+        node.save()
+        node = Node.objects.get(pk=11)
+        self.assertTrue(node.todo_state.closed)
+        self.assertFalse(node.archived)
 
 
 class RepeatingNodeTest(TestCase):

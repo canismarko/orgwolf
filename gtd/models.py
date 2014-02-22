@@ -735,7 +735,7 @@ def node_repeat(sender, **kwargs):
                 new = original + timedelta(days=(number*7))
             elif unit == 'm': # Months
                 month = ((original.month + number -1 ) % 12) + 1
-                # Make sure we're not setting Sep 31st of other non-dates
+                # Make sure we're not setting Sep 31st or other non-dates
                 if month in (4, 6, 9, 11) and original.day == 31:
                     day = 30
                 elif month == 2 and original.day > 28:
@@ -799,14 +799,20 @@ def node_repeat(sender, **kwargs):
 
 @receiver(signals.pre_save, sender=Node)
 def auto_archive(sender, **kwargs):
-    """pre_save receiver that archives the node if it's being closed"""
+    """
+    pre_save receiver that archives the node if it's being closed
+    and doesn't have any content the user might want to reference.
+    """
     if not kwargs['raw']:
         instance = kwargs['instance']
+        # Determine if this node should be checked
         status = (
             instance.pk and
             getattr(instance.todo_state, 'closed', False) and
-            instance.auto_update
+            instance.auto_update and
+            not instance.text
         )
+        # Only retrieve the old node if the updated node should be archived
         if status:
             old_node = Node.objects.get(pk=instance.pk)
             if not getattr(old_node.todo_state, 'closed', False):
