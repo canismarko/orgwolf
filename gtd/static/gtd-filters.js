@@ -104,27 +104,6 @@ owFilters.filter('order', ['$sce', function($sce) {
 }]);
 
 /*************************************************
-* Filter that creates a link to the list item's
-* tree root heading.
-*
-**************************************************/
-owFilters.filter('root_cell', ['$sce', function($sce) {
-    return function(obj) {
-	var parent, s;
-	s = '';
-	parent = obj.workspace.parents.get({tree_id: obj.fields.tree_id,
-					    level: 0});
-	if ( parent ) {
-	    // s += '<a href="/gtd/lists/parent' + parent.pk + '/">';
-	    s += '<a>';
-	    s += parent.fields.title + '</a>';
-	}
-	s = $sce.trustAsHtml(s);
-	return s;
-    };
-}]);
-
-/*************************************************
 * Filter that displays the deadline for a heading
 *
 **************************************************/

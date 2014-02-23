@@ -121,10 +121,8 @@ describe('filters in gtd-filters.js', function() {
 	});
     });
 
-    describe('the "root_cell" filter', function() {
-    });
-
     describe('the "deadline_str" filter', function() {
+
     });
 });
 
