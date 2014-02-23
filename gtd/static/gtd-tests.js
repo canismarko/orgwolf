@@ -122,7 +122,45 @@ describe('filters in gtd-filters.js', function() {
     });
 
     describe('the "deadline_str" filter', function() {
-
+	var deadline_strFilter, today, heading, due_date;
+	beforeEach(inject(function(_deadline_strFilter_) {
+	    deadline_strFilter = _deadline_strFilter_;
+	    today = new Date();
+	    due_date = new Date();
+	}));
+	it('returns "" for a heading without a due date', function() {
+	    heading = {fields: {deadline_date: null}};
+	    expect(deadline_strFilter(heading)).toEqual('');
+	});
+	it('describes a heading due in the future', function() {
+	    due_date.setDate(due_date.getDate() + 2);
+	    due_date = due_date.toISOString().slice(0, 10);
+	    heading = {fields: {deadline_date: due_date}};
+	    expect(deadline_strFilter(heading)).toEqual('Due in 2 days');
+	});
+	it('describes a heading due in the past', function() {
+	    due_date.setDate(due_date.getDate() - 2);
+	    due_date = due_date.toISOString().slice(0, 10);
+	    heading = {fields: {deadline_date: due_date}};
+	    expect(deadline_strFilter(heading)).toEqual('Due 2 days ago');
+	});
+	it('identifies a heading due today', function() {
+	    due_date = today.toISOString().slice(0, 10);
+	    heading = {fields: {deadline_date: due_date}};
+	    expect(deadline_strFilter(heading)).toEqual('Due today');
+	});
+	it('identifies a heading due tomorrow', function() {
+	    due_date.setDate(due_date.getDate() + 1);
+	    due_date = due_date.toISOString().slice(0, 10);
+	    heading = {fields: {deadline_date: due_date}};
+	    expect(deadline_strFilter(heading)).toEqual('Due tomorrow');
+	});
+	it('identifies a heading due yesterday', function() {
+	    due_date.setDate(due_date.getDate() - 1);
+	    due_date = due_date.toISOString().slice(0, 10);
+	    heading = {fields: {deadline_date: due_date}};
+	    expect(deadline_strFilter(heading)).toEqual('Due yesterday');
+	});
     });
 });
 
