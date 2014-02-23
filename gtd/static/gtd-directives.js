@@ -185,7 +185,7 @@ owDirectives.directive('owEditable', ['$resource', '$rootScope', '$timeout', 'ow
 	$text = element.find('.edit-text');
 	$save = element.find('#edit-save');
 	// Scroll so element is in view
-	$('body').animate({scrollTop: element.offset().top - 27}, '500');
+	$('html').animate({scrollTop: element.offset().top - 27}, '500');
 	// Focus on the title field
 	element.find('#title').focus();
 	// Event handlers for the editable dialog

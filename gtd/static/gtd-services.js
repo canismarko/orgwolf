@@ -22,13 +22,10 @@ owServices.factory('owWaitIndicator', ['$rootScope', function($rootScope) {
 	    'medium': [],
 	},
 	start_wait: function(listName, name) {
-	    console.log('started ' + name);
 	    obj.waitLists[listName].push(name);
 	},
 	end_wait: function(listName, name) {
 	    // First check if the user specified all options or set defaults
-	    console.log('finished ' + listName);
-	    console.log(obj.waitLists)
 	    var lists, i;
 	    lists = obj.waitLists[listName];
 	    if (lists === undefined) {

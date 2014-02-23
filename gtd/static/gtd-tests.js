@@ -16,9 +16,9 @@ beforeEach(function() {
 });
 
 describe('filters in gtd-filters.js', function() {
+    beforeEach(module('owFilters'))
     describe('the "is_target" filter', function () {
 	var is_targetFilter;
-	beforeEach(module('owFilters'))
 	beforeEach(inject(function(_is_targetFilter_) {
     	    is_targetFilter = _is_targetFilter_
 	}));
@@ -45,7 +45,6 @@ describe('filters in gtd-filters.js', function() {
 
     describe('the "style" filter', function() {
 	var styleFilter;
-	beforeEach(module('owFilters'));
 	beforeEach(inject(function(_styleFilter_) {
 	    styleFilter = _styleFilter_;
 	}));
@@ -89,6 +88,37 @@ describe('filters in gtd-filters.js', function() {
     });
 
     describe('the "order" filter', function() {
+	var orderFilter;
+	beforeEach(inject(function(_orderFilter_) {
+	    orderFilter = _orderFilter_;
+	}));
+	it('sorts by criterion', function() {
+	    unsorted_data = [{'key': 'bravo'}, {'key': 'alpha'},
+			     {'key': 'delta'}, {'key': 'charlie'}];
+	    sorted_data = [{'key': 'alpha'}, {'key': 'bravo'},
+			     {'key': 'charlie'}, {'key': 'delta'}];
+	    expect(orderFilter(unsorted_data, 'key')).toEqual(sorted_data);
+	});
+	describe('when passed the \'list\' option', function() {
+	    it('puts nodes in deadline order', function() {
+		unsorted_data = [{'deadline_date': '2014-01-02'},
+				 {'deadline_date': '2013-12-20'},
+				 {'deadline_date': '2013-12-26'}];
+		sorted_data = [{'deadline_date': '2013-12-20'},
+			       {'deadline_date': '2013-12-26'},
+			       {'deadline_date': '2014-01-02'}];
+		expect(orderFilter(unsorted_data, 'list')).toEqual(sorted_data);
+	    });
+	    it('puts nodes without a deadline at the end', function() {
+		unsorted_data = [{'deadline_date': null},
+				 {'deadline_date': '2013-12-26'},
+				 {'deadline_date': '2014-01-02'}];
+		sorted_data = [{'deadline_date': '2013-12-26'},
+			       {'deadline_date': '2014-01-02'},
+			       {'deadline_date': null}];
+		expect(orderFilter(unsorted_data, 'list')).toEqual(sorted_data);
+	    });
+	});
     });
 
     describe('the "root_cell" filter', function() {
