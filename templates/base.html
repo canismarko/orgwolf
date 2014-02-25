@@ -171,6 +171,18 @@
     {% endif %}
   </head>
   <body ow-logged-in="{{ request.user.is_authenticated }}">
+
+    <!-- Boxes display results of actions -->
+    {% verbatim %}
+    <div class="notifications" ng-if="notifications.length > 0">
+      <div class="notification alert-{{ msg.cls }}"
+	   ng-repeat="msg in notifications">
+	{{ msg.msg }}
+      </div>
+    </div>
+    {% endverbatim %}
+
+    <!-- Navigation bar -->
     {% block nav %}
     <nav class="navbar navbar-default" role="navigation">
       <div class="navbar-header">
@@ -301,16 +313,6 @@
 	     src="{{ STATIC_URL }}/ajax-loader.gif"></img>
       </div>
     </div>
-
-    <!-- Boxes display results of actions -->
-    {% verbatim %}
-    <div class="notifications">
-      <div class="notification alert-{{ msg.cls }}"
-	   ng-repeat="msg in notifications">
-	{{ msg.msg }}
-      </div>
-    </div>
-    {% endverbatim %}
 
     <!-- <button class="btn btn-default" ng-click="notify('hello, all', 'info')">Notify!</button> -->
     <!-- <button class="btn btn-default" ng-click="notify('world', 'danger')">Notify!</button> -->

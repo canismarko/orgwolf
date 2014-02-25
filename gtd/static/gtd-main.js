@@ -91,14 +91,15 @@ owMain.run(['$rootScope', '$resource', function($rootScope, $resource) {
 **************************************************/
 owMain.run(['$rootScope', function($rootScope) {
     var NOTIFY_TIMEOUT, key;
+    key = 1;
     NOTIFY_TIMEOUT = 4000;
     $rootScope.notifications = [];
     $rootScope.notify = function(msg, cls) {
 	console.log(msg);
-	key = key + 1;
 	$rootScope.notifications.push({pk: key,
 					msg: msg,
 					cls: cls});
+	key = key + 1;
 	/* Clear the message after NOTIFY_TIMEOUT */
 	setTimeout(function() {
 	    $rootScope.$apply(function() {
