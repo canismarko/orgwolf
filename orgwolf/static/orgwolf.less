@@ -70,6 +70,14 @@
     filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='@colora', endColorstr='@colorb', GradientType=0);
 }
 
+/* Things that are dimmed until the user hovers over them */
+.auto-dim {
+    .opacify(15);
+}
+.auto-undim {
+    .opacify(100);
+}
+
 /* Search box */
 .form-search {
     margin-bottom: 15px;
@@ -171,14 +179,13 @@ dd.todo
 	}
     }
     .action-buttons {
-	.opacify(15);
 	.btn-labels {
 	    display: none;
 	}
     }
     &:hover {
 	background-color: @gray-lighter !important;
-	.action-buttons,.filter-button {
+	.filter-button {
 	    .opacify(100);
 	}
     }
@@ -204,27 +211,108 @@ dd.todo
 /* Outline tree of headings in project view */
 #outline-appliance {
     .container;
+    #show-all
+    {
+	span {
+	    .glyphicon;
+	    .glyphicon-eye-close;
+	}
+	&.active span {
+	    .glyphicon-eye-open;
+	}
+    }
     .outline {
 	margin-left: 14px;
 	margin-top: 20px;
 	margin-bottom: 50px;
+	.archived-indicator {
+	    margin-left: 25px;
+	    cursor: pointer;
+	}
+	.details {
+	    color: black;
+	    margin-left: 30px;
+	    display: none;
+	}
+	.ow-text {
+	    .well;
+	}
+	.ow-text,.edit-text
+	{
+	    h1 {
+		font-size: 24px;
+	    }
+	    h2 {
+		font-size: 22px;
+	    }
+	    h3 {
+		font-size: 20px;
+	    }
+	    h4 {
+		font-size: 18px;
+	    }
+	    h5 {
+		font-size: 14px;
+	    }
+	    h6 {
+		font-size: 12px;
+	    }
+	}
 	.heading {
-	    /* padding-left: 14px; */
 	    padding-right: 8px;
 	    overflow: hidden;
-	    > .details {
-		color: black;
+	}
+	/* If the content/children should be presented to the user */
+	.heading.open {
+	    padding-top: 3px;
+	    > .ow-hoverable span.twisty {
+		.rotate(90deg);
 	    }
 	    > .details {
-		margin-left: 30px;
+		display: block;
 	    }
+	}
+	/* Special formatting for top level headings */
+	> .heading > .ow-hoverable {
+	    color: @primary;
+	    font-size: 105%;
 	}
 	.ow-hoverable {
 	    padding-left: 7px;
 	    border-radius: 5px;
-	    &[ow-level="0"] {
-		color: @primary;
-		font-size: 105%;
+	    /* Icons for action buttons */
+	    .tag {
+		.label;
+		.label-default;
+	    }
+	    .action-buttons {
+		.auto-dim;
+		button {
+		}
+		span {
+		    .glyphicon;
+		    &.edit-icon { .glyphicon-edit; }
+		    &.archive-icon { .glyphicon-eye-close; }
+		    &.list-icon {	.glyphicon-list; }
+		    &.new-icon { .glyphicon-plus; }
+		}
+	    }
+	    &:hover .action-buttons{
+		.auto-undim;
+	    }
+	    /* Twisty icon based on expandability */
+	    .twisty {
+		.glyphicon;
+		.glyphicon-chevron-right;
+	    }
+	    &.expandable .twisty {
+		.opacify(100);
+	    }
+	    &.not-expandable .twisty {
+		.opacify(0);
+	    }
+	    &.lazy-expandable .twisty {
+		.opacify(75);
 	    }
 	    &[ow-target="ancestor"] {
 		background: rgb(252, 240, 176); /* yellow */
@@ -232,17 +320,22 @@ dd.todo
 	    &[ow-target="yes"] {
 		background: rgb(223, 240, 216); /* green */
 	    }
+	    .repeat-icon {
+		.glyphicon;
+		.glyphicon-repeat;
+	    }
+	}
+	.ow-hoverable[archived="true"] {
+	    .archive-btn {
+		.glyphicon-eye-open;
+	    }
 	}
     }
-}
+} /* End css for #outline-appliance */
 
 .pointer, .add-heading, .todo-state, .todo-option
 {
     cursor: pointer;
-}
-#show-all-label
-{
-    margin-left: 4px;
 }
 #sort-field,#list-filters {
     select, {
@@ -257,33 +350,14 @@ dd.todo
 {
     cursor: pointer;
 }
-/* Twisty icon for outline nodes */
-.twisty[expandable='undefined'] {
-    .opacify(75);
-}
-.twisty[expandable='true'] {
-    .opacify(100);
-}
-.twisty[expandable='false'] {
-    .opacify(0);
-}
-
 
 .hidden {
     height: 0px;
 }
-.heading.open {
-    padding-top: 3px;
-    > .ow-hoverable > i {
-    	.rotate(90deg);
-    }
-}
 /* Text styles for various statuses */
-.ow-hoverable,.todo-state {
-    &[archived="true"] {
-	font-style: italic;
-	.opacify(80);
-    }
+.ow-hoverable[archived="true"],.todo-state,.archived-indicator {
+    font-style: italic;
+    .opacify(80);
 }
 .priority-A {
     font-weight: bold;
@@ -382,35 +456,14 @@ input,textarea {
 }
 
 /* Text associated with a node */
-.ow-text {
-    background: rgb(240, 240, 240);
-    padding: 5px;
-    border-radius: 10px;
-    hr {
-	border-top-color: gray;
-    }
-}
-.ow-text,.edit-text
-{
-    h1 {
-	font-size: 24px;
-    }
-    h2 {
-	font-size: 22px;
-    }
-    h3 {
-	font-size: 20px;
-    }
-    h4 {
-	font-size: 18px;
-    }
-    h5 {
-	font-size: 14px;
-    }
-    h6 {
-	font-size: 12px;
-    }
-}
+/* .ow-text { */
+/*     background: rgb(240, 240, 240); */
+/*     padding: 5px; */
+/*     border-radius: 10px; */
+/*     hr { */
+/* 	border-top-color: gray; */
+/*     } */
+/* } */
 
 /* Next actions list */
 #gtd-list {

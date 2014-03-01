@@ -2,8 +2,8 @@
   <form novalidate class="heading-form" name="form">
     <div class="header">
       <i class="twisty glyphicon glyphicon-chevron-down" expandable="disabled"></i>
-      <span ng-if="heading.fields.title">{{heading.fields.title}}</span>
-      <span ng-if="!heading.fields.title">New Heading</span>
+      <span ng-if="heading.title">{{ heading.title }}</span>
+      <span ng-if="!heading.title">New Heading</span>
       <button class="btn btn-primary btn-sm" ng-click="save($event)"
       	      ng-disabled="form.$invalid">
 	Save
@@ -22,7 +22,7 @@
 	<div class="todo-state">
 	  <label for="todo_state">Todo State:</label>
 	  <select id="todo_state" ng-model="fields.todo_state"
-		  ng-options="state.pk as (state.fields.abbreviation + ' - ' + state.fields.display_text) for state in todo_states">
+		  ng-options="state.id as (state.abbreviation + ' - ' + state.display_text) for state in todo_states">
 	    <option value="">----------</option>
 	  </select>
 	</div>
@@ -122,7 +122,7 @@
       <div class="row">
 	<div class="edit-text-container">
 	  <label>Addition information:</label>
-	  <div id="edit-text-{{ heading.pk }}" class="edit-text" ng-bind-html="fields.text | asHtml"></div>
+	  <div id="{{ editorId }}" class="edit-text" ng-bind-html="fields.text | asHtml"></div>
 	</div>
       </div>
     </div>

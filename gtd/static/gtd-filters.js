@@ -30,16 +30,16 @@ owFilters.filter('is_target', function() {
 });
 
 /*************************************************
-* Filter that determines object color
+* Filter that determines style of TodoState object
 *
 **************************************************/
-owFilters.filter('style', function() {
+owFilters.filter('todoStateStyle', function() {
     return function(obj) {
-	var style, c, colors, color_i;
+	var style, c;
 	style = '';
 	if (obj === null || obj === undefined) {
 	    style = null;
-	} else if ( obj.model === 'gtd.todostate' ) {
+	} else {
 	    // First decode color into rgb
 	    c = {};
 	    c.RED_OFFSET = 16; // in bits
@@ -50,24 +50,35 @@ owFilters.filter('style', function() {
 	    c.BLUE_MASK = 0x0000FF;
 	    /*jslint nomen: true*/
 	    /*jslint bitwise: true*/
-	    c.red = (obj.fields._color_rgb & c.RED_MASK) >> c.RED_OFFSET;
-	    c.green = (obj.fields._color_rgb & c.GREEN_MASK) >> c.GREEN_OFFSET;
-	    c.blue = (obj.fields._color_rgb & c.BLUE_MASK) >> c.BLUE_OFFSET;
+	    c.red = (obj._color_rgb & c.RED_MASK) >> c.RED_OFFSET;
+	    c.green = (obj._color_rgb & c.GREEN_MASK) >> c.GREEN_OFFSET;
+	    c.blue = (obj._color_rgb & c.BLUE_MASK) >> c.BLUE_OFFSET;
 	    style += 'color: rgba(' + c.red + ', ' + c.green + ', ' + c.blue;
-	    style += ', ' + obj.fields._color_alpha + '); ';
-	    if ( obj.fields.actionable ) {
+	    style += ', ' + obj._color_alpha + '); ';
+	    if ( obj.actionable ) {
 		style += 'font-weight: bold; ';
 	    }
 	    /*jslint nomen: false*/
 	    /*jslint bitwise: false*/
-	} else {// gtd.node model
-	    // Determine color based on node.rank
-	    if ( obj.fields.level > 0 ) { // Root headings style by CSS
-		colors = ['rgb(80, 0, 0)', 'rgb(0, 44, 19)',
-			  'teal', 'slateblue', 'brown'];
-		color_i = (obj.fields.level) % colors.length;
-		style += 'color: ' + colors[color_i - 1] + '; ';
-	    }
+	}
+	return style;
+    };
+});
+
+/*************************************************
+* Filter that determines style of Node object
+*
+**************************************************/
+owFilters.filter('headingStyle', function() {
+    return function(obj) {
+	var style, colors, color_i;
+	style = '';
+	// Determine color based on node.rank
+	if ( obj.level > 0 ) { // Root headings style by CSS
+	    colors = ['rgb(80, 0, 0)', 'rgb(0, 44, 19)',
+		      'teal', 'slateblue', 'brown'];
+	    color_i = (obj.level) % colors.length;
+	    style += 'color: ' + colors[color_i - 1] + '; ';
 	}
 	return style;
     };
@@ -96,6 +107,8 @@ owFilters.filter('order', ['$sce', function($sce) {
 	    deadline = $(obj).not(other).get().order_by('deadline_date');
 	    ordered = deadline;
 	    ordered = ordered.concat(other.order_by('priority'));
+	} else if ( criterion === 'none' ) {
+	    ordered = obj;
 	} else {
 	    ordered = obj.order_by(criterion);
 	}
@@ -138,3 +151,25 @@ owFilters.filter('deadline_str', ['$sce', function($sce) {
 	return str;
     };
 }]);
+
+/*************************************************
+* Filter a list (of headings) by the active scope
+*
+**************************************************/
+owFilters.filter('scope', function() {
+    return function(oldList, activeScope) {
+	var i, newList;
+	if (activeScope) {
+	    newList = [];
+	    for (i=0; i<oldList.length; i+=1) {
+		if( oldList[i].scope.indexOf(activeScope) > -1 ) {
+		    newList.push(oldList.slice(i, i+1)[0]);
+		} else {
+		}
+	    }
+	} else {
+	    newList = oldList.slice(0);
+	}
+	return newList;
+    };
+});

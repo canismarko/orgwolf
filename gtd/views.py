@@ -38,13 +38,15 @@ from django.views.generic import View
 from django.views.generic.detail import DetailView
 from rest_framework.views import APIView
 from rest_framework.response import Response
+from rest_framework import mixins, generics
 
 from gtd.forms import NodeForm
 from gtd.models import TodoState, Node, Context, Scope
 from gtd.shortcuts import (parse_url, generate_url, get_todo_abbrevs,
                            order_nodes)
 from gtd.serializers import (ContextSerializer, ScopeSerializer,
-                             NodeSerializer, NodeListSerializer)
+                             TodoStateSerializer, NodeSerializer,
+                             NodeListSerializer)
 from orgwolf import settings
 
 # Prepare logger
@@ -388,6 +390,7 @@ class NodeView(APIView):
         """
         data = request.DATA.copy()
         if pk is not None:
+            # Cannot POST if a node is specified by primary key
             return HttpResponseNotAllowed(['GET', 'PUT'])
         # Create new node
         self.node = Node()
@@ -614,21 +617,24 @@ class ProjectView(DetailView):
                                   RequestContext(request))
 
 
-class TodoStateView(View):
+class TodoStateView(mixins.ListModelMixin,
+                    mixins.RetrieveModelMixin,
+                    generics.GenericAPIView):
     """Handles RESTful retrieval of TodoState objects"""
-    def get(self, request, *args, **kwargs):
-        todo_states = TodoState.get_visible(user=request.user)
-        if request.is_ajax() or not settings.DEBUG_BAR:
-            return HttpResponse(
-                serializers.serialize('json', todo_states)
-            )
+    serializer_class = TodoStateSerializer
+    def get_object(self):
+        return TodoState.objects.get(pk=self.kwargs['pk'])
+    def get_queryset(self):
+        return TodoState.get_visible(user=self.request.user)
+    def get(self, request, pk=None, *args, **kwargs):
+        if pk:
+            return self.retrieve(request, *args, **kwargs)
         else:
-            serializers.serialize('json', todo_states)
-            # Non-ajax returns the base template to show django-debug-toolbar
-            return render_to_response('base.html',
-                                      locals(),
-                                      RequestContext(request))
-
+            return self.list(request, *args, **kwargs)
+    # def get(self, request, *args, **kwargs):
+    #     todo_states = TodoState.get_visible(user=request.user)
+    #     serializer = TodoStateSerializer(todo_states, many=True)
+    #     return Response(serializer.data)
 
 class ScopeView(APIView):
     """RESTful interaction with the gtd.Scope object"""

@@ -31,7 +31,7 @@
 	 ng-repeat-start="heading in scheduled">
       <div class="description">
 	<span ow-todo>
-	  {{ heading.todo_state.fields.abbreviation }}
+	  {{ heading.todo_state.abbreviation }}
 	</span>
 	<a href="/gtd/project/#{{ heading.pik }}-{{ heading.fields.slug }}">
 	  {{ heading.fields.title }}</a>
@@ -71,11 +71,11 @@
 	    <option value="">None</option>
     </select>
     <!-- TodoState selection checkboxes -->
-    <label class="checkbox-inline" ng-repeat="state in todo_states" style="{{ state | style }}">
-      <input type="checkbox" ow-state="{{ state.pk }}"
+    <label class="checkbox-inline" ng-repeat="state in todo_states" style="{{ state | todoStateStyle }}">
+      <input type="checkbox" ow-state="{{ state.id }}"
 	     ng-click="toggle_todo_state($event)"
-	     ng-checked="active_states.indexOf(state.pk) > -1"></input>
-	     {{ state.fields.abbreviation }}
+	     ng-checked="active_states.indexOf(state.id) > -1"></input>
+	     {{ state.abbreviation }}
     </label>
   </form>
 
@@ -105,7 +105,7 @@
        ng-hide="heading.editable">
     <div class="description">
       <span ow-todo>
-    	{{ heading.todo_state.fields.abbreviation }}
+    	{{ heading.todo_state.abbreviation }}
       </span>
       <a href="/gtd/project/#{{ heading.pk }}-{{ heading.fields.slug }}">
 	{{ heading.fields.title}}</a>

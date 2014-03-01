@@ -76,7 +76,7 @@ owMain.run(['$rootScope', '$resource', function($rootScope, $resource) {
     // Get todo states
     var TodoState, Context, Scope;
     TodoState = $resource('/gtd/todostate/');
-    $rootScope.todo_states = TodoState.query();
+    $rootScope.todoStates = TodoState.query();
     // Get list of contexts for filtering against
     Context = $resource('/gtd/context/');
     $rootScope.contexts = Context.query();
@@ -166,27 +166,26 @@ owMain.controller(
 **************************************************/
 owMain.controller(
     'nodeOutline',
-    ['$scope', '$http', '$resource', 'OldHeading', 'Heading',
+    ['$scope', '$rootScope', '$http', '$resource', '$filter', 'Heading',
      '$location', '$anchorScroll', 'owWaitIndicator',  outlineCtrl]
 );
-function outlineCtrl($scope, $http, $resource, OldHeading, Heading,
+function outlineCtrl($scope, $rootScope, $http, $resource, $filter, Heading,
 		     $location, $anchorScroll, owWaitIndicator) {
-    var TodoState, Scope, url, get_heading, Parent, Tree, parent_tree_id, parent_level, target_headings, target_id, main_headings;
+    var TodoState, Scope, url, get_heading, Parent, Tree, parent_tree_id, parent_level, target_headings, target_id, main_headings, newButton, showAllButton;
     $('.ow-active').removeClass('active');
     $('#nav-projects').addClass('active');
+    newButton = $('#add-heading');
+    showAllButton = $('#show-all');
     target_id = $location.hash().split('-')[0];
     if ( target_id ) {
-	$scope.target_heading = $resource('/gtd/node/:id/').get({id: target_id});
+	$scope.target_heading = Heading.get({id: target_id});
     }
     // modified array to hold all the tasks
-    main_headings = Heading.query({'parent_id': 0,
+    $scope.children = Heading.query({'parent_id': 0,
 				   'archived': false});
-    $scope.headings = new HeadingManager($scope);
-    $scope.children = new HeadingManager($scope);
-    $scope.headings.add(main_headings);
-    $scope.active_scope = 0;
-    $scope.sort_field = 'title';
-    $scope.sort_fields = [
+    $scope.activeScope = 0;
+    $scope.sortField = 'title';
+    $scope.sortFields = [
 	{key: 'title', display: 'Title'},
 	{key: '-title', display: 'Title (reverse)'},
 	{key: '-opened', display: 'Creation date'},
@@ -198,7 +197,7 @@ function outlineCtrl($scope, $http, $resource, OldHeading, Heading,
     } else {
 	$scope.parent_id = parseInt($scope.parent_id, 10);
     }
-    $scope.show_arx = false;
+    $rootScope.showArchived = false;
     $scope.state = 'open';
     $scope.rank = 0;
     $scope.update = function() {
@@ -223,88 +222,47 @@ function outlineCtrl($scope, $http, $resource, OldHeading, Heading,
 		}
 	    };
 	    if ( target.fields.archived ) {
-		$scope.show_arx = true;
+		$rootScope.showArchived = true;
 	    }
 	    open(target);
 	    target.editable = true;
 	});
     }
-    // Helper function that returns the heading object for a given event
-    get_heading = function(e) {
-	var $heading, heading, node_id;
-	$heading = $(e.delegateTarget).closest('.heading');
-	node_id = Number($heading.attr('node_id'));
-	heading = $scope.headings.get({pk: node_id});
-	return heading;
-    };
-    // Handlers for when a heading is clicked...
-    $scope.edit_heading = function(heading) {
-	// Edit button
-	heading.populate_children();
-	heading.editable = true;
-    };
-    $scope.archive_heading = function(heading) {
-	// Archive heading button
-	if ( heading.fields.archived ) {
-	    heading.fields.archived = false;
-	} else {
-	    heading.fields.archived = true;
-	}
-	heading.save();
-    };
-    $scope.new_heading = function(heading) {
-	// New heading button
-	var new_heading;
-	new_heading = new OldHeading(
-	    {
-		id: 0,
-		workspace: heading.workspace,
-		title: '',
-		parent: heading.pk,
-		level: heading.fields.level + 1,
-		scope: heading.fields.scope,
-	    });
-	new_heading.editable = true;
-	new_heading.expandable = 'no';
-	heading.children.add(new_heading);
-	$scope.headings.add(new_heading);
-	heading.toggle('open');
-    };
-    $scope.toggle_node = function(heading) {
-	// Default action: opening the heading
-	heading.toggle();
-    };
     // Handler for toggling archived nodes
-    $scope.show_all = function(e) {
+    $scope.showAll = function(e) {
 	var arx_headings;
-	if ( $scope.show_arx === true ) {
-	    $scope.show_arx = false;
-	} else {
-	    $scope.show_arx = true;
-	}
+	$rootScope.showArchived = !$rootScope.showArchived;
+	showAllButton.toggleClass('active');
 	// Fetch archived nodes if not cached
 	if ( ! $scope.arx_cached ) {
 	    arx_headings = Heading.query({'parent_id': 0,
 					   'archived': true});
-	    $scope.headings.add(arx_headings);
-	    $scope.headings.add(arx_headings);
+	    arx_headings.$promise.then(function() {
+		$scope.children = $scope.children.concat(arx_headings);
+	    });
 	    $scope.arx_cached = true;
 	}
+	// Broadcast to all child nodes that archived nodes should be shown
+	$scope.$broadcast('toggle-archived', $rootScope.showArchived);
     };
-    // Handler for adding a new node
-    $scope.add_heading = function(e) {
-	var new_heading;
-	new_heading = new OldHeading(
-	    {
-		id: 0,
-		workspace: $scope,
-		title: '',
-		parent: null,
-		level: 0,
-	    });
-	new_heading.editable = true;
-	$scope.headings.add(new_heading);
-	$scope.children.add(new_heading);
+    // Handler for adding a new project
+    $scope.addProject = function(e) {
+	var $off;
+	$scope.newProject = !$scope.newProject;
+	newButton.toggleClass('active');
+	$off = $scope.$on('finishEdit', function(e, newHeading) {
+	    e.stopPropagation();
+	    $scope.newProject = false;
+	    newButton.removeClass('active');
+	    if ( newHeading ) {
+		// Re-sort list then add new heading
+		$scope.sortFields.unshift({key: 'none', display: 'None'});
+		$scope.children = $filter('order')($scope.children, $scope.sortField);
+		$scope.sortField = 'none';
+		$scope.children.unshift(newHeading);
+	    }
+	    $off();
+	})
     };
 }
 
@@ -379,7 +337,7 @@ function listCtrl($sce, $scope, $resource, $location, $routeParams,
 	    }
 	));
     });
-    $scope.show_arx = true;
+    $scope.showArchived = true;
     $scope.active_scope = 0;
     // Todo state filtering
     $scope.toggle_todo_state = function(e) {

@@ -34,15 +34,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 {# Hierarchy, breadcrumb trail #}
   {{ breadcrumb_list|breadcrumbs:base_node_url }}
 
-{% verbatim %}
-<script type="text/ng-template" id="todo-state-selector">
-  <span class="todo-state" style="{{heading.todo_state | style }}"
-	rel="popover">
-	{{ heading.todo_state.fields.abbreviation }}
-	</span>
-</script>
-{% endverbatim %}
-
 <noscript>
 {# Scope tabs #}
 {% include "gtd/scope_tabs.html" %}

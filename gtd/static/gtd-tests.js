@@ -43,47 +43,45 @@ describe('filters in gtd-filters.js', function() {
 	});
     });
 
-    describe('the "style" filter', function() {
-	var styleFilter;
-	beforeEach(inject(function(_styleFilter_) {
-	    styleFilter = _styleFilter_;
+    describe('the "headingStyle" filter', function() {
+	var headingStyleFilter;
+	beforeEach(inject(function(_headingStyleFilter_) {
+	    headingStyleFilter = _headingStyleFilter_;
+	}));
+	it('determines heading color based on level', function() {
+	    lvlOneHeading = {level: 1};
+	    lvlTwoHeading = {level: 2};
+	    lvlSixHeading = {level: 6};
+	    expect(headingStyleFilter(lvlOneHeading)).toEqual('color: rgb(80, 0, 0); ');
+	    expect(headingStyleFilter(lvlTwoHeading)).toEqual('color: rgb(0, 44, 19); ');
+	    expect(headingStyleFilter(lvlSixHeading)).toEqual('color: rgb(80, 0, 0); ');
+	});
+    });
+
+    describe('the "todoStateStyle" filter', function() {
+	var todoStateStyleFilter;
+	beforeEach(inject(function(_todoStateStyleFilter_) {
+	    todoStateStyleFilter = _todoStateStyleFilter_;
 	}));
 	it('translates the todo_state\'s color', function() {
 	    colorlessState = {
-		model: 'gtd.todostate',
-		fields: {
-		    _color_rgb: 0,
-		    _color_alpha: 0,
-		}
+		_color_rgb: 0,
+		_color_alpha: 0,
 	    };
-    	    expect(styleFilter(colorlessState)).toEqual('color: rgba(0, 0, 0, 0); ');
+    	    expect(todoStateStyleFilter(colorlessState)).toEqual('color: rgba(0, 0, 0, 0); ');
 	    redState = {
-		model: 'gtd.todostate',
-		fields: {
-		    _color_rgb: 13369344,
-		    _color_alpha: 0.5,
-		}
-	    }
-    	    expect(styleFilter(redState)).toEqual('color: rgba(204, 0, 0, 0.5); ');
+		_color_rgb: 13369344,
+		_color_alpha: 0.5,
+	    };
+    	    expect(todoStateStyleFilter(redState)).toEqual('color: rgba(204, 0, 0, 0.5); ');
 	});
 	it('makes actionable todo states bold', function() {
 	    actionableState = {
-		model: 'gtd.todostate',
-		fields: {
-		    _color_rgb: 0,
-		    _color_alpha: 0,
-		    actionable: true,
-		}
-	    }
-	    expect(styleFilter(actionableState)).toMatch(/font-weight: bold;/);
-	});
-	it('determines heading color based on level', function() {
-	    lvlOneHeading = {fields: {level: 1}};
-	    lvlTwoHeading = {fields: {level: 2}};
-	    lvlSevenHeading = {fields: {level: 6}};
-	    expect(styleFilter(lvlOneHeading)).toEqual('color: rgb(80, 0, 0); ');
-	    expect(styleFilter(lvlTwoHeading)).toEqual('color: rgb(0, 44, 19); ');
-	    expect(styleFilter(lvlSevenHeading)).toEqual('color: rgb(80, 0, 0); ');
+		_color_rgb: 0,
+		_color_alpha: 0,
+		actionable: true,
+	    };
+	    expect(todoStateStyleFilter(actionableState)).toMatch(/font-weight: bold;/);
 	});
     });
 
@@ -162,6 +160,36 @@ describe('filters in gtd-filters.js', function() {
 	    expect(deadline_strFilter(heading)).toEqual('Due yesterday');
 	});
     });
+
+    describe('the scope filter', function() {
+	var dummyHeadings;
+	beforeEach(inject(function(_scopeFilter_) {
+	    scopeFilter = _scopeFilter_;
+	    dummyHeadings = [
+		{id: 1,
+		 scope: [1, 2]},
+		{id: 2,
+		 scope: [1]},
+		{id: 3,
+		 scope: []},
+		{id: 4,
+		 scope: [6]}
+	    ];
+	}));
+
+	it('filters headings based on active scope', function() {
+	    var filteredList = scopeFilter(dummyHeadings, 2);
+	    expect(filteredList.length).toBe(1);
+	    expect(JSON.stringify(filteredList[0]))
+		.toEqual(JSON.stringify( dummyHeadings[0] ));
+	});
+
+	it('allows all headings if no active scope', function() {
+	    var filteredList = scopeFilter(dummyHeadings, undefined);
+	    expect(filteredList).toEqual(dummyHeadings);
+	});
+
+    });
 });
 
 describe('directives in gtd-directives.js', function() {
@@ -204,76 +232,86 @@ describe('directives in gtd-directives.js', function() {
     });
 
     describe('the owEditable directive', function() {
-	var parentScopes;
+	var fullNode;
 	beforeEach(function() {
 	    // Mock the templateUrl lookup
 	    $templateCache.put('/static/editable.html',
 			       '<div class="editable"></div>');
-	    // Prepare the DOM element
-	    element = $compile(
-		'<div ow-editable ow-heading="heading"></div>'
-	    )($rootScope);
-	    // Fake heading for processing the directive
-	    parentScopes = [1, 2];
-	    $rootScope.heading = {
-		pk: 0,
-		get_parent: function() {
-		    // Mocked method that returns a fake parent heading
-		    return {
-			pk: 1,
-			fields: {
-			    scope: parentScopes,
-			    priority: 'A',
-			},
-		    };
-		},
-	    };
 	});
+	describe('when an existing node is being edited ([ow-heading])', function() {
+	    beforeEach(function() {
+		// Prepare the DOM element
+		element = $compile(
+		    '<div ow-editable ow-heading="heading"></div>'
+		)($rootScope);
+		// Fake heading for processing the directive
+		fullNode = {
+		    id: 2,
+		    title: 'full dummy node 1'
+		}
+		$rootScope.heading = {
+		    id: 2,
+		};
+		$httpBackend.expect('GET', '/gtd/node/2').respond(201, fullNode);
+	    });
 
-	it('inherits the parent $rootScope.scopes attribute', function() {
-	    var dummyScopes = [{pk: 1, title: 'scp 1'},
-			       {pk: 2, title: 'scp 2'}];
-	    $rootScope.scopes = dummyScopes;
-	    $rootScope.$digest();
-	    expect(element.isolateScope().scopes).toEqual(dummyScopes);
-
+	    it('retrieves the heading object from the server', function() {
+		$httpBackend.flush();
+		$rootScope.$digest();
+		expect(element.isolateScope().fields.title).toBe(fullNode.title);
+	    });
 	});
+	describe('when a new node is being created ([ow-parent])', function() {
+	    var parentScope;
+	    beforeEach(function() {
+		element = $compile(
+		    '<div ow-editable ow-parent="heading"></div>'
+		)($rootScope);
+		parentScope = [1, 2];
+		$rootScope.heading = {
+		    id: 1,
+		    title: 'Root-level node 1',
+		    scope: parentScope,
+		    priority: 'A'
+		};
+	    });
+	    it('inherits the parent $rootScope.scopes attribute', function() {
+		var dummyScopes = [{pk: 1, title: 'scp 1'},
+				   {pk: 2, title: 'scp 2'}];
+		$rootScope.scopes = dummyScopes;
+		$rootScope.$digest();
+		expect(element.isolateScope().scopes).toEqual(dummyScopes);
+	    });
 
-	it('inherites the parent $rootScope.todo_states attribute', function() {
-	    var todo_states = [{pk: 1, title: 'state 1'},
-			       {pk: 2, title: 'state 2'}];
-	    $rootScope.todo_states = todo_states;
-	    $rootScope.$digest();
-	    expect(element.isolateScope().todo_states).toEqual(todo_states);
+	    it('inherites the parent $rootScope.todo_states attribute', function() {
+		var todo_states = [{pk: 1, title: 'state 1'},
+				   {pk: 2, title: 'state 2'}];
+		$rootScope.todo_states = todo_states;
+		$rootScope.$digest();
+		expect(element.isolateScope().todo_states).toEqual(todo_states);
+	    });
+
+	    it('inherits parent\'s fields if creating a new node (priority and scope)', function() {
+		$rootScope.$digest();
+		expect(element.isolateScope().fields.scope).toEqual(parentScope);
+		expect(element.isolateScope().fields.priority).toEqual('A');
+	    });
 	});
+	describe('when a new root-level node is being created (no attrs)', function() {
+	    beforeEach(function() {
+		element = $compile('<div ow-editable></div>')($rootScope);
+	    });
+	    it('creates a new root-level node', function() {
+		// Simulate the $scope the is return from get_parent() for a top-level node
+		$rootScope.$digest();
+		expect(element.isolateScope().fields.scope).toEqual([]);
+		expect(element.isolateScope().fields.priority).toEqual('B');
+	    });
 
-	it('inherits parent\' fields if creating a new node (priority and scope)', function() {
-	    $rootScope.$digest();
-	    expect(element.isolateScope().fields.scope).toEqual(parentScopes);
-	    expect(element.isolateScope().fields.priority).toEqual('A');
-	});
-
-
-	it('creates a new root-level node', function() {
-	    // Simulate the $scope the is return from get_parent() for a top-level node
-	    $rootScope.heading.get_parent = function() {
-		return {active_scope: 0};
-	    };
-	    $rootScope.$digest();
-	    expect(element.isolateScope().fields.scope).toEqual([]);
-	    expect(element.isolateScope().fields.priority).toEqual('B');
-	});
-
-	it('hits the API if node\'s pk is greater than 0', function() {
-	    $rootScope.heading.pk = 1;
-	    // Define the expected http expectation
-	    $httpBackend.expectGET('/gtd/node/1').respond(201, '');
-	    $rootScope.$digest();
-	});
-
-	it('adds the ow-editable class (for animations)', function() {
-	    $rootScope.$digest();
-	    expect(element).toHaveClass('ow-editable');
+	    it('adds the ow-editable class (for animations)', function() {
+		$rootScope.$digest();
+		expect(element).toHaveClass('ow-editable');
+	    });
 	});
     });
 
@@ -286,9 +324,66 @@ describe('directives in gtd-directives.js', function() {
     describe('the owListRow directive', function() {
     });
 
+    describe('the owTwisty directive', function() {
+	beforeEach(function() {
+	    $rootScope.heading = {
+		id: 1,
+		lft: 1,
+		rght: 2,
+		tag_string: ''
+	    }
+	    $templateCache.put('/static/outline-twisty.html',
+			       '<div class="ow-hoverable"></div>');
+	    // Prepare the DOM element
+	    element = $compile(
+		'<div ow-twisty ow-heading="heading"></div>'
+	    )($rootScope);;
+	});
+	describe('expandability DOM classes', function() {
+	    it('identifies an unexapndable heading', function() {
+		$rootScope.$digest();
+		expect(element.find('.ow-hoverable')).toHaveClass('not-expandable');
+	    });
+	    it('identifies a heading with children as lazy-expandable', function() {
+		$rootScope.text = '';
+		$rootScope.heading.lft = 1;
+		$rootScope.heading.rght = 4;
+		$rootScope.$digest();
+		expect(element.find('.ow-hoverable')).toHaveClass('lazy-expandable');
+	    });
+	    it('identifies a heading with text as expandable', function() {
+		$rootScope.heading.lft = 1;
+		$rootScope.heading.rght = 4; // Catch .lazy-expandable bug
+		$rootScope.heading.text = 'Batman rules!';
+		$rootScope.$digest();
+		expect(element.find('.ow-hoverable')).toHaveClass('expandable');
+	    });
+	});
+	it('processes the tag_string', function() {
+	    var tags = ['home', 'work'];
+	    $rootScope.heading.tag_string = ':home:work:';
+	    $rootScope.$digest();
+	    expect(element.isolateScope().tags).toEqual(tags);
+	});
+	it('gets children when opened', function() {
+	    var children = [
+		{id: 2},
+		{id: 3},
+	    ];
+	    $httpBackend.expect('GET', '/gtd/node?parent_id=1')
+		.respond(201, children);
+	    $rootScope.$digest();
+	    element.isolateScope().toggleHeading();
+	    $httpBackend.flush();
+	    $rootScope.$digest();
+	    expect(JSON.stringify(element.isolateScope().children))
+		.toEqual(JSON.stringify(children));
+	    expect(element.isolateScope().loadedChildren).toBe(true);
+	});
+    });
 }); // End of gtd-directives.js tests
 
-describe('owServices in gtd-services.js', function() {
+describe('services in gtd-services.js', function() {
     beforeEach(module('owServices'));
     describe('the owWaitIndicator service', function() {
 	var waiting, $rootScope;
@@ -326,6 +421,50 @@ describe('owServices in gtd-services.js', function() {
 	    waitIndicator.end_wait('tests');
 	    expect(waitIndicator.waitLists['quick'].length).toEqual(0);
 	    expect(waitIndicator.waitLists['medium'].length).toEqual(0);
+	});
+    });
+
+    describe('the Heading service', function() {
+	var Heading, heading, $rootScope, $httpBackend;
+	beforeEach(inject(function($injector) {
+	    // Mock the global todo_states
+	    $rootScope = $injector.get('$rootScope');
+	    $httpBackend = $injector.get('$httpBackend');
+	    $rootScope.todoStates = [
+		{
+		    id: 1,
+		},
+		{
+		    id: 2,
+		}
+	    ];
+	    // Create a mocked Heading object
+	    $httpBackend.when('GET', '/gtd/node/1')
+	    	.respond(201, {
+		    id: 1,
+		    title: 'test heading 1'
+		});
+	    Heading = $injector.get('Heading');
+	    heading = Heading.get({id: 1});
+	    $httpBackend.flush();
+	}));
+
+	afterEach(function() {
+            $httpBackend.verifyNoOutstandingExpectation();
+	});
+
+	it('uses the PUT method to update', function() {
+	    $httpBackend.expect('PUT', '/gtd/node/1')
+		.respond(201, {});
+	    heading.$update();
+	    $httpBackend.flush();
+	});
+
+	it('uses the POST method to update', function() {
+	    $httpBackend.expect('POST', '/gtd/node')
+		.respond(201, {});
+	    Heading.create({title: 'hello'});
+	    $httpBackend.flush();
 	});
     });
 }); // End of gtd-services.js tests

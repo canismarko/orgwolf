@@ -712,6 +712,49 @@ class ScopeAPI(TestCase):
         )
 
 
+class TodoStateAPI(TestCase):
+    fixtures = ['gtd-env.json', 'test-users.json']
+    def setUp(self):
+        self.user = User.objects.get(username='test')
+        self.assertTrue(
+            self.client.login(
+                username=self.user.username, password='secret')
+        )
+
+    def test_get_uses_serializer(self):
+        """
+        Ensure that the API provides the full collection of relevant
+        todo states.
+        """
+        response = self.client.get(reverse('todo_state'))
+        r = json.loads(response.content)
+        self.assertIn(
+            'id',
+            r[0].keys()
+        )
+
+    def test_create_color(self):
+        state = TodoState.objects.get(pk=1)
+        color_obj = state.color()
+        color_dict = {
+            'red': color_obj.red,
+            'green': color_obj.green,
+            'blue': color_obj.blue,
+            'alpha': color_obj.get_alpha()
+        }
+        response = self.client.get(
+            reverse('todo_state', kwargs={'pk': state.pk}))
+        r = json.loads(response.content)
+        self.assertIn(
+            'color',
+            r.keys()
+        )
+        self.assertEqual(
+            r['color'],
+            color_dict
+        )
+
+
 class ContextAPI(TestCase):
     fixtures = ['test-users.json', 'gtd-test.json', 'gtd-env.json']
 

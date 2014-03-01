@@ -21,12 +21,24 @@ from __future__ import unicode_literals, absolute_import, print_function
 
 from rest_framework import serializers
 
-from gtd.models import Context, Scope, Node
+from gtd.models import Context, Scope, Node, TodoState
 
 
 class ScopeSerializer(serializers.ModelSerializer):
     class Meta:
         model = Scope
+
+
+class TodoStateSerializer(serializers.ModelSerializer):
+    color = serializers.SerializerMethodField('get_color')
+
+    def get_color(self, obj):
+        """Convert the _color_* fields into an integer color dictionary."""
+        return obj.color().as_dict()
+
+    class Meta:
+        model = TodoState
+        fields = ['id', 'color', 'actionable', 'abbreviation', 'closed', 'display_text']
 
 
 class ContextSerializer(serializers.ModelSerializer):

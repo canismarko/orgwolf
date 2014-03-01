@@ -125,45 +125,39 @@ owDirectives.directive('owCurrentDate', function() {
 });
 
 /*************************************************
-* Directive that lets a user edit a node
+* Directive that lets a user edit a node.
+* The ow-heading attr indicates that heading is
+* being edited. The ow-parent attr indicates this
+* is a new child.
 *
 **************************************************/
-owDirectives.directive('owEditable', ['$resource', '$rootScope', '$timeout', 'owWaitIndicator', function($resource, $rootScope, $timeout, owWaitIndicator) {
+owDirectives.directive('owEditable', ['$resource', '$rootScope', '$timeout', 'owWaitIndicator', 'Heading', function($resource, $rootScope, $timeout, owWaitIndicator, Heading) {
     // Directive creates the pieces that allow the user to edit a heading
     function link(scope, element, attrs) {
-	var defaultParent, $text, heading, $save, Heading, heading_id, parent, editorId;
-	// Default fields for when creating a new "top-level" node.
-	// (Additional fields must also be set to the model below)
-	defaultParent = {
-	    fields: {
-		priority: 'B',
-		scope: [],
-	    }
-	};
+	var defaultParent, $text, heading, $save, heading_id, parent, editorId;
 	scope.scopes = $rootScope.scopes;
 	scope.todo_states = $rootScope.todo_states;
+	scope.fields = {};
 	element.addClass('ow-editable'); // For animations
-	// Get the full fieldset if node is specified
-	if ( scope.heading.pk > 0 ) {
+	// Set some initial field values
+	if ( scope.heading ) {
+	    // Get the full fieldset if an existing heading is being edited
 	    // Initiate wait indicator
 	    owWaitIndicator.start_wait('quick', 'editable');
 	    // Retrieve object from API
-	    Heading = $resource('/gtd/node/:id/', {id: '@id'});
-	    scope.fields = Heading.get({id: scope.heading.pk});
+	    scope.fields = Heading.get({id: scope.heading.id});
 	    scope.fields.$promise.then(function() {
 		owWaitIndicator.end_wait('editable');
 	    });
+	} else if ( scope.parent ) {
+	    // Else inherit some attributes from parent...
+	    scope.fields.scope = scope.parent.scope;
+	    scope.fields.priority = scope.parent.priority;
+	    scope.fields.parent = scope.parent.id;
 	} else {
-	    // Else inherit some attributes from parents...
-	    parent = scope.heading.get_parent();
 	    // ...or use defaults if no parent
-	    if ( !parent.pk ) {
-		parent = defaultParent;
-	    }
-	    scope.fields = {
-		scope: parent.fields.scope,
-		priority: parent.fields.priority
-	    };
+	    scope.fields.scope = [];
+	    scope.fields.priority = 'B';
 	}
 	scope.priorities = [{sym: 'A',
 			     display: 'A - high'},
@@ -190,33 +184,40 @@ owDirectives.directive('owEditable', ['$resource', '$rootScope', '$timeout', 'ow
 	element.find('#title').focus();
 	// Event handlers for the editable dialog
 	scope.save = function(e) {
-	    // Tasks for when the user saves the edited heading
-	    scope.fields.text = tinyMCE.get(editorId).getContent();
-	    $.extend(scope.heading.fields, scope.fields);
-	    scope.heading.update();
-	    scope.heading.editable = false;
-	    scope.heading.save();
+	    var newHeading;
+	    // When the user saves the edited heading
+	    scope.fields.text = tinyMCE.get(scope.editorId).getContent();
+	    if ( scope.heading ) {
+		newHeading = Heading.update(scope.fields);
+	    } else {
+		newHeading = Heading.create(scope.fields);
+	    }
+	    newHeading.$promise.then(function() {
+		scope.$emit('finishEdit', newHeading);
+	    });
 	};
 	scope.cancel_edit = function(e) {
-	    // Handler for if an editable dialog is closed without saving
-	    scope.heading.editable = false;
-	    if ( scope.heading.pk === 0 ) {
-		scope.heading.pk = -1;
-	    }
+	    scope.$emit('finishEdit');
 	};
+	// Attach TinyMCE4 WYSIWYG editor
+	if( scope.heading ) {
+	    scope.editorId = 'edit-text-' + scope.heading.id;
+	} else if ( scope.parent ) {
+	    scope.editorId = 'edit-text-child-' + scope.parent.id;
+	} else {
+	    scope.editorId = 'edit-text-new-project';
+	}
 	$timeout(function() {
-	    // Attach TinyMCE4 WYSIWYG editor
-	    editorId = 'edit-text-' + scope.heading.pk;
 	    tinymce.init({
 		plugins: 'charmap fullscreen hr image link table textcolor',
 		toolbar: 'undo redo | fullscreen | styleselect | bold italic forecolor backcolor superscript subscript | alignleft aligncenter alignright alignjustify | bullist numlist outdent indent | hr link image',
 		tools: 'inserttable',
 		mode: 'exact',
-		elements: editorId,
+		elements: scope.editorId,
 	    });
 	    // Set TinyMCE4 content if source data changes
 	    scope.$watch('fields.text', function(newText) {
-		var editor = tinyMCE.get(editorId);
+		var editor = tinyMCE.get(scope.editorId);
 		if (newText && editor) {
 		    editor.setContent(newText);
 		}
@@ -227,6 +228,7 @@ owDirectives.directive('owEditable', ['$resource', '$rootScope', '$timeout', 'ow
 	link: link,
 	scope: {
 	    heading: '=owHeading',
+	    parent: '=owParent',
 	},
 	require: '?ngModel',
 	templateUrl: '/static/editable.html'
@@ -237,26 +239,31 @@ owDirectives.directive('owEditable', ['$resource', '$rootScope', '$timeout', 'ow
 * Directive that shows a list of Scopes tabs
 *
 **************************************************/
-owDirectives.directive('owScopeTabs', ['$resource', function($resource) {
+owDirectives.directive('owScopeTabs', ['$resource', '$rootScope', function($resource, $rootScope) {
     // Directive creates tabs that allow a user to filter by scope
     function link(scope, element, attrs) {
-	var Scope;
+	scope.owScopes = $rootScope.scopes;
+	var owScope;
 	// Set initial active scope tab
-	element.find('[scope_id="'+scope.active_scope+'"]').addClass('active');
-	scope.change_scope = function(ow_scope) {
-	    var new_scope;
+	element.find('[scope_id="'+scope.activeScope+'"]').addClass('active');
+	scope.changeScope = function(newScope) {
+	    console.log(newScope);
 	    // User has requested a different scope
-	    element.find('[scope_id="'+scope.active_scope+'"]').removeClass('active');
-	    if ( ow_scope ) {
-		scope.active_scope = ow_scope.id;
+	    element.find('[scope_id="'+scope.activeScope+'"]').removeClass('active');
+	    scope.activeScope = newScope ? newScope.id : 0;
+	    if ( newScope ) {
+	    	scope.activeScope = newScope.id;
 	    } else {
-		scope.active_scope = 0;
+	    	scope.activeScope = 0;
 	    }
-	    element.find('[scope_id="'+scope.active_scope+'"]').addClass('active');
+	    element.find('[scope_id="'+scope.activeScope+'"]').addClass('active');
 	};
     }
     return {
 	link: link,
+	scope: {
+	    activeScope: '=activeScope'
+	},
 	templateUrl: '/static/scope-tabs.html'
     };
 }]);
@@ -265,17 +272,17 @@ owDirectives.directive('owScopeTabs', ['$resource', function($resource) {
 * Directive that lets a user change the todo state
 * with a popover menu
 **************************************************/
-owDirectives.directive('owTodo', ['$filter', function($filter) {
+owDirectives.directive('owTodo', ['todoStateStyleFilter', function(styleFilter) {
     // Directive creates the pieces that allow the user to edit a heading
     function link(scope, element, attrs) {
-	var i, $span, $popover, $options, state, content, s, style;
-	style = $filter('style');
+	var i, $span, $popover, $options, state, content, s;
+	// style = $filter('style');
 	scope.heading.todo_popover = false;
 	$span = element.children('span');
 	if (scope.heading.todo_state) {
 	    $span.tooltip({
 		delay: {show:1000, hide: 100},
-		title: scope.heading.todo_state.fields.display_text,
+		title: scope.heading.todo_state.display_text,
 		placement: 'right'
 	    });
 	}
@@ -293,12 +300,12 @@ owDirectives.directive('owTodo', ['$filter', function($filter) {
 	    content += '>[None]</div>\n';
 	    for ( i=0; i<scope.todo_states.length; i+=1 ) {
 		state = scope.todo_states[i];
-		s = '<div class="todo-option" todo_id="' + state.pk + '"';
-		s += 'style="' + style(state) + '"';
-		if ( state.pk === scope.heading.fields.todo_state ) {
+		s = '<div class="todo-option" todo_id="' + state.id + '"';
+		s += 'style="' + styleFilter(state) + '"';
+		if ( state.id === scope.heading.fields.todo_state ) {
 		    s += ' selected';
 		}
-		s += '>' + state.fields.abbreviation + '</div>\n';
+		s += '>' + state.abbreviation + '</div>\n';
 		content += s;
 	    }
 	    $target.popover({
@@ -338,6 +345,117 @@ owDirectives.directive('owTodo', ['$filter', function($filter) {
     return {
 	link: link,
 	templateUrl: '/static/todo-state-selector.html',
+    };
+}]);
+
+/*************************************************
+* Directive forms a node in an outline (and takes
+* care of any child nodes).
+*
+**************************************************/
+owDirectives.directive('owTwisty', ['$compile', '$rootScope', 'Heading', function($compile, $rootScope, Heading) {
+    function link(scope, element, attrs) {
+	var hoverable, get_children;
+	scope.isEditing = false;
+	scope.loadedChildren = false;
+	scope.isOpen = false;
+	scope.showArchived = $rootScope.showArchived;
+	scope.$on('toggle-archived', function(e, newState) {
+	    scope.showArchived = newState;
+	});
+	element.addClass('heading');
+	hoverable = element.children('.ow-hoverable');
+	// Process tag_string into tags
+	scope.tags = scope.heading.tag_string.slice(1, -1).split(':');
+	// Test for expandability
+	if (scope.heading.text) {
+	    hoverable.addClass('expandable');
+	} else if ((scope.heading.rght - scope.heading.lft) > 1) {
+	    // MPTT fields suggest expandability
+	    hoverable.addClass('lazy-expandable');
+	} else {
+	    hoverable.addClass('not-expandable');
+	}
+	// Handlers for clicking on the heading (may be overridden by components)
+	scope.toggleHeading = function(newState) {
+	    if ( newState === 'open' ) {
+		scope.isOpen = true;
+		element.addClass('open');
+	    } else {
+		element.toggleClass('open');
+		scope.isOpen = !scope.isOpen;
+	    }
+	    // Get children if not already done
+	    if (!scope.loadedChildren) {
+		scope.children = Heading.query({parent_id: scope.heading.id});
+		scope.children.$promise.then(function() {
+		    scope.numArchived = scope.children.filter_by({archived: true}).length;
+		    scope.loadedChildren = true
+		});
+	    }
+	};
+	// Hanlder for clicking the "edit" button
+	scope.edit = function(e) {
+	    var $off;
+	    e.stopPropagation();
+	    scope.isEditing = true;
+	    $off = scope.$on('finishEdit', function(event, newHeading) {
+		// Emitted by the owEditable when hiding the editable
+		scope.isEditing = false;
+		event.stopPropagation();
+		if ( newHeading ) {
+		    // Update existing heading
+		    angular.extend(scope.heading, newHeading);
+		}
+		$off();
+	    });
+	};
+	// Handler for clicking the "new child" button
+	scope.createChild = function(e) {
+	    var $off;
+	    e.stopPropagation();
+	    scope.toggleHeading('open');
+	    scope.newChild = true;
+	    $off = scope.$on('finishEdit', function(event, newHeading) {
+		// Emitted by the owEditable when hiding the editable
+		scope.newChild = false;
+		event.stopPropagation();
+		if ( newHeading ) {
+		    // Add new child to the list
+		    scope.children.push(newHeading);
+		}
+		$off();
+	    });
+	};
+	// Handler for toggling the visibility (archive) of a node
+	scope.archive = function(e) {
+	    e.stopPropagation();
+	    scope.heading.archived = !scope.heading.archived;
+	    scope.heading.$update();
+	};
+    }
+    // Special compile function that avoids a recursive dead-lock
+    function compile(tElement, tAttr) {
+        var contents = tElement.contents().remove();
+        var compiledContents;
+        return function(scope, iElement, iAttr) {
+            if(!compiledContents) {
+                compiledContents = $compile(contents);
+            }
+            compiledContents(scope, function(clone, scope) {
+                iElement.append(clone);
+		// Now call our own link function
+		link(scope, iElement, iAttr);
+            });
+        };
+    }
+    return {
+	// link: link,
+	compile: compile,
+	templateUrl: '/static/outline-twisty.html',
+	scope: {
+	    heading: '=owHeading',
+	},
     };
 }]);
 
