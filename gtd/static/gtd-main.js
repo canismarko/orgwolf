@@ -290,8 +290,6 @@ function listCtrl($sce, $scope, $resource, $location, $routeParams,
 	$scope.active_context = null;
     }
     $scope.show_list = true;
-    // No-op to prevent function-not-found error
-    $scope.update = function() {};
     // See if there's a parent specified
     parent_id = $location.search().parent;
     if ( parent_id ) {
@@ -324,21 +322,25 @@ function listCtrl($sce, $scope, $resource, $location, $routeParams,
     $scope.list_params.todo_state = $scope.active_states;
     // Receiver that retrieves new GTD list from server
     $scope.$on('refresh_list', function() {
-	$scope.headings = new HeadingManager($scope);
-	$scope.headings.add(GtdList.query($scope.list_params));
-	$scope.headings.add(Upcoming.query());
+	$scope.headings = [];
+	GtdList.query($scope.list_params).$promise.then(function(actions) {
+	    $scope.headings = $scope.headings.concat(actions);
+	});
+	Upcoming.query($scope.list_params).$promise.then(function(upcoming) {
+	    $scope.headings = $scope.headings.concat(upcoming);
+	    console.log($scope.headings);
+	});
 	// Get list of hard scheduled commitments
-	$scope.scheduled = new HeadingManager($scope);
-	$scope.scheduled.add(Heading.query(
+	$scope.scheduled = Heading.query(
 	    {
 		field_group: 'actions_list',
 		scheduled_date__lte: $scope.currentDate.ow_date(),
 		todo_state: 8
 	    }
-	));
+	);
     });
     $scope.showArchived = true;
-    $scope.active_scope = 0;
+    $scope.activeScope = 0;
     // Todo state filtering
     $scope.toggle_todo_state = function(e) {
 	var i, state_pk, state, state_url;

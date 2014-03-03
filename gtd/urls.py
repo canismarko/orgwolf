@@ -25,8 +25,8 @@ from django.contrib import admin
 admin.autodiscover()
 
 from gtd.views import (NodeView, TodoStateView,
-                       ScopeView, NodeListView, ContextView,
-                       ProjectView, UpcomingNodeView)
+                       ScopeView, ContextView,
+                       ProjectView)
 
 urlpatterns = patterns(
     'gtd.views',
@@ -34,20 +34,14 @@ urlpatterns = patterns(
 
     url(r'^node/search/', 'node_search'),
 
-    # New API urls below
     url(r'^project(?:/(?P<pk>\d+))?(?:/(?P<slug>[-\w\d]*))?(:?/(?P<show_all>all/))?/?$',
         ProjectView.as_view(),
         name='projects'
     ),
 
-    url(r'^node(?:/(?P<pk>\d+))?/?$',
+    url(r'^nodes(?:/(?P<pk>\d+))?/?$',
         NodeView.as_view(),
         name='node_object'
-    ),
-
-    url(r'^node/upcoming/?',
-        UpcomingNodeView.as_view(),
-        name='upcoming'
     ),
 
     url(r'^todostate(?:/(?P<pk>\d+))?/?$',
@@ -58,11 +52,6 @@ urlpatterns = patterns(
     url(r'^actions(?:/(?P<context_id>\d+)/(?P<context_slug>[-A-Za-z0-9_]+))?/?$',
         'actions',
         name='list_display'
-    ),
-
-    url(r'^lists(?:/(?P<context_id>\d+)/(?P<context_slug>[-A-Za-z0-9_]+))?/?$',
-        NodeListView.as_view(),
-        name='list_api'
     ),
 
     url(r'^scope/?$',

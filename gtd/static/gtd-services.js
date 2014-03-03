@@ -98,59 +98,59 @@ function HeadingFactory($resource, $http) {
 	//     }
 	// }
     );
-    // Methods added on to the resource object
-    res.prototype.is_visible = function($scope) {
-	// Determine if the heading is visible in the current view
-	var visibility, showall, active_states, active_tree, is_active, is_recent, is_closed, deadline_days, deadline_limit, is_due;
-	// Set defaults
-	if (typeof $scope === 'undefined') {
-	    $scope = {};
-	}
-	visibility = true; // Assume visible unless we think otherwise
-	// Check if this heading is within the active scope
-	if ( this.workspace.active_scope ) {
-	    if ( this.fields.scope.indexOf(this.workspace.active_scope) === -1 ) {
-		visibility = false;
-	    }
-	}
-	// Check if heading is in active todo-states
-	active_states = this.workspace.active_states;
-	if ( typeof active_states !== 'undefined' ) {
-	    is_active = true;
-	    if ( active_states.indexOf(this.fields.todo_state) === -1 ) {
-		is_active = false;
-	    }
-	    // If recently then show anyway
-	    is_recent = this.just_modified || false;
-	    // If deadline is coming up then show anyway
-	    is_closed = this.todo_state ? this.todo_state.closed : false;
-	    if ( this.fields.deadline_date && !is_closed ) {
-		deadline_days = 7;
-		deadline_limit = deadline_days * 24 * 60 * 60 * 1000;
-		is_due = ( this.due() < deadline_limit );
-	    } else {
-		is_due = false;
-	    }
-	    if ( !is_active && !is_due && !is_recent ) {
-		visibility = false;
-	    }
-	}
-	// Check archived state
-	if ( this.fields.archived && ! $scope.show_arx ) {
-	    visibility = false;
-	}
-	// Check if parent is open
-	if ( this.parent_obj && !this.workspace.show_list ) {
-	    if ( this.parent_obj.state !== 'open' ) {
-		visibility = false;
-	    }
-	}
-	// An un-saved heading is not visible
-	if ( this.pk === -1 ) {
-	    visibility = false;
-	}
-	return visibility;
-    };
+    // // Methods added on to the resource object
+    // res.prototype.is_visible = function($scope) {
+    // 	// Determine if the heading is visible in the current view
+    // 	var visibility, showall, active_states, active_tree, is_active, is_recent, is_closed, deadline_days, deadline_limit, is_due;
+    // 	// Set defaults
+    // 	if (typeof $scope === 'undefined') {
+    // 	    $scope = {};
+    // 	}
+    // 	visibility = true; // Assume visible unless we think otherwise
+    // 	// Check if this heading is within the active scope
+    // 	if ( this.workspace.active_scope ) {
+    // 	    if ( this.fields.scope.indexOf(this.workspace.active_scope) === -1 ) {
+    // 		visibility = false;
+    // 	    }
+    // 	}
+    // 	// Check if heading is in active todo-states
+    // 	active_states = this.workspace.active_states;
+    // 	if ( typeof active_states !== 'undefined' ) {
+    // 	    is_active = true;
+    // 	    if ( active_states.indexOf(this.fields.todo_state) === -1 ) {
+    // 		is_active = false;
+    // 	    }
+    // 	    // If recently then show anyway
+    // 	    is_recent = this.just_modified || false;
+    // 	    // If deadline is coming up then show anyway
+    // 	    is_closed = this.todo_state ? this.todo_state.closed : false;
+    // 	    if ( this.fields.deadline_date && !is_closed ) {
+    // 		deadline_days = 7;
+    // 		deadline_limit = deadline_days * 24 * 60 * 60 * 1000;
+    // 		is_due = ( this.due() < deadline_limit );
+    // 	    } else {
+    // 		is_due = false;
+    // 	    }
+    // 	    if ( !is_active && !is_due && !is_recent ) {
+    // 		visibility = false;
+    // 	    }
+    // 	}
+    // 	// Check archived state
+    // 	if ( this.fields.archived && ! $scope.show_arx ) {
+    // 	    visibility = false;
+    // 	}
+    // 	// Check if parent is open
+    // 	if ( this.parent_obj && !this.workspace.show_list ) {
+    // 	    if ( this.parent_obj.state !== 'open' ) {
+    // 		visibility = false;
+    // 	    }
+    // 	}
+    // 	// An un-saved heading is not visible
+    // 	if ( this.pk === -1 ) {
+    // 	    visibility = false;
+    // 	}
+    // 	return visibility;
+    // };
     return res;
 }
 
@@ -165,15 +165,8 @@ function UpcomingFactory($resource, $http) {
 	'/gtd/node/upcoming/',
 	{},
 	{
-	    'query': {
-		method: 'GET',
-		transformResponse: $http.defaults.transformResponse.concat([
-		    function (data, headersGetter) {
-			return data;
-		    }
-		]),
-		isArray: true
-	    },
+	    'update': {method: 'PUT'},
+	    'create': {method: 'POST'},
 	}
     );
     return res;
@@ -191,20 +184,8 @@ function GtdListFactory($resource, $http) {
     var res = $resource(
 	'/gtd/lists/', {},
 	{
-	    'query': {
-		method: 'GET',
-		transformResponse: $http.defaults.transformResponse.concat([
-		    function (data, headersGetter) {
-			var i, new_heading;
-			for ( i=0; i<data.length; i+=1 ) {
-			    new_heading = new GtdHeading(data[i]);
-			    jQuery.extend(data[i], new_heading);
-			}
-			return data;
-		    }
-		]),
-		isArray: true
-	    },
+	    'update': {method: 'PUT'},
+	    'create': {method: 'POST'},
 	}
     );
     return res;

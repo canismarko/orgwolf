@@ -1,4 +1,5 @@
 // Jasmine tests for Getting Things Done javascript (mostly angular)
+var customMatchers, $rootScope;
 var customMatchers = {
     toHaveClass: function(utils) {
 	// Checks that element has HTML class ala jQuery().hasClass()
@@ -65,20 +66,32 @@ describe('filters in gtd-filters.js', function() {
 	}));
 	it('translates the todo_state\'s color', function() {
 	    colorlessState = {
-		_color_rgb: 0,
-		_color_alpha: 0,
+		color: {
+		    red: 0,
+		    green: 0,
+		    blue: 0,
+		    alpha: 0
+		}
 	    };
     	    expect(todoStateStyleFilter(colorlessState)).toEqual('color: rgba(0, 0, 0, 0); ');
 	    redState = {
-		_color_rgb: 13369344,
-		_color_alpha: 0.5,
+		color: {
+		    red: 204,
+		    green: 0,
+		    blue: 0,
+		    alpha: 0.5
+		}
 	    };
     	    expect(todoStateStyleFilter(redState)).toEqual('color: rgba(204, 0, 0, 0.5); ');
 	});
 	it('makes actionable todo states bold', function() {
 	    actionableState = {
-		_color_rgb: 0,
-		_color_alpha: 0,
+		color: {
+		    red: 0,
+		    green: 0,
+		    blue: 0,
+		    alpha: 0
+		},
 		actionable: true,
 	    };
 	    expect(todoStateStyleFilter(actionableState)).toMatch(/font-weight: bold;/);
@@ -123,8 +136,8 @@ describe('filters in gtd-filters.js', function() {
 	var deadline_strFilter, today, heading, due_date;
 	beforeEach(inject(function(_deadline_strFilter_) {
 	    deadline_strFilter = _deadline_strFilter_;
-	    today = new Date();
-	    due_date = new Date();
+	    today = new Date(2014, 02, 21, 19, 1, 1);
+	    due_date = new Date(2014, 02, 21, 19, 1, 1);
 	}));
 	it('returns "" for a heading without a due date', function() {
 	    heading = {fields: {deadline_date: null}};
@@ -133,31 +146,31 @@ describe('filters in gtd-filters.js', function() {
 	it('describes a heading due in the future', function() {
 	    due_date.setDate(due_date.getDate() + 2);
 	    due_date = due_date.toISOString().slice(0, 10);
-	    heading = {fields: {deadline_date: due_date}};
-	    expect(deadline_strFilter(heading)).toEqual('Due in 2 days');
+	    heading = {deadline_date: due_date};
+	    expect(deadline_strFilter(heading, today)).toEqual('Due in 2 days');
 	});
 	it('describes a heading due in the past', function() {
 	    due_date.setDate(due_date.getDate() - 2);
 	    due_date = due_date.toISOString().slice(0, 10);
-	    heading = {fields: {deadline_date: due_date}};
-	    expect(deadline_strFilter(heading)).toEqual('Due 2 days ago');
+	    heading = {deadline_date: due_date};
+	    expect(deadline_strFilter(heading, today)).toEqual('Due 2 days ago');
 	});
 	it('identifies a heading due today', function() {
 	    due_date = today.toISOString().slice(0, 10);
-	    heading = {fields: {deadline_date: due_date}};
-	    expect(deadline_strFilter(heading)).toEqual('Due today');
+	    heading = {deadline_date: due_date};
+	    expect(deadline_strFilter(heading, today)).toEqual('Due today');
 	});
 	it('identifies a heading due tomorrow', function() {
 	    due_date.setDate(due_date.getDate() + 1);
 	    due_date = due_date.toISOString().slice(0, 10);
-	    heading = {fields: {deadline_date: due_date}};
-	    expect(deadline_strFilter(heading)).toEqual('Due tomorrow');
+	    heading = {deadline_date: due_date};
+	    expect(deadline_strFilter(heading, today)).toEqual('Due tomorrow');
 	});
 	it('identifies a heading due yesterday', function() {
 	    due_date.setDate(due_date.getDate() - 1);
 	    due_date = due_date.toISOString().slice(0, 10);
-	    heading = {fields: {deadline_date: due_date}};
-	    expect(deadline_strFilter(heading)).toEqual('Due yesterday');
+	    heading = {deadline_date: due_date};
+	    expect(deadline_strFilter(heading, today)).toEqual('Due yesterday');
 	});
     });
 
@@ -194,10 +207,31 @@ describe('filters in gtd-filters.js', function() {
 
 describe('directives in gtd-directives.js', function() {
     var $compile, $rootScope, $httpBackend, $templateCache, element;
-    beforeEach(module('owDirectives'));
+    beforeEach(module('owDirectives', 'owFilters', 'owServices'));
     beforeEach(inject(function($injector) {
 	$compile = $injector.get('$compile');
 	$rootScope = $injector.get('$rootScope');
+	// Mock global data (scopes, todo-states, etc)
+	$rootScope.todoStates = [
+	    {
+		id: 1,
+		color: {
+		    red: 0,
+		    green: 0,
+		    blue: 0,
+		    alpha: 0,
+		}
+	    },
+	    {
+		id: 2,
+		color: {
+		    red: 0,
+		    green: 0,
+		    blue: 0,
+		    alpha: 0,
+		}
+	    }
+	];
 	$httpBackend = $injector.get('$httpBackend');
 	$templateCache = $injector.get('$templateCache');
     }));
@@ -284,11 +318,11 @@ describe('directives in gtd-directives.js', function() {
 	    });
 
 	    it('inherites the parent $rootScope.todo_states attribute', function() {
-		var todo_states = [{pk: 1, title: 'state 1'},
+		var todoStates = [{pk: 1, title: 'state 1'},
 				   {pk: 2, title: 'state 2'}];
-		$rootScope.todo_states = todo_states;
+		$rootScope.todoStates = todoStates;
 		$rootScope.$digest();
-		expect(element.isolateScope().todo_states).toEqual(todo_states);
+		expect(element.isolateScope().todoStates).toEqual(todoStates);
 	    });
 
 	    it('inherits parent\'s fields if creating a new node (priority and scope)', function() {
@@ -319,6 +353,56 @@ describe('directives in gtd-directives.js', function() {
     });
 
     describe('the owTodo directive', function() {
+	var $scope;
+	beforeEach(function() {
+	    $rootScope.heading = {
+		todo_state: 1,
+		// $update: function() {},
+	    };
+	    $templateCache.put('/static/todo-state-selector.html',
+			       '<select ng-model="todoStateId"></div>');
+	    // Prepare the DOM element
+	    element = $compile(
+		'<div ow-todo ow-heading="heading"></div>'
+	    )($rootScope);
+	});
+
+	it('does not call heading.$update during initialization', function() {
+	    var hitApi = false;
+	    $rootScope.heading.$update = function() {
+		hitApi = true;
+	    };
+	    $rootScope.$digest();
+	    expect(hitApi).toEqual(false);
+	});
+
+	it('sets scope.todoState during initialization', function() {
+	    var scope;
+	    $rootScope.$digest();
+	    scope = element.isolateScope();
+	    expect(scope.todoStateId)
+		.toEqual($rootScope.heading.todo_state);
+	    expect(scope.todoState).toBe($rootScope.todoStates.get({id: 1}));
+	});
+
+	it('updates models when todoStateId changes', function() {
+	    var scope;
+	    $rootScope.heading.$update = function() {};
+	    $rootScope.$digest();
+	    scope = element.isolateScope();
+	    scope.todoStateId = 2;
+	    $rootScope.$digest();
+	    expect(scope.todoState).toBe($rootScope.todoStates.get({id: 2}));
+	    expect(scope.todoStateId).toEqual(2);
+	    expect($rootScope.heading.todo_state).toEqual(2);
+	});
+
+	it('responds to changes in $parent.heading.todo_state', function() {
+	    $rootScope.$digest();
+	    $rootScope.heading.todo_state = 2;
+	    $rootScope.$digest();
+	    expect(element.isolateScope().todoStateId).toEqual(2);
+	});
     });
 
     describe('the owListRow directive', function() {
@@ -427,17 +511,7 @@ describe('services in gtd-services.js', function() {
     describe('the Heading service', function() {
 	var Heading, heading, $rootScope, $httpBackend;
 	beforeEach(inject(function($injector) {
-	    // Mock the global todo_states
-	    $rootScope = $injector.get('$rootScope');
 	    $httpBackend = $injector.get('$httpBackend');
-	    $rootScope.todoStates = [
-		{
-		    id: 1,
-		},
-		{
-		    id: 2,
-		}
-	    ];
 	    // Create a mocked Heading object
 	    $httpBackend.when('GET', '/gtd/node/1')
 	    	.respond(201, {

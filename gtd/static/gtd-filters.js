@@ -40,26 +40,13 @@ owFilters.filter('todoStateStyle', function() {
 	if (obj === null || obj === undefined) {
 	    style = null;
 	} else {
-	    // First decode color into rgb
-	    c = {};
-	    c.RED_OFFSET = 16; // in bits
-	    c.GREEN_OFFSET = 8;
-	    c.BLUE_OFFSET = 0;
-	    c.RED_MASK = 0xFF0000;
-	    c.GREEN_MASK = 0x00FF00;
-	    c.BLUE_MASK = 0x0000FF;
-	    /*jslint nomen: true*/
-	    /*jslint bitwise: true*/
-	    c.red = (obj._color_rgb & c.RED_MASK) >> c.RED_OFFSET;
-	    c.green = (obj._color_rgb & c.GREEN_MASK) >> c.GREEN_OFFSET;
-	    c.blue = (obj._color_rgb & c.BLUE_MASK) >> c.BLUE_OFFSET;
-	    style += 'color: rgba(' + c.red + ', ' + c.green + ', ' + c.blue;
-	    style += ', ' + obj._color_alpha + '); ';
+	    /* Set text stylings */
+	    c = obj.color;
+	    style += 'color: rgba(' + c.red + ', ' + c.green + ', ';
+	    style += c.blue + ', ' + c.alpha + '); ';
 	    if ( obj.actionable ) {
 		style += 'font-weight: bold; ';
 	    }
-	    /*jslint nomen: false*/
-	    /*jslint bitwise: false*/
 	}
 	return style;
     };
@@ -121,13 +108,15 @@ owFilters.filter('order', ['$sce', function($sce) {
 *
 **************************************************/
 owFilters.filter('deadline_str', ['$sce', function($sce) {
-    return function(heading) {
+    return function(heading, today) {
 	var str, date, today, time_delta, day_delta;
+	if ( typeof today === 'undefined' ) {
+	    today = new Date()
+	}
 	str = '';
-	if ( heading.fields.deadline_date ) {
+	if ( heading.deadline_date ) {
 	    str = 'Due ';
-	    date = new Date(heading.fields.deadline_date + 'T12:00:00');
-	    today = new Date();
+	    date = new Date(heading.deadline_date + 'T12:00:00');
 	    today.setHours(12, 0, 0, 0);
 	    time_delta = date.getTime() - today.getTime();
 	    day_delta = Math.ceil(time_delta / (1000 * 3600 * 24));

@@ -30,23 +30,23 @@
     <div ow-list-row class="heading-row" ng-hide="heading.editable"
 	 ng-repeat-start="heading in scheduled">
       <div class="description">
-	<span ow-todo>
+	<span ow-todo ow-heading="heading">
 	  {{ heading.todo_state.abbreviation }}
 	</span>
-	<a href="/gtd/project/#{{ heading.pik }}-{{ heading.fields.slug }}">
-	  {{ heading.fields.title }}</a>
-	<span ng-if="heading.fields.repeats"
+	<a href="/gtd/project/#{{ heading.id }}-{{ heading.slug }}">
+	  {{ heading.title }}</a>
+	<span ng-if="heading.repeats"
     	      class="glyphicon glyphicon-repeat"></span>
       </div>
       <div class="buttons">
     	<span ng-include="'action-buttons'"></span>
       </div>
       <div class="deadline">
-	{{ heading.fields.scheduled_date }} {{ heading.fields.scheduled_time }}
+	{{ heading.scheduled_date }} {{ heading.scheduled_time }}
       </div>
       <div class="project">
 	<span class="collapse-label">Project:</span>
-    	{{ heading.fields.root_name }}
+    	{{ heading.root_name }}
     	<button class="filter-button btn" ng-click="filter_parent(heading)">
 	  <span class="icon"></span>
 	  Filter
@@ -104,12 +104,12 @@
        ng-show="heading.is_visible()"
        ng-hide="heading.editable">
     <div class="description">
-      <span ow-todo>
-    	{{ heading.todo_state.abbreviation }}
+      <span ow-todo ow-heading="heading">
+    	{{ todoState.abbreviation }}
       </span>
-      <a href="/gtd/project/#{{ heading.pk }}-{{ heading.fields.slug }}">
-	{{ heading.fields.title}}</a>
-      <span ng-if="heading.fields.repeats"
+      <a href="/gtd/project/#{{ heading.id }}-{{ heading.slug }}">
+	{{ heading.title}}</a>
+      <span ng-if="heading.repeats"
     	    class="glyphicon glyphicon-repeat"></span>
     </div>
     <div class="buttons">
@@ -120,7 +120,7 @@
     </div>
     <div class="project">
       <span class="collapse-label">Project:</span>
-      {{ heading.fields.root_name }}
+      {{ heading.root_name }}
       <button class="filter-button btn" ng-click="filter_parent(heading)">
 	<span class="icon"></span>
 	Filter

@@ -1,4 +1,17 @@
-<span class="todo-state" style="{{heading.todo_state | todoStateStyle }}"
-      rel="popover">
-  {{ heading.todo_state.abbreviation }}
+<span ng-if="heading.read_only" style="{{ todoState | todoStateStyle }}"
+      class="read-only non-opening">
+  {{ todoState.abbreviation }}
 </span>
+<select class="todo-select non-opening"
+	ng-if="todoStateId && !heading.read_only" ng-model="$parent.todoStateId"
+	style="{{ todoState | todoStateStyle }}">
+  <option value="" class="default">None</option>
+</select>
+<!-- <span style="{{ todoState | todoStateStyle }}" -->
+<!--       ng-click="togglePicker($event)" -->
+<!--       ng-hide="showPicker"> -->
+<!--   {{ todoState.abbreviation }} -->
+<!-- </span> -->
+<!-- Remaining options set during directive's compile function -->
+<!-- <option ng-repeat="state in todoStates" ng-click="changeState($event, state)" -->
+<!-- 	  style="{{ state | todoStateStyle }}">{{ state.abbreviation }}</option> -->

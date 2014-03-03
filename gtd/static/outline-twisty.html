@@ -1,20 +1,20 @@
 <!-- Recursive template for tree of Tasks -->
 <div class="ow-hoverable"
      ng-show="!isEditing"
-     ng-click="toggleHeading()"
+     ng-click="toggleHeading($event)"
      style="{{ heading | headingStyle }}"
      archived="{{ heading.archived }}">
   <span class="twisty"></span>
-  <span ow-todo></span>
+  <span ow-todo ow-heading="heading"></span>
   <span ng-if="heading.fields.repeats"
 	class="repeat-icon"></span>
-  <div class="clickable ow-title">
+  <div class="ow-title">
     {{heading.title}}
   </div>
 
   <span ng-repeat="tag in tags" class="tag">{{ tag }}</span>
 
-  <div class="action-buttons btn-group btn-group-xs">
+  <div class="action-buttons btn-group btn-group-xs non-opening">
 
     <button type="button" class="btn btn-default"
 	    ng-disabled="{{ heading.read_only }}"
@@ -26,7 +26,9 @@
       <span class="list-icon" title="View As List"></span>
     </a>
 
-    <button type="button" class="btn btn-default" ng-click="archive($event)">
+    <button type="button" class="btn btn-default"
+	    ng-click="archive($event)"
+	    ng-disabled="{{ heading.read_only }}">
       <span class="archive-icon" title="Archive/Unarchive"></span>
     </button>
 
@@ -35,6 +37,8 @@
       <span class="new-icon" title="New subheading"></span>
     </button>
   </div>
+  <span class="read-only-label non-opening"
+	ng-if="heading.read_only">Read-only</span>
 </div><!-- /.ow-hoverable -->
 
 <div ow-editable ng-if="isEditing" ow-heading="heading">
@@ -74,6 +78,6 @@
   <div class="archived-indicator"
        ng-show="numArchived && !showArchived && !showGlobalArchived"
        ng-click="showArchived = !showArchived">
-    ...plus {{ numArchived }} more (click to show)
+    ...plus {{ numArchived }} archived (click to show)
   </div>
 </div><!-- /.details -->

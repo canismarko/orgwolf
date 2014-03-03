@@ -136,7 +136,7 @@ owDirectives.directive('owEditable', ['$resource', '$rootScope', '$timeout', 'ow
     function link(scope, element, attrs) {
 	var defaultParent, $text, heading, $save, heading_id, parent, editorId;
 	scope.scopes = $rootScope.scopes;
-	scope.todo_states = $rootScope.todo_states;
+	scope.todoStates = $rootScope.todoStates;
 	scope.fields = {};
 	element.addClass('ow-editable'); // For animations
 	// Set some initial field values
@@ -247,7 +247,6 @@ owDirectives.directive('owScopeTabs', ['$resource', '$rootScope', function($reso
 	// Set initial active scope tab
 	element.find('[scope_id="'+scope.activeScope+'"]').addClass('active');
 	scope.changeScope = function(newScope) {
-	    console.log(newScope);
 	    // User has requested a different scope
 	    element.find('[scope_id="'+scope.activeScope+'"]').removeClass('active');
 	    scope.activeScope = newScope ? newScope.id : 0;
@@ -272,78 +271,61 @@ owDirectives.directive('owScopeTabs', ['$resource', '$rootScope', function($reso
 * Directive that lets a user change the todo state
 * with a popover menu
 **************************************************/
-owDirectives.directive('owTodo', ['todoStateStyleFilter', function(styleFilter) {
+owDirectives.directive('owTodo', ['$rootScope', '$filter', function($rootScope, $filter) {
     // Directive creates the pieces that allow the user to edit a heading
     function link(scope, element, attrs) {
-	var i, $span, $popover, $options, state, content, s;
-	// style = $filter('style');
-	scope.heading.todo_popover = false;
-	$span = element.children('span');
-	if (scope.heading.todo_state) {
-	    $span.tooltip({
-		delay: {show:1000, hide: 100},
-		title: scope.heading.todo_state.display_text,
-		placement: 'right'
-	    });
-	}
-	function remove_popover($target) {
-	    // Remove the popover
-		element.popover('destroy');
-	}
-	function add_popover($target) {
-	    // Create and attach popover
-	    $('body').append('<div id="todo-popover"></div>');
-	    content = '<div class="todo-option" todo_id=""';
-	    if ( scope.heading.fields.todo_state === null ) {
-		content += ' selected';
+	var i, $span, $popover, $options, state, content, s, isInitialized;
+	scope.todoStates = $rootScope.todoStates;
+	element.addClass("todo-state-widget");
+	scope.todoState = scope.todoStates.get(
+	    {id: scope.heading.todo_state});
+	scope.todoStateId = scope.heading.todo_state;
+	scope.$watch('todoStateId', function(newStateId, oldStateId) {
+	    // When the todoStateId changes (by user action)
+	    if (newStateId !== scope.heading.todo_state) {
+		scope.heading.todo_state = newStateId;
+		scope.todoState = scope.todoStates.get({id: newStateId});
+		scope.heading.auto_update = true;
+		scope.heading.$update();
 	    }
-	    content += '>[None]</div>\n';
-	    for ( i=0; i<scope.todo_states.length; i+=1 ) {
-		state = scope.todo_states[i];
-		s = '<div class="todo-option" todo_id="' + state.id + '"';
-		s += 'style="' + styleFilter(state) + '"';
-		if ( state.id === scope.heading.fields.todo_state ) {
-		    s += ' selected';
-		}
-		s += '>' + state.abbreviation + '</div>\n';
-		content += s;
-	    }
-	    $target.popover({
-		title: 'Todo State',
-		content: content,
-		html: true,
-		container: '#todo-popover'
-	    });
-	    $target.popover('show');
-	    // Bind to click events for clearing the popover
-	    $('body').on('click.todo_state', function(e) {
-		if ( ! $(e.target).hasClass('todo-state') ) {
-		    $target.popover('destroy');
-		}
-	    });
-	    // Bind to click event for todo state options
-	    $options = $('.todo-option').not('[selected]');
-	    $options.on('click.todostate', function(e) {
-		scope.$apply( function() {
-		    var new_todo_id = $(e.target).attr('todo_id');
-		    if ( new_todo_id === '' ) {
-			scope.heading.fields.todo_state = null;
-		    } else {
-			scope.heading.fields.todo_state = parseInt(new_todo_id, 10);
-		    }
-		    scope.heading.update();
-		    scope.heading.just_modified = true;
-		    scope.heading.save({ auto: true });
-		    remove_popover($target);
-		});
-	    });
-	}
-	$span.on('click', function(e) {
-	    add_popover($span);
 	});
+	scope.$watch(
+	    function() { return scope.heading.todo_state },
+	    function(newHeadingStateId) {
+		if (newHeadingStateId !== scope.todoStateId) {
+		    scope.todoState = scope.todoStates.get(
+			{id: newHeadingStateId});
+		    scope.todoStateId = newHeadingStateId;
+		}
+	    }
+	);
+	// if (scope.heading.todo_state) {
+	//     element.tooltip({
+	// 	delay: {show:1000, hide: 100},
+	// 	title: scope.heading.todo_state.display_text,
+	// 	placement: 'right'
+	//     });
+	// }
+    }
+    function compile(cElement, cAttrs) {
+	// Create the <option> element for each todoState
+	var select, i, todoStates, h, todoState;
+	todoStates = $rootScope.todoStates;
+	select = cElement.find('select');
+	for (i=0; i<todoStates.length; i+=1) {
+	    todoState = todoStates[i];
+	    h = '<option value="' + todoState.id + '" ';
+	    h += 'style="' + $filter('todoStateStyle')(todoState) + '">';
+	    h += todoState.abbreviation + '</option>';
+	    select.append(h);
+	}
+	return link;
     }
     return {
-	link: link,
+	compile: compile,
+	scope: {
+	    heading: '=owHeading'
+	},
 	templateUrl: '/static/todo-state-selector.html',
     };
 }]);
@@ -360,6 +342,14 @@ owDirectives.directive('owTwisty', ['$compile', '$rootScope', 'Heading', functio
 	scope.loadedChildren = false;
 	scope.isOpen = false;
 	scope.showArchived = $rootScope.showArchived;
+	// Get todo-states
+	if ($rootScope.todoStates) {
+	    scope.todoStates = $rootScope.todoStates;
+	} else {
+	    scope.todoStates = [];
+	}
+	scope.todoState = scope.todoStates.get(
+	    {id: scope.heading.todo_state});
 	scope.$on('toggle-archived', function(e, newState) {
 	    scope.showArchived = newState;
 	});
@@ -378,15 +368,27 @@ owDirectives.directive('owTwisty', ['$compile', '$rootScope', 'Heading', functio
 	}
 	// Handlers for clicking on the heading (may be overridden by components)
 	scope.toggleHeading = function(newState) {
+	    // First figure out which way to open
+	    if ( typeof newState === 'undefined' ) {
+		// Default action
+		newState = 'toggle';
+	    } else if ( typeof newState.target !== 'undefined' ) {
+		// User clicked on something
+		if ($(newState.target).is(':not(.non-opening)')) {
+		    newState = 'toggle';
+		} else {
+		    newState = 'none';
+		}
+	    }
 	    if ( newState === 'open' ) {
 		scope.isOpen = true;
 		element.addClass('open');
-	    } else {
+	    } else if (newState === 'toggle') {
 		element.toggleClass('open');
 		scope.isOpen = !scope.isOpen;
 	    }
 	    // Get children if not already done
-	    if (!scope.loadedChildren) {
+	    if (!scope.loadedChildren && newState !== 'none') {
 		scope.children = Heading.query({parent_id: scope.heading.id});
 		scope.children.$promise.then(function() {
 		    scope.numArchived = scope.children.filter_by({archived: true}).length;
@@ -406,6 +408,8 @@ owDirectives.directive('owTwisty', ['$compile', '$rootScope', 'Heading', functio
 		if ( newHeading ) {
 		    // Update existing heading
 		    angular.extend(scope.heading, newHeading);
+		    scope.todoState = $rootScope.todoStates.get(
+			{id: scope.heading.todo_state});
 		}
 		$off();
 	    });
@@ -463,16 +467,23 @@ owDirectives.directive('owTwisty', ['$compile', '$rootScope', 'Heading', functio
 * Directive sets the parameters of next
 * actions table row
 **************************************************/
-owDirectives.directive('owListRow', function() {
+owDirectives.directive('owListRow', function($rootScope) {
     function link(scope, element, attrs) {
 	var node_pk, $element;
 	$element = $(element);
+	// Get heading's todoState
+	scope.todoState = scope.todoStates.get({id: scope.heading.todo_state});
 	// Determine bootstrap row style based on overdue status
 	scope.$watch(
-	    function() {return scope.heading.fields.deadline_date;},
+	    function() {return scope.heading.deadline_date;},
 	    function() {
 		var row_cls, due;
-		due = scope.heading.due();
+		due = null;
+		if ( scope.deadline_date ) {
+		    today = new Date();
+		    deadline = new Date(scope.heading.deadline_date);
+		    due = deadline - today;
+		}
 		if ( due === null ) {
 		    row_cls = '';
 		} else if ( due <= 0 ) {

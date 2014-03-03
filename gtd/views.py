@@ -19,7 +19,7 @@
 #######################################################################
 
 from __future__ import unicode_literals, absolute_import, print_function
-import datetime
+import datetime as dt
 import json
 import logging
 import math
@@ -27,8 +27,10 @@ import re
 
 from django.contrib.auth.decorators import login_required
 from django.core import serializers
+from django.core.exceptions import FieldError
 from django.core.urlresolvers import reverse
 from django.db.models import Q
+from django.db.models.query import QuerySet
 from django.http import (HttpResponse, Http404,
                          HttpResponseBadRequest, HttpResponseNotAllowed)
 from django.shortcuts import render_to_response, redirect, get_object_or_404
@@ -215,163 +217,131 @@ def actions(request, context_id, context_slug):
                               RequestContext(request))
 
 
-class NodeListView(APIView):
+class NodeView(APIView):
     """
-    Interacts with next-action style lists of <Node> objects
-    """
-    model = Node
-    def dispatch(self, request, *args, **kwargs):
-        """Set some properties first then call regular dispatch"""
-        self.request = request
-        self.todo_states = TodoState.get_visible(request.user)
-        self.scope_url_data = {}
-        list(self.todo_states)
-        self.url_string = kwargs.get('url_string', '')
-        if self.url_string is None:
-            self.url_string = ''
-        self.url_data = parse_url(self.url_string, request,
-                                  todo_states=self.todo_states)
-        self.base_url = reverse('list_display')
-        return super(NodeListView, self).dispatch(request, *args, **kwargs)
+    API for interacting with Node objects. Unauthenticated requests
+    are permitted but do not alter the database. Several query parameters
+    have special significance, otherwise query parameters are treated as
+    filters:
 
-    def get_queryset(self):
-        parent_id = self.request.GET.get('parent', None)
+    - 'context=[integer]': Any query with context (even if it is null) is
+    treated as an actions-list. The query indicates which Context object
+    should be used.
+
+    - 'field_group=[string]': Allows for an alternate set of fields to
+    be returned.
+
+    - 'upcoming=[date-string]': Requests a list of Node objects that are
+    due soon. The date-string should be UTC and ISO formatted (YYYY-mm-dd).
+    """
+    def get(self, request, *args, **kwargs):
+        """Returns the details of the node as a json encoded object"""
+        SERIALIZERS = {
+            'default': NodeSerializer,
+            'actions_list': NodeListSerializer
+        }
+        get_dict = request.GET.copy()
+        node_id = kwargs.get('pk')
+        # Look for the reserved query parameters
+        if get_dict.get('upcoming', None):
+            # Get Nodes with upcoming deadline
+            nodes = self.get_upcoming(request, *args, **kwargs)
+            default_serializer = 'actions_list'
+        elif get_dict.get('context', None):
+            # Context is given, so this is an actions list
+            nodes = self.get_actions_list(request, *args, **kwargs)
+            default_serializer = 'actions_list'
+        elif node_id is not None:
+            # A specific Node object is requested
+            nodes = get_object_or_404(Node, pk=node_id)
+            default_serializer = 'default'
+        else:
+            nodes = self.get_queryset(request, *args, **kwargs)
+            default_serializer = 'default'
+        # Check for alternate serializer
+        try:
+            field_group = get_dict.pop('field_group')[0]
+        except KeyError:
+            field_group = default_serializer
+        Serializer = SERIALIZERS[field_group]
+        # Serialize and return the queryset or object
+        is_many = isinstance(nodes, QuerySet)
+        serializer = Serializer(nodes, request, many=is_many)
+        return Response(serializer.data)
+
+    def get_queryset(self, request, *args, **kwargs):
+        """
+        Return a queryset for regular GET queries. If a context
+        is given as a query parameter, then the get_action_list()
+        method is to be used instead.
+        """
+        BOOLS = ('archived',) # Translate 'False' -> False for these fields
+        nodes = Node.objects.mine(request.user, get_archived=True)
+        get_dict = request.GET.copy()
+        parent_id = get_dict.get('parent_id', None)
+        if parent_id == '0':
+            get_dict['parent_id'] = None
+        # Apply each criterion to the queryset
+        for param, value in get_dict.iteritems():
+            if param in BOOLS and value == 'false':
+                value = False
+            query = {param: value}
+            try:
+                nodes = nodes.filter(**query)
+            except FieldError:
+                pass
+        return nodes
+
+    def get_actions_list(self, request, *args, **kwargs):
+        """
+        Fetches a queryset for the requested "Next Actions" list.
+        Only called if 'context' is passed as a GET query parameter (even if
+        it equals None).
+        """
+        # Filter by parent
+        parent_id = request.GET.get('parent', None)
         if parent_id is not None:
             parent = Node.objects.get(pk=parent_id)
             nodes = parent.get_descendants(include_self=True)
         else:
             nodes = Node.objects.all()
-        nodes = nodes.assigned(self.request.user).select_related(
+        nodes = nodes.assigned(request.user).select_related(
             'context', 'todo_state', 'root'
         )
         # Filter by todo state
         final_Q = Q()
-        todo_states_query = self.url_data.get('todo_state', [])
+        todo_states_params = request.GET.getlist('todo_state')
         todo_string = ''
-        for todo_state in todo_states_query:
-            todo_string += '{0}/'.format(todo_state.abbreviation.lower())
+        for todo_state in todo_states_params:
             final_Q = final_Q | Q(todo_state=todo_state)
-        self.scope_url_data['states'] = todo_string
         nodes = nodes.filter(final_Q)
-        # And filter by scope
-        self.scope = self.url_data.get('scope', None)
-        if self.scope:
-            try:
-                nodes = nodes.filter(scope=self.scope)
-            except Node.ObjectDoesNotExist:
-                pass
+        # Filter by Scope
+        scope = request.GET.get('scope', None)
+        if scope:
+            nodes = nodes.filter(scope=scope)
         # Filter by context
-        self.context = self.url_data.get('context', None)
-        if self.context is not None:
-            nodes = self.context.apply(nodes)
+        context_id = request.GET.get('context', None)
+        if context_id and context_id != 'None':
+            context = Context.objects.get(id=context_id)
+            nodes = context.apply(nodes)
         return nodes
 
-    def post(self, request, *args, **kwargs):
-        """Change active filtering parameters"""
-        base_url = self.base_url
-        todo_regex = re.compile(r'todo(\d+)')
-        new_context_id = 0
-        todo_state_Q = Q()
-        empty_Q = True
-        parent = None
-        # Check for TODO filters
-        for post_item in request.POST:
-            todo_match = todo_regex.match(post_item)
-            if todo_match:
-                todo_state_Q = todo_state_Q | Q(id=todo_match.groups()[0])
-                empty_Q = False
-            elif post_item == 'context':
-                new_context_id = int(request.POST['context'])
-                # Update session variable if user is clearning the context
-                if new_context_id == 0:
-                    request.session['context'] = None
-            elif post_item == 'scope':
-                new_scope_id = int(request.POST['scope'])
-            elif post_item == 'parent_id':
-                parent = Node.objects.get(pk=request.POST['parent_id'])
-        # Now build the new URL and redirect
-        new_url = base_url
-        if empty_Q:
-            matched_todo_states = TodoState.objects.none()
-        else:
-            matched_todo_states = TodoState.objects.filter(todo_state_Q)
-        if parent:
-            new_url += 'parent{0}/'.format(parent.pk)
-        for todo_state in matched_todo_states:
-            new_url += todo_state.abbreviation.lower() + '/'
-        if new_scope_id > 0:
-            new_url += 'scope' + str(new_scope_id) + '/'
-        if new_context_id > 0:
-            new_url += 'context' + str(new_context_id) + '/'
-        return redirect(new_url)
-
-    def get(self, request, *args, **kwargs):
-        """Determines which list the user has requested and fetches it."""
-        # Get objects based on url parameters
-        todo_states = request.GET.getlist('todo_state', [''])
-        if todo_states != ['']:
-            self.url_data['todo_state'] = self.todo_states.filter(
-                pk__in=todo_states
-            )
-            # Check that all todo_states requested are valid
-            if len(self.url_data['todo_state']) != len(todo_states):
-                return HttpResponseBadRequest('Invalid todo_state passed')
-        scope = request.GET.get('scope', '')
-        if scope:
-            self.url_data['scope'] = Scope.objects.get(pk=scope)
-        context = request.GET.get('context', '')
-        if context:
-            # self.url_data['context'] = Context.objects.get(pk=context)
-            self.url_data['context'] = get_object_or_404(Context, pk=context)
-        # Update the current context
-        new_context_id = request.GET.get('context', None)
-        if new_context_id is not None:
-            new_context = Context.objects.get(pk=new_context_id)
-            request.session['context_name'] = new_context.name
-        request.session['context_id'] = new_context_id
-        nodes = self.get_queryset()
-        serializer = NodeListSerializer(nodes, many=True)
-        return Response(serializer.data)
-
-
-class NodeView(APIView):
-    """
-    API for interacting with Node objects. Unauthenticated requests
-    are permitted but do not alter the database.
-    """
-    def get(self, request, *args, **kwargs):
-        """Returns the details of the node as a json encoded object"""
-        BOOLS = ('archived',) # Translate 'False' -> False for these fields
-        get_dict = request.QUERY_PARAMS.copy()
-        # Check for alternate serializer
-        serializers = {
-            'default': NodeSerializer,
-            'actions_list': NodeListSerializer
-        }
-        field_group = get_dict.get('field_group', None)
-        if field_group:
-            serializer = serializers[field_group]
-            get_dict.pop('field_group')
-        else:
-            serializer = serializers['default']
-        node_id = kwargs.get('pk')
-        parent_id = get_dict.get('parent_id', None)
-        if parent_id == '0':
-            get_dict['parent_id'] = None
-        if node_id is None:
-            # All nodes
-            nodes = Node.objects.mine(request.user, get_archived=True)
-            # Apply each criterion to the queryset
-            for param, value in get_dict.iteritems():
-                if param in BOOLS and value == 'false':
-                    value = False
-                query = {param: value}
-                nodes = nodes.filter(**query)
-            serial_node = serializer(nodes, many=True)
-        else:
-            node = get_object_or_404(Node, pk=node_id)
-            serial_node = serializer(node)
-        return Response(serial_node.data)
+    def get_upcoming(self, request, *args, **kwargs):
+        """
+        Get QuerySet with deadlines coming up based on
+        'upcoming' query parameter.
+        """
+        deadline_period = 7 # in days
+        all_nodes_qs = Node.objects.mine(request.user)
+        target_date = dt.datetime.strptime(request.GET['upcoming'],
+                                           '%Y-%m-%d').date()
+        # Determine query filters for "Upcoming Deadlines" section
+        undone_Q = Q(todo_state__closed = False) | Q(todo_state = None)
+        deadline = target_date + dt.timedelta(days=deadline_period)
+        upcoming_deadline_Q = Q(deadline_date__lte = deadline) # TODO: fix this
+        deadline_nodes = all_nodes_qs.filter(undone_Q, upcoming_deadline_Q)
+        deadline_nodes = deadline_nodes.order_by("deadline_date")
+        return deadline_nodes
 
     def post(self, request, pk=None, *args, **kwargs):
         """
@@ -455,35 +425,11 @@ class NodeView(APIView):
         return Response(serializer.data)
 
 
-class UpcomingNodeView(APIView):
-    """
-    Returns a list of nodes that have upcoming deadlines, based on the
-    optional date passed: /gtd/node/upcoming[/year/month/day/]
-    """
-    def get(self, request, year=None, month=None, day=None):
-        deadline_period = 7 # in days
-        all_nodes_qs = Node.objects.mine(request.user)
-        if year is None:
-            # Default to today
-            target_date = datetime.date.today()
-        # Determine query filters for "Upcoming Deadlines" section
-        undone_Q = Q(todo_state__closed = False) | Q(todo_state = None)
-        deadline = target_date + datetime.timedelta(days=deadline_period)
-        upcoming_deadline_Q = Q(deadline_date__lte = deadline) # TODO: fix this
-        deadline_nodes = all_nodes_qs.filter(undone_Q, upcoming_deadline_Q)
-        deadline_nodes = deadline_nodes.order_by("deadline_date")
-        serializer = NodeListSerializer(deadline_nodes, many=True)
-        return Response(serializer.data)
-
-
 class ProjectView(DetailView):
     """Manages the retrieval of a tree view for the nodes"""
     model = Node
     template_name = 'gtd/node_view.html'
     context_object_name = 'parent_node'
-    # @method_decorator(login_required)
-    # def dispatch(self, *args, **kwargs):
-    #     return super(ProjectView, self).dispatch(*args, **kwargs)
 
     def get(self, request, *args, **kwargs):
         # First unpack arguments
@@ -631,10 +577,7 @@ class TodoStateView(mixins.ListModelMixin,
             return self.retrieve(request, *args, **kwargs)
         else:
             return self.list(request, *args, **kwargs)
-    # def get(self, request, *args, **kwargs):
-    #     todo_states = TodoState.get_visible(user=request.user)
-    #     serializer = TodoStateSerializer(todo_states, many=True)
-    #     return Response(serializer.data)
+
 
 class ScopeView(APIView):
     """RESTful interaction with the gtd.Scope object"""

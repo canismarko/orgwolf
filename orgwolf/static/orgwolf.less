@@ -72,7 +72,7 @@
 
 /* Things that are dimmed until the user hovers over them */
 .auto-dim {
-    .opacify(15);
+    .opacify(0);
 }
 .auto-undim {
     .opacify(100);
@@ -280,15 +280,28 @@ dd.todo
 	.ow-hoverable {
 	    padding-left: 7px;
 	    border-radius: 5px;
+	    display: inline-block;
+	    div {
+		display: inline-block;
+		cursor: pointer;
+	    }
+	    /* Read-only label */
+	    .read-only-label {
+		.label;
+		.label-info;
+		.auto-dim;
+		cursor: default;
+	    }
 	    /* Icons for action buttons */
 	    .tag {
 		.label;
 		.label-default;
+		.opacify(15);
 	    }
 	    .action-buttons {
+		cursor: default;
+		top: -1px;
 		.auto-dim;
-		button {
-		}
 		span {
 		    .glyphicon;
 		    &.edit-icon { .glyphicon-edit; }
@@ -297,8 +310,10 @@ dd.todo
 		    &.new-icon { .glyphicon-plus; }
 		}
 	    }
-	    &:hover .action-buttons{
-		.auto-undim;
+	    &:hover {
+		.action-buttons,.read-only-label,.tag {
+		    .auto-undim;
+		}
 	    }
 	    /* Twisty icon based on expandability */
 	    .twisty {
@@ -355,7 +370,7 @@ dd.todo
     height: 0px;
 }
 /* Text styles for various statuses */
-.ow-hoverable[archived="true"],.todo-state,.archived-indicator {
+.ow-hoverable[archived="true"],.archived-indicator {
     font-style: italic;
     .opacify(80);
 }
@@ -369,11 +384,6 @@ dd.todo
     &[actionable="true"] {
 	font-weight: bold;
     }
-}
-div.ow-hoverable, div.clickable, div.ow-buttons
-{
-    display: inline-block;
-    cursor: pointer;
 }
 /* Box for editing a node (used on various pages) */
 .editable {
@@ -441,10 +451,35 @@ input,textarea {
 }
 
 /* Popover todo-state picker */
+.todo-state-widget {
+    .read-only {
+	cursor: text;
+    }
+    width: 23px;
+    overflow: hidden;
+    select {
+	width: 48px;
+	border: 0px;
+	-webkit-appearance: none;
+	-moz-appearance: none;
+	appearance: none;
+	background: none;
+	.default {
+	    color: black;
+	}
+    }
+    .todo-popover {
+	z-index: 999;
+	position: absolute;
+	display: block;
+	.todo-option {
+	    margin: 3px;
+	    width: auto;
+	}
+    }
+}
 .todo-option
 {
-    margin: 3px;
-    width: auto;
     &:not([selected]):hover {
 	background-color: #DFF0D8;
     }
@@ -454,16 +489,6 @@ input,textarea {
 	font-style: italic;
     }
 }
-
-/* Text associated with a node */
-/* .ow-text { */
-/*     background: rgb(240, 240, 240); */
-/*     padding: 5px; */
-/*     border-radius: 10px; */
-/*     hr { */
-/* 	border-top-color: gray; */
-/*     } */
-/* } */
 
 /* Next actions list */
 #gtd-list {

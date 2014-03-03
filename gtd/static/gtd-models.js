@@ -11,7 +11,6 @@ var GtdHeading, HeadingManager;
 // Constructor
 GtdHeading = function (args) {
     var parent, $body, sane;
-    console.log(args);
     if (!args) {
 	args = {};
     }
