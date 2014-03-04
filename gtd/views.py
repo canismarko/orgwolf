@@ -348,8 +348,8 @@ class NodeView(APIView):
         Create a new Node, conducted through JSON format:
         {
           id: [node primary key],
-          field: (eg. title),
-          field: (eg. todo_state),
+          title: 'Everything's shiny, captn',
+          todo_state: 2,
           etc...
         }
 
@@ -389,8 +389,8 @@ class NodeView(APIView):
         Edit existing nodes through JSON format:
         {
           id: [node primary key],
-          field: (eg. title),
-          field: (eg. todo_state),
+          title: 'Everything's shiny, captn',
+          todo_state: 2,
           etc...
         }
         """
@@ -421,7 +421,7 @@ class NodeView(APIView):
         if not request.user.is_anonymous():
             node.save()
             node = Node.objects.get(pk=node.pk)
-        serializer = NodeSerializer(node)
+        serializer = NodeSerializer(node, request)
         return Response(serializer.data)
 
 

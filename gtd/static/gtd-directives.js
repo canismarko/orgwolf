@@ -251,9 +251,9 @@ owDirectives.directive('owScopeTabs', ['$resource', '$rootScope', function($reso
 	    element.find('[scope_id="'+scope.activeScope+'"]').removeClass('active');
 	    scope.activeScope = newScope ? newScope.id : 0;
 	    if ( newScope ) {
-	    	scope.activeScope = newScope.id;
+		scope.activeScope = newScope.id;
 	    } else {
-	    	scope.activeScope = 0;
+		scope.activeScope = 0;
 	    }
 	    element.find('[scope_id="'+scope.activeScope+'"]').addClass('active');
 	};
@@ -283,29 +283,29 @@ owDirectives.directive('owTodo', ['$rootScope', '$filter', function($rootScope, 
 	scope.$watch('todoStateId', function(newStateId, oldStateId) {
 	    // When the todoStateId changes (by user action)
 	    if (newStateId !== scope.heading.todo_state) {
-		scope.heading.todo_state = newStateId;
+		scope.heading.todo_state = parseInt(newStateId, 10);
 		scope.todoState = scope.todoStates.get({id: newStateId});
 		scope.heading.auto_update = true;
 		scope.heading.$update();
 	    }
 	});
 	scope.$watch(
-	    function() { return scope.heading.todo_state },
+	    function() { return scope.heading.todo_state; },
 	    function(newHeadingStateId) {
 		if (newHeadingStateId !== scope.todoStateId) {
 		    scope.todoState = scope.todoStates.get(
 			{id: newHeadingStateId});
 		    scope.todoStateId = newHeadingStateId;
 		}
+		// Attach a tooltip with the states text
+		if (scope.todoState) {
+		    element.tooltip({
+			delay: {show:1000, hide: 100},
+			title: scope.todoState.display_text,
+		    });
+		}
 	    }
 	);
-	// if (scope.heading.todo_state) {
-	//     element.tooltip({
-	// 	delay: {show:1000, hide: 100},
-	// 	title: scope.heading.todo_state.display_text,
-	// 	placement: 'right'
-	//     });
-	// }
     }
     function compile(cElement, cAttrs) {
 	// Create the <option> element for each todoState
@@ -350,9 +350,15 @@ owDirectives.directive('owTwisty', ['$compile', '$rootScope', 'Heading', functio
 	}
 	scope.todoState = scope.todoStates.get(
 	    {id: scope.heading.todo_state});
+	if ( scope.todoState && scope.todoState.actionable ) {
+	    element.find('.ow-hoverable').addClass('actionable');
+	}
 	scope.$on('toggle-archived', function(e, newState) {
 	    scope.showArchived = newState;
 	});
+	if ( scope.heading.level === 0 ) {
+	    element.find('.ow-hoverable').addClass('project');
+	}
 	element.addClass('heading');
 	hoverable = element.children('.ow-hoverable');
 	// Process tag_string into tags
@@ -392,7 +398,7 @@ owDirectives.directive('owTwisty', ['$compile', '$rootScope', 'Heading', functio
 		scope.children = Heading.query({parent_id: scope.heading.id});
 		scope.children.$promise.then(function() {
 		    scope.numArchived = scope.children.filter_by({archived: true}).length;
-		    scope.loadedChildren = true
+		    scope.loadedChildren = true;
 		});
 	    }
 	};
@@ -440,8 +446,8 @@ owDirectives.directive('owTwisty', ['$compile', '$rootScope', 'Heading', functio
     }
     // Special compile function that avoids a recursive dead-lock
     function compile(tElement, tAttr) {
-        var contents = tElement.contents().remove();
-        var compiledContents;
+        var compiledContents, contents;
+        contents = tElement.contents().remove();
         return function(scope, iElement, iAttr) {
             if(!compiledContents) {
                 compiledContents = $compile(contents);
@@ -467,17 +473,18 @@ owDirectives.directive('owTwisty', ['$compile', '$rootScope', 'Heading', functio
 * Directive sets the parameters of next
 * actions table row
 **************************************************/
-owDirectives.directive('owListRow', function($rootScope) {
+owDirectives.directive('owListRow', ['$rootScope', function($rootScope) {
     function link(scope, element, attrs) {
 	var node_pk, $element;
 	$element = $(element);
+	element.addClass("heading-row");
 	// Get heading's todoState
-	scope.todoState = scope.todoStates.get({id: scope.heading.todo_state});
+	scope.todoState = $rootScope.todoStates.get({id: scope.heading.todo_state});
 	// Determine bootstrap row style based on overdue status
 	scope.$watch(
 	    function() {return scope.heading.deadline_date;},
 	    function() {
-		var row_cls, due;
+		var row_cls, due, today, deadline;
 		due = null;
 		if ( scope.deadline_date ) {
 		    today = new Date();
@@ -518,12 +525,21 @@ owDirectives.directive('owListRow', function($rootScope) {
 	    }
 	);
 	// Handlers for action buttons
-	scope.edit = function(h) {
-	    h.editable = true;
+	scope.edit = function() {
+	    var $off;
+	    scope.isEditable = true;
+	    $off = scope.$on('finishEdit', function(e) {
+		scope.isEditable = false;
+		$off();
+	    });
 	};
     }
     return {
 	link: link,
-	scope: true,
+	scope: {
+	    heading: '=owHeading',
+	    owDate: '@',
+	},
+	templateUrl: '/static/actions-list-row.html',
     };
-});
+}]);

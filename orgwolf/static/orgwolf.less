@@ -73,10 +73,14 @@
 /* Things that are dimmed until the user hovers over them */
 .auto-dim {
     .opacify(0);
+    /* .heading-row,.message-row,.ow-hoverable & { */
+    .heading-row:hover &,.ow-hoverable:hover &,.message-row:hover & {
+	.opacify(100);
+    }
 }
-.auto-undim {
-    .opacify(100);
-}
+/* .auto-undim { */
+/*     .opacify(100); */
+/* } */
 
 /* Search box */
 .form-search {
@@ -153,11 +157,51 @@ dd.todo
     }
 }
 
-/* Tabs for scope filtering */
+/* Miscellaneous components */
 .ow-scope-tabs {
     a {
 	color: @primary;
     }
+}
+
+.read-only-label {
+    .label;
+    .label-info;
+    .auto-dim;
+    cursor: default;
+    &:empty {
+	display: inline;
+    }
+    &:after {
+	content: "Read only";
+    }
+}
+
+.repeat-icon {
+    .auto-dim;
+    .glyphicon;
+    .glyphicon-repeat;
+}
+
+.action-buttons {
+    .auto-dim;
+    cursor: default;
+    .btn-labels {
+	display: none;
+    }
+    span {
+	.glyphicon;
+    }
+}
+
+.tag {
+    .label;
+    .label-default;
+    .auto-dim;
+}
+
+.filter-button {
+    .auto-dim;
 }
 
 /* Global grid layout style */
@@ -168,9 +212,9 @@ dd.todo
     border-bottom-style: solid;
     border-width: 1px 0px;
 }
+/* Components common to all node and message directives */
 .heading-row,.message-row,.ow-hoverable {
     .filter-button {
-	.opacify(15);
 	.btn-default;
 	.btn-xs;
 	.icon {
@@ -178,16 +222,8 @@ dd.todo
 	    .glyphicon-filter;
 	}
     }
-    .action-buttons {
-	.btn-labels {
-	    display: none;
-	}
-    }
     &:hover {
 	background-color: @gray-lighter !important;
-	.filter-button {
-	    .opacify(100);
-	}
     }
 }
 .table-heading {
@@ -231,8 +267,11 @@ dd.todo
 	}
 	.details {
 	    color: black;
-	    margin-left: 30px;
+	    margin-left: 35px;
 	    display: none;
+	}
+	.ow-title {
+	    margin-left: 5px;
 	}
 	.ow-text {
 	    .well;
@@ -285,38 +324,18 @@ dd.todo
 		display: inline-block;
 		cursor: pointer;
 	    }
-	    /* Read-only label */
-	    .read-only-label {
-		.label;
-		.label-info;
-		.auto-dim;
-		cursor: default;
-	    }
-	    /* Icons for action buttons */
-	    .tag {
-		.label;
-		.label-default;
-		.opacify(15);
-	    }
 	    .action-buttons {
-		cursor: default;
 		top: -1px;
-		.auto-dim;
 		span {
-		    .glyphicon;
 		    &.edit-icon { .glyphicon-edit; }
 		    &.archive-icon { .glyphicon-eye-close; }
 		    &.list-icon {	.glyphicon-list; }
 		    &.new-icon { .glyphicon-plus; }
 		}
 	    }
-	    &:hover {
-		.action-buttons,.read-only-label,.tag {
-		    .auto-undim;
-		}
-	    }
 	    /* Twisty icon based on expandability */
 	    .twisty {
+		cursor: pointer;
 		.glyphicon;
 		.glyphicon-chevron-right;
 	    }
@@ -329,15 +348,17 @@ dd.todo
 	    &.lazy-expandable .twisty {
 		.opacify(75);
 	    }
+	    &.actionable:not(.project) {
+		font-weight: bold;
+		.todo-select {
+		    font-weight: bold;
+		}
+	    }
 	    &[ow-target="ancestor"] {
 		background: rgb(252, 240, 176); /* yellow */
 	    }
 	    &[ow-target="yes"] {
 		background: rgb(223, 240, 216); /* green */
-	    }
-	    .repeat-icon {
-		.glyphicon;
-		.glyphicon-repeat;
 	    }
 	}
 	.ow-hoverable[archived="true"] {
@@ -348,7 +369,7 @@ dd.todo
     }
 } /* End css for #outline-appliance */
 
-.pointer, .add-heading, .todo-state, .todo-option
+.pointer, .add-heading, .todo-select
 {
     cursor: pointer;
 }
@@ -452,11 +473,14 @@ input,textarea {
 
 /* Popover todo-state picker */
 .todo-state-widget {
+    width: 23px;
+    overflow: hidden;
+    span {
+	margin-left: 4px;
+    }
     .read-only {
 	cursor: text;
     }
-    width: 23px;
-    overflow: hidden;
     select {
 	width: 48px;
 	border: 0px;
@@ -506,10 +530,10 @@ input,textarea {
     .table-heading,.heading-row {
 	/* Cell properties and layout */
 	.description {
-	    .make-md-column(5);
+	    .make-md-column(4);
 	}
 	.buttons {
-	    .make-md-column(1);
+	    .make-md-column(2);
 	}
 	.deadline {
 	    .make-md-column(2);

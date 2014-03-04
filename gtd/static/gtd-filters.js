@@ -44,9 +44,6 @@ owFilters.filter('todoStateStyle', function() {
 	    c = obj.color;
 	    style += 'color: rgba(' + c.red + ', ' + c.green + ', ';
 	    style += c.blue + ', ' + c.alpha + '); ';
-	    if ( obj.actionable ) {
-		style += 'font-weight: bold; ';
-	    }
 	}
 	return style;
     };
@@ -109,9 +106,9 @@ owFilters.filter('order', ['$sce', function($sce) {
 **************************************************/
 owFilters.filter('deadline_str', ['$sce', function($sce) {
     return function(heading, today) {
-	var str, date, today, time_delta, day_delta;
+	var str, date, time_delta, day_delta;
 	if ( typeof today === 'undefined' ) {
-	    today = new Date()
+	    today = new Date();
 	}
 	str = '';
 	if ( heading.deadline_date ) {
@@ -153,7 +150,6 @@ owFilters.filter('scope', function() {
 	    for (i=0; i<oldList.length; i+=1) {
 		if( oldList[i].scope.indexOf(activeScope) > -1 ) {
 		    newList.push(oldList.slice(i, i+1)[0]);
-		} else {
 		}
 	    }
 	} else {

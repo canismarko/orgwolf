@@ -1,6 +1,6 @@
-/*globals document, $, jQuery, Aloha, window, alert, GtdHeading, HeadingManager, angular, ga*/
+/*globals document, $, jQuery, Aloha, window, alert, angular, ga*/
 "use strict";
-var test_headings, owConfig, HeadingFactory, GtdListFactory, UpcomingFactory, outlineCtrl, listCtrl;
+var test_headings, owConfig, HeadingFactory, outlineCtrl, listCtrl;
 
 /*************************************************
 * Angular module for all GTD components
@@ -262,7 +262,7 @@ function outlineCtrl($scope, $rootScope, $http, $resource, $filter, Heading,
 		$scope.children.unshift(newHeading);
 	    }
 	    $off();
-	})
+	});
     };
 }
 
@@ -273,10 +273,9 @@ function outlineCtrl($scope, $rootScope, $http, $resource, $filter, Heading,
 owMain.controller(
     'nextActionsList',
     ['$sce', '$scope', '$resource', '$location', '$routeParams',
-     'GtdList', 'Heading', 'Upcoming', listCtrl]
+     'Heading', listCtrl]
 );
-function listCtrl($sce, $scope, $resource, $location, $routeParams,
-		  GtdList, Heading, Upcoming) {
+function listCtrl($sce, $scope, $resource, $location, $routeParams, Heading) {
     var i, TodoState, Context, today, update_url, get_list, parent_id, todo_states;
     $('.ow-active').removeClass('active');
     $('#nav-actions').addClass('active');
@@ -322,13 +321,16 @@ function listCtrl($sce, $scope, $resource, $location, $routeParams,
     $scope.list_params.todo_state = $scope.active_states;
     // Receiver that retrieves new GTD list from server
     $scope.$on('refresh_list', function() {
+	var upcomingParams;
 	$scope.headings = [];
-	GtdList.query($scope.list_params).$promise.then(function(actions) {
+	Heading.query($scope.list_params).$promise.then(function(actions) {
 	    $scope.headings = $scope.headings.concat(actions);
 	});
-	Upcoming.query($scope.list_params).$promise.then(function(upcoming) {
+	upcomingParams = angular.extend(
+	    {upcoming: $scope.currentDate.ow_date()},
+	    $scope.list_params);
+	Heading.query(upcomingParams).$promise.then(function(upcoming) {
 	    $scope.headings = $scope.headings.concat(upcoming);
-	    console.log($scope.headings);
 	});
 	// Get list of hard scheduled commitments
 	$scope.scheduled = Heading.query(
@@ -356,7 +358,7 @@ function listCtrl($sce, $scope, $resource, $location, $routeParams,
 	if ( $scope.cached_states.indexOf(state_pk) === -1 ) {
 	    $scope.cached_states.push(state_pk);
 	    $scope.list_params.todo_state = state_pk;
-	    $scope.headings.add(GtdList.query($scope.list_params));
+	    $scope.headings.add(Heading.query($scope.list_params));
 	}
     };
     // Helper function for setting the browser URL for routing
@@ -383,7 +385,6 @@ function listCtrl($sce, $scope, $resource, $location, $routeParams,
     // Handler for changing the context
     $scope.change_context = function(e) {
 	// Get new list of headings for this context
-	$scope.headings = new HeadingManager($scope);
 	$scope.list_params.context = $scope.active_context;
 	if ($scope.active_context) {
 	    $scope.context_name = $scope.contexts.get(
@@ -393,7 +394,7 @@ function listCtrl($sce, $scope, $resource, $location, $routeParams,
 	    delete $scope.context_name;
 	}
 	$scope.list_params.todo_state = $scope.active_states;
-	$scope.headings.add(GtdList.query($scope.list_params));
+	$scope.$emit('refresh_list');
 	update_url($scope);
     };
     // Handler for only showing one parent

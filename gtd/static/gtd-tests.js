@@ -286,7 +286,7 @@ describe('directives in gtd-directives.js', function() {
 		$rootScope.heading = {
 		    id: 2,
 		};
-		$httpBackend.expect('GET', '/gtd/node/2').respond(201, fullNode);
+		$httpBackend.expect('GET', '/gtd/nodes/2').respond(201, fullNode);
 	    });
 
 	    it('retrieves the heading object from the server', function() {
@@ -406,6 +406,39 @@ describe('directives in gtd-directives.js', function() {
     });
 
     describe('the owListRow directive', function() {
+	beforeEach(function() {
+	    $rootScope.heading = {
+		id: 1,
+		lft: 1,
+		rght: 2,
+		tag_string: ''
+	    }
+	    $templateCache.put('/static/actions-list-row.html',
+	    		       '<div></div>');
+	    // Prepare the DOM element
+	    element = $compile(
+		'<div ow-list-row ow-heading="heading" ow-date="Due today"></div>'
+	    )($rootScope);;
+	});
+
+	it('sets isEditable when edit() is called', function() {
+	    var scope;
+	    $rootScope.$digest();
+	    scope = element.isolateScope();
+	    scope.edit();
+	    expect(scope.isEditable).toBeTruthy();
+	});
+
+	it('catches the finishEdit signal', function() {
+	    var parentScope, childScope;
+	    $rootScope.$digest();
+	    parentScope = element.isolateScope();
+	    parentScope.edit();
+	    expect(parentScope.isEditable).toBeTruthy();
+	    childScope = parentScope.$new();
+	    childScope.$emit('finishEdit');
+	    expect(parentScope.isEditable).toBeFalsy();
+	});
     });
 
     describe('the owTwisty directive', function() {
@@ -454,7 +487,7 @@ describe('directives in gtd-directives.js', function() {
 		{id: 2},
 		{id: 3},
 	    ];
-	    $httpBackend.expect('GET', '/gtd/node?parent_id=1')
+	    $httpBackend.expect('GET', '/gtd/nodes?parent_id=1')
 		.respond(201, children);
 	    $rootScope.$digest();
 	    element.isolateScope().toggleHeading();
@@ -513,7 +546,7 @@ describe('services in gtd-services.js', function() {
 	beforeEach(inject(function($injector) {
 	    $httpBackend = $injector.get('$httpBackend');
 	    // Create a mocked Heading object
-	    $httpBackend.when('GET', '/gtd/node/1')
+	    $httpBackend.when('GET', '/gtd/nodes/1')
 	    	.respond(201, {
 		    id: 1,
 		    title: 'test heading 1'
@@ -528,14 +561,14 @@ describe('services in gtd-services.js', function() {
 	});
 
 	it('uses the PUT method to update', function() {
-	    $httpBackend.expect('PUT', '/gtd/node/1')
+	    $httpBackend.expect('PUT', '/gtd/nodes/1')
 		.respond(201, {});
 	    heading.$update();
 	    $httpBackend.flush();
 	});
 
 	it('uses the POST method to update', function() {
-	    $httpBackend.expect('POST', '/gtd/node')
+	    $httpBackend.expect('POST', '/gtd/nodes')
 		.respond(201, {});
 	    Heading.create({title: 'hello'});
 	    $httpBackend.flush();

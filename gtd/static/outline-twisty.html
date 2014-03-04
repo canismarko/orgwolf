@@ -6,13 +6,13 @@
      archived="{{ heading.archived }}">
   <span class="twisty"></span>
   <span ow-todo ow-heading="heading"></span>
-  <span ng-if="heading.fields.repeats"
-	class="repeat-icon"></span>
   <div class="ow-title">
     {{heading.title}}
   </div>
+  <span ng-if="heading.repeats"
+	class="repeat-icon non-opening"></span>
 
-  <span ng-repeat="tag in tags" class="tag">{{ tag }}</span>
+  <span ng-repeat="tag in tags" class="tag non-opening">{{ tag }}</span>
 
   <div class="action-buttons btn-group btn-group-xs non-opening">
 
@@ -38,7 +38,7 @@
     </button>
   </div>
   <span class="read-only-label non-opening"
-	ng-if="heading.read_only">Read-only</span>
+	ng-if="heading.read_only"></span>
 </div><!-- /.ow-hoverable -->
 
 <div ow-editable ng-if="isEditing" ow-heading="heading">

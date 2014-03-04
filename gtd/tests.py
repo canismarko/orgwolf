@@ -1518,6 +1518,18 @@ class NodeAPI(TestCase):
             node.get_root().title
         )
 
+    def test_put_read_only(self):
+        """
+        Does a successful PUT command properly return the read_only 'field'?
+        """
+        url = reverse('node_object', kwargs={'pk': 1})
+        response = self.client.put(
+            url,
+            {},
+            content_type="application/json")
+        r = json.loads(response.content)
+        self.assertFalse(r['read_only'])
+
     def test_read_only_anonymous(self):
         node = Node.objects.filter(owner=None)[0]
         url = reverse('node_object', kwargs={'pk': node.pk})

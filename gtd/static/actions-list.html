@@ -1,20 +1,3 @@
-<!-- Template for buttons to edit/view project/etc -->
-<script type="text/ng-template" id="action-buttons">
-  <div class="btn-group action-buttons">
-    <button class="btn btn-default btn-xs"
-	    ng-click="edit(heading)">
-      <span class="glyphicon glyphicon-edit"></span>
-      <span class="collapse-label">Edit</span>
-    </button>
-    <a href="/gtd/project/#{{heading.pk}}-{{heading.fields.slug}}"
-       class="btn btn-default btn-xs"
-       title="View this task in the project view">
-      <span class="glyphicon glyphicon-folder-open"></span>
-      <span class="collapse-label">Project</span>
-    </a>
-  </div>
-</script>
-
 <div id="gtd-list">
   <!-- Current date widget -->
   <div class="current-date" ow-current-date></div>
@@ -27,34 +10,8 @@
       <div class="project">Project</div>
     </div>
 
-    <div ow-list-row class="heading-row" ng-hide="heading.editable"
-	 ng-repeat-start="heading in scheduled">
-      <div class="description">
-	<span ow-todo ow-heading="heading">
-	  {{ heading.todo_state.abbreviation }}
-	</span>
-	<a href="/gtd/project/#{{ heading.id }}-{{ heading.slug }}">
-	  {{ heading.title }}</a>
-	<span ng-if="heading.repeats"
-    	      class="glyphicon glyphicon-repeat"></span>
-      </div>
-      <div class="buttons">
-    	<span ng-include="'action-buttons'"></span>
-      </div>
-      <div class="deadline">
-	{{ heading.scheduled_date }} {{ heading.scheduled_time }}
-      </div>
-      <div class="project">
-	<span class="collapse-label">Project:</span>
-    	{{ heading.root_name }}
-    	<button class="filter-button btn" ng-click="filter_parent(heading)">
-	  <span class="icon"></span>
-	  Filter
-	</button>
-      </div>
-    </div><!-- /ow-list-row -->
-    <div ow-editable ng-if="heading.editable" ow-heading="heading"
-	 ng-repeat-end>
+    <div ow-list-row ng-repeat="heading in scheduled" ow-heading="heading"
+	 ow-date="{{ heading.scheduled_date }} {{ heading.scheduled_time }}">
     </div>
     <!-- end repeating scheduled list -->
   </div><!-- /#scheduled-list -->
@@ -71,7 +28,7 @@
 	    <option value="">None</option>
     </select>
     <!-- TodoState selection checkboxes -->
-    <label class="checkbox-inline" ng-repeat="state in todo_states" style="{{ state | todoStateStyle }}">
+    <label class="checkbox-inline" ng-repeat="state in todoStates" style="{{ state | todoStateStyle }}">
       <input type="checkbox" ow-state="{{ state.id }}"
 	     ng-click="toggle_todo_state($event)"
 	     ng-checked="active_states.indexOf(state.id) > -1"></input>
@@ -98,36 +55,8 @@
     <div class="deadline">Deadline</div>
     <div class="project">Project</div>
   </div>
-  <!-- Actionable Items Body -->
-  <div ow-list-row class="heading-row"
-       ng-repeat-start="heading in headings | order: 'list'"
-       ng-show="heading.is_visible()"
-       ng-hide="heading.editable">
-    <div class="description">
-      <span ow-todo ow-heading="heading">
-    	{{ todoState.abbreviation }}
-      </span>
-      <a href="/gtd/project/#{{ heading.id }}-{{ heading.slug }}">
-	{{ heading.title}}</a>
-      <span ng-if="heading.repeats"
-    	    class="glyphicon glyphicon-repeat"></span>
-    </div>
-    <div class="buttons">
-      <span ng-include="'action-buttons'"></span>
-    </div>
-    <div class="deadline">
-      {{ heading | deadline_str }}
-    </div>
-    <div class="project">
-      <span class="collapse-label">Project:</span>
-      {{ heading.root_name }}
-      <button class="filter-button btn" ng-click="filter_parent(heading)">
-	<span class="icon"></span>
-	Filter
-      </button>
-    </div>
-  </div><!-- /.heading-row -->
-  <div ow-editable ng-if="heading.editable" ow-heading="heading"
-       ng-repeat-end>
+
+  <div ow-list-row ng-repeat="heading in headings | order: 'list'"
+       ow-heading="heading" ow-date="{{ heading | deadline_str }}">
   </div>
 </div><!-- /#gtd-list -->
