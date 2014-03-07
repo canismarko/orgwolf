@@ -20,7 +20,7 @@
 from __future__ import unicode_literals, print_function, absolute_import
 import datetime as dt
 import json
-import urllib
+import requests
 
 from django.core.urlresolvers import reverse
 from django.shortcuts import render_to_response, redirect
@@ -177,11 +177,9 @@ def persona_login(request):
     # First validate assertiong with identifer
     data = {'audience': settings.PERSONA_AUDIENCE,
             'assertion': request.POST['assertion'] }
-    r = urllib.urlopen(
-        'https://verifier.login.persona.org/verify',
-        urllib.urlencode(data)
-    )
-    r = json.loads( r.read() )
+    r = requests.post('https://verifier.login.persona.org/verify',
+                             params=data, verify=True)
+    r = r.json()
     if r['status'] == 'okay':
         # Persona login succeeded
         users = User.objects.filter(username=r['email'])
