@@ -131,12 +131,12 @@ owDirectives.directive('owCurrentDate', function() {
 * is a new child.
 *
 **************************************************/
-owDirectives.directive('owEditable', ['$resource', '$rootScope', '$timeout', 'owWaitIndicator', 'Heading', function($resource, $rootScope, $timeout, owWaitIndicator, Heading) {
+owDirectives.directive('owEditable', ['$resource', '$rootScope', '$timeout', 'owWaitIndicator', 'Heading', 'todoStates', function($resource, $rootScope, $timeout, owWaitIndicator, Heading, todoStates) {
     // Directive creates the pieces that allow the user to edit a heading
     function link(scope, element, attrs) {
 	var defaultParent, $text, heading, $save, heading_id, parent, editorId;
 	scope.scopes = $rootScope.scopes;
-	scope.todoStates = $rootScope.todoStates;
+	scope.todoStates = todoStates;
 	scope.fields = {};
 	element.addClass('ow-editable'); // For animations
 	// Set some initial field values
@@ -236,33 +236,39 @@ owDirectives.directive('owEditable', ['$resource', '$rootScope', '$timeout', 'ow
 }]);
 
 /*************************************************
-* Directive that shows a list of Scopes tabs
+* Directive that shows a list of Scopes tabs.
+* When a tab is clicked, this directive emits the
+* 'scope-changed' signal via the scope's $emit()
+* method with the new scope as the first argument.
 *
 **************************************************/
-owDirectives.directive('owScopeTabs', ['$resource', '$rootScope', function($resource, $rootScope) {
+owDirectives.directive('owScopeTabs', ['$resource', '$rootScope', '$timeout', function($resource, $rootScope, $timeout) {
     // Directive creates tabs that allow a user to filter by scope
     function link(scope, element, attrs) {
-	scope.owScopes = $rootScope.scopes;
-	var owScope;
-	// Set initial active scope tab
-	element.find('[scope_id="'+scope.activeScope+'"]').addClass('active');
+	var nullScope = {
+	    id: 0,
+	    display: 'All'
+	};
+	scope.owScopes = [nullScope].concat($rootScope.scopes);
+	scope.activeScope = nullScope;
+	$timeout(function() {
+	    element.find('#scope-tab-0').addClass('active');
+	});
+	// Tab click handler
 	scope.changeScope = function(newScope) {
+	    var emittedScope;
 	    // User has requested a different scope
-	    element.find('[scope_id="'+scope.activeScope+'"]').removeClass('active');
-	    scope.activeScope = newScope ? newScope.id : 0;
-	    if ( newScope ) {
-		scope.activeScope = newScope.id;
-	    } else {
-		scope.activeScope = 0;
-	    }
-	    element.find('[scope_id="'+scope.activeScope+'"]').addClass('active');
+	    element.find('#scope-tab-' + scope.activeScope.id).removeClass('active');
+	    scope.activeScope = newScope;
+	    element.find('#scope-tab-' + scope.activeScope.id).addClass('active');
+	    // Send the relevant signals
+	    emittedScope = newScope.id ? newScope : null;
+	    scope.$emit('scope-changed', emittedScope);
 	};
     }
     return {
 	link: link,
-	scope: {
-	    activeScope: '=activeScope'
-	},
+	scope: {},
 	templateUrl: '/static/scope-tabs.html'
     };
 }]);
@@ -271,20 +277,18 @@ owDirectives.directive('owScopeTabs', ['$resource', '$rootScope', function($reso
 * Directive that lets a user change the todo state
 * with a popover menu
 **************************************************/
-owDirectives.directive('owTodo', ['$rootScope', '$filter', function($rootScope, $filter) {
+owDirectives.directive('owTodo', ['$rootScope', '$filter', 'todoStates', function($rootScope, $filter, todoStates) {
     // Directive creates the pieces that allow the user to edit a heading
     function link(scope, element, attrs) {
 	var i, $span, $popover, $options, state, content, s, isInitialized;
-	scope.todoStates = $rootScope.todoStates;
 	element.addClass("todo-state-widget");
-	scope.todoState = scope.todoStates.get(
-	    {id: scope.heading.todo_state});
+	scope.todoState = todoStates.getState(scope.heading.todo_state);
 	scope.todoStateId = scope.heading.todo_state;
 	scope.$watch('todoStateId', function(newStateId, oldStateId) {
 	    // When the todoStateId changes (by user action)
 	    if (newStateId !== scope.heading.todo_state) {
 		scope.heading.todo_state = parseInt(newStateId, 10);
-		scope.todoState = scope.todoStates.get({id: newStateId});
+		scope.todoState = todoStates.getState(scope.heading.todo_state);
 		scope.heading.auto_update = true;
 		scope.heading.$update();
 	    }
@@ -293,8 +297,7 @@ owDirectives.directive('owTodo', ['$rootScope', '$filter', function($rootScope, 
 	    function() { return scope.heading.todo_state; },
 	    function(newHeadingStateId) {
 		if (newHeadingStateId !== scope.todoStateId) {
-		    scope.todoState = scope.todoStates.get(
-			{id: newHeadingStateId});
+		    scope.todoState = todoStates.getState(scope.heading.todo_state);
 		    scope.todoStateId = newHeadingStateId;
 		}
 		// Attach a tooltip with the states text
@@ -309,8 +312,7 @@ owDirectives.directive('owTodo', ['$rootScope', '$filter', function($rootScope, 
     }
     function compile(cElement, cAttrs) {
 	// Create the <option> element for each todoState
-	var select, i, todoStates, h, todoState;
-	todoStates = $rootScope.todoStates;
+	var select, i, h, todoState;
 	select = cElement.find('select');
 	for (i=0; i<todoStates.length; i+=1) {
 	    todoState = todoStates[i];
@@ -348,8 +350,9 @@ owDirectives.directive('owTwisty', ['$compile', '$rootScope', 'Heading', functio
 	} else {
 	    scope.todoStates = [];
 	}
-	scope.todoState = scope.todoStates.get(
-	    {id: scope.heading.todo_state});
+	// scope.todoState = scope.todoStates.get(
+	//     {id: scope.heading.todo_state});
+
 	if ( scope.todoState && scope.todoState.actionable ) {
 	    element.find('.ow-hoverable').addClass('actionable');
 	}
@@ -397,7 +400,9 @@ owDirectives.directive('owTwisty', ['$compile', '$rootScope', 'Heading', functio
 	    if (!scope.loadedChildren && newState !== 'none') {
 		scope.children = Heading.query({parent_id: scope.heading.id});
 		scope.children.$promise.then(function() {
-		    scope.numArchived = scope.children.filter_by({archived: true}).length;
+		    scope.numArchived = scope.children.filter(function(obj) {
+			return obj.archived === false;
+		    }).length;
 		    scope.loadedChildren = true;
 		});
 	    }
@@ -473,13 +478,13 @@ owDirectives.directive('owTwisty', ['$compile', '$rootScope', 'Heading', functio
 * Directive sets the parameters of next
 * actions table row
 **************************************************/
-owDirectives.directive('owListRow', ['$rootScope', function($rootScope) {
+owDirectives.directive('owListRow', ['$rootScope', 'todoStates', function($rootScope, todoStates) {
     function link(scope, element, attrs) {
 	var node_pk, $element;
 	$element = $(element);
 	element.addClass("heading-row");
 	// Get heading's todoState
-	scope.todoState = $rootScope.todoStates.get({id: scope.heading.todo_state});
+	scope.todoState = todoStates.getState(scope.heading.todo_state);
 	// Determine bootstrap row style based on overdue status
 	scope.$watch(
 	    function() {return scope.heading.deadline_date;},

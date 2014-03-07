@@ -87,7 +87,9 @@ owFilters.filter('order', ['$sce', function($sce) {
     return function(obj, criterion) {
 	var ordered, deadline, other;
 	if ( criterion === 'list' ) {
-	    other = obj.filter_by({deadline_date: null});
+	    other = obj.filter(function(currHeading) {
+		return currHeading.deadline_date === null;
+	    });
 	    deadline = $(obj).not(other).get().order_by('deadline_date');
 	    ordered = deadline;
 	    ordered = ordered.concat(other.order_by('priority'));

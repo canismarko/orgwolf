@@ -84,18 +84,6 @@ describe('filters in gtd-filters.js', function() {
 	    };
     	    expect(todoStateStyleFilter(redState)).toEqual('color: rgba(204, 0, 0, 0.5); ');
 	});
-	it('makes actionable todo states bold', function() {
-	    actionableState = {
-		color: {
-		    red: 0,
-		    green: 0,
-		    blue: 0,
-		    alpha: 0
-		},
-		actionable: true,
-	    };
-	    expect(todoStateStyleFilter(actionableState)).toMatch(/font-weight: bold;/);
-	});
     });
 
     describe('the "order" filter', function() {
@@ -206,13 +194,13 @@ describe('filters in gtd-filters.js', function() {
 });
 
 describe('directives in gtd-directives.js', function() {
-    var $compile, $rootScope, $httpBackend, $templateCache, element;
+    var $compile, $rootScope, $httpBackend, $templateCache, element, dummyStates;
     beforeEach(module('owDirectives', 'owFilters', 'owServices'));
     beforeEach(inject(function($injector) {
 	$compile = $injector.get('$compile');
 	$rootScope = $injector.get('$rootScope');
 	// Mock global data (scopes, todo-states, etc)
-	$rootScope.todoStates = [
+	dummyStates = [
 	    {
 		id: 1,
 		color: {
@@ -233,6 +221,7 @@ describe('directives in gtd-directives.js', function() {
 	    }
 	];
 	$httpBackend = $injector.get('$httpBackend');
+	$httpBackend.whenGET('/gtd/todostate').respond(201, dummyStates);
 	$templateCache = $injector.get('$templateCache');
     }));
     // Reset httpBackend calls
@@ -317,14 +306,6 @@ describe('directives in gtd-directives.js', function() {
 		expect(element.isolateScope().scopes).toEqual(dummyScopes);
 	    });
 
-	    it('inherites the parent $rootScope.todo_states attribute', function() {
-		var todoStates = [{pk: 1, title: 'state 1'},
-				   {pk: 2, title: 'state 2'}];
-		$rootScope.todoStates = todoStates;
-		$rootScope.$digest();
-		expect(element.isolateScope().todoStates).toEqual(todoStates);
-	    });
-
 	    it('inherits parent\'s fields if creating a new node (priority and scope)', function() {
 		$rootScope.$digest();
 		expect(element.isolateScope().fields.scope).toEqual(parentScope);
@@ -350,6 +331,67 @@ describe('directives in gtd-directives.js', function() {
     });
 
     describe('the owScopeTabs directive', function() {
+	var $childScope;
+	beforeEach(function() {
+	    $rootScope.scopes = [
+		{id: 1},
+		{id: 2},
+	    ];
+	    $templateCache.put(
+		'/static/scope-tabs.html',
+		'<ul><li id="scope-tab-{{ scope.id }}" ng-repeat="scope in owScopes"></li></ul>'
+	    );
+	    element = $compile(
+		'<div ow-scope-tabs></div>'
+	    )($rootScope);
+	});
+	it('emits the "change-scope" event on changeScope()', function() {
+	    var emittedStatus, targetScope;
+	    $rootScope.$digest();
+	    $childScope = element.isolateScope();
+	    targetScope = $rootScope.scopes[0];
+	    expect($childScope).toBeDefined();
+	    $rootScope.$on('scope-changed', function(e, newScope) {
+		emittedStatus = true;
+		emittedScope = newScope;
+	    });
+	    $childScope.changeScope(targetScope);
+	    expect(emittedStatus).toBeTruthy();
+	    expect(emittedScope).toBe(targetScope);
+	});
+	it('emits with argument "null" if newScope is 0', function() {
+	    var targetScope, emittedScope;
+	    $rootScope.$digest();
+	    $childScope = element.isolateScope();
+	    nullScope = $childScope.owScopes[0];
+	    $rootScope.$on('scope-changed', function(e, newScope) {
+		emittedScope = newScope;
+	    });
+	    $childScope.changeScope(nullScope);
+	    expect(emittedScope).toBe(null);
+	   });
+	it('sets scope.activeScope on changeScope()', function() {
+	    var newScope;
+	    newScope = $rootScope.scopes[0];
+	    $rootScope.$digest();
+	    $childScope = element.isolateScope();
+	    $childScope.changeScope(newScope);
+	    expect($childScope.activeScope).toBe(newScope);
+	});
+	it('moves the "active" class to a tab on changeScope()', function() {
+	    var newScope = $rootScope.scopes[0];
+	    $rootScope.$digest();
+	    // Set the first scope
+	    $childScope = element.isolateScope();
+	    $childScope.changeScope(newScope);
+	    expect(element.find('#scope-tab-1')).toHaveClass('active');
+	    expect(element.find('#scope-tab-2')).not.toHaveClass('active');
+	    // Now change the scope
+	    newScope = $rootScope.scopes[1];
+	    $childScope.changeScope(newScope)
+	    expect(element.find('#scope-tab-2')).toHaveClass('active');
+	    expect(element.find('#scope-tab-1')).not.toHaveClass('active');
+	});
     });
 
     describe('the owTodo directive', function() {
@@ -365,6 +407,7 @@ describe('directives in gtd-directives.js', function() {
 	    element = $compile(
 		'<div ow-todo ow-heading="heading"></div>'
 	    )($rootScope);
+	    $httpBackend.flush();
 	});
 
 	it('does not call heading.$update during initialization', function() {
@@ -376,23 +419,30 @@ describe('directives in gtd-directives.js', function() {
 	    expect(hitApi).toEqual(false);
 	});
 
-	it('sets scope.todoState during initialization', function() {
-	    var scope;
-	    $rootScope.$digest();
-	    scope = element.isolateScope();
-	    expect(scope.todoStateId)
-		.toEqual($rootScope.heading.todo_state);
-	    expect(scope.todoState).toBe($rootScope.todoStates.get({id: 1}));
-	});
+	// it('sets scope.todoState during initialization', function() {
+	//     var scope;
+	//     $rootScope.$digest();
+	//     scope = element.isolateScope();
+	//     expect(scope.todoStateId)
+	// 	.toEqual($rootScope.heading.todo_state);
+	//     expectedState = dummyStates.filter(
+	// 	function(o) {return o.id===1;}
+	//     )[0];
+	//     expect(scope.todoState).toBe(expectedState);
+	// });
 
 	it('updates models when todoStateId changes', function() {
-	    var scope;
+	    var scope, expectedState;
 	    $rootScope.heading.$update = function() {};
 	    $rootScope.$digest();
 	    scope = element.isolateScope();
 	    scope.todoStateId = 2;
 	    $rootScope.$digest();
-	    expect(scope.todoState).toBe($rootScope.todoStates.get({id: 2}));
+	    expectedState = dummyStates.filter(
+		function(o) {return o.id===2;}
+	    )[0];
+	    expect(JSON.stringify(scope.todoState))
+		.toEqual(JSON.stringify(expectedState));
 	    expect(scope.todoStateId).toEqual(2);
 	    expect($rootScope.heading.todo_state).toEqual(2);
 	});
@@ -574,4 +624,115 @@ describe('services in gtd-services.js', function() {
 	    $httpBackend.flush();
 	});
     });
+
+    describe('the TodoState service', function() {
+	var todoStates, $httpBackend, mockedStates;
+	beforeEach(inject(function($injector) {
+	    mockedStates = [
+		{id: 1},
+		{id: 2},
+	    ];
+	    todoStates = $injector.get('todoStates');
+	    $httpBackend = $injector.get('$httpBackend');
+	    $httpBackend.whenGET('/gtd/todostate').respond(201, mockedStates);
+	}));
+	it('sets the getState() method', function() {
+	    $httpBackend.flush();
+	    expect(todoStates.getState(1).id).toEqual(1);
+	});
+    });
 }); // End of gtd-services.js tests
+
+describe('controllers in gtd-main.js', function() {
+    var dummyStates;
+    beforeEach(module('owMain'));
+    beforeEach(function() {
+	dummyStates = [
+	    {id: 1},
+	    {id: 2},
+	]
+    });
+    describe('nextActionsList controller', function() {
+	var $httpBackend
+	beforeEach(inject(function($rootScope, $controller, _$httpBackend_) {
+	    $httpBackend = _$httpBackend_
+	    $httpBackend.whenGET('/gtd/todostate').respond(201, dummyStates);
+	    $httpBackend.whenGET('/gtd/context').respond(201, []);
+	    $httpBackend.whenGET('/gtd/scope').respond(201, []);
+	    $httpBackend.whenGET(/\/gtd\/nodes?[^t]?.*/).respond(201, []);
+	    $scope = $rootScope.$new();
+	    $controller('nextActionsList', {$scope: $scope});
+	    $httpBackend.flush();
+	    $scope.headings = [
+		{id: 1,
+		 scope: [1]},
+		{id: 2,
+		 scope: []},
+	    ];
+	}));
+	// Reset httpBackend calls
+	afterEach(function() {
+	    $httpBackend.verifyNoOutstandingExpectation();
+	});
+	describe('the row-counting logic', function() {
+	    it('watches the length of $scope.headings', function() {
+		$scope.$digest();
+		expect($scope.numberOfRows).toEqual($scope.headings.length);
+	    });
+	    it('watches the $scope.activeScope object', function() {
+		$scope.$digest();
+		$scope.activeScope = {id: 1};
+		$scope.$digest();
+		expect($scope.numberOfRows).toEqual(1);
+	    });
+	});
+	describe('the toggleTodoState() method', function() {
+	    it('adds the todo-state if it\'s not active', function() {
+		$scope.cachedStates = [2, 1]; // To avoid $http call
+		expect($scope.activeStates).toEqual([2]);
+		$scope.toggleTodoState({id: 1});
+		expect($scope.activeStates).toEqual([2, 1]);
+	    });
+	    it('removes a todo-state if it\'s already active', function() {
+		$scope.activeStates = [2, 1];
+		$scope.toggleTodoState({id: 1});
+		expect($scope.activeStates).toEqual([2]);
+	    });
+	    it('fetches extra nodes for newly checked todo states', function() {
+		$httpBackend.expectGET('/gtd/nodes?todo_state=1')
+		    .respond(201, '');
+		$scope.toggleTodoState({id: 1});
+		expect($scope.activeStates).toEqual([2, 1]);
+		expect($scope.cachedStates).toEqual([2, 1]);
+		$scope.$digest();
+		// Make sure it doesn't add twice
+		$scope.toggleTodoState({id: 1});
+		expect($scope.cachedStates).toEqual([2, 1]);
+	    });
+
+	});
+    });
+}); // End of gtd-main.js tests
+
+describe('site wide resources', function() {
+    var headings, result;
+    beforeEach(module('owMain'));
+
+    describe('Array.order_by method', function() {
+	beforeEach(function() {
+	    headings = [
+		{id: 2},
+		{id: 3},
+		{id: 1},
+	    ];
+	});
+	it('orders an array in ascending order', function() {
+	    result = headings.order_by('id');
+	    expect(result[0].id).toBe(1);
+	});
+	it('orders an array in descending order', function() {
+	    result = headings.order_by('-id');
+	    expect(result[0].id).toBe(3);
+	});
+    });
+});

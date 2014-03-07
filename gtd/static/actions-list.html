@@ -30,7 +30,7 @@
     <!-- TodoState selection checkboxes -->
     <label class="checkbox-inline" ng-repeat="state in todoStates" style="{{ state | todoStateStyle }}">
       <input type="checkbox" ow-state="{{ state.id }}"
-	     ng-click="toggle_todo_state($event)"
+	     ng-click="toggleTodoState($event, state)"
 	     ng-checked="active_states.indexOf(state.id) > -1"></input>
 	     {{ state.abbreviation }}
     </label>
@@ -57,6 +57,14 @@
   </div>
 
   <div ow-list-row ng-repeat="heading in headings | order: 'list'"
-       ow-heading="heading" ow-date="{{ heading | deadline_str }}">
+       ow-index="{{ heading.scope.indexOf(activeScope.id) > -1 }}"
+       ow-heading="heading" ow-date="{{ heading | deadline_str }}"
+       ng-if="!activeScope || heading.scope.indexOf(activeScope.id) > -1">
   </div>
+
+  <div class="alert-empty" ng-if="numberOfRows === 0">
+    No actions here. Try another Scope, Context or
+    TodoState combination.
+  </div>
+
 </div><!-- /#gtd-list -->

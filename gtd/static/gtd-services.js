@@ -62,8 +62,8 @@ owServices.factory('OldHeading', ['$resource', '$http', function($resource, $htt
         return new GtdHeading(data);
     };
 }]);
-owServices.factory('Heading', ['$resource', '$http', HeadingFactory]);
-function HeadingFactory($resource, $http) {
+owServices.factory('Heading', ['$resource', HeadingFactory]);
+function HeadingFactory($resource) {
     var res = $resource(
 	'/gtd/nodes/:id/',
 	{id: '@id'},
@@ -74,3 +74,27 @@ function HeadingFactory($resource, $http) {
     );
     return res;
 }
+
+/*************************************************
+* Factory fetches the list of todoStates from the
+* API.
+*
+**************************************************/
+owServices.factory('todoStates', ['$resource', function($resource) {
+    var states, TodoState;
+    TodoState = $resource('/gtd/todostate/');
+    states = TodoState.query();
+    states.getState = function(stateId) {
+	var foundState, foundStates;
+	foundStates = this.filter(function(obj) {
+	    return obj.id === stateId;
+	});
+	if (foundStates.length > 0) {
+	    foundState = foundStates[0];
+	} else {
+	    foundState = null;
+	}
+	return foundState;
+    };
+    return states;
+}]);

@@ -74,9 +74,7 @@ function owConfig($httpProvider, $locationProvider) {
 **************************************************/
 owMain.run(['$rootScope', '$resource', function($rootScope, $resource) {
     // Get todo states
-    var TodoState, Context, Scope;
-    TodoState = $resource('/gtd/todostate/');
-    $rootScope.todoStates = TodoState.query();
+    var TodoState, Context, Scope, getState;
     // Get list of contexts for filtering against
     Context = $resource('/gtd/context/');
     $rootScope.contexts = Context.query();
@@ -183,7 +181,7 @@ function outlineCtrl($scope, $rootScope, $http, $resource, $filter, Heading,
     // modified array to hold all the tasks
     $scope.children = Heading.query({'parent_id': 0,
 				   'archived': false});
-    $scope.activeScope = 0;
+    $scope.activeScope = null;
     $scope.sortField = 'title';
     $scope.sortFields = [
 	{key: 'title', display: 'Title'},
@@ -198,11 +196,11 @@ function outlineCtrl($scope, $rootScope, $http, $resource, $filter, Heading,
 	$scope.parent_id = parseInt($scope.parent_id, 10);
     }
     $rootScope.showArchived = false;
-    $scope.state = 'open';
-    $scope.rank = 0;
-    $scope.update = function() {
-	$scope.children = $scope.headings.filter_by({parent: null});
-    };
+    // $scope.state = 'open';
+    // $scope.rank = 0;
+    // $scope.update = function() {
+    // 	$scope.children = $scope.headings.filter_by({parent: null});
+    // };
     // If a parent node was passed
     if ( $scope.parent_id ) {
 	target_headings = Heading.query({'tree_id': parent_tree_id,
@@ -273,13 +271,15 @@ function outlineCtrl($scope, $rootScope, $http, $resource, $filter, Heading,
 owMain.controller(
     'nextActionsList',
     ['$sce', '$scope', '$resource', '$location', '$routeParams',
-     'Heading', listCtrl]
+     'Heading', 'todoStates', listCtrl]
 );
-function listCtrl($sce, $scope, $resource, $location, $routeParams, Heading) {
+function listCtrl($sce, $scope, $resource, $location, $routeParams, Heading, todoStates) {
     var i, TodoState, Context, today, update_url, get_list, parent_id, todo_states;
     $('.ow-active').removeClass('active');
     $('#nav-actions').addClass('active');
     $scope.list_params = {};
+    $scope.showArchived = true;
+    $scope.activeScope = null;
     // Context filtering
     if (typeof $routeParams.context_id !== 'undefined') {
 	$scope.active_context = parseInt($routeParams.context_id, 10);
@@ -312,17 +312,37 @@ function listCtrl($sce, $scope, $resource, $location, $routeParams, Heading) {
     } else {
 	todo_states = [2];
     }
-    $scope.cached_states = todo_states.slice(0);
-    $scope.active_states = todo_states.slice(0);
+    $scope.cachedStates = todo_states.slice(0);
+    $scope.activeStates = todo_states.slice(0);
     $scope.currentDate = new Date();
     $scope.$watch('currentDate', function() {
 	$scope.$emit('refresh_list');
     }, true);
     $scope.list_params.todo_state = $scope.active_states;
+    $scope.todoStates = todoStates;
+    // Helper function and watches deteremine how many rows are visible
+    $scope.setNumberOfRows = function() {
+	var num, headings;
+	headings = $scope.headings;
+	// Filter by current active orgwolf-scope
+	if ( $scope.activeScope ) {
+	    headings = headings.filter(function(currHeading) {
+		return (currHeading.scope.indexOf($scope.activeScope.id) > -1);
+	    });
+	}
+	$scope.numberOfRows = headings.length;
+    };
+    $scope.$watchCollection('headings', function() {
+	$scope.setNumberOfRows();
+    });
+    $scope.$watchCollection('activeScope', function() {
+	$scope.setNumberOfRows();
+    });
+    $scope.headings = [];
     // Receiver that retrieves new GTD list from server
     $scope.$on('refresh_list', function() {
-	var upcomingParams;
 	$scope.headings = [];
+	var upcomingParams;
 	Heading.query($scope.list_params).$promise.then(function(actions) {
 	    $scope.headings = $scope.headings.concat(actions);
 	});
@@ -341,26 +361,44 @@ function listCtrl($sce, $scope, $resource, $location, $routeParams, Heading) {
 	    }
 	);
     });
-    $scope.showArchived = true;
-    $scope.activeScope = 0;
+    // Receiver for when the active scope changes (by clicking a tab)
+    $scope.$on('scope-changed', function(e, newScope) {
+	$scope.activeScope = newScope;
+	$scope.setNumberOfRows();
+    });
     // Todo state filtering
-    $scope.toggle_todo_state = function(e) {
-	var i, state_pk, state, state_url;
-	state_pk = parseInt($(e.target).attr('ow-state'), 10);
-	// Hide the current elements
-	i = $scope.active_states.indexOf(state_pk);
+    $scope.toggleTodoState = function(targetState) {
+	// Add or remove a TodoState from the active list
+	var i = $scope.activeStates.indexOf(targetState.id)
 	if ( i > -1 ) {
-	    $scope.active_states.splice(i, 1);
+	    $scope.activeStates.splice(i, 1);
 	} else {
-	    $scope.active_states.push(state_pk);
+	    $scope.activeStates.push(targetState.id);
 	}
-	// Fetch the node list if it's not already retrieved
-	if ( $scope.cached_states.indexOf(state_pk) === -1 ) {
-	    $scope.cached_states.push(state_pk);
-	    $scope.list_params.todo_state = state_pk;
-	    $scope.headings.add(Heading.query($scope.list_params));
+	if ( $scope.cachedStates.indexOf(targetState.id) === -1 ) {
+	    $scope.cachedStates.push(targetState.id);
 	}
+	// var i, state_pk, state, state_url;
+	// state_pk = parseInt($(e.target).attr('ow-state'), 10);
+	// // Hide the current elements
+	// i = $scope.active_states.indexOf(state_pk);
+	// if ( i > -1 ) {
+	//     $scope.active_states.splice(i, 1);
+	// } else {
+	//     $scope.active_states.push(state_pk);
+	// }
+	// // Fetch the node list if it's not already retrieved
+	// if ( $scope.cached_states.indexOf(state_pk) === -1 ) {
+	//     $scope.cached_states.push(state_pk);
+	//     $scope.list_params.todo_state = state_pk;
+	//     $scope.headings.add(Heading.query($scope.list_params));
+	// }
     };
+    $scope.$watchCollection('activeStates', function(newList, oldList) {
+	console.log($scope.list_params);
+	$scope.headings = $scope.headings.concat(
+	    Heading.query($scope.list_params));
+    });
     // Helper function for setting the browser URL for routing
     update_url = function(params) {
 	var path, search;
