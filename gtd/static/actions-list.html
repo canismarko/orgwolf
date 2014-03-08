@@ -22,16 +22,16 @@
 	class="form-inline ow-unauth-hide">
     <!-- Context selection box -->
     <label for="context">Context:</label>
-    <select name="context" ng-model="active_context" class="form-control"
+    <select name="context" ng-model="activeContext" class="form-control"
 	    ng-options="x.id as x.name for x in contexts"
-	    ng-change="change_context($event)">
+	    ng-change="changeContext($event)">
 	    <option value="">None</option>
     </select>
     <!-- TodoState selection checkboxes -->
     <label class="checkbox-inline" ng-repeat="state in todoStates" style="{{ state | todoStateStyle }}">
       <input type="checkbox" ow-state="{{ state.id }}"
-	     ng-click="toggleTodoState($event, state)"
-	     ng-checked="active_states.indexOf(state.id) > -1"></input>
+	     ng-click="toggleTodoState(state)"
+	     ng-checked="activeStates.indexOf(state.id) > -1"></input>
 	     {{ state.abbreviation }}
     </label>
   </form>
@@ -56,13 +56,13 @@
     <div class="project">Project</div>
   </div>
 
-  <div ow-list-row ng-repeat="heading in headings | order: 'list'"
-       ow-index="{{ heading.scope.indexOf(activeScope.id) > -1 }}"
+  <div ow-list-row
+       ng-repeat="heading in visibleHeadings | order:'list'"
        ow-heading="heading" ow-date="{{ heading | deadline_str }}"
        ng-if="!activeScope || heading.scope.indexOf(activeScope.id) > -1">
   </div>
 
-  <div class="alert-empty" ng-if="numberOfRows === 0">
+  <div class="alert-empty" ng-show="visibleHeadings.length === 0">
     No actions here. Try another Scope, Context or
     TodoState combination.
   </div>

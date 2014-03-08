@@ -103,6 +103,49 @@ owFilters.filter('order', ['$sce', function($sce) {
 }]);
 
 /*************************************************
+* Filter that only shows headings that are visible
+* based on list parameters.
+*
+**************************************************/
+owFilters.filter('currentList', function() {
+    return function(headings, todoStates, upcomingList) {
+	var upcomingListIds;
+	// Filter by todoStates
+	if ( todoStates ) {
+	    headings = headings.filter(function(h) {
+		return todoStates.indexOf(h.todo_state) > -1;
+	    });
+	}
+	// Remove headings that are duplicated in the upcomingList
+	if ( upcomingList ) {
+	    upcomingListIds = upcomingList.map(function(v) {
+		return v.id;
+	    });
+	    headings = headings.filter(function(h) {
+		return upcomingListIds.indexOf(h.id) === -1;
+	    });
+	}
+	return headings;
+    };
+});
+
+/*************************************************
+* Filter that only shows headings that are visible
+* in the current scope.
+*
+**************************************************/
+owFilters.filter('currentScope', function() {
+    return function(headings, activeScope) {
+	if ( activeScope ) {
+	    headings = headings.filter(function(h) {
+		return h.scope.indexOf(activeScope.id) > -1;
+	    });
+	}
+	return headings;
+    };
+});
+
+/*************************************************
 * Filter that displays the deadline for a heading
 *
 **************************************************/

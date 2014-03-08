@@ -120,12 +120,67 @@ describe('filters in gtd-filters.js', function() {
 	});
     });
 
+    describe('the "currentList" filter', function() {
+	var currentListFilter, headings;
+	beforeEach(inject(function(_currentListFilter_) {
+	    currentListFilter = _currentListFilter_;
+	    headings = [
+		{id: 1,
+		 todo_state: 1,
+		 scope: [1]},
+		{id: 2,
+		 todo_state: 2,
+		 scope: []},
+	    ];
+	}));
+	it('passes the array back if no parameters given', function() {
+	    result = currentListFilter(headings);
+	    expect(result).toBe(headings);
+	});
+	it('filters by active todoState', function() {
+	    result = currentListFilter(headings, [1]);
+	    expect(result.length).toEqual(1);
+	    expect(result[0]).toBe(headings[0]);
+	});
+	it('filters out headings that are also on the upcoming list', function() {
+	    upcomingList = [
+		{id: 2},
+		{id: 3},
+	    ];
+	    headings[1].deadline_date = '2014-03-08';
+	    result = currentListFilter(headings, [1, 2], upcomingList);
+	    expect(result.length).toEqual(1);
+	    expect(result[0]).toBe(headings[0]);
+	});
+    });
+
+    describe('the "currentScope" filter', function() {
+	var currentScopeFilter;
+	beforeEach(inject(function(_currentScopeFilter_) {
+	    currentScopeFilter = _currentScopeFilter_;
+	    headings = [
+		{id: 1,
+		 todo_state: 1,
+		 scope: [1]},
+		{id: 2,
+		 todo_state: 2,
+		 scope: []},
+	    ]
+	}));
+	it('filters by scope', function() {
+	    result = currentScopeFilter(headings, {id: 1});
+	    expect(result.length).toEqual(1);
+	    expect(JSON.stringify(result[0]))
+		.toEqual(JSON.stringify(headings[0]));
+	});
+    });
+
     describe('the "deadline_str" filter', function() {
 	var deadline_strFilter, today, heading, due_date;
 	beforeEach(inject(function(_deadline_strFilter_) {
 	    deadline_strFilter = _deadline_strFilter_;
-	    today = new Date(2014, 02, 21, 19, 1, 1);
-	    due_date = new Date(2014, 02, 21, 19, 1, 1);
+	    today = new Date(2014, 02, 21, 18, 1, 1);
+	    due_date = new Date(2014, 02, 21, 18, 1, 1);
 	}));
 	it('returns "" for a heading without a due date', function() {
 	    heading = {fields: {deadline_date: null}};
@@ -659,14 +714,26 @@ describe('controllers in gtd-main.js', function() {
 	    $httpBackend.whenGET('/gtd/todostate').respond(201, dummyStates);
 	    $httpBackend.whenGET('/gtd/context').respond(201, []);
 	    $httpBackend.whenGET('/gtd/scope').respond(201, []);
-	    $httpBackend.whenGET(/\/gtd\/nodes?[^t]?.*/).respond(201, []);
+	    // $httpBackend.whenGET(/\/gtd\/nodes?[^t]?.*/).respond(201, []);
+	    $httpBackend.whenGET('/gtd/nodes?todo_state=2').respond(201, []);
+	    $httpBackend.whenGET(/\/gtd\/nodes\?todo_state=2&upcoming=[-0-9]+/)
+		.respond(201, []);
+	    $httpBackend.whenGET(/\/gtd\/nodes\?field_group=actions_list&scheduled_date__lte=[-0-9]+&todo_state=8/)
+	    	.respond(201, []);
 	    $scope = $rootScope.$new();
 	    $controller('nextActionsList', {$scope: $scope});
 	    $httpBackend.flush();
-	    $scope.headings = [
+	    $scope.actionsList = [
 		{id: 1,
-		 scope: [1]},
+		 scope: [1],
+		 todo_state: 2},
 		{id: 2,
+		 scope: []},
+	    ];
+	    $scope.upcomingList = [
+		{id: 2,
+		 scope: [1]},
+		{id: 3,
 		 scope: []},
 	    ];
 	}));
@@ -674,17 +741,9 @@ describe('controllers in gtd-main.js', function() {
 	afterEach(function() {
 	    $httpBackend.verifyNoOutstandingExpectation();
 	});
-	describe('the row-counting logic', function() {
-	    it('watches the length of $scope.headings', function() {
-		$scope.$digest();
-		expect($scope.numberOfRows).toEqual($scope.headings.length);
-	    });
-	    it('watches the $scope.activeScope object', function() {
-		$scope.$digest();
-		$scope.activeScope = {id: 1};
-		$scope.$digest();
-		expect($scope.numberOfRows).toEqual(1);
-	    });
+	it('sets the visibleHeadings list upon initialization', function() {
+	    $scope.$digest();
+	    expect($scope.visibleHeadings.length).toEqual(3);
 	});
 	describe('the toggleTodoState() method', function() {
 	    it('adds the todo-state if it\'s not active', function() {
@@ -699,15 +758,16 @@ describe('controllers in gtd-main.js', function() {
 		expect($scope.activeStates).toEqual([2]);
 	    });
 	    it('fetches extra nodes for newly checked todo states', function() {
-		$httpBackend.expectGET('/gtd/nodes?todo_state=1')
-		    .respond(201, '');
-		$scope.toggleTodoState({id: 1});
-		expect($scope.activeStates).toEqual([2, 1]);
-		expect($scope.cachedStates).toEqual([2, 1]);
-		$scope.$digest();
-		// Make sure it doesn't add twice
-		$scope.toggleTodoState({id: 1});
-		expect($scope.cachedStates).toEqual([2, 1]);
+	    	$httpBackend.expectGET('/gtd/nodes?todo_state=1')
+	    	    .respond(201, '');
+	    	$scope.toggleTodoState({id: 1});
+	    	expect($scope.activeStates).toEqual([2, 1]);
+		$httpBackend.flush();
+	    	expect($scope.cachedStates).toEqual([2, 1]);
+	    	$scope.$digest();
+	    	// Make sure it doesn't add twice
+	    	$scope.toggleTodoState({id: 1});
+	    	expect($scope.cachedStates).toEqual([2, 1]);
 	    });
 
 	});

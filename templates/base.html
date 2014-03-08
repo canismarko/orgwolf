@@ -161,8 +161,12 @@
 	ga('create', 'UA-47040758-1', 'orgwolf.com');
 	ga('send', 'pageview');
 	{% endif %}
-
     });
+    owServices.value(
+	'todoStatesList',
+	{% todo_states_json %}
+    );
+
     </script>
     {% endblock %}
     {% endblock %}

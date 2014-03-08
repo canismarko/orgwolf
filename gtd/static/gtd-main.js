@@ -196,11 +196,6 @@ function outlineCtrl($scope, $rootScope, $http, $resource, $filter, Heading,
 	$scope.parent_id = parseInt($scope.parent_id, 10);
     }
     $rootScope.showArchived = false;
-    // $scope.state = 'open';
-    // $scope.rank = 0;
-    // $scope.update = function() {
-    // 	$scope.children = $scope.headings.filter_by({parent: null});
-    // };
     // If a parent node was passed
     if ( $scope.parent_id ) {
 	target_headings = Heading.query({'tree_id': parent_tree_id,
@@ -270,10 +265,10 @@ function outlineCtrl($scope, $rootScope, $http, $resource, $filter, Heading,
 **************************************************/
 owMain.controller(
     'nextActionsList',
-    ['$sce', '$scope', '$resource', '$location', '$routeParams',
+    ['$sce', '$scope', '$resource', '$location', '$routeParams', '$filter',
      'Heading', 'todoStates', listCtrl]
 );
-function listCtrl($sce, $scope, $resource, $location, $routeParams, Heading, todoStates) {
+function listCtrl($sce, $scope, $resource, $location, $routeParams, $filter, Heading, todoStates) {
     var i, TodoState, Context, today, update_url, get_list, parent_id, todo_states;
     $('.ow-active').removeClass('active');
     $('#nav-actions').addClass('active');
@@ -282,11 +277,11 @@ function listCtrl($sce, $scope, $resource, $location, $routeParams, Heading, tod
     $scope.activeScope = null;
     // Context filtering
     if (typeof $routeParams.context_id !== 'undefined') {
-	$scope.active_context = parseInt($routeParams.context_id, 10);
-	$scope.context_name = $routeParams.context_slug;
-	$scope.list_params.context = $scope.active_context;
+	$scope.activeContext = parseInt($routeParams.context_id, 10);
+	$scope.contextName = $routeParams.context_slug;
+	$scope.list_params.context = $scope.activeContext;
     } else {
-	$scope.active_context = null;
+	$scope.activeContext = null;
     }
     $scope.show_list = true;
     // See if there's a parent specified
@@ -298,7 +293,7 @@ function listCtrl($sce, $scope, $resource, $location, $routeParams, Heading, tod
 	$scope.parent = $resource('/gtd/node/:id/')
 	    .get({id: parent_id});
     }
-    // Set todo_states
+    // Set todoStates
     todo_states = $location.search().todo_state;
     if ( todo_states ) {
 	// Pull from URL if provided
@@ -314,46 +309,35 @@ function listCtrl($sce, $scope, $resource, $location, $routeParams, Heading, tod
     }
     $scope.cachedStates = todo_states.slice(0);
     $scope.activeStates = todo_states.slice(0);
+    $scope.list_params.todo_state = $scope.activeStates;
     $scope.currentDate = new Date();
     $scope.$watch('currentDate', function() {
 	$scope.$emit('refresh_list');
     }, true);
-    $scope.list_params.todo_state = $scope.active_states;
     $scope.todoStates = todoStates;
-    // Helper function and watches deteremine how many rows are visible
-    $scope.setNumberOfRows = function() {
-	var num, headings;
-	headings = $scope.headings;
-	// Filter by current active orgwolf-scope
-	if ( $scope.activeScope ) {
-	    headings = headings.filter(function(currHeading) {
-		return (currHeading.scope.indexOf($scope.activeScope.id) > -1);
-	    });
-	}
-	$scope.numberOfRows = headings.length;
+    // Helper function finds which upcoming and action headings to display
+    $scope.setVisibleHeadings = function() {
+	var currentListFilter = $filter('currentList');
+	$scope.visibleHeadings = $scope.upcomingList.slice(0);
+	$scope.visibleHeadings = $scope.visibleHeadings.concat(
+	    currentListFilter($scope.actionsList, $scope.activeStates, $scope.upcomingList)
+	);
     };
-    $scope.$watchCollection('headings', function() {
-	$scope.setNumberOfRows();
+    $scope.$watchCollection('actionsList', function() {
+	$scope.setVisibleHeadings();
     });
-    $scope.$watchCollection('activeScope', function() {
-	$scope.setNumberOfRows();
+    $scope.$watchCollection('upcomingList', function() {
+	$scope.setVisibleHeadings();
     });
-    $scope.headings = [];
-    // Receiver that retrieves new GTD list from server
+    // Receiver that retrieves GTD lists from server
     $scope.$on('refresh_list', function() {
-	$scope.headings = [];
 	var upcomingParams;
-	Heading.query($scope.list_params).$promise.then(function(actions) {
-	    $scope.headings = $scope.headings.concat(actions);
-	});
+	$scope.actionsList = Heading.query($scope.list_params);
 	upcomingParams = angular.extend(
 	    {upcoming: $scope.currentDate.ow_date()},
 	    $scope.list_params);
-	Heading.query(upcomingParams).$promise.then(function(upcoming) {
-	    $scope.headings = $scope.headings.concat(upcoming);
-	});
-	// Get list of hard scheduled commitments
-	$scope.scheduled = Heading.query(
+	$scope.upcomingList = Heading.query(upcomingParams);
+	$scope.scheduledList = Heading.query(
 	    {
 		field_group: 'actions_list',
 		scheduled_date__lte: $scope.currentDate.ow_date(),
@@ -364,49 +348,41 @@ function listCtrl($sce, $scope, $resource, $location, $routeParams, Heading, tod
     // Receiver for when the active scope changes (by clicking a tab)
     $scope.$on('scope-changed', function(e, newScope) {
 	$scope.activeScope = newScope;
-	$scope.setNumberOfRows();
     });
     // Todo state filtering
     $scope.toggleTodoState = function(targetState) {
 	// Add or remove a TodoState from the active list
-	var i = $scope.activeStates.indexOf(targetState.id)
+	var i = $scope.activeStates.indexOf(targetState.id);
 	if ( i > -1 ) {
 	    $scope.activeStates.splice(i, 1);
 	} else {
 	    $scope.activeStates.push(targetState.id);
 	}
-	if ( $scope.cachedStates.indexOf(targetState.id) === -1 ) {
-	    $scope.cachedStates.push(targetState.id);
-	}
-	// var i, state_pk, state, state_url;
-	// state_pk = parseInt($(e.target).attr('ow-state'), 10);
-	// // Hide the current elements
-	// i = $scope.active_states.indexOf(state_pk);
-	// if ( i > -1 ) {
-	//     $scope.active_states.splice(i, 1);
-	// } else {
-	//     $scope.active_states.push(state_pk);
-	// }
-	// // Fetch the node list if it's not already retrieved
-	// if ( $scope.cached_states.indexOf(state_pk) === -1 ) {
-	//     $scope.cached_states.push(state_pk);
-	//     $scope.list_params.todo_state = state_pk;
-	//     $scope.headings.add(Heading.query($scope.list_params));
-	// }
+	$scope.setVisibleHeadings();
     };
     $scope.$watchCollection('activeStates', function(newList, oldList) {
-	console.log($scope.list_params);
-	$scope.headings = $scope.headings.concat(
-	    Heading.query($scope.list_params));
+	var new_states, list_params;
+	list_params = {};
+	list_params.todo_state = newList.filter(function(state) {
+	    return $scope.cachedStates.indexOf(state) === -1;
+	});
+	if( list_params.todo_state.length > 0 ) {
+	    new_states = Heading.query(list_params);
+	    new_states.$promise.then(function() {
+		$scope.cachedStates = $scope.cachedStates.concat(
+		    list_params.todo_state);
+		$scope.actionsList = $scope.actionsList.concat(new_states);
+	    });
+	}
     });
     // Helper function for setting the browser URL for routing
     update_url = function(params) {
 	var path, search;
 	path = '/gtd/actions';
-	if (params.active_context) {
+	if (params.activeContext) {
 	    /*jslint regexp: true */
-	    path += '/' + params.active_context;
-	    path += '/' + params.context_name
+	    path += '/' + params.activeContext;
+	    path += '/' + params.contextName
 		.toLowerCase()
 		.replace(/ /g,'-')
 		.replace(/[^\w\-]+/g,'');
@@ -417,21 +393,21 @@ function listCtrl($sce, $scope, $resource, $location, $routeParams, Heading, tod
 	if ($scope.parent_id) {
 	    search.parent = $scope.parent_id;
 	}
-	search.todo_state = $scope.active_states;
+	search.todo_state = $scope.activeStates;
 	$location.search(search);
     };
     // Handler for changing the context
-    $scope.change_context = function(e) {
+    $scope.changeContext = function(e) {
 	// Get new list of headings for this context
-	$scope.list_params.context = $scope.active_context;
-	if ($scope.active_context) {
-	    $scope.context_name = $scope.contexts.get(
-		{id: $scope.active_context}
-	    ).name;
+	$scope.list_params.context = $scope.activeContext;
+	if ($scope.activeContext) {
+	    $scope.contextName = $scope.contexts.filter(function(context) {
+		return context.id === $scope.activeContext;
+	    })[0].name;
 	} else {
-	    delete $scope.context_name;
+	    delete $scope.contextName;
 	}
-	$scope.list_params.todo_state = $scope.active_states;
+	$scope.list_params.todo_state = $scope.activeStates;
 	$scope.$emit('refresh_list');
 	update_url($scope);
     };
@@ -440,7 +416,7 @@ function listCtrl($sce, $scope, $resource, $location, $routeParams, Heading, tod
 	if ( h === null ) {
 	    delete $scope.parent_id;
 	} else {
-	    $scope.parent_id = h.fields.root_id;
+	    $scope.parent_id = h.root_id;
 	}
 	update_url($scope);
     };

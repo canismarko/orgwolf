@@ -76,14 +76,42 @@ function HeadingFactory($resource) {
 }
 
 /*************************************************
-* Factory fetches the list of todoStates from the
-* API.
+* Default todo states. Override in template from
+* server.
 *
 **************************************************/
-owServices.factory('todoStates', ['$resource', function($resource) {
+owServices.value(
+    'todoStatesList',
+    [
+	{id: 1,
+	 color: {
+	     red: 0,
+	     green: 0,
+	     blue: 0,
+	     alpha: 0,
+	 },
+	 abbreviation: 'NEXT',
+	},
+	{id: 2,
+	 color: {
+	     red: 0,
+	     green: 0,
+	     blue: 0,
+	     alpha: 0,
+	 }
+	},
+    ]
+);
+
+/*************************************************
+* Factory returns the request todoStates
+*
+**************************************************/
+owServices.factory('todoStates', ['$resource', 'todoStatesList', function($resource, todoStatesList) {
     var states, TodoState;
     TodoState = $resource('/gtd/todostate/');
     states = TodoState.query();
+    states = todoStatesList;
     states.getState = function(stateId) {
 	var foundState, foundStates;
 	foundStates = this.filter(function(obj) {

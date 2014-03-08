@@ -483,17 +483,18 @@ owDirectives.directive('owListRow', ['$rootScope', 'todoStates', function($rootS
 	var node_pk, $element;
 	$element = $(element);
 	element.addClass("heading-row");
+	element.addClass('priority' + (scope.heading.priority || 'B'));
 	// Get heading's todoState
 	scope.todoState = todoStates.getState(scope.heading.todo_state);
 	// Determine bootstrap row style based on overdue status
 	scope.$watch(
 	    function() {return scope.heading.deadline_date;},
-	    function() {
+	    function(newDeadline) {
 		var row_cls, due, today, deadline;
 		due = null;
-		if ( scope.deadline_date ) {
+		if ( newDeadline ) {
 		    today = new Date();
-		    deadline = new Date(scope.heading.deadline_date);
+		    deadline = new Date(newDeadline);
 		    due = deadline - today;
 		}
 		if ( due === null ) {

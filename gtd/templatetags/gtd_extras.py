@@ -24,19 +24,24 @@ other attributes.
 """
 
 from __future__ import unicode_literals, absolute_import, print_function
+import json
 import re
 
 from django import template
 from django.utils.html import conditional_escape
 from django.utils.safestring import mark_safe
 
+from gtd.models import TodoState
+from gtd.serializers import TodoStateSerializer
 from orgwolf.models import HTMLEscaper
 
 register = template.Library()
 
-@register.simple_tag
-def todo_states_json(args):
-    return 'hello'
+@register.simple_tag(takes_context=True)
+def todo_states_json(context):
+    states = TodoState.get_visible(user=context['request'].user)
+    serializer = TodoStateSerializer(states, many=True)
+    return json.dumps(serializer.data)
 
 @register.filter
 def repeat_icon(value):
