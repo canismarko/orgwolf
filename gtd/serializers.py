@@ -21,12 +21,24 @@ from __future__ import unicode_literals, absolute_import, print_function
 
 from rest_framework import serializers
 
-from gtd.models import Context, Scope, Node
+from gtd.models import Context, Scope, Node, TodoState
 
 
 class ScopeSerializer(serializers.ModelSerializer):
     class Meta:
         model = Scope
+
+
+class TodoStateSerializer(serializers.ModelSerializer):
+    color = serializers.SerializerMethodField('get_color')
+
+    def get_color(self, obj):
+        """Convert the _color_* fields into an integer color dictionary."""
+        return obj.color().as_dict()
+
+    class Meta:
+        model = TodoState
+        fields = ['id', 'color', 'actionable', 'abbreviation', 'closed', 'display_text']
 
 
 class ContextSerializer(serializers.ModelSerializer):
@@ -37,18 +49,21 @@ class ContextSerializer(serializers.ModelSerializer):
 
 class NodeSerializer(serializers.ModelSerializer):
     read_only = serializers.SerializerMethodField('get_read_only')
-    def __init__(self, qs, *args, **kwargs):
+    def __init__(self, qs, request=None, *args, **kwargs):
         # Perform some optimization before hitting the database
+        self.request = request
         if kwargs.get('many', False):
             # Prefetch related fields only if passing a queryset
             qs = qs.select_related('owner').prefetch_related('scope', 'users')
         return super(NodeSerializer, self).__init__(qs, *args, **kwargs)
 
     def get_read_only(self, obj):
-        if obj.owner:
-            return False
-        else:
-            return True
+        """Determine if the request.user can edit this Node."""
+        user = getattr(self.request, 'user', None)
+        status = True # Default
+        if obj.owner == user and obj.owner is not None:
+            status = False
+        return status
 
     class Meta:
         model = Node

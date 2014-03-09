@@ -1,0 +1,83 @@
+<!-- Recursive template for tree of Tasks -->
+<div class="ow-hoverable"
+     ng-show="!isEditing"
+     ng-click="toggleHeading($event)"
+     style="{{ heading | headingStyle }}"
+     archived="{{ heading.archived }}">
+  <span class="twisty"></span>
+  <span ow-todo ow-heading="heading"></span>
+  <div class="ow-title">
+    {{heading.title}}
+  </div>
+  <span ng-if="heading.repeats"
+	class="repeat-icon non-opening"></span>
+
+  <span ng-repeat="tag in tags" class="tag non-opening">{{ tag }}</span>
+
+  <div class="action-buttons btn-group btn-group-xs non-opening">
+
+    <button type="button" class="btn btn-default"
+	    ng-disabled="{{ heading.read_only }}"
+	    ng-click="edit($event)">
+      <span class="edit-icon" title="Edit"></span>
+    </button>
+    <a href="/gtd/actions/?parent={{heading.id}}"
+       class="btn btn-default">
+      <span class="list-icon" title="View As List"></span>
+    </a>
+
+    <button type="button" class="btn btn-default"
+	    ng-click="archive($event)"
+	    ng-disabled="{{ heading.read_only }}">
+      <span class="archive-icon" title="Archive/Unarchive"></span>
+    </button>
+
+    <button type="button" class="btn btn-default"
+	    ng-click="createChild($event)">
+      <span class="new-icon" title="New subheading"></span>
+    </button>
+  </div>
+  <span class="read-only-label non-opening"
+	ng-if="heading.read_only"></span>
+</div><!-- /.ow-hoverable -->
+
+<div ow-editable ng-if="isEditing" ow-heading="heading">
+</div>
+
+<div class="details" ng-show="isOpen">
+  <div ng-if="heading.scheduled_date">
+    Scheduled: {{ heading.scheduled_date }} {{ heading.scheduled_time }}
+  </div>
+  <div ng-if="heading.deadline_date">
+    Deadline: {{ heading.deadline_date }}
+    <span ng-if="heading.deadline_time">
+      {{ heading.deadline_time }}
+    </span>
+  </div>
+  <div ng-if="heading.repeats">
+    Repeats every {{ heading.repeating_number }}{{ heading.repeating_unit }}
+    <span ng-if="heading.repeats_from_completed">
+      from completion date
+    </span>
+    <span ng-if="!heading.repeats_from_completed">
+      from scheduled date
+    </span>
+  </div>
+  <div class="ow-text"
+       ng-show="heading.text"
+       ng-bind-html="heading.text | asHtml">
+  </div>
+
+  <!-- Children -->
+  <div ow-editable ow-parent="heading" ng-if="newChild"></div>
+  <div ng-show="!loadedChildren">
+    Loading...
+  </div>
+  <div ow-twisty ng-repeat="heading in children" ow-heading="heading"
+       ng-if="!heading.archived || showArchived"></div>
+  <div class="archived-indicator"
+       ng-show="numArchived && !showArchived && !showGlobalArchived"
+       ng-click="showArchived = !showArchived">
+    ...plus {{ numArchived }} archived (click to show)
+  </div>
+</div><!-- /.details -->

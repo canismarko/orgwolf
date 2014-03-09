@@ -48,7 +48,7 @@ from gtd.serializers import NodeSerializer
 from gtd.shortcuts import parse_url, generate_url, order_nodes, load_fixture
 from gtd.templatetags.gtd_extras import escape_html
 from gtd.templatetags.gtd_extras import add_scope, breadcrumbs
-from gtd.views import NodeListView, NodeView
+from gtd.views import NodeView
 from orgwolf.models import OrgWolfUser as User
 from plugins.deferred import MessageHandler as DeferredMessageHandler
 from wolfmail.models import Message
@@ -712,6 +712,49 @@ class ScopeAPI(TestCase):
         )
 
 
+class TodoStateAPI(TestCase):
+    fixtures = ['gtd-env.json', 'test-users.json']
+    def setUp(self):
+        self.user = User.objects.get(username='test')
+        self.assertTrue(
+            self.client.login(
+                username=self.user.username, password='secret')
+        )
+
+    def test_get_uses_serializer(self):
+        """
+        Ensure that the API provides the full collection of relevant
+        todo states.
+        """
+        response = self.client.get(reverse('todo_state'))
+        r = json.loads(response.content)
+        self.assertIn(
+            'id',
+            r[0].keys()
+        )
+
+    def test_create_color(self):
+        state = TodoState.objects.get(pk=1)
+        color_obj = state.color()
+        color_dict = {
+            'red': color_obj.red,
+            'green': color_obj.green,
+            'blue': color_obj.blue,
+            'alpha': color_obj.get_alpha()
+        }
+        response = self.client.get(
+            reverse('todo_state', kwargs={'pk': state.pk}))
+        r = json.loads(response.content)
+        self.assertIn(
+            'color',
+            r.keys()
+        )
+        self.assertEqual(
+            r['color'],
+            color_dict
+        )
+
+
 class ContextAPI(TestCase):
     fixtures = ['test-users.json', 'gtd-test.json', 'gtd-env.json']
 
@@ -909,22 +952,19 @@ class TodoStateRetrieval(TestCase):
 
 
 class ListViewQueryset(TestCase):
-    """The get_queryset() method of the NodeListView class"""
+    """The get_actions_list() method of the NodeView class"""
     fixtures = ['test-users.json', 'gtd-env.json', 'gtd-test.json']
 
     def setUp(self):
-        self.view = NodeListView()
-        self.view.url_data = {}
-        self.view.scope_url_data = {}
-        self.factory = RequestFactory()
+        self.view = NodeView()
         self.user = User.objects.get(pk=1)
-        self.view.request = self.factory.get('/gtd/lists/')
-        self.view.request.user = self.user
+        self.factory = RequestFactory()
+        self.url = reverse('node_object')
+        self.request = self.factory.get(self.url)
+        self.request.user = self.user
 
     def test_returns_queryset(self):
-        self.view.request = self.factory.get('/gtd/lists/')
-        self.view.request.user = self.user
-        qs = self.view.get_queryset()
+        qs = self.view.get_actions_list(self.request)
         self.assertEqual(
             qs.__class__.__name__,
             'NodeQuerySet',
@@ -932,9 +972,10 @@ class ListViewQueryset(TestCase):
 
     def test_filter_todo_state(self):
         """Check that passing a todostate to the filter works"""
-        todo = TodoState.objects.filter(pk=1)
-        self.view.url_data = {'todo_state': todo}
-        qs = self.view.get_queryset()
+        todo = TodoState.objects.get(pk=1)
+        request = self.factory.get(self.url, {'todo_state': todo.pk})
+        request.user = self.user
+        qs = self.view.get_actions_list(request)
         expected = Node.objects.assigned(self.user)
         expected = expected.filter(todo_state=todo)
         self.assertQuerysetEqual(
@@ -945,8 +986,9 @@ class ListViewQueryset(TestCase):
 
     def test_filter_scope(self):
         scope = Scope.objects.get(pk=1)
-        self.view.url_data['scope'] = scope
-        qs = self.view.get_queryset()
+        request = self.factory.get(self.url, {'scope': scope.pk})
+        request.user = self.user
+        qs = self.view.get_actions_list(request)
         expected = Node.objects.assigned(self.user)
         expected = expected.filter(scope=scope)
         self.assertQuerysetEqual(
@@ -957,8 +999,9 @@ class ListViewQueryset(TestCase):
 
     def test_context_filtering(self):
         context = Context.objects.get(pk=1)
-        self.view.url_data['context'] = context
-        qs = self.view.get_queryset()
+        request = self.factory.get(self.url, {'context': context.pk})
+        request.user = self.user
+        qs = self.view.get_actions_list(request)
         expected = context.apply(Node.objects.assigned(self.user))
         self.assertQuerysetEqual(
             qs,
@@ -976,49 +1019,50 @@ class ListAPI(TestCase):
 
     def setUp(self):
         self.user = User.objects.get(username='test')
-        self.view = NodeListView()
+        self.view = NodeView()
         self.factory = RequestFactory()
         self.assertTrue(
             self.client.login(
                 username=self.user.username, password='secret')
         )
 
-    def test_parse_get_params(self):
-        states = TodoState.objects.filter(pk__in=[1, 2])
-        scope = Scope.objects.get(pk=1)
-        context = Context.objects.get(pk=2)
-        request = self.factory.get(
-            '/gtd/lists',
-            {
-                'todo_state': ['1', '2'],
-                'scope': ['1'],
-                'context': ['2']
-            },
-        )
-        request.is_json = True
-        request.user = self.user
-        request.session = {'context_name': None}
-        self.view.dispatch(request)
-        self.view.get(request)
-        self.assertQuerysetEqual(
-            self.view.url_data['todo_state'],
-            [repr(x) for x in states]
-        )
-        self.assertEqual(
-            self.view.url_data['scope'],
-            scope
-        )
-        self.assertEqual(
-            self.view.url_data['context'],
-            context
-        )
+    # def test_parse_get_params(self):
+    #     states = TodoState.objects.filter(pk__in=[1, 2])
+    #     scope = Scope.objects.get(pk=1)
+    #     context = Context.objects.get(pk=2)
+    #     request = self.factory.get(
+    #         reverse('node_object'),
+    #         {
+    #             'todo_state': ['1', '2'],
+    #             'scope': ['1'],
+    #             'context': ['2']
+    #         },
+    #     )
+    #     request.is_json = True
+    #     request.user = self.user
+    #     request.session = {'context_name': None}
+    #     self.view.dispatch(request)
+    #     self.view.get(request)
+    #     self.assertQuerysetEqual(
+    #         self.view.url_data['todo_state'],
+    #         [repr(x) for x in states]
+    #     )
+    #     self.assertEqual(
+    #         self.view.url_data['scope'],
+    #         scope
+    #     )
+    #     self.assertEqual(
+    #         self.view.url_data['context'],
+    #         context
+    #     )
 
     def test_parent_param(self):
         """Test that adding the parent= param filters by parent"""
         parent = Node.objects.get(pk=1)
         response = self.client.get(
-            '/gtd/lists',
+            reverse('node_object'),
             {
+                'context': None,
                 'parent': parent.pk,
             },
             HTTP_X_REQUESTED_WITH='XMLHttpRequest',
@@ -1042,7 +1086,8 @@ class ListAPI(TestCase):
                     'root_id', 'root_name', 'scope', 'priority',
                     'repeats']
         response = self.client.get(
-            reverse('list_api'),
+            reverse('node_object'),
+            {'context': None},
             content_type='application/json'
         )
         r = json.loads(response.content)[0]
@@ -1161,8 +1206,8 @@ class MultiUser(TestCase):
             )
 
     def test_list_view(self):
-        url = reverse('list_api')
-        response = self.client.get(url)
+        url = reverse('node_object')
+        response = self.client.get(url, {'context': None})
         self.assertContains(
             response,
             'Test user owned node',
@@ -1372,8 +1417,9 @@ class NodeAPI(TestCase):
         """Check that a collection of nodes can be retried with optional filters
         applied by parameters"""
         nodes = Node.objects.mine(self.user, get_archived=True)
+        url = reverse('node_object')
         response = self.client.get(
-            '/gtd/node/',
+            url,
             HTTP_X_REQUESTED_WITH='XMLHttpRequest',
             HTTP_ACCEPT='application/json'
         )
@@ -1387,7 +1433,7 @@ class NodeAPI(TestCase):
         # Now filter by some parameters
         nodes = Node.objects.mine(self.user).filter(parent_id='1')
         response = self.client.get(
-            '/gtd/node/',
+            url,
             {'parent_id': '1'},
             HTTP_X_REQUESTED_WITH='XMLHttpRequest',
             HTTP_ACCEPT='application/json',
@@ -1403,7 +1449,7 @@ class NodeAPI(TestCase):
         nodes = Node.objects.mine(self.user, get_archived=False)
         nodes = nodes.filter(parent=None)
         response = self.client.get(
-            '/gtd/node/',
+            url,
             {
                 'parent_id': '0',
                 'archived': 'false',
@@ -1472,13 +1518,63 @@ class NodeAPI(TestCase):
             node.get_root().title
         )
 
-    def test_read_only(self):
+    def test_put_read_only(self):
+        """
+        Does a successful PUT command properly return the read_only 'field'?
+        """
+        url = reverse('node_object', kwargs={'pk': 1})
+        response = self.client.put(
+            url,
+            {},
+            content_type="application/json")
+        r = json.loads(response.content)
+        self.assertFalse(r['read_only'])
+
+    def test_read_only_anonymous(self):
         node = Node.objects.filter(owner=None)[0]
         url = reverse('node_object', kwargs={'pk': node.pk})
         response = self.client.get(
             url,
             content_type='application/json'
         )
+        r = json.loads(response.content)
+        self.assertTrue(
+            r['read_only']
+        )
+
+    def test_read_only_owned(self):
+        """
+        Test that a Node the user owns is not read_only.
+        """
+        node = Node.objects.get(pk=1)
+        url = reverse('node_object', kwargs={'pk': node.pk})
+        response = self.client.get(
+            url,
+            content_type='application/json'
+        )
+        r = json.loads(response.content)
+        self.assertFalse(
+            r['read_only']
+        )
+
+    def test_read_only_others(self):
+        """
+        Test that a Node in which the user is
+        listed in node.others is read_only.
+        """
+        node = Node.objects.get(pk=10)
+        url = reverse('node_object', kwargs={'pk': node.pk})
+        def get_response():
+            return self.client.get(
+                url,
+                content_type='application/json'
+            )
+        # Make sure we don't add extra queries
+        self.assertNumQueries(
+            6,
+            get_response
+        )
+        response = get_response()
         r = json.loads(response.content)
         self.assertTrue(
             r['read_only']
@@ -1781,11 +1877,12 @@ class UpcomingAPI(TestCase):
             self.client.login(username=self.user.username,
                               password='secret')
         )
-        self.url = reverse('upcoming')
+        self.url = reverse('node_object')
 
     def test_upcoming_deadlines(self):
         response = self.client.get(
             self.url,
+            {'upcoming': '2014-03-02'},
             HTTP_X_REQUESTED_WITH='XMLHttpRequest',
             )
         self.assertEqual(

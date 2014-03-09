@@ -1,0 +1,42 @@
+<div ng-hide="isEditable">
+  <div class="description">
+    <span ow-todo ow-heading="heading">
+      {{ todoState.abbreviation }}
+    </span>
+    <a href="/gtd/project/#{{ heading.id }}-{{ heading.slug }}">
+      {{ heading.title}}</a>
+    <span ng-if="heading.repeats"
+	  class="repeat-icon"></span>
+  </div>
+  <div class="buttons">
+    <div class="action-buttons btn-group">
+      <button class="btn btn-default btn-xs"
+	      ng-click="edit(heading)" ng-disabled="heading.read_only">
+	<span class="glyphicon glyphicon-edit"></span>
+	<span class="collapse-label">Edit</span>
+      </button>
+      <a href="/gtd/project/#{{heading.pk}}-{{heading.fields.slug}}"
+	 class="btn btn-default btn-xs"
+	 title="View this task in the project view">
+	<span class="glyphicon glyphicon-folder-open"></span>
+	<span class="collapse-label">Project</span>
+      </a>
+    </div>
+    <span class="read-only-label"
+	  ng-show="heading.read_only"></span>
+  </div>
+  <div class="deadline">
+    {{ owDate }}
+  </div>
+  <div class="project">
+    <span class="collapse-label">Project:</span>
+    {{ heading.root_name }}
+    <button class="filter-button btn" ng-click="filter_parent(heading)">
+      <span class="icon"></span>
+      Filter
+    </button>
+  </div>
+</div>
+
+<div ow-editable ng-if="isEditable" ow-heading="heading">
+</div>

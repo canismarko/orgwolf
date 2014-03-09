@@ -70,6 +70,18 @@
     filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='@colora', endColorstr='@colorb', GradientType=0);
 }
 
+/* Things that are dimmed until the user hovers over them */
+.auto-dim {
+    .opacify(0);
+    /* .heading-row,.message-row,.ow-hoverable & { */
+    .heading-row:hover &,.ow-hoverable:hover &,.message-row:hover & {
+	.opacify(100);
+    }
+}
+/* .auto-undim { */
+/*     .opacify(100); */
+/* } */
+
 /* Search box */
 .form-search {
     margin-bottom: 15px;
@@ -147,11 +159,51 @@ dd.todo
     }
 }
 
-/* Tabs for scope filtering */
+/* Miscellaneous components */
 .ow-scope-tabs {
     a {
 	color: @primary;
     }
+}
+
+.read-only-label {
+    .label;
+    .label-info;
+    .auto-dim;
+    cursor: default;
+    &:empty {
+	display: inline;
+    }
+    &:after {
+	content: "Read only";
+    }
+}
+
+.repeat-icon {
+    .auto-dim;
+    .glyphicon;
+    .glyphicon-repeat;
+}
+
+.action-buttons {
+    .auto-dim;
+    cursor: default;
+    .btn-labels {
+	display: none;
+    }
+    span {
+	.glyphicon;
+    }
+}
+
+.tag {
+    .label;
+    .label-default;
+    .auto-dim;
+}
+
+.filter-button {
+    .auto-dim;
 }
 
 /* Global grid layout style */
@@ -162,9 +214,9 @@ dd.todo
     border-bottom-style: solid;
     border-width: 1px 0px;
 }
+/* Components common to all node and message directives */
 .heading-row,.message-row,.ow-hoverable {
     .filter-button {
-	.opacify(15);
 	.btn-default;
 	.btn-xs;
 	.icon {
@@ -172,17 +224,8 @@ dd.todo
 	    .glyphicon-filter;
 	}
     }
-    .action-buttons {
-	.opacify(15);
-	.btn-labels {
-	    display: none;
-	}
-    }
     &:hover {
 	background-color: @gray-lighter !important;
-	.action-buttons,.filter-button {
-	    .opacify(100);
-	}
     }
 }
 .table-heading {
@@ -206,27 +249,112 @@ dd.todo
 /* Outline tree of headings in project view */
 #outline-appliance {
     .container;
+    #show-all
+    {
+	span {
+	    .glyphicon;
+	    .glyphicon-eye-close;
+	}
+	&.active span {
+	    .glyphicon-eye-open;
+	}
+    }
     .outline {
 	margin-left: 14px;
 	margin-top: 20px;
 	margin-bottom: 50px;
+	.archived-indicator {
+	    margin-left: 25px;
+	    cursor: pointer;
+	}
+	.details {
+	    color: black;
+	    margin-left: 35px;
+	    display: none;
+	}
+	.ow-title {
+	    margin-left: 5px;
+	}
+	.ow-text {
+	    .well;
+	}
+	.ow-text,.edit-text
+	{
+	    h1 {
+		font-size: 24px;
+	    }
+	    h2 {
+		font-size: 22px;
+	    }
+	    h3 {
+		font-size: 20px;
+	    }
+	    h4 {
+		font-size: 18px;
+	    }
+	    h5 {
+		font-size: 14px;
+	    }
+	    h6 {
+		font-size: 12px;
+	    }
+	}
 	.heading {
-	    /* padding-left: 14px; */
 	    padding-right: 8px;
 	    overflow: hidden;
-	    > .details {
-		color: black;
+	}
+	/* If the content/children should be presented to the user */
+	.heading.open {
+	    padding-top: 3px;
+	    > .ow-hoverable span.twisty {
+		.rotate(90deg);
 	    }
 	    > .details {
-		margin-left: 30px;
+		display: block;
 	    }
+	}
+	/* Special formatting for top level headings */
+	> .heading > .ow-hoverable {
+	    color: @primary;
+	    font-size: 105%;
 	}
 	.ow-hoverable {
 	    padding-left: 7px;
 	    border-radius: 5px;
-	    &[ow-level="0"] {
-		color: @primary;
-		font-size: 105%;
+	    display: inline-block;
+	    div {
+		display: inline-block;
+		cursor: pointer;
+	    }
+	    .action-buttons {
+		top: -1px;
+		span {
+		    &.edit-icon { .glyphicon-edit; }
+		    &.archive-icon { .glyphicon-eye-close; }
+		    &.list-icon {	.glyphicon-list; }
+		    &.new-icon { .glyphicon-plus; }
+		}
+	    }
+	    /* Twisty icon based on expandability */
+	    .twisty {
+		cursor: pointer;
+		.glyphicon;
+		.glyphicon-chevron-right;
+	    }
+	    &.expandable .twisty {
+		.opacify(100);
+	    }
+	    &.not-expandable .twisty {
+		.opacify(0);
+	    }
+	    &.lazy-expandable .twisty {
+		.opacify(75);
+	    }
+	    &.actionable:not(.project) {
+		font-weight: bold;
+		.todo-select {
+		    font-weight: bold;
+		}
 	    }
 	    &[ow-target="ancestor"] {
 		background: rgb(252, 240, 176); /* yellow */
@@ -235,16 +363,17 @@ dd.todo
 		background: rgb(223, 240, 216); /* green */
 	    }
 	}
+	.ow-hoverable[archived="true"] {
+	    .archive-btn {
+		.glyphicon-eye-open;
+	    }
+	}
     }
-}
+} /* End css for #outline-appliance */
 
-.pointer, .add-heading, .todo-state, .todo-option
+.pointer, .add-heading, .todo-select
 {
     cursor: pointer;
-}
-#show-all-label
-{
-    margin-left: 4px;
 }
 #sort-field,#list-filters {
     select, {
@@ -259,49 +388,25 @@ dd.todo
 {
     cursor: pointer;
 }
-/* Twisty icon for outline nodes */
-.twisty[expandable='undefined'] {
-    .opacify(75);
-}
-.twisty[expandable='true'] {
-    .opacify(100);
-}
-.twisty[expandable='false'] {
-    .opacify(0);
-}
-
 
 .hidden {
     height: 0px;
 }
-.heading.open {
-    padding-top: 3px;
-    > .ow-hoverable > i {
-    	.rotate(90deg);
-    }
-}
 /* Text styles for various statuses */
-.ow-hoverable,.todo-state {
-    &[archived="true"] {
-	font-style: italic;
-	.opacify(80);
-    }
+.ow-hoverable[archived="true"],.archived-indicator {
+    font-style: italic;
+    .opacify(80);
 }
-.priority-A {
+.priorityA {
     font-weight: bold;
 }
-.priority-C {
+.priorityC {
     font-style: italic;
 }
 .ow-hoverable,.todo-state {
     &[actionable="true"] {
 	font-weight: bold;
     }
-}
-div.ow-hoverable, div.clickable, div.ow-buttons
-{
-    display: inline-block;
-    cursor: pointer;
 }
 /* Box for editing a node (used on various pages) */
 .editable {
@@ -369,10 +474,38 @@ input,textarea {
 }
 
 /* Popover todo-state picker */
+.todo-state-widget {
+    width: 23px;
+    overflow: hidden;
+    span {
+	margin-left: 4px;
+    }
+    .read-only {
+	cursor: text;
+    }
+    select {
+	width: 48px;
+	border: 0px;
+	-webkit-appearance: none;
+	-moz-appearance: none;
+	appearance: none;
+	background: none;
+	.default {
+	    color: black;
+	}
+    }
+    .todo-popover {
+	z-index: 999;
+	position: absolute;
+	display: block;
+	.todo-option {
+	    margin: 3px;
+	    width: auto;
+	}
+    }
+}
 .todo-option
 {
-    margin: 3px;
-    width: auto;
     &:not([selected]):hover {
 	background-color: #DFF0D8;
     }
@@ -380,37 +513,6 @@ input,textarea {
 	cursor: default;
 	.opacify(50);
 	font-style: italic;
-    }
-}
-
-/* Text associated with a node */
-.ow-text {
-    background: rgb(240, 240, 240);
-    padding: 5px;
-    border-radius: 10px;
-    hr {
-	border-top-color: gray;
-    }
-}
-.ow-text,.edit-text
-{
-    h1 {
-	font-size: 24px;
-    }
-    h2 {
-	font-size: 22px;
-    }
-    h3 {
-	font-size: 20px;
-    }
-    h4 {
-	font-size: 18px;
-    }
-    h5 {
-	font-size: 14px;
-    }
-    h6 {
-	font-size: 12px;
     }
 }
 
@@ -452,6 +554,10 @@ input,textarea {
     }
     #scheduled-list {
 	margin-bottom: 15px;
+    }
+    .alert-empty {
+	.alert;
+	.alert-warning;
     }
     /* Collapsed accordian row */
     @media (max-width: 992px) {

@@ -75,6 +75,7 @@ class Color:
         string += _format_int_digits(self.blue)
         string += ")"
         return string
+
     def rgba_string(self):
         """Returns a (red, green, blue, alpha) string. Suitable for use in CSS."""
         # Calls rgb_string and adds alpha
@@ -82,6 +83,7 @@ class Color:
         string += self.rgb_string()[4:-1] + ", "
         string += str(float(self._alpha)/100) + ")"
         return string
+
     def rgb_hex(self):
         """Returns a number describing the color: 0xRRGGBB"""
         composite = self.red << self.RED_OFFSET
@@ -89,8 +91,17 @@ class Color:
         composite = composite & (self.blue << self.BLUE_OFFSET)
         return hex(composite)
 
+    def as_dict(self):
+        d = {
+            'red': self.red,
+            'green': self.green,
+            'blue': self.blue,
+            'alpha': self.get_alpha()}
+        return d
+
     def get_alpha(self):
         return float(self._alpha)/100
+
     def set_alpha(self, new_alpha):
         """Sets the alpha value (between 0 and 1)."""
         self._alpha = int(new_alpha * 100)

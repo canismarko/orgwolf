@@ -1,6 +1,6 @@
 /*globals angular, GtdHeading, jQuery*/
 "use strict";
-var HeadingFactory, UpcomingFactory, GtdListFactory;
+var HeadingFactory;
 
 var owServices = angular.module(
     'owServices',
@@ -62,78 +62,67 @@ owServices.factory('OldHeading', ['$resource', '$http', function($resource, $htt
         return new GtdHeading(data);
     };
 }]);
-owServices.factory('Heading', ['$resource', '$http', HeadingFactory]);
-function HeadingFactory($resource, $http) {
+owServices.factory('Heading', ['$resource', HeadingFactory]);
+function HeadingFactory($resource) {
     var res = $resource(
-	'/gtd/node/:pk/',
-	{pk: '@pk'},
+	'/gtd/nodes/:id/',
+	{id: '@id'},
 	{
-	    'query': {
-		method: 'GET',
-		transformResponse: $http.defaults.transformResponse.concat([
-		    function (data, headersGetter) {
-			return data;
-		    }
-		]),
-		isArray: true
-	    },
+	    'update': {method: 'PUT'},
+	    'create': {method: 'POST'},
 	}
     );
     return res;
 }
 
 /*************************************************
-* Factory creates resource for list of nodes with
-* upcoming deadlines
+* Default todo states. Override in template from
+* server.
 *
 **************************************************/
-owServices.factory('Upcoming', ['$resource', '$http', UpcomingFactory]);
-function UpcomingFactory($resource, $http) {
-    var res = $resource(
-	'/gtd/node/upcoming/',
-	{},
-	{
-	    'query': {
-		method: 'GET',
-		transformResponse: $http.defaults.transformResponse.concat([
-		    function (data, headersGetter) {
-			return data;
-		    }
-		]),
-		isArray: true
-	    },
-	}
-    );
-    return res;
-}
-
-/*************************************************
-* Factory creates next actions list $resource
-*
-**************************************************/
-owServices.factory(
-    'GtdList',
-    ['$resource', '$http', GtdListFactory]
+owServices.value(
+    'todoStatesList',
+    [
+	{id: 1,
+	 color: {
+	     red: 0,
+	     green: 0,
+	     blue: 0,
+	     alpha: 0,
+	 },
+	 abbreviation: 'NEXT',
+	},
+	{id: 2,
+	 color: {
+	     red: 0,
+	     green: 0,
+	     blue: 0,
+	     alpha: 0,
+	 }
+	},
+    ]
 );
-function GtdListFactory($resource, $http) {
-    var res = $resource(
-	'/gtd/lists/', {},
-	{
-	    'query': {
-		method: 'GET',
-		transformResponse: $http.defaults.transformResponse.concat([
-		    function (data, headersGetter) {
-			var i, new_heading;
-			for ( i=0; i<data.length; i+=1 ) {
-			    new_heading = new GtdHeading(data[i]);
-			    jQuery.extend(data[i], new_heading);
-			}
-			return data;
-		    }
-		]),
-		isArray: true
-	    },
+
+/*************************************************
+* Factory returns the request todoStates
+*
+**************************************************/
+owServices.factory('todoStates', ['$resource', 'todoStatesList', function($resource, todoStatesList) {
+    var states, TodoState;
+    TodoState = $resource('/gtd/todostate/');
+    states = TodoState.query();
+    states = todoStatesList;
+    states.getState = function(stateId) {
+	var foundState, foundStates;
+	foundStates = this.filter(function(obj) {
+	    return obj.id === stateId;
+	});
+	if (foundStates.length > 0) {
+	    foundState = foundStates[0];
+	} else {
+	    foundState = null;
 	}
-    );
-    return res;
-}
+	return foundState;
+    };
+    return states;
+}]);

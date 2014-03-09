@@ -305,8 +305,10 @@ class NodeQuerySet(query.QuerySet):
             return Node.objects.filter(owner=None)
 
     def mine(self, user, get_archived=False):
-        """Get all the objects that have `user` as the owner or assigned,
-        or have `user` in the related_users relationship."""
+        """
+        Get all the objects that have `user` as the owner or assigned,
+        or have `user` in the related_users relationship.
+        """
         qs = self
         if user.is_anonymous():
             qs = qs.filter(owner=None)

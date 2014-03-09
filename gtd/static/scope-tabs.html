@@ -1,11 +1,6 @@
 <ul class="nav nav-tabs ow-scope-tabs">
-  <li scope_id="0" ng-click="change_scope(null)" class="active">
-    <a href="#">
-      All
-    </a>
-  </li>
-  <li scope_id="{{ scope.id }}" ng-repeat="scope in scopes"
-      ng-click="change_scope(scope)">
+  <li id="scope-tab-{{ scope.id }}" ng-repeat="scope in owScopes"
+      ng-click="changeScope(scope)">
     <a href="#">
     {{ scope.display }}
     </a>

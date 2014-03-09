@@ -105,10 +105,9 @@
     <script src="//ajax.googleapis.com/ajax/libs/angularjs/1.2.7/angular-sanitize.min.js"></script>
     <script src="//ajax.googleapis.com/ajax/libs/angularjs/1.2.7/angular-resource.min.js"></script>
     <script src="//ajax.googleapis.com/ajax/libs/angularjs/1.2.7/angular-route.min.js"></script>
-
-    {% endif %}
-
     <script src="https://login.persona.org/include.js"></script>
+    <script src="{{ STATIC_URL }}persona.js"></script>
+    {% endif %}
 
     {% if debug %}
       <script src="{{ STATIC_URL }}jquery.mockjax.js"></script>
@@ -124,7 +123,6 @@
       <script type="text/javascript" src="{{ STATIC_URL }}wolfmail-directives.js"></script>
       <script type="text/javascript" src="{{ STATIC_URL }}wolfmail-filters.js"></script>
       <script type="text/javascript" src="{{ STATIC_URL }}wolfmail-ctrl.js"></script>
-      <script src="{{ STATIC_URL }}persona.js"></script>
     {% else %}
       <script src="{{ STATIC_URL }}orgwolf-min.js"></script>
     {% endif %}
@@ -163,8 +161,12 @@
 	ga('create', 'UA-47040758-1', 'orgwolf.com');
 	ga('send', 'pageview');
 	{% endif %}
-
     });
+    owServices.value(
+	'todoStatesList',
+	{% todo_states_json %}
+    );
+
     </script>
     {% endblock %}
     {% endblock %}
