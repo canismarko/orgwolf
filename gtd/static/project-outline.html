@@ -39,12 +39,8 @@
   <div class="outline">
     <div ow-editable ng-if="newProject"></div>
     <div ow-twisty ow-heading="heading"
-	 ng-repeat="heading in children | scope:activeScope |order:sortField"
+	 ng-repeat="heading in children | currentScope:activeScope |order:sortField"
 	 ng-if="!heading.archived || showArchived"></div>
-    <!-- <div ng-repeat="heading in children | order:sort_field" class="children" -->
-    <!-- 	 ng-show="heading.is_visible()"> -->
-    <!--   <div ng-include="'outline-tree'"></div> -->
-    <!-- </div> -->
   </div>
 
 </div><!-- /#outline-appliance -->

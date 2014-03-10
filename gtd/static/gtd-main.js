@@ -258,6 +258,10 @@ function outlineCtrl($scope, $rootScope, $http, $resource, $filter, Heading,
 	    $off();
 	});
     };
+    // Handler for changing the scope
+    $scope.$on('scope-changed', function(e, newScope) {
+	$scope.activeScope = newScope;
+    });
 }
 
 /*************************************************

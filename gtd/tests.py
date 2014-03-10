@@ -1310,7 +1310,7 @@ class DBOptimization(TestCase):
             reverse('list_display')
         )
         self.assertNumQueries(
-            4,
+            5,
             self.client.get,
             reverse('list_display'),
         )

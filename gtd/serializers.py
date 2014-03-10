@@ -78,7 +78,7 @@ class NodeListSerializer(NodeSerializer):
                   'slug', 'scope', 'root_id', 'root_name', 'priority',
                   'deadline_date', 'deadline_time',
                   'scheduled_date', 'scheduled_time',
-                  'repeats']
+                  'repeats', 'read_only']
 
     def get_root_id(self, obj):
         root = obj.get_root()

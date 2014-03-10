@@ -772,6 +772,47 @@ describe('controllers in gtd-main.js', function() {
 
 	});
     });
+    describe('the nodeOutline controller', function() {
+	var $scope;
+	beforeEach(inject(function($rootScope, $controller, _$httpBackend_) {
+	    // $httpBackend = _$httpBackend_
+	    // $httpBackend.whenGET('/gtd/todostate').respond(201, dummyStates);
+	    // $httpBackend.whenGET('/gtd/context').respond(201, []);
+	    // $httpBackend.whenGET('/gtd/scope').respond(201, []);
+	    // // $httpBackend.whenGET(/\/gtd\/nodes?[^t]?.*/).respond(201, []);
+	    // $httpBackend.whenGET('/gtd/nodes?todo_state=2').respond(201, []);
+	    // $httpBackend.whenGET(/\/gtd\/nodes\?todo_state=2&upcoming=[-0-9]+/)
+	    // 	.respond(201, []);
+	    // $httpBackend.whenGET(/\/gtd\/nodes\?field_group=actions_list&scheduled_date__lte=[-0-9]+&todo_state=8/)
+	    // 	.respond(201, []);
+	    $scope = $rootScope.$new();
+	    $controller('nodeOutline', {$scope: $scope});
+	    // $httpBackend.flush();
+	    // $scope.actionsList = [
+	    // 	{id: 1,
+	    // 	 scope: [1],
+	    // 	 todo_state: 2},
+	    // 	{id: 2,
+	    // 	 scope: []},
+	    // ];
+	    // $scope.upcomingList = [
+	    // 	{id: 2,
+	    // 	 scope: [1]},
+	    // 	{id: 3,
+	    // 	 scope: []},
+	    // ];
+	}));
+	// Reset httpBackend calls
+	afterEach(function() {
+	    // $httpBackend.verifyNoOutstandingExpectation();
+	});
+	it('handles the "scope-changed" signal', function() {
+	    expect($scope.activeScope).toBe(null);
+	    newScope = {id: 1};
+	    $scope.$emit('scope-changed', newScope);
+	    expect($scope.activeScope).toBe(newScope);
+	});
+    });
 }); // End of gtd-main.js tests
 
 describe('site wide resources', function() {
