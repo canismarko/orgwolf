@@ -350,9 +350,6 @@ owDirectives.directive('owTwisty', ['$compile', '$rootScope', 'Heading', functio
 	} else {
 	    scope.todoStates = [];
 	}
-	// scope.todoState = scope.todoStates.get(
-	//     {id: scope.heading.todo_state});
-
 	if ( scope.todoState && scope.todoState.actionable ) {
 	    element.find('.ow-hoverable').addClass('actionable');
 	}
@@ -399,9 +396,9 @@ owDirectives.directive('owTwisty', ['$compile', '$rootScope', 'Heading', functio
 	    // Get children if not already done
 	    if (!scope.loadedChildren && newState !== 'none') {
 		scope.children = Heading.query({parent_id: scope.heading.id});
-		scope.children.$promise.then(function() {
-		    scope.numArchived = scope.children.filter(function(obj) {
-			return obj.archived === false;
+		scope.children.$promise.then(function(headings) {
+		    scope.numArchived = headings.filter(function(obj) {
+			return obj.archived === true;
 		    }).length;
 		    scope.loadedChildren = true;
 		});
