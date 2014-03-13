@@ -113,7 +113,7 @@ class HTMLEscaper(HTMLParser):
                     'b', 'i', 'del', 'sup', 'sub',
                     'ul', 'ol', 'li',
                     'div', 'p', 'span', 'hr', 'a', 'br',
-                    'table', 'tbody', 'tr', 'td', 'th',
+                    'table', 'tbody', 'thead', 'tr', 'td', 'th',
                     'caption', 'pre', 'img',
                     ]
     ALLOWED_ATTRS = ['style', 'href', 'src', 'alt', 'width', 'height']

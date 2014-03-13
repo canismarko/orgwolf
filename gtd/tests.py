@@ -1844,6 +1844,9 @@ class NodeAPI(TestCase):
             new_node.slug,
             slugify(new_data['title'])
         )
+        self.assertFalse(
+            r['read_only']
+        )
 
     def test_post_anonymous(self):
         """

@@ -277,6 +277,22 @@ dd.todo
 	}
 	.ow-text {
 	    .well;
+	    table, th, td {
+		border-collapse: collapse;
+		border-color: @primary-dark;
+		border-style: solid;
+		border-width: 1px 0px;
+		padding: 0px 8px;
+		margin-bottom: 5px;
+	    }
+	    th, thead td {
+		color: white;
+		font-weight: bold;
+		background: @primary-dark-faded;
+	    }
+	    tr:nth-child(even) {
+		background: @primary-light-pale;
+	    }
 	}
 	.ow-text,.edit-text
 	{
