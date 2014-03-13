@@ -164,15 +164,21 @@ class MessageAPI(TestCase):
         message = Message.objects.get(pk=1)
         node = message.source_node
         url = reverse('messages', kwargs={'pk': message.pk})
-        self.client.post(
-            '{0}?action=create_heading'.format(url),
-            json.dumps({'close': 'true'}),
+        response = self.client.post(
+            url,
+            json.dumps({'close': 'true',
+                        'action': 'create_heading'}),
             content_type='application/json'
         )
+        r = json.loads(response.content)
         node = Node.objects.get(pk=node.pk)
         self.assertEqual(
             node.todo_state.abbreviation,
             'DONE'
+        )
+        self.assertEqual(
+            r['message']['id'],
+            message.pk
         )
 
     def test_convert_repeating_to_node(self):
@@ -331,8 +337,9 @@ class MessageAPI(TestCase):
         future_date = now + dt.timedelta(days=3)
         future_str = future_date.strftime('%Y-%m-%d')
         self.client.put(
-            '{0}?action=defer'.format(url),
-            json.dumps({'target_date': future_str}),
+            url,
+            json.dumps({'target_date': future_str,
+                        'action': 'defer'}),
             content_type='application/json'
         )
         # Now check that the new rcvd_date is set

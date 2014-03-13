@@ -46,18 +46,27 @@ owDirectives.directive('owMessageRow', function() {
 * descended from a message.
 *   eg. Message --> new task (Heading)
 **************************************************/
-owDirectives.directive('owMessageHeading', function() {
+owDirectives.directive('owMessageHeading', ['todoStates', function(todoStates) {
     function link(scope, element, attrs) {
 	scope.isEditable = false;
 	scope.$on('finishEdit', function() {
 	    scope.isEditable = false;
+	});
+	scope.$watch('heading.todo_state', function(newStateId) {
+	    if ( newStateId) {
+		scope.todoState = todoStates.filter(function(state) {
+		    return state.id === newStateId;
+		})[0];
+	    } else {
+		scope.todoState = null;
+	    }
 	});
     }
     return {
 	scope: false,
 	link: link,
     };
-});
+}]);
 
 /*************************************************
 * Directive that handles actions on messages
@@ -95,10 +104,9 @@ owDirectives.directive('owMsgActions', ['Heading', function(Heading) {
 	    scope.new_node.close = false;
 	    scope.create_task_modal(msg);
 	};
-	scope.complete_task = function(msg) {
-	    // Shows modal for creating a DONE task (from DFRD Nodes)
-	    scope.new_node.close = true;
-	    scope.create_task_modal(msg);
+	scope.completeTask = function(msg) {
+	    // Make the Node as completed in the API
+	    msg.$createNode({close: true});
 	};
 	scope.create_project_modal = function(msg) {
 	    // Shows modal for creating a new project (root Node)

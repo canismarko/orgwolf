@@ -114,6 +114,7 @@ class MessageView(APIView):
         if action == 'create_heading':
             message = Message.objects.get(pk=pk)
             # Create a new action based on this message
+            message_data = MessageSerializer(message).data
             node = message.handler.create_node()
             # Set some attributes on the newly created Node()
             node.todo_state = TodoState.objects.get(abbreviation='NEXT')
@@ -123,17 +124,18 @@ class MessageView(APIView):
                 node.parent = Node.objects.get(pk=pid)
             node.save()
             # Close this Node if requested
-            if request.DATA.get('close', 'false') == 'true':
+            if data.get('close', 'false') == 'true':
+                message_data['in_inbox'] = False
                 node.todo_state = TodoState.objects.get(abbreviation='DONE')
                 node.auto_update = True
                 node.save()
-            message = Message.objects.filter(pk=pk).first()
+            else:
+                message = Message.objects.filter(pk=pk).first()
+                message_data = MessageSerializer(message).data
             heading_serializer = NodeSerializer(node, request)
             r = {'status': 'success',
                  'heading': heading_serializer.data}
-            if message:
-                message_serializer = MessageSerializer(message)
-                r['message'] = message_serializer.data
+            r['message'] = message_data
         else:
             data = data.dict()
             data['rcvd_date'] = dt.datetime.now(get_current_timezone())

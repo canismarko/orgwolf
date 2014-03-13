@@ -168,6 +168,7 @@ describe('directives in wolfmail-directives.js', function() {
 	beforeEach(function() {
 	    $rootScope.heading = {id: 1};
 	    element = $compile('<div ow-message-heading></div>')($rootScope);
+	    $httpBackend.whenGET('/gtd/todostate').respond(200, []);
 	});
 	it('responds to the finishEdit signal', function() {
 	    $rootScope.$digest();
@@ -260,11 +261,17 @@ describe('wolfmail-ctrl.js', function() {
 	beforeEach(inject(function($rootScope, $controller, _$httpBackend_) {
 	    $controller('owInbox', {$scope: $scope});
 	}));
-	it('removes the node in response to  "message-archived" signal', function() {
+	it('removes the message in response to  "message-archived" signal', function() {
 	    $scope.$emit('message-archived', {id: 1});
 	    $scope.$digest();
 	    $httpBackend.flush();
 	    $scope.$emit('message-archived', {id: 1});
+	    expect($scope.messages.length).toEqual(0);
+	});
+	it('removes the message if response doesn\'t have in_inbox=true', function() {
+	    $scope.$digest();
+	    $httpBackend.flush();
+	    $scope.$emit('heading-created', {id: 1, in_inbox: false});
 	    expect($scope.messages.length).toEqual(0);
 	});
     });

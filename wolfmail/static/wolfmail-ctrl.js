@@ -71,6 +71,11 @@ function owinbox($scope, $rootScope, $resource, Message, Heading, owWaitIndicato
     $scope.$on('message-deferred', function(e, message) {
 	removeMessage(message);
     });
+    $scope.$on('heading-created', function(e, message) {
+	if ( !message.in_inbox ) {
+	    removeMessage(message);
+	}
+    });
     // Get top level projects for "New task" modal
     $scope.projects = Heading.query({'parent_id': 0,
 				     'archived': false});

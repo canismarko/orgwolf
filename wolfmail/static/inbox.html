@@ -46,7 +46,7 @@
 		  data-title="New Project"></span>
 	  </button>
 	  <button class="msg-complete btn btn-success"
-		  ng-click="complete_task(message)">
+		  ng-click="completeTask(message)">
 	    <span class="glyphicon glyphicon-check"
 		  data-title="Mark as 'Done'"></span>
 	  </button>
@@ -80,10 +80,12 @@
 	   ow-message-heading
 	   ng-hide="isEditable">
 	<div>
-	  <span class="heading-icon glyphicon glyphicon-arrow-right"></span>
+	  <span class="heading-icon glyphicon glyphicon-unchecked"></span>
+	  <span ow-todo ow-heading="heading"></span>
 	  {{ heading.title }}
-	  <button class="btn btn-sm btn-default"
+	  <button class="btn btn-xs btn-default"
 		  ng-click="isEditable = !isEditable">
+	    <span class="glyphicon glyphicon-edit"></span>
 	    Edit</button>
 	</div>
       </div>

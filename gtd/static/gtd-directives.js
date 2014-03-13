@@ -416,8 +416,13 @@ owDirectives.directive('owTwisty', ['$compile', '$rootScope', 'Heading', functio
 		if ( newHeading ) {
 		    // Update existing heading
 		    angular.extend(scope.heading, newHeading);
-		    scope.todoState = $rootScope.todoStates.get(
-			{id: scope.heading.todo_state});
+		    if ( scope.heading.todo_state ) {
+			scope.todoState = scope.todoStates.filter(function(state) {
+			    return state.id === scope.heading.todo_state;
+			})[0];
+		    } else {
+			scope.todoState = null;
+		    }
 		}
 		$off();
 	    });

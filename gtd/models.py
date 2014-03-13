@@ -648,10 +648,8 @@ class Node(MPTTModel):
 
     def __str__(self):
         if hasattr(self.todo_state, "abbreviation"):
-            return mark_safe(
-                "[" + self.todo_state.as_html() + "] " + conditional_escape(
-                    self.get_title())
-            )
+            return "[{0}] {1}".format(self.todo_state.abbreviation,
+                                      self.get_title())
         else:
             return self.get_title()
 
