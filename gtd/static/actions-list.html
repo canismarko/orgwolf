@@ -2,7 +2,7 @@
   <!-- Current date widget -->
   <div class="current-date" ow-current-date></div>
   <!-- Hard scheduled List -->
-  <div id="scheduled-list" ng-if="scheduled.length">
+  <div id="scheduled-list" ng-show="scheduledList.length">
     <div class="table-heading">
       <div class="description">Description</div>
       <div class="buttons"></div>
@@ -10,7 +10,7 @@
       <div class="project">Project</div>
     </div>
 
-    <div ow-list-row ng-repeat="heading in scheduled" ow-heading="heading"
+    <div ow-list-row ng-repeat="heading in scheduledList" ow-heading="heading"
 	 ow-date="{{ heading.scheduled_date }} {{ heading.scheduled_time }}">
     </div>
     <!-- end repeating scheduled list -->
