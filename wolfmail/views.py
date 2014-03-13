@@ -95,13 +95,14 @@ class MessageView(APIView):
         elif action == 'defer':
             # Reschedule this Message to a later date
             new_date = dt.datetime.strptime(
-                request.DATA['target_date'],
+                data['target_date'],
                 '%Y-%m-%d'
             ).replace(tzinfo=get_current_timezone())
             message.rcvd_date = new_date
             message.save()
+            serializer = MessageSerializer(message)
             r = {'status': 'success',
-                 'result': 'message_deleted'}
+                 'message': serializer.data}
         return Response(r)
 
     def post(self, request, pk):

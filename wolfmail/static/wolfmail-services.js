@@ -31,7 +31,16 @@ function MessageFactory($resource, $rootScope) {
 					  data.heading);
 		    return data.message;
 		}
-	    }
+	    },
+	    'defer': {
+		method: 'PUT',
+		params: {action: 'defer'},
+		transformResponse: function(data) {
+		    data = angular.fromJson(data);
+		    $rootScope.$broadcast('message-deferred', data.message);
+		    return data.message;
+		}
+	    },
 	}
     );
     return res;

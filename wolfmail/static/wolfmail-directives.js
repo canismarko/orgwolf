@@ -50,7 +50,6 @@ owDirectives.directive('owMessageHeading', function() {
     function link(scope, element, attrs) {
 	scope.isEditable = false;
 	scope.$on('finishEdit', function() {
-	    console.log('here we are');
 	    scope.isEditable = false;
 	});
     }
@@ -105,7 +104,7 @@ owDirectives.directive('owMsgActions', ['Heading', function(Heading) {
 	    // Shows modal for creating a new project (root Node)
 	    delete scope.new_node.tree_id;
 	    delete scope.new_node.parent;
-	    scope.new_node.title = msg.fields.subject;
+	    scope.new_node.title = msg.subject;
 	    scope.active_msg = msg;
 	    scope.modal_task = false;
 	    scope.$task_modal.modal();
@@ -141,11 +140,11 @@ owDirectives.directive('owMsgActions', ['Heading', function(Heading) {
 	    // User picked a new project for the Node()
 	    scope.new_node.parent = parent.id;
 	};
-	scope.defer_msg = function() {
+	scope.deferMessage = function() {
 	    // Reschedule this message to appear in the future
 	    scope.new_node.target_date = scope.$defer_modal.find('#target-date').val();
 	    scope.$defer_modal.modal('hide').one('hidden.bs.modal', function() {
-		scope.active_msg.defer(scope.new_node);
+		scope.active_msg.$defer({target_date: scope.newDate});
 	    });
 	};
 	scope.delete_node = function() {

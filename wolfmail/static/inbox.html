@@ -30,7 +30,7 @@
     </div>
 
     <div ng-repeat="message in messages" unread="{{ message.unread }}"
-	 ow-handler="{{ message.fields.handler_path }}"
+	 ow-handler="{{ message.handler_path }}"
 	 class="message-full-row"
 	 ow-message-row>
       <div class="message-row">
@@ -74,7 +74,7 @@
 	  </a>
 	</div>
 	<div class="received"
-	     ng-bind-html="message.fields.rcvd_date | format_date"></div>
+	     ng-bind-html="message.rcvd_date | format_date"></div>
       </div>
       <div ng-repeat-start="heading in headings" class="message-heading"
 	   ow-message-heading
