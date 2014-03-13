@@ -31,46 +31,64 @@
 
     <div ng-repeat="message in messages" unread="{{ message.unread }}"
 	 ow-handler="{{ message.fields.handler_path }}"
-	 class="message-row"
+	 class="message-full-row"
 	 ow-message-row>
-      <div class="action-buttons btn-group btn-group-xs">
-	<button class="msg-task btn btn-primary"
-		ng-click="open_task_modal(message)">
-	  <span class="glyphicon glyphicon-unchecked"
-		data-title="New Task"></span>
-	</button>
-	<button class="msg-project btn btn-info"
-		ng-click="create_project_modal(message)">
-	  <span class="glyphicon glyphicon-folder-close"
-		data-title="New Project"></span>
-	</button>
-	<button class="msg-complete btn btn-success"
-		ng-click="complete_task(message)">
-	  <span class="glyphicon glyphicon-check"
-		data-title="Mark as 'Done'"></span>
-	</button>
-	<button class="msg-defer btn btn-warning"
-		ng-click="defer_modal(message)">
-	  <span class="glyphicon glyphicon-time"
-		data-title="Defer"></span>
-	</button>
-	<button class="msg-save btn btn-default"
-		ng-click="archive_msg(message)">
-	  <span class="glyphicon glyphicon-save"
-		data-title="Archive"></span>
-	</button>
-	<button class="msg-delete btn btn-danger"
-		ng-click="delete_modal(message)">
-	  <span class="glyphicon glyphicon-trash"
-		data-title="Delete"></span>
-	</button>
-      </div><!-- /.action-buttons -->
+      <div class="message-row">
+	<div class="action-buttons btn-group btn-group-xs">
+	  <button class="msg-task btn btn-primary"
+		  ng-click="open_task_modal(message)">
+	    <span class="glyphicon glyphicon-unchecked"
+		  data-title="New Task"></span>
+	  </button>
+	  <button class="msg-project btn btn-info"
+		  ng-click="create_project_modal(message)">
+	    <span class="glyphicon glyphicon-folder-close"
+		  data-title="New Project"></span>
+	  </button>
+	  <button class="msg-complete btn btn-success"
+		  ng-click="complete_task(message)">
+	    <span class="glyphicon glyphicon-check"
+		  data-title="Mark as 'Done'"></span>
+	  </button>
+	  <button class="msg-defer btn btn-warning"
+		  ng-click="defer_modal(message)">
+	    <span class="glyphicon glyphicon-time"
+		  data-title="Defer"></span>
+	  </button>
+	  <button class="msg-archive btn btn-default"
+		  ng-click="archive(message)">
+	    <span class="glyphicon glyphicon-save"
+		  data-title="Archive"></span>
+	  </button>
+	  <button class="msg-delete btn btn-danger"
+		  ng-click="delete_modal(message)">
+	    <span class="glyphicon glyphicon-trash"
+		  data-title="Delete"></span>
+	  </button>
+	</div><!-- /.action-buttons -->
 
-      <div class="from" ng-bind-html="message | format_sender"></div>
-      <div class="subject" ng-bind-html="message | format_subject"></div>
-      <div class="received"
-	   ng-bind-html="message.fields.rcvd_date | format_date"></div>
-    </div><!-- /.message-row -->
+	<div class="from" ng-bind-html="message | format_sender"></div>
+	<div class="subject">
+	  <a href="{{ message.id }}"
+	     ng-bind-html="message | format_subject">
+	  </a>
+	</div>
+	<div class="received"
+	     ng-bind-html="message.fields.rcvd_date | format_date"></div>
+      </div>
+      <div ng-repeat-start="heading in headings" class="message-heading"
+	   ow-message-heading
+	   ng-hide="isEditable">
+	<div>
+	  <span class="heading-icon glyphicon glyphicon-arrow-right"></span>
+	  {{ heading.title }}
+	  <button class="btn btn-sm btn-default"
+		  ng-click="isEditable = !isEditable">
+	    Edit</button>
+	</div>
+      </div>
+      <div ng-repeat-end ow-editable class="row" ow-heading="heading" ng-if="isEditable"></div>
+    </div><!-- /.message-full-row -->
   </div><!-- /.message-list -->
 </div><!-- /#inbox -->
 

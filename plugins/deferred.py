@@ -71,5 +71,4 @@ class MessageHandler(BaseMessageHandler):
             self._msg.save()
         else:
             new_node = source_node
-            self._msg.delete()
         return new_node

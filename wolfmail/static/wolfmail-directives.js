@@ -1,15 +1,16 @@
-/*globals owMain, $*/
+/*globals $, owMain, owDirectives */
 "use strict";
 
 /*************************************************
 * Directive sets the parameters of next
 * actions table row
 **************************************************/
-owMain.directive('owMessageRow', function() {
+owDirectives.directive('owMessageRow', function() {
     function link(scope, element, attrs) {
 	var $element, $bTask, $bProject, $bComplete, $bDefer, $bArchive, $bDelete;
 	$element = $(element);
 	$element.find('.glyphicon').tooltip();
+	scope.headings = [];
 	// Find buttons
 	$bTask = $element.find('.msg-task');
 	$bProject = $element.find('.msg-project');
@@ -27,8 +28,34 @@ owMain.directive('owMessageRow', function() {
 	} else {
 	    $bComplete.remove();
 	}
+	// Respond to new rows being added
+	scope.$on('heading-created', function(e, message, newHeading) {
+	    if ( scope.message.id === message.id ) {
+		scope.headings.push(newHeading);
+	    }
+	});
     }
     return {
+	scope: true,
+	link: link,
+    };
+});
+
+/*************************************************
+* Directive for showing the Headings that are
+* descended from a message.
+*   eg. Message --> new task (Heading)
+**************************************************/
+owDirectives.directive('owMessageHeading', function() {
+    function link(scope, element, attrs) {
+	scope.isEditable = false;
+	scope.$on('finishEdit', function() {
+	    console.log('here we are');
+	    scope.isEditable = false;
+	});
+    }
+    return {
+	scope: false,
 	link: link,
     };
 });
@@ -37,10 +64,10 @@ owMain.directive('owMessageRow', function() {
 * Directive that handles actions on messages
 *
 **************************************************/
-owMain.directive('owMsgActions', ['Heading', function(Heading) {
+owDirectives.directive('owMsgActions', ['Heading', function(Heading) {
     // Directive handles actions modal on message object
     function link(scope, element, attrs) {
-	var $element;
+	var $element, MessageApi;
 	// Find jQuery elements
 	$element = $(element);
 	scope.$task_modal = $element.find('.modal.task');
@@ -50,12 +77,11 @@ owMain.directive('owMsgActions', ['Heading', function(Heading) {
 	if ( scope.new_node === undefined ) {
 	    scope.new_node = {};
 	}
-	scope.new_node.$scope = scope;
 	// Handlers for showing modals
 	scope.create_task_modal = function(msg) {
 	    // Abstract handler: shows modal for creating a new task
-	    scope.new_node.title = msg.fields.subject;
-	    if ( msg.fields.handler_path === 'plugins.deferred' ) {
+	    scope.new_node.title = msg.subject;
+	    if ( msg.handler_path === 'plugins.deferred' ) {
 		// Deferred nodes don't show the modal
 		msg.create_node(scope.new_node);
 	    } else {
@@ -90,21 +116,20 @@ owMain.directive('owMsgActions', ['Heading', function(Heading) {
 	    today = new Date();
 	    scope.active_msg = msg;
 	    scope.$defer_modal.modal();
-	    scope.$defer_modal.find('.datepicker').datepicker({
-		format: 'yyyy-mm-dd',
-		todayBtn: true,
-		todayHighlight: true,
-		startDate: today,
-	    });
 	};
 	scope.delete_modal = function(msg) {
 	    scope.active_msg = msg;
 	    scope.$delete_modal.modal();
 	};
 	// Handlers for commiting actions
-	scope.archive_msg = function(msg) {
-	    // Remove the message from the inbox in the database
-	    msg.archive(scope.new_node);
+	scope.archive = function(msg) {
+	    msg.$archive();
+	};
+	scope.createNode = function(msg) {
+	    // Send the new Node to the API
+	    scope.$task_modal.modal('hide').one('hidden.bs.modal', function() {
+		msg.$createNode(scope.new_node);
+	    });
 	};
 	scope.change_project = function(project) {
 	    // Get a list of descendants for the selected project(tree)
@@ -115,13 +140,6 @@ owMain.directive('owMsgActions', ['Heading', function(Heading) {
 	scope.change_parent = function(parent) {
 	    // User picked a new project for the Node()
 	    scope.new_node.parent = parent.id;
-	};
-	scope.create_node = function() {
-	    // Send the new Node to the API
-	    scope.$task_modal.modal('hide').one('hidden.bs.modal', function() {
-		console.log(scope.new_node);
-		scope.active_msg.create_node(scope.new_node);
-	    });
 	};
 	scope.defer_msg = function() {
 	    // Reschedule this message to appear in the future
@@ -139,6 +157,7 @@ owMain.directive('owMsgActions', ['Heading', function(Heading) {
     }
     return {
 	link: link,
+	scope: false,
 	templateUrl: '/static/message-modals.html'
     };
 }]);

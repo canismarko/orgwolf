@@ -1,4 +1,4 @@
-/*globals owMain, Message*/
+/*globals owMain, Message, owServices, angular*/
 "use strict";
 var MessageFactory;
 
@@ -7,39 +7,32 @@ var MessageFactory;
 * DFRD node, quick-capture item, etc.
 *
 **************************************************/
-owMain.factory('MessageAPI', ['$resource', '$http', MessageFactory]);
-function MessageFactory($resource, $http) {
+owServices.factory('Message', ['$resource', '$rootScope', MessageFactory]);
+function MessageFactory($resource, $rootScope) {
     var res = $resource(
 	'/wolfmail/message/:id', {id: '@id'},
 	{
-	    'query': {
-		method: 'GET',
-		transformResponse: $http.defaults.transformResponse.concat([
-		    function (data, headersGetter) {
-			var i, new_message;
-			for ( i=0; i<data.length; i+=1 ) {
-			    new_message = new Message(data[i]);
-			    data[i] = new_message;
-			}
-			return data;
-		    }
-		]),
-		isArray: true
+	    'archive': {
+		method: 'PUT',
+		params: {action: 'archive'},
+		transformResponse: function(data) {
+		    data = angular.fromJson(data);
+		    $rootScope.$broadcast('message-archived', data.message);
+		    return data.message;
+		}
 	    },
-	    'get': {
-		method: 'GET',
-		transformResponse: $http.defaults.transformResponse.concat([
-		    function(data) {
-			return new Message(data);
-		    }
-		])
+	    'createNode': {
+		method: 'POST',
+		params: {action: 'create_heading'},
+		transformResponse: function(data) {
+		    data = angular.fromJson(data);
+		    $rootScope.$broadcast('heading-created',
+					  data.message,
+					  data.heading);
+		    return data.message;
+		}
 	    }
 	}
     );
-    // Attach custom methods to the prototype
-    res.prototype.create_node = Message.prototype.create_node;
-    res.prototype.delete_msg = Message.prototype.delete_msg;
-    res.prototype.archive = Message.prototype.archive;
-    res.prototype.defer = Message.prototype.defer;
     return res;
 }

@@ -81,7 +81,7 @@ class MessageAPI(TestCase):
             403
         )
 
-    def test_convert_to_node(self):
+    def test_convert_dfrd_to_node(self):
         message = Message.objects.get(pk=1)
         node = message.source_node
         self.assertTrue(
@@ -89,12 +89,13 @@ class MessageAPI(TestCase):
             'DFRD'
         )
         url = reverse('messages', kwargs={'pk': message.pk})
-        response = self.client.put(
+        response = self.client.post(
             url,
-            json.dumps({'action': 'create_node',
-                        'title': 'man of action',
-                        'parent': 1,
-                        'close': 'false'}),
+            json.dumps(
+                {'action': 'create_heading',
+                 'title': 'man of action',
+                 'parent': 1,
+                 'close': 'false'}),
             content_type='application/json'
         )
         r = json.loads(response.content)
@@ -103,8 +104,12 @@ class MessageAPI(TestCase):
             'success',
         )
         self.assertEqual(
-            r['result'],
-            'message_deleted'
+            r['heading']['title'],
+            'man of action'
+        )
+        self.assertEqual(
+            r['heading']['id'],
+            node.pk
         )
         self.assertEqual(
             Message.objects.filter(pk=1).count(),
@@ -115,7 +120,7 @@ class MessageAPI(TestCase):
         self.assertEqual(
             node.todo_state.abbreviation,
             'NEXT',
-            'create_node action does not set new nodes todo_state'
+            'create_heading action does not set new nodes todo_state'
         )
         self.assertEqual(
             node.title,
@@ -128,14 +133,40 @@ class MessageAPI(TestCase):
             'Parent not set'
         )
 
+    def test_convert_other_to_node(self):
+        message = Message.objects.get(pk=4)
+        node = message.source_node
+        url = reverse('messages', kwargs={'pk': message.pk})
+        response = self.client.post(
+            url,
+            json.dumps({'action': 'create_heading',
+                        'title': 'man of action',
+                        'parent': 1,
+                        'close': 'false'}),
+            content_type='application/json'
+        )
+        r = json.loads(response.content)
+        self.assertEqual(
+            Message.objects.filter(pk=message.pk).count(),
+            1,
+            'Message is deleted after new heading is created'
+        )
+        self.assertEqual(
+            r['heading']['title'],
+            'man of action',
+        )
+        self.assertEqual(
+            r['message']['id'],
+            message.pk
+        )
+
     def test_convert_to_closed_node(self):
         message = Message.objects.get(pk=1)
         node = message.source_node
         url = reverse('messages', kwargs={'pk': message.pk})
-        self.client.put(
-            url,
-            json.dumps({'action': 'create_node',
-                        'close': 'true'}),
+        self.client.post(
+            '{0}?action=create_heading'.format(url),
+            json.dumps({'close': 'true'}),
             content_type='application/json'
         )
         node = Node.objects.get(pk=node.pk)
@@ -147,9 +178,9 @@ class MessageAPI(TestCase):
     def test_convert_repeating_to_node(self):
         message = Message.objects.get(pk=2)
         url = reverse('messages', kwargs={'pk': message.pk})
-        self.client.put(
+        self.client.post(
             url,
-            json.dumps({'action': 'create_node'}),
+            json.dumps({'action': 'create_heading'}),
             content_type='application/json'
         )
         self.assertEqual(
@@ -168,9 +199,9 @@ class MessageAPI(TestCase):
         node.repeats_from_completion = True
         node.save()
         url = reverse('messages', kwargs={'pk': message.pk})
-        self.client.put(
+        self.client.post(
             url,
-            json.dumps({'action': 'create_node',
+            json.dumps({'action': 'create_heading',
                         'close': 'true'}),
             content_type='application/json'
         )
@@ -271,15 +302,20 @@ class MessageAPI(TestCase):
         url = reverse('messages', kwargs={'pk': msg.pk})
         self.assertTrue(
             msg.in_inbox,
-            'Message starts out with in_inbox=False (bad fixture?)'
+            'Message starts out with in_inbox=False (check fixture)'
         )
-        self.client.put(url,
+        response = self.client.put(url,
                         json.dumps({'action': 'archive'}),
                         content_type='application/json')
-        msg = Message.objects.get(pk=1)
-        self.assertTrue(
-            not msg.in_inbox,
+        r = json.loads(response.content)
+        msg = Message.objects.get(pk=msg.pk)
+        self.assertFalse(
+            msg.in_inbox,
             'Message not changed'
+        )
+        self.assertEqual(
+            r['message']['id'],
+            msg.pk
         )
 
     def test_defer(self):
@@ -295,9 +331,8 @@ class MessageAPI(TestCase):
         future_date = now + dt.timedelta(days=3)
         future_str = future_date.strftime('%Y-%m-%d')
         self.client.put(
-            url,
-            json.dumps({'action': 'defer',
-                        'target_date': future_str}),
+            '{0}?action=defer'.format(url),
+            json.dumps({'target_date': future_str}),
             content_type='application/json'
         )
         # Now check that the new rcvd_date is set

@@ -7,15 +7,15 @@
 owFilters.filter('format_sender', ['$sce', function($sce) {
     return function(msg) {
 	var s;
-	if (msg.fields.handler_path === 'plugins.deferred') {
+	if (msg.handler_path === 'plugins.deferred') {
 	    // Message from a deferred Node
 	    s = '';
 	    s += '<span class="dfrd">DFRD</span> Node';
 	    s = $sce.trustAsHtml(s);
-	} else if (msg.fields.handler_path === 'plugins.quickcapture' ) {
+	} else if (msg.handler_path === 'plugins.quickcapture' ) {
 	    s = 'Quick capture';
 	} else {
-	    s = msg.fields.sender;
+	    s = msg.sender;
 	}
 	return s;
     };
@@ -28,20 +28,20 @@ owFilters.filter('format_subject', ['$sce', function($sce) {
     return function(msg) {
 	var s;
 	s = '';
-	if (msg.fields.handler_path === 'plugins.deferred') {
+	if (msg.handler_path === 'plugins.deferred') {
 	    // Message from a deferred Node
 	    s = '<a href="/gtd/project/#';
-	    s += msg.fields.source_node + '-';
-	    s += msg.fields.node_slug + '">';
-	    s += msg.fields.subject;
+	    s += msg.source_node + '-';
+	    s += msg.node_slug + '">';
+	    s += msg.subject;
 	    s += '</a>';
 	    s = $sce.trustAsHtml(s);
-	} else if (msg.fields.handler_path === 'plugins.quickcapture' ) {
+	} else if (msg.handler_path === 'plugins.quickcapture' ) {
 	    // Quick-captured message
-	    s = msg.fields.subject;
+	    s = msg.subject;
 	} else {
-	    s = '<a href="/wolfmail/inbox/' + msg.pk + '/">';
-	    s += msg.fields.subject;
+	    s = '<a href="/wolfmail/inbox/' + msg.id + '/">';
+	    s += msg.subject;
 	    s += '</a>';
 	}
 	return s;

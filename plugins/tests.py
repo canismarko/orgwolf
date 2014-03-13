@@ -222,8 +222,8 @@ class BaseMessageHandlerTest(TestCase):
         node = handler.create_node()
         self.assertEqual(
             Message.objects.filter(pk=message.pk).count(),
-            0,
-            'Message not deleted after node created'
+            1,
+            'Message deleted after node created'
         )
         self.assertTrue(
             isinstance(node, Node),
@@ -266,8 +266,8 @@ class DeferredHandlerTest(TestCase):
         )
         self.assertEqual(
             Message.objects.filter(pk=message.pk).count(),
-            0,
-            'Message not deleted after create_node() called'
+            1,
+            'Message deleted after create_node() called'
         )
 
     def test_create_repeating_node(self):

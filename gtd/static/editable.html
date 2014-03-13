@@ -2,8 +2,8 @@
   <form novalidate class="heading-form" name="form">
     <div class="header">
       <i class="twisty glyphicon glyphicon-chevron-down" expandable="disabled"></i>
-      <span ng-if="heading.title">{{ heading.title }}</span>
-      <span ng-if="!heading.title">New Heading</span>
+      <span ng-show="heading.title">{{ heading.title }}</span>
+      <span ng-hide="heading.title">New Heading</span>
       <button class="btn btn-primary btn-sm" ng-click="save($event)"
       	      ng-disabled="form.$invalid">
 	Save

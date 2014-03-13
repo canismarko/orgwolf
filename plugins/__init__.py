@@ -44,7 +44,6 @@ class BaseMessageHandler():
         """
         new_node = Node()
         new_node.owner = self._msg.owner
-        self._msg.delete()
         return new_node
 
     def archive(self):

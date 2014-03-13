@@ -711,9 +711,9 @@ describe('controllers in gtd-main.js', function() {
 	var $httpBackend
 	beforeEach(inject(function($rootScope, $controller, _$httpBackend_) {
 	    $httpBackend = _$httpBackend_
-	    $httpBackend.whenGET('/gtd/todostate').respond(201, dummyStates);
-	    $httpBackend.whenGET('/gtd/context').respond(201, []);
-	    $httpBackend.whenGET('/gtd/scope').respond(201, []);
+	    $httpBackend.whenGET('/gtd/todostate').respond(200, dummyStates);
+	    $httpBackend.whenGET('/gtd/context').respond(200, []);
+	    $httpBackend.whenGET('/gtd/scope').respond(200, []);
 	    // $httpBackend.whenGET(/\/gtd\/nodes?[^t]?.*/).respond(201, []);
 	    $httpBackend.whenGET('/gtd/nodes?todo_state=2').respond(201, []);
 	    $httpBackend.whenGET(/\/gtd\/nodes\?todo_state=2&upcoming=[-0-9]+/)

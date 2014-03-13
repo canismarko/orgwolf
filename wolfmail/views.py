@@ -31,6 +31,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from gtd.models import Node, TodoState
+from gtd.serializers import NodeSerializer
 from wolfmail.models import Message
 from wolfmail.serializers import InboxSerializer, MessageSerializer
 
@@ -79,25 +80,18 @@ class MessageView(APIView):
         return Response(serializer.data)
 
     def put(self, request, pk):
-        action = request.DATA.get('action', None)
+        if request.QUERY_PARAMS:
+            data = request.QUERY_PARAMS
+        else:
+            data = request.DATA
+        action = data.get('action', None)
         message = Message.objects.get(pk=pk)
-        if action == 'create_node':
-            node = message.handler.create_node()
-            # Set some attributes on the newly created Node()
-            node.todo_state = TodoState.objects.get(abbreviation='NEXT')
-            node.title = request.DATA.get('title', node.title)
-            pid = request.DATA.get('parent', None)
-            if pid is not None:
-                node.parent = Node.objects.get(pk=pid)
-            node.save()
-            # Close this Node if requested
-            if request.DATA.get('close', 'false') == 'true':
-                node.todo_state = TodoState.objects.get(abbreviation='DONE')
-                node.auto_update = True
-                node.save()
-        elif action == 'archive':
+        if action == 'archive':
             # Archive this Message
             message.handler.archive()
+            serializer = MessageSerializer(message)
+            r = {'status': 'success',
+                 'message': serializer.data}
         elif action == 'defer':
             # Reschedule this Message to a later date
             new_date = dt.datetime.strptime(
@@ -106,18 +100,47 @@ class MessageView(APIView):
             ).replace(tzinfo=get_current_timezone())
             message.rcvd_date = new_date
             message.save()
-        r = {'status': 'success',
-             'result': 'message_deleted'}
+            r = {'status': 'success',
+                 'result': 'message_deleted'}
         return Response(r)
 
     def post(self, request, pk):
-        data = request.DATA.dict()
-        data['rcvd_date'] = dt.datetime.now(get_current_timezone())
-        data['owner'] = request.user
-        msg = Message(**data)
-        msg.save()
-        serializer = MessageSerializer(msg)
-        return Response(serializer.data)
+        if request.QUERY_PARAMS:
+            data = request.QUERY_PARAMS
+        else:
+            data = request.DATA
+        action = data.get('action', None)
+        if action == 'create_heading':
+            message = Message.objects.get(pk=pk)
+            # Create a new action based on this message
+            node = message.handler.create_node()
+            # Set some attributes on the newly created Node()
+            node.todo_state = TodoState.objects.get(abbreviation='NEXT')
+            node.title = data.get('title', node.title)
+            pid = data.get('parent', None)
+            if pid is not None:
+                node.parent = Node.objects.get(pk=pid)
+            node.save()
+            # Close this Node if requested
+            if request.DATA.get('close', 'false') == 'true':
+                node.todo_state = TodoState.objects.get(abbreviation='DONE')
+                node.auto_update = True
+                node.save()
+            message = Message.objects.filter(pk=pk).first()
+            heading_serializer = NodeSerializer(node, request)
+            r = {'status': 'success',
+                 'heading': heading_serializer.data}
+            if message:
+                message_serializer = MessageSerializer(message)
+                r['message'] = message_serializer.data
+        else:
+            data = data.dict()
+            data['rcvd_date'] = dt.datetime.now(get_current_timezone())
+            data['owner'] = request.user
+            msg = Message(**data)
+            msg.save()
+            r = MessageSerializer(msg).data
+        return Response(r)
 
     def delete(self, request, pk):
         if pk is None:

@@ -37,7 +37,7 @@
 	<div class="modal-footer">
 	  <button type="button" class="btn btn-default" data-dismiss="modal">Discard Changes</button>
 	  <button type="button" class="btn btn-primary"
-		  ng-click="create_node()" ng-disabled="new_node_form.$invalid">
+		  ng-click="createNode(active_msg)" ng-disabled="new_node_form.$invalid">
 	    Create
 	  </button>
 	</div>
@@ -57,7 +57,7 @@
       <div class="modal-body">
 	<p>
 	  Are you sure you want to delete
-	  &ldquo;{{ active_msg.fields.subject }}&rdquo;?
+	  &ldquo;{{ active_msg.subject }}&rdquo;?
 	</p>
 	<p>
 	  This action cannot be undone.
@@ -81,8 +81,8 @@
       </div>
       <div class="modal-body">
 	<label for="target-date">Scheduled Date:</label>
-	<input id="target-date" type="text"
-	       class="form-control datepicker"
+	<input id="target-date" type="date"
+	       class="form-control"
 	       placeholder="YYYY-MM-DD" />
       </div>
       <div class="modal-footer">

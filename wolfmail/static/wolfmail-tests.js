@@ -9,24 +9,20 @@ describe('filters in wolfmail-filters.js:', function() {
 
 	it('formats a DFRD node', function() {
 	    var dfrdMsg = {
-		fields: {
-		    handler_path: 'plugins.deferred',
-		},
+		handler_path: 'plugins.deferred',
 	    };
 	    expect(format_senderFilter(dfrdMsg).toString())
 		.toEqual('<span class="dfrd">DFRD</span> Node');
 	});
 
 	it('formats a quick-capture node', function() {
-	    var qcMsg = {
-		fields: { handler_path: 'plugins.quickcapture' }
-	    };
+	    var qcMsg = {handler_path: 'plugins.quickcapture'};
 	    expect(format_senderFilter(qcMsg)).toEqual('Quick capture');
 	});
 
 	it('formats a generic message', function() {
 	    var qcMsg = {
-		fields: { sender: 'Malcolm Reynolds' }
+		sender: 'Malcolm Reynolds'
 	    };
 	    expect(format_senderFilter(qcMsg)).toEqual('Malcolm Reynolds');
 	});
@@ -41,10 +37,8 @@ describe('filters in wolfmail-filters.js:', function() {
 
 	it('formats a quick-capture node', function() {
 	    var qcNode = {
-		fields: {
-		    subject: 'QC Msg',
-		    handler_path: 'plugins.quickcapture'
-		}
+		subject: 'QC Msg',
+		handler_path: 'plugins.quickcapture'
 	    };
 	    expect(format_subjectFilter(qcNode)).toEqual('QC Msg');
 	});
@@ -52,12 +46,10 @@ describe('filters in wolfmail-filters.js:', function() {
 	it('formats a DFRD node', function() {
 	    var dfrdNode, subject;
 	    dfrdNode = {
-		fields: {
-		    subject: 'DFRD Node',
-		    handler_path: 'plugins.deferred',
-		    source_node: 1,
-		    node_slug: 'dfrd-node',
-		}
+		subject: 'DFRD Node',
+		handler_path: 'plugins.deferred',
+		source_node: 1,
+		node_slug: 'dfrd-node',
 	    };
 	    expect(format_subjectFilter(dfrdNode).toString())
 		.toEqual('<a href="/gtd/project/#1-dfrd-node">DFRD Node</a>');
@@ -66,10 +58,8 @@ describe('filters in wolfmail-filters.js:', function() {
 	it('formats a generic message', function() {
 	    var msg;
 	    msg = {
-		pk: 1,
-		fields: {
-		    subject: 'hello, world',
-		}
+		id: 1,
+		subject: 'hello, world',
 	    };
 	    expect(format_subjectFilter(msg))
 		.toEqual('<a href="/wolfmail/inbox/1/">hello, world</a>');
@@ -128,9 +118,154 @@ describe('filters in wolfmail-filters.js:', function() {
 }); // End of wolfmail-filters.js tests
 
 describe('directives in wolfmail-directives.js', function() {
+    var $compile, element, $rootScope, $httpBackend, $templateCache, Message;
+    beforeEach(module('owDirectives', 'owServices'));
+
+    beforeEach(inject(function($injector) {
+	$templateCache = $injector.get('$templateCache');
+	$compile = $injector.get('$compile');
+	$rootScope = $injector.get('$rootScope');
+	$httpBackend = $injector.get('$httpBackend');
+	$httpBackend.whenGET('/wolfmail/message/1').respond(200, {id: 1});
+	Message = $injector.get('Message');
+	$scope = $rootScope.$new();
+    }));
+
+    afterEach(function() {
+        $httpBackend.verifyNoOutstandingExpectation();
+    });
+
+    describe('owMsgActions directive', function() {
+	var message;
+	beforeEach(function() {
+	    $templateCache.put('/static/message-modals.html',
+			       '');
+	    element = $compile('<div ow-msg-actions></div>')($scope);
+	    message = Message.get({id: 1});
+	    $httpBackend.flush();
+	});
+    });
+
+    describe('owMessageRow', function() {
+	beforeEach(function() {
+	    $rootScope.message = {id: 1};
+	    element = $compile('<div ow-message-row></div>')($rootScope);
+	});
+	it('responds to the "heading-created" signal', function() {
+	    $scope = element.scope();
+	    expect($scope.headings.length).toEqual(0);
+	    $scope.$broadcast('heading-created', {id: 1}, {id: 27});
+	    expect($scope.headings.length).toEqual(1);
+	});
+	it('checks id for "heading-created" signal', function() {
+	    $scope = element.scope();
+	    $scope.$broadcast('heading-created', {id: 2}, {id: 27});
+	    expect($scope.headings.length).toEqual(0);
+	});
+    });
+
+    describe('owMessageHeading', function() {
+	beforeEach(function() {
+	    $rootScope.heading = {id: 1};
+	    element = $compile('<div ow-message-heading></div>')($rootScope);
+	});
+	it('responds to the finishEdit signal', function() {
+	    $rootScope.$digest();
+	    $scope = element.scope();
+	    expect($scope.isEditable).toBe(false);
+	    $scope.isEditable = true;
+	    $scope.$emit('finishEdit');
+	    expect($scope.isEditable).toBe(false);
+	});
+    });
 
 }); // End of wolfmail-directives.js tests
 
 describe('services in wolfmail-services.js', function() {
+    var $httpBackend, $rootScope;
+    beforeEach(module('owServices'));
+    beforeEach(inject(function($injector) {
+	$httpBackend = $injector.get('$httpBackend');
+	$rootScope = $injector.get('$rootScope');
+    }));
+    afterEach(function() {
+	$httpBackend.verifyNoOutstandingExpectation();
+    });
+
+    describe('the Message $resource object', function() {
+	var Message;
+	beforeEach(inject(function($injector) {
+	    Message = $injector.get('Message');
+	    $httpBackend = $injector.get('$httpBackend');
+	}));
+	it('retrieves message list', function() {
+	    $httpBackend.expectGET('/wolfmail/message').respond(200, []);
+	    Message.query();
+	});
+	it('retrieves individual message', function() {
+	    $httpBackend.expectGET('/wolfmail/message/1').respond(200, {});
+	    Message.get({id: 1});
+	});
+	it('archives a retrieved message', function() {
+	    var emitMessage, $scope;
+	    $scope = $rootScope.$new();
+	    $httpBackend.expectGET('/wolfmail/message/1').respond(200, {id: 1});
+	    msg = Message.get({id: 1});
+	    $httpBackend.flush();
+	    $httpBackend.expectPUT('/wolfmail/message/1?action=archive')
+		.respond(200, {message: {id: 1}});
+	    $rootScope.$on('message-archived', function(e, newMessage) {
+		emitMessage = newMessage;
+	    })
+	    msg.$archive();
+	    $httpBackend.flush();
+	    expect(emitMessage).toBeTruthy();
+	});
+	it('creates a new node related to a message', function() {
+	    var emitHeading;
+	    $scope = $rootScope.$new();
+	    $httpBackend.expectGET('/wolfmail/message/1').respond(200, {id: 1});
+	    msg = Message.get({id: 1});
+	    $httpBackend.flush();
+	    $httpBackend.expectPOST('/wolfmail/message/1?action=create_heading')
+		.respond(200, {message: {id: 1},
+			       heading: {id: 27}});
+	    $scope.$on('heading-created', function(e, message, newHeading) {
+		emitHeading = newHeading;
+	    });
+	    msg.$createNode();
+	    $httpBackend.flush();
+	    expect(emitHeading).toBeTruthy();
+	    expect(emitHeading.id).toEqual(27);
+	});
+    });
 
 }); // End of wolfmail-services.js test
+
+describe('wolfmail-ctrl.js', function() {
+    var $controller, $rootScope, $scope, dummyMessages, $httpBackend;
+    beforeEach(module('owMain'));
+    beforeEach(inject(function($injector) {
+	$controller = $injector.get('$controller');
+	$rootScope = $injector.get('$rootScope');
+	$scope = $rootScope.$new();
+	dummyMessages = [{id: 1}];
+	$httpBackend = $injector.get('$httpBackend');
+	$httpBackend.whenGET('/gtd/context').respond(200, []);
+	$httpBackend.whenGET('/gtd/scope').respond(200, []);
+	$httpBackend.whenGET(/\/wolfmail\/message\?.*/).respond(200, dummyMessages);
+	$httpBackend.whenGET(/\/gtd\/nodes.*/).respond(200, []);
+    }));
+    describe('the owInbox controller', function() {
+	beforeEach(inject(function($rootScope, $controller, _$httpBackend_) {
+	    $controller('owInbox', {$scope: $scope});
+	}));
+	it('removes the node in response to  "message-archived" signal', function() {
+	    $scope.$emit('message-archived', {id: 1});
+	    $scope.$digest();
+	    $httpBackend.flush();
+	    $scope.$emit('message-archived', {id: 1});
+	    expect($scope.messages.length).toEqual(0);
+	});
+    });
+});

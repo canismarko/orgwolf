@@ -207,7 +207,7 @@ dd.todo
 }
 
 /* Global grid layout style */
-.table-heading,.heading-row,.message-row {
+.table-heading,.heading-row {
     .make-row();
     padding: 5px 0px 5px 0px;
     border-color: @gray-light;
@@ -610,6 +610,23 @@ input,textarea {
 		.make-lg-column(2);
 		.make-md-column(3);
 	    }
+	}
+	.message-heading, .message-row {
+	    .make-row();
+	}
+	.message-heading div {
+	    .make-md-column(10);
+	    .make-md-column-offset(2);
+	    .heading-icon {
+		.opacity(0.2);
+		cursor: default;
+	    }
+	}
+	.message-full-row {
+	    padding: 5px 0px 5px 0px;
+	    border-color: @gray-light;
+	    border-bottom-style: solid;
+	    border-width: 1px 0px;
 	}
 	.action-buttons {
 	    .make-md-column(2);
