@@ -91,7 +91,7 @@ owDirectives.directive('owMsgActions', ['Heading', function(Heading) {
 	    scope.new_node.title = msg.subject;
 	    if ( msg.handler_path === 'plugins.deferred' ) {
 		// Deferred nodes don't show the modal
-		msg.create_node(scope.new_node);
+		msg.$createNode();
 	    } else {
 		// Show a modal for creating a new Node
 		scope.active_msg = msg;
