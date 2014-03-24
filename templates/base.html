@@ -44,11 +44,11 @@
 
 	{% if local_net %}
 	  <link rel="stylesheet" type="text/css"
-		href="{{ STATIC_URL }}bootstrap-3.0.3/dist/css/bootstrap.min.css" />
+		href="{{ STATIC_URL }}bower/bootstrap/dist/css/bootstrap.css" />
 	  <link rel="stylesheet" type="text/css"
-		href="{{ STATIC_URL }}bootstrap-switch.css" />
+		href="{{ STATIC_URL }}bower/bootstrap-switch/build/css/bootstrap3/bootstrap-switch.css" />
 	{% else %}
-	  <link rel="stylesheet" type="text/css" href="//cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.0.3/css/bootstrap.min.css" />
+	  <link rel="stylesheet" type="text/css" href="//cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.1.1/css/bootstrap.min.css" />
 	  <link rel="stylesheet" type="text/css" href="//cdnjs.cloudflare.com/ajax/libs/bootstrap-switch/2.0.1/css/bootstrap3/bootstrap-switch.min.css" />
 
 	{% endif %}
@@ -60,7 +60,7 @@
 	  href="{{ STATIC_URL }}orgwolf.less" />
     <link rel="stylesheet/less" type="text/css"
 	  href="{{ STATIC_URL }}orgwolf-animations.less" />
-    <script src="{{ STATIC_URL }}less-1.3.3.min.js"
+    <script src="{{ STATIC_URL }}bower/less/dist/less-1.7.0.js"
 	    type="text/javascript"></script>
     {% else %}
     <link rel="stylesheet" type="text/css"
@@ -78,25 +78,21 @@
 
     {% if local_net %}
     <!-- <script src="{{ STATIC_URL }}modernizr.min.js"></script> -->
-    <script src="{{ STATIC_URL }}require.min.js"></script>
-    <script type="text/javascript"
-	    src="{{ STATIC_URL }}jquery-2.0.3.js"></script>
-    <script type="text/javascript"
-	    src="{{ STATIC_URL }}bootstrap-3.0.3/dist/js/bootstrap.min.js"></script>
-    <script type="text/javascript"
-	    src="{{ STATIC_URL }}bootstrap-switch.min.js"></script>
-    <script type="text/javascript"
-	    src="{{ STATIC_URL }}tinymce-4.0.16/tinymce.min.js"></script>
-    <script src="{{ STATIC_URL }}angular-1.2.7/angular.js"></script>
-    <script src="{{ STATIC_URL }}angular-1.2.7/angular-animate.js"></script>
-    <script src="{{ STATIC_URL }}angular-1.2.7/angular-resource.js"></script>
-    <script src="{{ STATIC_URL }}angular-1.2.7/angular-sanitize.js"></script>
-    <script src="{{ STATIC_URL }}angular-1.2.7/angular-route.js"></script>
+    <script src="{{ STATIC_URL }}bower/requirejs/require.js"></script>
+    <script src="{{ STATIC_URL }}bower/jquery/dist/jquery.js"></script>
+    <script src="{{ STATIC_URL }}bower/bootstrap/dist/js/bootstrap.js"></script>
+    <script src="{{ STATIC_URL }}bower/bootstrap-switch/build/js/bootstrap-switch.js"></script>
+    <script src="{{ STATIC_URL }}bower/tinymce/tinymce.min.js"></script>
+    <script src="{{ STATIC_URL }}bower/angular/angular.js"></script>
+    <script src="{{ STATIC_URL }}bower/angular-animate/angular-animate.js"></script>
+    <script src="{{ STATIC_URL }}bower/angular-resource/angular-resource.js"></script>
+    <script src="{{ STATIC_URL }}bower/angular-sanitize/angular-sanitize.js"></script>
+    <script src="{{ STATIC_URL }}bower/angular-route/angular-route.js"></script>
     {% else %}
     <!-- <script src="//cdnjs.cloudflare.com/ajax/libs/modernizr/2.7.1/modernizr.min.js"></script> -->
     <script src="//cdnjs.cloudflare.com/ajax/libs/require.js/2.1.10/require.min.js"></script>
-    <script src="//cdnjs.cloudflare.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
-    <script src="//cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.0.3/js/bootstrap.min.js"></script>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/jquery/2.1.0/jquery.min.js"></script>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.1.1/js/bootstrap.min.js"></script>
     <script src="//cdnjs.cloudflare.com/ajax/libs/bootstrap-switch/2.0.1/js/bootstrap-switch.min.js"></script>
     <script src="//tinymce.cachefly.net/4.0/tinymce.min.js"></script>
     <!-- Angular and its modules -->
@@ -113,16 +109,16 @@
       <script src="{{ STATIC_URL }}jquery.mockjax.js"></script>
       <script src="{{ STATIC_URL }}jquery.cookie.js"></script>
       <script src="{{ STATIC_URL }}orgwolf.js"></script>
-      <script type="text/javascript" src="{{ STATIC_URL }}gtd-models.js"></script>
-      <script type="text/javascript" src="{{ STATIC_URL }}gtd-services.js"></script>
-      <script type="text/javascript" src="{{ STATIC_URL }}gtd-directives.js"></script>
-      <script type="text/javascript" src="{{ STATIC_URL }}gtd-filters.js"></script>
-      <script type="text/javascript" src="{{ STATIC_URL }}gtd-main.js"></script>
-      <script type="text/javascript" src="{{ STATIC_URL }}wolfmail-models.js"></script>
-      <script type="text/javascript" src="{{ STATIC_URL }}wolfmail-services.js"></script>
-      <script type="text/javascript" src="{{ STATIC_URL }}wolfmail-directives.js"></script>
-      <script type="text/javascript" src="{{ STATIC_URL }}wolfmail-filters.js"></script>
-      <script type="text/javascript" src="{{ STATIC_URL }}wolfmail-ctrl.js"></script>
+      <script src="{{ STATIC_URL }}gtd-models.js"></script>
+      <script src="{{ STATIC_URL }}gtd-services.js"></script>
+      <script src="{{ STATIC_URL }}gtd-directives.js"></script>
+      <script src="{{ STATIC_URL }}gtd-filters.js"></script>
+      <script src="{{ STATIC_URL }}gtd-main.js"></script>
+      <script src="{{ STATIC_URL }}wolfmail-models.js"></script>
+      <script src="{{ STATIC_URL }}wolfmail-services.js"></script>
+      <script src="{{ STATIC_URL }}wolfmail-directives.js"></script>
+      <script src="{{ STATIC_URL }}wolfmail-filters.js"></script>
+      <script src="{{ STATIC_URL }}wolfmail-ctrl.js"></script>
     {% else %}
       <script src="{{ STATIC_URL }}orgwolf-min.js"></script>
     {% endif %}
