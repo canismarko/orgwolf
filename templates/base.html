@@ -28,17 +28,19 @@
     <title>
       {% block title%}TODO: implement title{% endblock %}
     </title>
+    {% block favicon %}
     {% if debug %}
-      <link rel="icon"
-	    type="image/png"
-	    href="{{ STATIC_URL }}orgwolf-icon-debug.png" />
+    <link rel="icon"
+	  type="image/png"
+	  href="{{ STATIC_URL }}orgwolf-icon-debug.png" />
     {% else %}
-      <link rel="icon"
-	    type="image/png"
-	    href="{{ STATIC_URL }}orgwolf-icon.ico" />
+    <link rel="icon"
+	  type="image/png"
+	  href="{{ STATIC_URL }}orgwolf-icon.ico" />
     {% endif %}
-      <link rel="apple-touch-icon"
-	    href="{{ STATIC_URL }}orgwolf-icon-114.png" />
+    <link rel="apple-touch-icon"
+	  href="{{ STATIC_URL }}orgwolf-icon-114.png" />
+    {% endblock %}
     {% if enable_css %}
       {% block all_style %}
 
@@ -102,11 +104,9 @@
     <script src="//ajax.googleapis.com/ajax/libs/angularjs/1.2.7/angular-resource.min.js"></script>
     <script src="//ajax.googleapis.com/ajax/libs/angularjs/1.2.7/angular-route.min.js"></script>
     <script src="https://login.persona.org/include.js"></script>
-    <script src="{{ STATIC_URL }}persona.js"></script>
     {% endif %}
 
     {% if debug %}
-      <script src="{{ STATIC_URL }}jquery.mockjax.js"></script>
       <script src="{{ STATIC_URL }}jquery.cookie.js"></script>
       <script src="{{ STATIC_URL }}orgwolf.js"></script>
       <script src="{{ STATIC_URL }}gtd-models.js"></script>
@@ -122,12 +122,12 @@
     {% else %}
       <script src="{{ STATIC_URL }}orgwolf-min.js"></script>
     {% endif %}
-    <script type="text/javascript">
-    // Page specific persona setup
-    persona_user = {% if request.user.is_authenticated %}"{{ request.user.username }}"{% else %}null{% endif %};
-    </script>
     {% block script %}
     <script type="text/javascript">
+      {% if request.user.is_authenticated %}
+      // Page specific persona setup
+      owServices.value('personaUser', "{{ request.user.username }}");
+      {% endif %}
     $(document).ready(function() {
 	{% if request.user.is_authenticated %}
 	// Convert utility links to dropdown menu
@@ -170,6 +170,7 @@
   </head>
   <body ow-logged-in="{{ request.user.is_authenticated }}">
 
+    {% block body %}
     <!-- Boxes display results of actions -->
     {% verbatim %}
     <div class="notifications" ng-if="notifications.length > 0">
@@ -269,12 +270,12 @@
 	    <a href="/accounts/profile/" target="_self">Account</a>
 	  </li>
 	  <li class="util-dropdown" role="menuitem">
-	    <a href="#" id="logout" target="_self">Logout</a>
+	    <a href="#" id="logout" persona-button="logout">Logout</a>
 	  </li>
 	  {% else %}
 	  <li>
-	    <a href="#" class="persona-button navbar-brand">
-	      <img src="{{ STATIC_URL }}/persona-button.png" />
+	    <a href="#" class="navbar-brand" persona-button="login">
+	      <img src="{{ STATIC_URL }}persona-button.png" />
 	    </a>
 	  </li>
 	  {% endif %}
@@ -295,8 +296,8 @@
 	<div class="alert alert-warning col-md-5 col-md-offset-3">
 	  You are in <strong>demo mode</strong>; changes will not be
 	  saved.<br />Please
-	  <a href="#" class="persona-button">
-	    <img src="{{ STATIC_URL}}/persona-button-small.png" /></a>
+	  <a href="#" persona-button="login">
+	    <img src="{{ STATIC_URL}}persona-button-small.png" /></a>
 	  to create a new account.
 	</div>
       </div>
@@ -324,6 +325,8 @@
     {% endblock %}
 
 </div>
+
+{% endblock %}
 
 </body>
 </html>

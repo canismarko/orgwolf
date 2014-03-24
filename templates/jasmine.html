@@ -1,65 +1,26 @@
-<!DOCTYPE HTML>
-<html>
-  <head>
-    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-    <title>Jasmine Spec Runner v2.0.0</title>
+{% extends 'base.html' %}
 
-    <link rel="shortcut icon" type="image/png" href="{{ STATIC_URL }}/jasmine-2.0.0/jasmine_favicon.png">
-    <link rel="stylesheet" type="text/css" href="{{ STATIC_URL }}/jasmine-2.0.0/jasmine.css">
+{% block title %}Jasmine Spec Runner | OrgWolf{% endblock %}
 
-    <script type="text/javascript"
-	    src="{{ STATIC_URL }}/jasmine-2.0.0/jasmine.js"></script>
-    <script type="text/javascript"
-	    src="{{ STATIC_URL }}/jasmine-2.0.0/jasmine-html.js"></script>
-    <script type="text/javascript"
-	    src="{{ STATIC_URL }}/jasmine-2.0.0/boot.js"></script>
+{% block favicon %}
+<link rel="shortcut icon" type="image/png" href="{{ STATIC_URL }}bower/jasmine/images/jasmine_favicon.png">
+{% endblock %}
 
-    <script src="{{ STATIC_URL }}jquery-2.0.3.js"></script>
-    <script src="{{ STATIC_URL }}bootstrap-3.0.3/dist/js/bootstrap.min.js"></script>
-    <script type="text/javascript"
-	    src="{{ STATIC_URL }}bootstrap-switch.min.js"></script>
+{% block all_style %}
+<link rel="stylesheet" type="text/css" href="{{ STATIC_URL }}bower/jasmine/lib/jasmine-core/jasmine.css">
+{% endblock %}
 
-    <script type="text/javascript"
-	    src="{{ STATIC_URL }}angular-1.2.7/angular.js"></script>
-    <script type="text/javascript"
-	    src="{{ STATIC_URL }}angular-1.2.7/angular-mocks.js"></script>
-    <script type="text/javascript"
-	    src="{{ STATIC_URL }}angular-1.2.7/angular-animate.js"></script>
-    <script type="text/javascript"
-	    src="{{ STATIC_URL }}angular-1.2.7/angular-resource.js"></script>
-    <script type="text/javascript"
-	    src="{{ STATIC_URL }}angular-1.2.7/angular-sanitize.js"></script>
-    <script type="text/javascript"
-	    src="{{ STATIC_URL }}angular-1.2.7/angular-route.js"></script>
+{% block script %}{% endblock %}
 
-    <!-- include source files here... -->
-    <script type="text/javascript"
-	    src="{{ STATIC_URL }}gtd-models.js"></script>
-    <script type="text/javascript"
-	    src="{{ STATIC_URL }}gtd-services.js"></script>
-    <script type="text/javascript"
-	    src="{{ STATIC_URL }}gtd-directives.js"></script>
-    <script type="text/javascript"
-	    src="{{ STATIC_URL }}gtd-filters.js"></script>
-    <script type="text/javascript"
-	    src="{{ STATIC_URL }}gtd-main.js"></script>
-    <script type="text/javascript"
-	    src="{{ STATIC_URL }}wolfmail-services.js"></script>
-    <script type="text/javascript"
-	    src="{{ STATIC_URL }}wolfmail-directives.js"></script>
-    <script type="text/javascript"
-	    src="{{ STATIC_URL }}wolfmail-filters.js"></script>
-    <script type="text/javascript"
-	    src="{{ STATIC_URL }}wolfmail-ctrl.js"></script>
+{% block all_script %}
+<script src="{{ STATIC_URL }}bower/jasmine/lib/jasmine-core/jasmine.js"></script>
+<script src="{{ STATIC_URL }}bower/jasmine/lib/jasmine-core/jasmine-html.js"></script>
+<script src="{{ STATIC_URL }}bower/jasmine/lib/jasmine-core/boot.js"></script>
+{{ block.super }}
+<script src="{{ STATIC_URL }}bower/angular-mocks/angular-mocks.js"></script>
+<!-- include spec files here... -->
+<script src="{{ STATIC_URL }}gtd-tests.js"></script>
+<script src="{{ STATIC_URL }}wolfmail-tests.js"></script>
+{% endblock %}
 
-    <!-- include spec files here... -->
-    <script type="text/javascript"
-	    src="{{ STATIC_URL }}/gtd-tests.js"></script>
-    <script type="text/javascript"
-	    src="{{ STATIC_URL }}/wolfmail-tests.js"></script>
-
-  </head>
-
-  <body>
-  </body>
-</html>
+{% block body %}{% endblock %}

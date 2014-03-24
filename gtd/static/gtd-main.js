@@ -108,7 +108,7 @@ owMain.run(['$rootScope', function($rootScope) {
 }]);
 
 /*************************************************
-* Handler sends goole analytics tracking on
+* Handler sends google analytics tracking on
 * angular route change
 **************************************************/
 owMain.run(['$rootScope', '$location', function($rootScope, $location) {

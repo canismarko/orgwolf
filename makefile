@@ -23,10 +23,10 @@ $(ORGWOLF_CSS): $(ORGWOLF_LESS) $(STATIC)social/auth-buttons.css
 	$(LESS) $(STATIC)orgwolf.less >> $(ORGWOLF_CSS)
 	$(LESS) $(STATIC)orgwolf-animations.less >> $(ORGWOLF_CSS)
 
-$(MIN_JS): $(GTD_JS) $(WM_JS) $(STATIC)persona.js $(STATIC)jquery.cookie.js
+$(MIN_JS): $(GTD_JS) $(WM_JS) $(STATIC)jquery.cookie.js
 	$(DIVIDER)
 	@echo "$(bold)Linting javascript files...$(normal)"
 	$(JSLINT) $(GTD_JS) $(WM_JS)
 	$(DIVIDER)
 	@echo "$(bold)Minifying javascript files...$(normal)"
-	cat $(STATIC)jquery.cookie.js $(GTD_JS) $(WM_JS) $(STATIC)persona.js | $(YUI) --type js -o $(MIN_JS)
+	cat $(STATIC)jquery.cookie.js $(GTD_JS) $(WM_JS) | $(YUI) --type js -o $(MIN_JS)
