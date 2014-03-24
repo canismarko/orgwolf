@@ -19,7 +19,7 @@ all: $(ORGWOLF_CSS) $(MIN_JS)
 $(ORGWOLF_CSS): $(ORGWOLF_LESS) $(STATIC)social/auth-buttons.css
 	$(DIVIDER)
 	@echo "$(bold)Building stylesheet $(ORGWOLF_CSS)...$(normal)"
-	$(YUI) $(STATIC)social/auth-buttons.css >> $(ORGWOLF_CSS)
+	$(YUI) $(STATIC)social/auth-buttons.css > $(ORGWOLF_CSS)
 	$(LESS) $(STATIC)orgwolf.less >> $(ORGWOLF_CSS)
 	$(LESS) $(STATIC)orgwolf-animations.less >> $(ORGWOLF_CSS)
 
