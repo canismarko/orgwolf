@@ -110,7 +110,7 @@ class Color:
 class HTMLEscaper(HTMLParser):
     # Default list of html tags to allow
     ALLOWED_TAGS = ['h1', 'h2', 'h3', 'h4', 'h5', 'h6',
-                    'b', 'i', 'del', 'sup', 'sub',
+                    'b', 'i', 'del', 'sup', 'sub', 'strong', 'em',
                     'ul', 'ol', 'li',
                     'div', 'p', 'span', 'hr', 'a', 'br',
                     'table', 'tbody', 'thead', 'tr', 'td', 'th',

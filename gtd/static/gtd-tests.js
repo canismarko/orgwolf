@@ -350,6 +350,20 @@ describe('directives in gtd-directives.js', function() {
     describe('the owCurrentDate directive', function() {
     });
 
+    // describe('the owDetails directive', function() {
+    // 	beforeEach(function() {
+    // 	    $templateCache.put('/static/details.html',
+    // 	    		       '<div class="details"></div>');
+    // 	    $rootScope.heading = {
+    // 		id: 2,
+    // 		title: 'Hello, world'
+    // 	    };
+    // 	    element = $compile(
+    // 		'<div ow-details ow-heading="heading"></div>'
+    // 	    )($rootScope);
+    // 	});
+    // });
+
     describe('the owEditable directive', function() {
 	var fullNode;
 	beforeEach(function() {
@@ -599,7 +613,7 @@ describe('directives in gtd-directives.js', function() {
 			       '<div class="ow-hoverable"></div>');
 	    // Prepare the DOM element
 	    element = $compile(
-		'<div ow-twisty ow-heading="heading"></div>'
+		'<div ow-twisty ow-heading="heading" ng-click="toggleHeading($event)"></div>'
 	    )($rootScope);;
 	});
 	describe('expandability DOM classes', function() {
@@ -633,15 +647,31 @@ describe('directives in gtd-directives.js', function() {
 		{id: 2},
 		{id: 3},
 	    ];
-	    $httpBackend.expect('GET', '/gtd/nodes?parent_id=1')
-		.respond(201, children);
+	    $httpBackend.expect('GET', '/gtd/nodes?field_group=outline&parent_id=1')
+		.respond(200, children);
 	    $rootScope.$digest();
-	    element.isolateScope().toggleHeading();
+	    element.isolateScope().toggleHeading({target: element});
 	    $httpBackend.flush();
 	    $rootScope.$digest();
 	    expect(JSON.stringify(element.isolateScope().children))
 		.toEqual(JSON.stringify(children));
 	    expect(element.isolateScope().loadedChildren).toBe(true);
+	});
+	it('cycles through all states when toggled', function() {
+	    $httpBackend.expectGET('/gtd/nodes?field_group=outline&parent_id=1').respond(200, []);
+	    $rootScope.$digest();
+	    scope = element.isolateScope();
+	    expect(scope.state).toEqual(0);
+	    scope.toggleHeading({target: element});
+	    $httpBackend.flush();
+	    expect(scope.state).toEqual(1);
+	    expect(element).toHaveClass('state-1');
+	    scope.toggleHeading({target: element});
+	    expect(element).toHaveClass('state-2');
+	    expect(element).not.toHaveClass('state-1');
+	    expect(scope.state).toEqual(2);
+	    scope.toggleHeading({target: element});
+	    expect(scope.state).toEqual(0);
 	});
     });
 }); // End of gtd-directives.js tests

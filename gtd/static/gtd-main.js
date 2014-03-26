@@ -181,7 +181,8 @@ function outlineCtrl($scope, $rootScope, $http, $resource, $filter, Heading,
     }
     // modified array to hold all the tasks
     $scope.children = Heading.query({'parent_id': 0,
-				   'archived': false});
+				     'archived': false,
+				     'field_group': 'outline'});
     $scope.activeScope = null;
     $scope.sortField = 'title';
     $scope.sortFields = [

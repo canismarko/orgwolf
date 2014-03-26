@@ -31,9 +31,7 @@
 	    font-size: 130%;
 	    padding: 15px;
 	    background-color: @primary-light-pale;
-	    /* background-color: #d9edf7; /\* light blue *\/ */
-	    border: 1px solid @primary-light; /* blue */
-	    /* border: 1px solid #bce8f1; /\* blue *\/ */
+	    border: 1px solid @primary-light;
 	}
     }
 }
@@ -233,6 +231,67 @@ dd.todo
     .hidden-xs;
     font-weight: bold;
 }
+.details {
+    .well;
+    .ow-text {
+	border-style: solid;
+	border-width: 3px;
+	border-color: rgba(0, 0, 0, 0);
+	> *:first-child {
+	    margin-top: 0px;
+	}
+	h1 {
+	    font-size: 24px;
+	}
+	h2 {
+	    font-size: 22px;
+	}
+	h3 {
+	    font-size: 20px;
+	}
+	h4 {
+	    font-size: 18px;
+	}
+	h5 {
+	    font-size: 14px;
+	}
+	h6 {
+	    font-size: 12px;
+	}
+    }
+    &:hover .ow-text {
+	border-color: rgba(255, 255, 0, 100);
+    }
+    button {
+	.btn;
+	.btn-sm;
+	&.finish {
+	    .btn-primary;
+	}
+	&.revert {
+	    .btn-danger;
+	}
+    }
+    .ow-text {
+	min-height: 19px;
+	table, th, td {
+	    border-collapse: collapse;
+	    border-color: @primary-dark;
+	    border-style: solid;
+	    border-width: 1px 0px;
+	    padding: 0px 8px;
+	    margin-bottom: 5px;
+	}
+	th, thead td {
+	    color: white;
+	    font-weight: bold;
+	    background: @primary-dark-faded;
+	}
+	tr:nth-child(even) {
+	    background: @primary-light-pale;
+	}
+    }
+}
 
 /* Widget for changing the current date of lists and inbox */
 .current-date {
@@ -269,57 +328,24 @@ dd.todo
 	}
 	.details {
 	    color: black;
-	    margin-left: 35px;
-	    display: none;
+	}
+	.children,.details {
+	    margin-left: 25px;
 	}
 	.ow-title {
 	    margin-left: 5px;
-	}
-	.ow-text {
-	    .well;
-	    table, th, td {
-		border-collapse: collapse;
-		border-color: @primary-dark;
-		border-style: solid;
-		border-width: 1px 0px;
-		padding: 0px 8px;
-		margin-bottom: 5px;
-	    }
-	    th, thead td {
-		color: white;
-		font-weight: bold;
-		background: @primary-dark-faded;
-	    }
-	    tr:nth-child(even) {
-		background: @primary-light-pale;
-	    }
-	}
-	.ow-text,.edit-text
-	{
-	    h1 {
-		font-size: 24px;
-	    }
-	    h2 {
-		font-size: 22px;
-	    }
-	    h3 {
-		font-size: 20px;
-	    }
-	    h4 {
-		font-size: 18px;
-	    }
-	    h5 {
-		font-size: 14px;
-	    }
-	    h6 {
-		font-size: 12px;
-	    }
 	}
 	.heading {
 	    padding-right: 8px;
 	    overflow: hidden;
 	}
 	/* If the content/children should be presented to the user */
+	.heading.state-1 > .ow-hoverable span.twisty {
+	    .rotate(45deg);
+	}
+	.heading.state-2 > .ow-hoverable span.twisty {
+	    .rotate(90deg);
+	}
 	.heading.open {
 	    padding-top: 3px;
 	    > .ow-hoverable span.twisty {

@@ -87,3 +87,11 @@ class NodeListSerializer(NodeSerializer):
     def get_root_name(self, obj):
         root = obj.get_root()
         return root.title
+
+
+class NodeOutlineSerializer(NodeSerializer):
+    """List of fields needed for constructing an outline without details."""
+    class Meta:
+        model = Node
+        fields = ['title', 'tag_string', 'lft', 'rght', 'id',
+                  'scope', 'level', 'archived', 'todo_state', 'repeats']

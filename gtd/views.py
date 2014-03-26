@@ -48,7 +48,7 @@ from gtd.shortcuts import (parse_url, generate_url, get_todo_abbrevs,
                            order_nodes)
 from gtd.serializers import (ContextSerializer, ScopeSerializer,
                              TodoStateSerializer, NodeSerializer,
-                             NodeListSerializer)
+                             NodeListSerializer, NodeOutlineSerializer,)
 from orgwolf import settings
 
 # Prepare logger
@@ -238,7 +238,8 @@ class NodeView(APIView):
         """Returns the details of the node as a json encoded object"""
         SERIALIZERS = {
             'default': NodeSerializer,
-            'actions_list': NodeListSerializer
+            'actions_list': NodeListSerializer,
+            'outline': NodeOutlineSerializer,
         }
         get_dict = request.GET.copy()
         node_id = kwargs.get('pk')

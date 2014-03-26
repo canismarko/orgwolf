@@ -151,6 +151,59 @@ owDirectives.directive('owCurrentDate', function() {
 * is a new child.
 *
 **************************************************/
+owDirectives.directive('owDetails', ['$timeout', function($timeout) {
+    function link(scope, element, attrs) {
+	scope.editorId = 'edit-text-' + scope.heading.id;
+	scope.heading.$get()
+	    .then(function(newHeading) {
+		scope.headingText = newHeading.text;
+	    });
+	$timeout(function() {
+	    if ( typeof tinymce !== 'undefined' ) {
+		tinymce.init({
+		    plugins: 'charmap fullscreen hr image link table textcolor',
+		    toolbar: 'undo redo | fullscreen | styleselect | bold italic forecolor backcolor superscript subscript | alignleft aligncenter alignright alignjustify | bullist numlist outdent indent | hr link image',
+		    inline: true,
+		    tools: 'inserttable',
+		    mode: 'exact',
+		    elements: scope.editorId,
+		    setup: function(editor) {
+			editor.on('change', function(e) {
+			    scope.$apply(function() {
+				scope.heading.text = editor.getContent();
+				scope.heading.$update();
+			    });
+			});
+		    }
+		});
+	    }
+	});
+	scope.editText = function(e) {
+	    e.stopPropagation();
+	    scope.textIsEditable = true;
+	    scope.textEditStatus = '';
+	};
+	scope.stopEditingText = function() {
+	    scope.textIsEditable = false;
+	    if ( typeof tinymce !== 'undefined' ) {
+		tinymce.remove('#' + scope.editorId);
+	    }
+	};
+    }
+    return {
+	link: link,
+	scope: { heading: '=owHeading' },
+	templateUrl: '/static/details.html'
+    };
+}]);
+
+/*************************************************
+* Directive that lets a user edit a node.
+* The ow-heading attr indicates that heading is
+* being edited. The ow-parent attr indicates this
+* is a new child.
+*
+**************************************************/
 owDirectives.directive('owEditable', ['$resource', '$rootScope', '$timeout', 'owWaitIndicator', 'Heading', 'todoStates', function($resource, $rootScope, $timeout, owWaitIndicator, Heading, todoStates) {
     // Directive creates the pieces that allow the user to edit a heading
     function link(scope, element, attrs) {
@@ -228,13 +281,6 @@ owDirectives.directive('owEditable', ['$resource', '$rootScope', '$timeout', 'ow
 	    scope.editorId = 'edit-text-new-project';
 	}
 	$timeout(function() {
-	    tinymce.init({
-		plugins: 'charmap fullscreen hr image link table textcolor',
-		toolbar: 'undo redo | fullscreen | styleselect | bold italic forecolor backcolor superscript subscript | alignleft aligncenter alignright alignjustify | bullist numlist outdent indent | hr link image',
-		tools: 'inserttable',
-		mode: 'exact',
-		elements: scope.editorId,
-	    });
 	    // Set TinyMCE4 content if source data changes
 	    scope.$watch('fields.text', function(newText) {
 		var editor = tinyMCE.get(scope.editorId);
@@ -362,7 +408,8 @@ owDirectives.directive('owTwisty', ['$compile', '$rootScope', 'Heading', functio
 	var hoverable, get_children;
 	scope.isEditing = false;
 	scope.loadedChildren = false;
-	scope.isOpen = false;
+	scope.state = 0;
+	// scope.isOpen = false;
 	scope.showArchived = $rootScope.showArchived;
 	// Get todo-states
 	if ($rootScope.todoStates) {
@@ -394,34 +441,22 @@ owDirectives.directive('owTwisty', ['$compile', '$rootScope', 'Heading', functio
 	}
 	// Handlers for clicking on the heading (may be overridden by components)
 	scope.toggleHeading = function(newState) {
-	    // First figure out which way to open
-	    if ( typeof newState === 'undefined' ) {
-		// Default action
-		newState = 'toggle';
-	    } else if ( typeof newState.target !== 'undefined' ) {
-		// User clicked on something
-		if ($(newState.target).is(':not(.non-opening)')) {
-		    newState = 'toggle';
-		} else {
-		    newState = 'none';
+	    // Verify that something should be toggled
+	    if ($(newState.target).is(':not(.non-opening)')) {
+		element.removeClass('state-' + scope.state);
+		scope.state = (scope.state + 1) % 3;
+		element.addClass('state-' + scope.state);
+		// Get children if not already done
+		if (!scope.loadedChildren) {
+		    scope.children = Heading.query({parent_id: scope.heading.id,
+						    field_group: 'outline'});
+		    scope.children.$promise.then(function(headings) {
+			scope.numArchived = headings.filter(function(obj) {
+			    return obj.archived === true;
+			}).length;
+			scope.loadedChildren = true;
+		    });
 		}
-	    }
-	    if ( newState === 'open' ) {
-		scope.isOpen = true;
-		element.addClass('open');
-	    } else if (newState === 'toggle') {
-		element.toggleClass('open');
-		scope.isOpen = !scope.isOpen;
-	    }
-	    // Get children if not already done
-	    if (!scope.loadedChildren && newState !== 'none') {
-		scope.children = Heading.query({parent_id: scope.heading.id});
-		scope.children.$promise.then(function(headings) {
-		    scope.numArchived = headings.filter(function(obj) {
-			return obj.archived === true;
-		    }).length;
-		    scope.loadedChildren = true;
-		});
 	    }
 	};
 	// Hanlder for clicking the "edit" button

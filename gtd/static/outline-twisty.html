@@ -41,33 +41,11 @@
 	ng-if="heading.read_only"></span>
 </div><!-- /.ow-hoverable -->
 
-<div ow-editable ng-if="isEditing" ow-heading="heading">
-</div>
+<div ow-editable ng-if="isEditing" ow-heading="heading"></div>
 
-<div class="details" ng-show="isOpen">
-  <div ng-if="heading.scheduled_date">
-    Scheduled: {{ heading.scheduled_date }} {{ heading.scheduled_time }}
-  </div>
-  <div ng-if="heading.deadline_date">
-    Deadline: {{ heading.deadline_date }}
-    <span ng-if="heading.deadline_time">
-      {{ heading.deadline_time }}
-    </span>
-  </div>
-  <div ng-if="heading.repeats">
-    Repeats every {{ heading.repeating_number }}{{ heading.repeating_unit }}
-    <span ng-if="heading.repeats_from_completed">
-      from completion date
-    </span>
-    <span ng-if="!heading.repeats_from_completed">
-      from scheduled date
-    </span>
-  </div>
-  <div class="ow-text"
-       ng-show="heading.text"
-       ng-bind-html="heading.text | asHtml">
-  </div>
+<div ow-details class="details" ow-heading="heading" ng-if="state == 2"></div>
 
+<div class="children" ng-if="state >= 1">
   <!-- Children -->
   <div ow-editable ow-parent="heading" ng-if="newChild"></div>
   <div ng-show="!loadedChildren">
