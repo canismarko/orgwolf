@@ -259,7 +259,6 @@ owDirectives.directive('owEditable', ['$resource', '$rootScope', '$timeout', 'ow
 	scope.save = function(e) {
 	    var newHeading;
 	    // When the user saves the edited heading
-	    scope.fields.text = tinyMCE.get(scope.editorId).getContent();
 	    if ( scope.heading ) {
 		newHeading = Heading.update(scope.fields);
 	    } else {
@@ -269,26 +268,9 @@ owDirectives.directive('owEditable', ['$resource', '$rootScope', '$timeout', 'ow
 		scope.$emit('finishEdit', newHeading);
 	    });
 	};
-	scope.cancel_edit = function(e) {
+	scope.cancelEdit = function(e) {
 	    scope.$emit('finishEdit');
 	};
-	// Attach TinyMCE4 WYSIWYG editor
-	if( scope.heading ) {
-	    scope.editorId = 'edit-text-' + scope.heading.id;
-	} else if ( scope.parent ) {
-	    scope.editorId = 'edit-text-child-' + scope.parent.id;
-	} else {
-	    scope.editorId = 'edit-text-new-project';
-	}
-	$timeout(function() {
-	    // Set TinyMCE4 content if source data changes
-	    scope.$watch('fields.text', function(newText) {
-		var editor = tinyMCE.get(scope.editorId);
-		if (newText && editor) {
-		    editor.setContent(newText);
-		}
-	    });
-	});
     }
     return {
 	link: link,
@@ -409,6 +391,7 @@ owDirectives.directive('owTwisty', ['$compile', '$rootScope', 'Heading', functio
 	scope.isEditing = false;
 	scope.loadedChildren = false;
 	scope.state = 0;
+	element.addClass('state-'+scope.state);
 	// scope.isOpen = false;
 	scope.showArchived = $rootScope.showArchived;
 	// Get todo-states
@@ -441,22 +424,26 @@ owDirectives.directive('owTwisty', ['$compile', '$rootScope', 'Heading', functio
 	}
 	// Handlers for clicking on the heading (may be overridden by components)
 	scope.toggleHeading = function(newState) {
-	    // Verify that something should be toggled
-	    if ($(newState.target).is(':not(.non-opening)')) {
-		element.removeClass('state-' + scope.state);
+	    element.removeClass('state-' + scope.state);
+	    if ( /^\d+$/.test(newState) ) {
+		// Specific state is passed as an integer
+		scope.state = newState % 3;
+	    }
+	    else if ($(newState.target).is(':not(.non-opening)')) {
+		// Verify that something should be toggled
 		scope.state = (scope.state + 1) % 3;
-		element.addClass('state-' + scope.state);
-		// Get children if not already done
-		if (!scope.loadedChildren) {
-		    scope.children = Heading.query({parent_id: scope.heading.id,
-						    field_group: 'outline'});
-		    scope.children.$promise.then(function(headings) {
-			scope.numArchived = headings.filter(function(obj) {
-			    return obj.archived === true;
-			}).length;
-			scope.loadedChildren = true;
-		    });
-		}
+	    }
+	    element.addClass('state-' + scope.state);
+	    // Get children if not already done
+	    if (!scope.loadedChildren && scope.state > 0) {
+		scope.children = Heading.query({parent_id: scope.heading.id,
+						field_group: 'outline'});
+		scope.children.$promise.then(function(headings) {
+		    scope.numArchived = headings.filter(function(obj) {
+			return obj.archived === true;
+		    }).length;
+		    scope.loadedChildren = true;
+		});
 	    }
 	};
 	// Hanlder for clicking the "edit" button
@@ -486,7 +473,10 @@ owDirectives.directive('owTwisty', ['$compile', '$rootScope', 'Heading', functio
 	scope.createChild = function(e) {
 	    var $off;
 	    e.stopPropagation();
-	    scope.toggleHeading('open');
+	    // Open the twisty if necessary
+	    if ( scope.state === 0 ) {
+		scope.toggleHeading(1);
+	    }
 	    scope.newChild = true;
 	    $off = scope.$on('finishEdit', function(event, newHeading) {
 		// Emitted by the owEditable when hiding the editable

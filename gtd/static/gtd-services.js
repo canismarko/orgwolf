@@ -14,47 +14,49 @@ var owServices = angular.module(
 **************************************************/
 owServices.value('personaUser', null); // Default value, override in django
 owServices.factory('personaNavigator', ['personaUser', 'owWaitIndicator', function(personaUser, owWaitIndicator) {
-    // Setup the persona navigator before linking the directive
-    navigator.id.watch({
-	loggedInUser: personaUser,
-	onlogin: function(assertion) {
-	    // A user has logged in! Here you need to:
-	    // 1. Send the assertion to your backend for verification and to create a session.
-	    // 2. Update your UI.
-	    owWaitIndicator.start_wait('medium', 'persona');
-	    jQuery.ajax({
-		type: 'POST',
-		url: '/accounts/login/persona/',
-		data: {assertion: assertion},
-		success: function(res, status, xhr) {
-		    owWaitIndicator.end_wait('medium', 'persona');
-		    window.location.reload();
-		},
-		error: function(xhr, status, err) {
-		    navigator.id.logout();
-		    alert("Login failure: " + err);
-		},
-	    });
-	},
-	onlogout: function() {
-	    // A user has logged out! Here you need to:
-	    // Tear down the user's session by redirecting the user or making a call to your backend.
-	    // Also, make sure loggedInUser will get set to null on the next page load.
-	    // (That's a literal JavaScript null. Not false, 0, or undefined. null.)
-	    // ow_waiting('spinner');
-	    owWaitIndicator.start_wait('medium', 'persona');
-	    jQuery.ajax({
-		type: 'POST',
-		url: '/accounts/logout/persona/', // This is a URL on your website.
-		success: function(res, status, xhr) { window.location.reload(); },
-		error: function(xhr, status, err) { alert("Logout failure: " + err); },
-		complete: function() {
-		    owWaitIndicator.start_wait('medium', 'persona');
-		}
-		// complete: function(jqXHR, status) { ow_waiting('clear'); }
-	    });
-	}
-    });
+    if ( typeof navigator.id !== 'undefined' ) {
+	// Setup the persona navigator before linking the directive
+	navigator.id.watch({
+	    loggedInUser: personaUser,
+	    onlogin: function(assertion) {
+		// A user has logged in! Here you need to:
+		// 1. Send the assertion to your backend for verification and to create a session.
+		// 2. Update your UI.
+		owWaitIndicator.start_wait('medium', 'persona');
+		jQuery.ajax({
+		    type: 'POST',
+		    url: '/accounts/login/persona/',
+		    data: {assertion: assertion},
+		    success: function(res, status, xhr) {
+			owWaitIndicator.end_wait('medium', 'persona');
+			window.location.reload();
+		    },
+		    error: function(xhr, status, err) {
+			navigator.id.logout();
+			alert("Login failure: " + err);
+		    },
+		});
+	    },
+	    onlogout: function() {
+		// A user has logged out! Here you need to:
+		// Tear down the user's session by redirecting the user or making a call to your backend.
+		// Also, make sure loggedInUser will get set to null on the next page load.
+		// (That's a literal JavaScript null. Not false, 0, or undefined. null.)
+		// ow_waiting('spinner');
+		owWaitIndicator.start_wait('medium', 'persona');
+		jQuery.ajax({
+		    type: 'POST',
+		    url: '/accounts/logout/persona/', // This is a URL on your website.
+		    success: function(res, status, xhr) { window.location.reload(); },
+		    error: function(xhr, status, err) { alert("Logout failure: " + err); },
+		    complete: function() {
+			owWaitIndicator.start_wait('medium', 'persona');
+		    }
+		    // complete: function(jqXHR, status) { ow_waiting('clear'); }
+		});
+	    }
+	});
+    }
     return navigator;
 }]);
 

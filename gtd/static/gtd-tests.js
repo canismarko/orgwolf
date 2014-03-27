@@ -673,6 +673,17 @@ describe('directives in gtd-directives.js', function() {
 	    scope.toggleHeading({target: element});
 	    expect(scope.state).toEqual(0);
 	});
+	it('allows the state to be toggled directly', function() {
+	    $httpBackend.expectGET('/gtd/nodes?field_group=outline&parent_id=1').respond(200, []);
+	    $rootScope.$digest();
+	    scope = element.isolateScope();
+	    expect(scope.state).toEqual(0);
+	    scope.toggleHeading(1);
+	    $httpBackend.flush();
+	    expect(scope.state).toEqual(1);
+	    scope.toggleHeading(5);
+	    expect(scope.state).toEqual(2);
+	});
     });
 }); // End of gtd-directives.js tests
 

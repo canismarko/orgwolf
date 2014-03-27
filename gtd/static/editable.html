@@ -4,11 +4,11 @@
       <i class="twisty glyphicon glyphicon-chevron-down" expandable="disabled"></i>
       <span ng-show="heading.title">{{ heading.title }}</span>
       <span ng-hide="heading.title">New Heading</span>
-      <button class="btn btn-primary btn-sm" ng-click="save($event)"
+      <button class="btn btn-primary btn-sm save-btn" ng-click="save($event)"
       	      ng-disabled="form.$invalid">
 	Save
       </button>
-      <button class="btn btn-default btn-sm" ng-click="cancel_edit($event)">
+      <button class="btn btn-default btn-sm" ng-click="cancelEdit($event)">
 	Don't Save
       </button>
     </div>
