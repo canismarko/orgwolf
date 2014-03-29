@@ -1,8 +1,8 @@
 <div ng-show="heading.scheduled_date" ng-show="heading.scheduled_date">
-  Scheduled: {{ heading.scheduled_date }} {{ heading.scheduled_time }}
+  SCHEDULED: {{ heading.scheduled_date }} {{ heading.scheduled_time }}
 </div>
 <div ng-show="heading.deadline_date && !isEditable">
-  Deadline: {{ heading.deadline_date }}
+  DEADLINE: {{ heading.deadline_date }}
   <span ng-show="heading.deadline_time">
     {{ heading.deadline_time }}
   </span>
@@ -28,8 +28,6 @@
       {{ scopeId }}
     </li>
 </div>
-
-<hr />
 
 <div class="ow-text" id="edit-text-{{ heading.id }}"
      ng-bind-html="headingText | asHtml">

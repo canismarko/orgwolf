@@ -606,7 +606,8 @@ describe('directives in gtd-directives.js', function() {
 	    $rootScope.heading = {
 		id: 1,
 		lft: 1,
-		rght: 2,
+		rght: 6,
+		tree_id: 1,
 		tag_string: ''
 	    }
 	    $templateCache.put('/static/outline-twisty.html',
@@ -651,11 +652,58 @@ describe('directives in gtd-directives.js', function() {
 		.respond(200, children);
 	    $rootScope.$digest();
 	    element.isolateScope().toggleHeading({target: element});
-	    $httpBackend.flush();
 	    $rootScope.$digest();
+	    $httpBackend.flush();
 	    expect(JSON.stringify(element.isolateScope().children))
 		.toEqual(JSON.stringify(children));
 	    expect(element.isolateScope().loadedChildren).toBe(true);
+	});
+	it('gets children when created if not root level', function() {
+	    // Prepare the DOM element
+	    $scope = $rootScope.$new();
+	    $scope.heading = {
+		id: 2,
+		lft: 2,
+		rght: 5,
+		tree_id: 1,
+		level: 1,
+		tag_string: ''
+	    };
+	    $httpBackend.expectGET(
+	    	'/gtd/nodes?field_group=outline&parent_id=2'
+	    ).respond(200, []);
+	    element = $compile(
+		'<div ow-twisty ow-heading="heading" ng-click="toggleHeading($event)"></div>'
+	    )($scope);
+	    $rootScope.$digest();
+	    $httpBackend.flush();
+	    scope = element.isolateScope();
+	    expect(typeof scope.getChildren).toEqual('function');
+	});
+	it('does not get children if heading is a leaf node', function() {
+	    // Prepare the DOM element
+	    $scope = $rootScope.$new();
+	    $scope.heading = {
+		id: 2,
+		lft: 2,
+		rght: 3,
+		tree_id: 1,
+		level: 1,
+		tag_string: ''
+	    };
+	    element = $compile(
+		'<div ow-twisty ow-heading="heading" ng-click="toggleHeading($event)"></div>'
+	    )($scope);
+	    $rootScope.$digest();
+	    scope = element.isolateScope();
+	});
+	it('responds to the open-descendants signal', function() {
+	    $httpBackend.expectGET('/gtd/nodes?field_group=outline&parent_id=1').respond(200, []);
+	    $rootScope.$digest();
+	    $scope = element.isolateScope();
+	    expect($scope.state).toBe(0);
+	    $rootScope.$broadcast('open-descendants');
+	    expect($scope.state).toBe(1);
 	});
 	it('cycles through all states when toggled', function() {
 	    $httpBackend.expectGET('/gtd/nodes?field_group=outline&parent_id=1').respond(200, []);
@@ -672,6 +720,21 @@ describe('directives in gtd-directives.js', function() {
 	    expect(scope.state).toEqual(2);
 	    scope.toggleHeading({target: element});
 	    expect(scope.state).toEqual(0);
+	});
+	it('broadcasts open-descendants on state 2', function() {
+	    $httpBackend.expectGET('/gtd/nodes?field_group=outline&parent_id=1').respond(200, []);
+	    $rootScope.$digest();
+	    scope = element.isolateScope();
+	    childScope = scope.$new();
+	    var signalCaught = false;
+	    childScope.$on('open-descendants', function() {
+		signalCaught = true;
+	    });
+	    expect(scope.state).toEqual(0);
+	    scope.toggleHeading({target: element});
+	    $httpBackend.flush();
+	    scope.toggleHeading({target: element});
+	    expect(signalCaught).toBe(true);
 	});
 	it('allows the state to be toggled directly', function() {
 	    $httpBackend.expectGET('/gtd/nodes?field_group=outline&parent_id=1').respond(200, []);

@@ -32,7 +32,6 @@ describe('the GTD outline page', function() {
 	editButton.click();
 	var titleBox = element(by.model('fields.title'));
 	var oldText = titleBox.getAttribute('value');
-	console.log(oldText);
 	titleBox.sendKeys(' extra text');
 	$('.save-btn').click();
 	expect(firstRow.$('.ow-title').getText()).toMatch(/extra text$/);

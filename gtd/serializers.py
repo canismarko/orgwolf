@@ -90,8 +90,8 @@ class NodeListSerializer(NodeSerializer):
 
 
 class NodeOutlineSerializer(NodeSerializer):
-    """List of fields needed for constructing an outline without details."""
+    """Fields needed for constructing an outline with minimal details."""
     class Meta:
         model = Node
-        fields = ['title', 'tag_string', 'lft', 'rght', 'id',
+        fields = ['title', 'tag_string', 'lft', 'rght', 'id', 'priority',
                   'scope', 'level', 'archived', 'todo_state', 'repeats']

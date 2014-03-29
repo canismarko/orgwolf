@@ -48,7 +48,7 @@
 <div class="children" ng-if="state >= 1">
   <!-- Children -->
   <div ow-editable ow-parent="heading" ng-if="newChild"></div>
-  <div ng-show="!loadedChildren">
+  <div ng-show="!loadedChildren && !isLeafNode">
     Loading...
   </div>
   <div ow-twisty ng-repeat="heading in children" ow-heading="heading"

@@ -232,7 +232,6 @@ dd.todo
     font-weight: bold;
 }
 .details {
-    .well;
     .ow-text {
 	border-style: solid;
 	border-width: 3px;
@@ -241,22 +240,30 @@ dd.todo
 	    margin-top: 0px;
 	}
 	h1 {
-	    font-size: 24px;
+	    /* font-size: 24px; */
+	    font-size: 130%;
 	}
 	h2 {
-	    font-size: 22px;
+	    /* font-size: 22px; */
+	    font-size: 120%;
 	}
 	h3 {
-	    font-size: 20px;
+	    /* font-size: 20px; */
+	    font-size: 110%;
+	    font-weight: bold;
 	}
 	h4 {
-	    font-size: 18px;
+	    /* font-size: 18px; */
+	    font-size: 100%;
+	    font-weight: bold;
 	}
 	h5 {
-	    font-size: 14px;
+	    /* font-size: 14px; */
+	    font-size: 100%;
 	}
 	h6 {
-	    font-size: 12px;
+	    /* font-size: 12px; */
+	    font-size: 90%
 	}
     }
     &:hover .ow-text {
@@ -328,8 +335,12 @@ dd.todo
 	}
 	.details {
 	    color: black;
+	    margin-left: 27px;
+	    background: linear-gradient(rgba(0,0,0,0), rgb(230, 230, 230));
+	    border-radius: 7px;
+	    padding-left: 5px;
 	}
-	.children,.details {
+	.children {
 	    margin-left: 25px;
 	}
 	.ow-title {

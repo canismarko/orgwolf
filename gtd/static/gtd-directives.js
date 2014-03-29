@@ -422,6 +422,29 @@ owDirectives.directive('owTwisty', ['$compile', '$rootScope', 'Heading', functio
 	} else {
 	    hoverable.addClass('not-expandable');
 	}
+	// Handler for getting the children of this heading
+	scope.isLeafNode = ((scope.heading.rght - scope.heading.lft) === 1);
+	scope.getChildren = function() {
+	    if (!scope.loadedChildren && !scope.isLeafNode) {
+		scope.children = Heading.query({parent_id: scope.heading.id,
+						field_group: 'outline'});
+		scope.children.$promise.then(function(headings) {
+		    scope.numArchived = headings.filter(function(obj) {
+			return obj.archived === true;
+		    }).length;
+		    scope.loadedChildren = true;
+		});
+	    }
+	};
+	scope.$on('open-descendants', function(e) {
+	    if (e.targetScope !== e.currentScope) {
+		scope.toggleHeading(1);
+	    }
+	});
+	// Get children if this is not a root level node
+	if (scope.heading.level > 0) {
+	    scope.getChildren();
+	}
 	// Handlers for clicking on the heading (may be overridden by components)
 	scope.toggleHeading = function(newState) {
 	    element.removeClass('state-' + scope.state);
@@ -434,19 +457,15 @@ owDirectives.directive('owTwisty', ['$compile', '$rootScope', 'Heading', functio
 		scope.state = (scope.state + 1) % 3;
 	    }
 	    element.addClass('state-' + scope.state);
-	    // Get children if not already done
-	    if (!scope.loadedChildren && scope.state > 0) {
-		scope.children = Heading.query({parent_id: scope.heading.id,
-						field_group: 'outline'});
-		scope.children.$promise.then(function(headings) {
-		    scope.numArchived = headings.filter(function(obj) {
-			return obj.archived === true;
-		    }).length;
-		    scope.loadedChildren = true;
-		});
+	    // Get children if heading is now open
+	    if (scope.state > 0) {
+		scope.getChildren();
+	    }
+	    if (scope.state === 2) {
+		scope.$broadcast('open-descendants');
 	    }
 	};
-	// Hanlder for clicking the "edit" button
+	// Handler for clicking the "edit" button
 	scope.edit = function(e) {
 	    var $off;
 	    e.stopPropagation();
