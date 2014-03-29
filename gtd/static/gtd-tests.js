@@ -350,19 +350,33 @@ describe('directives in gtd-directives.js', function() {
     describe('the owCurrentDate directive', function() {
     });
 
-    // describe('the owDetails directive', function() {
-    // 	beforeEach(function() {
-    // 	    $templateCache.put('/static/details.html',
-    // 	    		       '<div class="details"></div>');
-    // 	    $rootScope.heading = {
-    // 		id: 2,
-    // 		title: 'Hello, world'
-    // 	    };
-    // 	    element = $compile(
-    // 		'<div ow-details ow-heading="heading"></div>'
-    // 	    )($rootScope);
-    // 	});
-    // });
+    describe('the owDetails directive', function() {
+    	beforeEach(inject(function(Heading) {
+    	    $templateCache.put('/static/details.html',
+    	    		       '<div class="details"></div>');
+    	    heading = {
+    		id: 2,
+    		title: 'Hello, world',
+		scope: [1, 2]
+    	    };
+	    $httpBackend.whenGET('/gtd/nodes/2').respond(200, heading);
+	    $rootScope.heading = Heading.get({id: 2});
+	    $rootScope.scopes = [
+		{id: 1, display: 'Work'},
+		{id: 2, display: 'Home'}
+	    ];
+	    $httpBackend.flush();
+    	    element = $compile(
+    		'<div ow-details ow-heading="heading"></div>'
+    	    )($rootScope);
+	    $httpBackend.flush();
+    	}));
+	it('sets scope.focusAreas', function() {
+	    scope = element.isolateScope();
+	    expect(scope.focusAreas.length).toEqual(2);
+	    expect(scope.focusAreas[0]).toEqual('Work');
+	});
+    });
 
     describe('the owEditable directive', function() {
 	var fullNode;

@@ -93,7 +93,6 @@ owMain.run(['$rootScope', function($rootScope) {
     NOTIFY_TIMEOUT = 4000;
     $rootScope.notifications = [];
     $rootScope.notify = function(msg, cls) {
-	console.log(msg);
 	$rootScope.notifications.push({pk: key,
 					msg: msg,
 					cls: cls});

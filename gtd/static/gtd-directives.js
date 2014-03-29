@@ -151,12 +151,21 @@ owDirectives.directive('owCurrentDate', function() {
 * is a new child.
 *
 **************************************************/
-owDirectives.directive('owDetails', ['$timeout', function($timeout) {
+owDirectives.directive('owDetails', ['$timeout', '$rootScope', function($timeout, $rootScope) {
     function link(scope, element, attrs) {
+	var i;
 	scope.editorId = 'edit-text-' + scope.heading.id;
 	scope.heading.$get()
 	    .then(function(newHeading) {
+		var areaName, f;
 		scope.headingText = newHeading.text;
+		// Build list of focus area names
+		scope.focusAreas = [];
+		f = function(scp) {return scp.id === newHeading.scope[i];};
+		for (i=0; i<newHeading.scope.length; i+=1) {
+		    areaName = $rootScope.scopes.filter(f)[0].display;
+		    scope.focusAreas.push(areaName);
+		}
 	    });
 	$timeout(function() {
 	    if ( typeof tinymce !== 'undefined' ) {

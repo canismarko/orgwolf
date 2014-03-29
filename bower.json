@@ -25,7 +25,7 @@
 	"angular-sanitize": "=1.2.7",
 	"angular-route": "=1.2.7",
 	"angular-mocks": "=1.2.7",
-	"angular-ui-tinymce": "latest",
+	"tinymce-release": "=4.0.2",
 	"bootstrap-switch": ">=2.0.1",
 	"jasmine": ">=2.0"
     }

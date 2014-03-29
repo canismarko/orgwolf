@@ -8,7 +8,7 @@
   </span>
 </div>
 <div ng-show="heading.repeats">
-  Repeats every {{ heading.repeating_number }}{{ heading.repeating_unit }}
+  REPEATS: Every {{ heading.repeating_number }}{{ heading.repeating_unit }}
   <span ng-show="heading.repeats_from_completed">
     from completion date
   </span>
@@ -18,15 +18,12 @@
 </div>
 
 <div>
-  Priority: {{ heading.priority }}
+  PRIORITY: {{ heading.priority }}
 </div>
 
 <div ng-show="heading.scope.length > 0">
-  Scopes:
-  <ul>
-    <li ng-repeat="scopeId in heading.scope">
-      {{ scopeId }}
-    </li>
+  FOCUS AREAS:
+  <span ng-repeat="area in focusAreas"><span ng-show="$first">{{ area }}</span><span ng-show="$middle">, {{ area }}</span><span ng-show="$last"> and {{ area }}</span></span>
 </div>
 
 <div class="ow-text" id="edit-text-{{ heading.id }}"
