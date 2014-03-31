@@ -330,7 +330,6 @@ class ContextFiltering(TestCase):
             self.client.login(username='test', password='secret')
             )
 
-
     def test_home_tag(self):
         all_nodes_qs = Node.objects.filter(
             Q(tag_string=':work:')|Q(tag_string=':home:')
@@ -1001,6 +1000,7 @@ class ListViewQueryset(TestCase):
         context = Context.objects.get(pk=1)
         request = self.factory.get(self.url, {'context': context.pk})
         request.user = self.user
+        request.session = {}
         qs = self.view.get_actions_list(request)
         expected = context.apply(Node.objects.assigned(self.user))
         self.assertQuerysetEqual(
@@ -1026,35 +1026,35 @@ class ListAPI(TestCase):
                 username=self.user.username, password='secret')
         )
 
-    # def test_parse_get_params(self):
-    #     states = TodoState.objects.filter(pk__in=[1, 2])
-    #     scope = Scope.objects.get(pk=1)
-    #     context = Context.objects.get(pk=2)
-    #     request = self.factory.get(
-    #         reverse('node_object'),
-    #         {
-    #             'todo_state': ['1', '2'],
-    #             'scope': ['1'],
-    #             'context': ['2']
-    #         },
-    #     )
-    #     request.is_json = True
-    #     request.user = self.user
-    #     request.session = {'context_name': None}
-    #     self.view.dispatch(request)
-    #     self.view.get(request)
-    #     self.assertQuerysetEqual(
-    #         self.view.url_data['todo_state'],
-    #         [repr(x) for x in states]
-    #     )
-    #     self.assertEqual(
-    #         self.view.url_data['scope'],
-    #         scope
-    #     )
-    #     self.assertEqual(
-    #         self.view.url_data['context'],
-    #         context
-    #     )
+    def test_sets_session_context(self):
+        context = Context.objects.get(pk=1)
+        response = self.client.get(
+            reverse('node_object'),
+            {'context': context.pk},
+            content_type='application/json'
+        )
+        self.assertEqual(
+            self.client.session['context_id'],
+            str(context.pk),
+            'session[\'context_id\'] not set'
+        )
+        self.assertEqual(
+            self.client.session['context_name'],
+            context.name,
+            'session[\'context_name\'] not set'
+        )
+
+    def test_unsets_session_context(self):
+        response = self.client.get(
+            reverse('node_object'),
+            {'context': 0},
+            content_type='application/json'
+        )
+        self.assertEqual(
+            self.client.session['context_id'],
+            None,
+            'session[\'context_id\'] not unset'
+        )
 
     def test_parent_param(self):
         """Test that adding the parent= param filters by parent"""

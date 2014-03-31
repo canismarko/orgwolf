@@ -403,8 +403,9 @@ function listCtrl($sce, $scope, $resource, $location, $routeParams, $filter, Hea
     };
     // Handler for changing the context
     $scope.changeContext = function(e) {
+	var $navButton, $navText, $navLink, newContext;
 	// Get new list of headings for this context
-	$scope.list_params.context = $scope.activeContext;
+	$scope.list_params.context = $scope.activeContext || 0;
 	if ($scope.activeContext) {
 	    $scope.contextName = $scope.contexts.filter(function(context) {
 		return context.id === $scope.activeContext;
@@ -415,6 +416,20 @@ function listCtrl($sce, $scope, $resource, $location, $routeParams, $filter, Hea
 	$scope.list_params.todo_state = $scope.activeStates;
 	$scope.$emit('refresh_list');
 	update_url($scope);
+	// Update navbar button
+	$navButton = $('#nav-actions');
+	$navText = $navButton.find('.nav-text');
+	$navLink = $navButton.find('a');
+	newContext = $scope.contexts.filter(function(context) {
+	    return context.id === $scope.activeContext;
+	});
+	if (newContext.length === 1) {
+	    $navText.text(newContext[0].name + ' Actions');
+	} else {
+	    $navText.text('Next Actions');
+	}
+	$navLink.attr('href', $location.absUrl());
+	console.log($location.absUrl());
     };
     // Handler for only showing one parent
     $scope.filter_parent = function(h) {

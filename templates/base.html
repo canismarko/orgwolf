@@ -211,12 +211,16 @@
 	    {% if request.session.context_id %}
 	    <a href="{% url 'list_display' context_id=request.session.context_id context_slug=request.session.context_name|slugify %}">
 	      <span class="glyphicon glyphicon-list"></span>
-	      {{ request.session.context_name }} Actions
+	      <span class="nav-text">
+		{{ request.session.context_name }} Actions
+	      </span>
 	    </a>
 	    {% else %}
 	    <a href="{% url 'list_display' %}">
 	      <span class="glyphicon glyphicon-list"></span>
-	      Next Actions
+	      <span class="nav-text">
+		Next Actions
+	      </span>
 	    </a>
 	    {% endif %}
 	  </li>

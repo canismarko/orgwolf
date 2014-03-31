@@ -322,9 +322,13 @@ class NodeView(APIView):
             nodes = nodes.filter(scope=scope)
         # Filter by context
         context_id = request.GET.get('context', None)
-        if context_id and context_id != 'None':
+        if context_id == '0':
+            request.session['context_id'] = None
+        elif context_id != 'None' and context_id is not None:
             context = Context.objects.get(id=context_id)
             nodes = context.apply(nodes)
+            request.session['context_id'] = context_id
+            request.session['context_name'] = context.name
         return nodes
 
     def get_upcoming(self, request, *args, **kwargs):
