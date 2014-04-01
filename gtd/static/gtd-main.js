@@ -83,26 +83,13 @@ owMain.run(['$rootScope', '$resource', function($rootScope, $resource) {
     $rootScope.scopes = Scope.query();
 }]);
 
-/*************************************************
-* Setup notification box for action results
-*
-**************************************************/
-owMain.run(['$rootScope', function($rootScope) {
-    var NOTIFY_TIMEOUT, key;
-    key = 1;
-    NOTIFY_TIMEOUT = 4000;
-    $rootScope.notifications = [];
-    $rootScope.notify = function(msg, cls) {
-	$rootScope.notifications.push({pk: key,
-					msg: msg,
-					cls: cls});
-	key = key + 1;
-	/* Clear the message after NOTIFY_TIMEOUT */
-	setTimeout(function() {
-	    $rootScope.$apply(function() {
-		$rootScope.notifications.splice(0, 1);
-	    });
-	}, NOTIFY_TIMEOUT);
+owMain.controller('owNotifications', ['$scope', 'notifyList', function($scope, notifyList) {
+    $scope.notifyList = notifyList;
+}]);
+
+owMain.controller('owNotificationsTest', ['$scope', 'notify', function($scope, notify) {
+    $scope.add = function() {
+	notify('hello');
     };
 }]);
 

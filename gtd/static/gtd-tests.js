@@ -805,6 +805,30 @@ describe('services in gtd-services.js', function() {
 	});
     });
 
+    describe('the notify service', function() {
+	var notify, notifyList, $timeout;
+	beforeEach(inject(function($injector) {
+	    notify = $injector.get('notify');
+	    notifications = $injector.get('notifyList');
+	    $timeout = $injector.get('$timeout');
+	}));
+	it('adds a new notification to the list', function() {
+	    expect(notifications.length).toEqual(0);
+	    notify('hello, world');
+	    expect(notifications.length).toEqual(1);
+	    expect(JSON.stringify(notifications))
+		.toEqual(JSON.stringify([{
+		    msg: 'hello, world', cls: 'info'
+		}]));
+	});
+	it('removes notifications after a while', function() {
+	    notify('hello, world');
+	    expect(notifications.length).toEqual(1);
+	    $timeout.flush();
+	    expect(notifications.length).toEqual(0);
+	});
+    });
+
     describe('the Heading service', function() {
 	var Heading, heading, $rootScope, $httpBackend;
 	beforeEach(inject(function($injector) {

@@ -179,3 +179,37 @@ owServices.factory('todoStates', ['$resource', 'todoStatesList', function($resou
     };
     return states;
 }]);
+
+/*************************************************
+* A list of current messages. Manipulated by the
+* notify service.
+*
+**************************************************/
+owServices.factory('notifyList', [function() {
+    var list = [];
+    return list;
+}]);
+
+/*************************************************
+* Creates function that lets components show
+* messages to the user
+*
+**************************************************/
+owServices.value('notifyTimeout', 4000); //in seconds
+owServices.factory('notify', ['notifyList', 'notifyTimeout', '$timeout', function(notifyList, notifyTimeout, $timeout) {
+    function removeMessage() {
+	notifyList.splice(0, 1);
+    }
+    function notify(msg, cls) {
+	if (typeof cls === 'undefined') {
+	    cls = 'info';
+	}
+	notifyList.push({
+	    msg: msg,
+	    cls: cls
+	});
+	// Drop the message after a few seconds
+	$timeout(removeMessage, notifyTimeout);
+    }
+    return notify;
+}]);
