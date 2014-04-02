@@ -87,12 +87,6 @@ owMain.controller('owNotifications', ['$scope', 'notifyList', function($scope, n
     $scope.notifyList = notifyList;
 }]);
 
-owMain.controller('owNotificationsTest', ['$scope', 'notify', function($scope, notify) {
-    $scope.add = function() {
-	notify('hello');
-    };
-}]);
-
 /*************************************************
 * Handler sends google analytics tracking on
 * angular route change

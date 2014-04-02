@@ -386,6 +386,7 @@ describe('directives in gtd-directives.js', function() {
 			       '<div class="editable"></div>');
 	});
 	describe('when an existing node is being edited ([ow-heading])', function() {
+	    var notifyList;
 	    beforeEach(function() {
 		// Prepare the DOM element
 		element = $compile(
@@ -399,8 +400,11 @@ describe('directives in gtd-directives.js', function() {
 		$rootScope.heading = {
 		    id: 2,
 		};
-		$httpBackend.expect('GET', '/gtd/nodes/2').respond(201, fullNode);
+		$httpBackend.expect('GET', '/gtd/nodes/2').respond(200, fullNode);
 	    });
+	    beforeEach(inject(function($injector) {
+		notifyList = $injector.get('notifyList');
+	    }));
 
 	    it('retrieves the heading object from the server', function() {
 		$httpBackend.flush();

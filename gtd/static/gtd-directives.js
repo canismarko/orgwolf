@@ -213,7 +213,7 @@ owDirectives.directive('owDetails', ['$timeout', '$rootScope', function($timeout
 * is a new child.
 *
 **************************************************/
-owDirectives.directive('owEditable', ['$resource', '$rootScope', '$timeout', 'owWaitIndicator', 'Heading', 'todoStates', function($resource, $rootScope, $timeout, owWaitIndicator, Heading, todoStates) {
+owDirectives.directive('owEditable', ['$resource', '$rootScope', '$timeout', 'owWaitIndicator', 'Heading', 'todoStates', 'notify', function($resource, $rootScope, $timeout, owWaitIndicator, Heading, todoStates, notify) {
     // Directive creates the pieces that allow the user to edit a heading
     function link(scope, element, attrs) {
 	var defaultParent, $text, heading, $save, heading_id, parent, editorId;
@@ -273,8 +273,13 @@ owDirectives.directive('owEditable', ['$resource', '$rootScope', '$timeout', 'ow
 	    } else {
 		newHeading = Heading.create(scope.fields);
 	    }
-	    newHeading.$promise.then(function() {
+	    newHeading.$promise.then(function(data) {
+		notify('Saved', 'success');
 		scope.$emit('finishEdit', newHeading);
+	    })['catch'](function(e) {
+		notify('<strong>Not saved!</strong> Check your internet connection and try again.', 'danger');
+		console.log('Save failed:');
+		console.log(e);
 	    });
 	};
 	scope.cancelEdit = function(e) {
@@ -334,7 +339,7 @@ owDirectives.directive('owScopeTabs', ['$resource', '$rootScope', '$timeout', fu
 * Directive that lets a user change the todo state
 * with a popover menu
 **************************************************/
-owDirectives.directive('owTodo', ['$rootScope', '$filter', 'todoStates', function($rootScope, $filter, todoStates) {
+owDirectives.directive('owTodo', ['$rootScope', '$filter', 'todoStates', 'notify', function($rootScope, $filter, todoStates, notify) {
     // Directive creates the pieces that allow the user to edit a heading
     function link(scope, element, attrs) {
 	var i, $span, $popover, $options, state, content, s, isInitialized;
@@ -344,10 +349,24 @@ owDirectives.directive('owTodo', ['$rootScope', '$filter', 'todoStates', functio
 	scope.$watch('todoStateId', function(newStateId, oldStateId) {
 	    // When the todoStateId changes (by user action)
 	    if (newStateId !== scope.heading.todo_state) {
+		var oldDate;
 		scope.heading.todo_state = parseInt(newStateId, 10);
 		scope.todoState = todoStates.getState(scope.heading.todo_state);
 		scope.heading.auto_update = true;
-		scope.heading.$update();
+		oldDate = scope.heading.scheduled_date;
+		scope.heading.$update()
+		    .then(function(data) {
+			if (data.scheduled_date !== oldDate) {
+			    // Notify the user that the heading is rescheduled
+			    var s = 'Rescheduled for ';
+			    s += data.scheduled_date;
+			    notify(s, 'info');
+			}
+		    })['catch'](function(e) {
+			notify('<strong>Not saved!</strong> Check your internet connection and try again.', 'danger');
+			console.log('Save failed:');
+			console.log(e);
+		    });
 	    }
 	});
 	scope.$watch(

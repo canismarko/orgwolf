@@ -176,15 +176,11 @@
     {% block body %}
     <!-- Boxes display results of actions -->
     {% verbatim %}
-      <div ng-controller="owNotifications" class="notifications"
-	   ng-show="notifyList.length > 0">
-	<div class="notification alert-{{ msg.cls }}"
-	     ng-repeat="msg in notifyList">
-	  {{ msg.msg }}
-	</div>
+    <div ng-controller="owNotifications" class="notifications"
+	 ng-show="notifyList.length > 0">
+      <div class="notification alert-{{ msg.cls }}"
+	   ng-repeat="msg in notifyList" ng-bind-html="msg.msg">
       </div>
-    <div ng-controller="owNotificationsTest">
-      <button ng-click="add()">Add</button>
     </div>
     {% endverbatim %}
 

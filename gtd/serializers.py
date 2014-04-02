@@ -94,4 +94,5 @@ class NodeOutlineSerializer(NodeSerializer):
     class Meta:
         model = Node
         fields = ['title', 'tag_string', 'lft', 'rght', 'id', 'priority',
-                  'scope', 'level', 'archived', 'todo_state', 'repeats']
+                  'scope', 'level', 'archived', 'todo_state', 'repeats',
+                  'scheduled_date', 'read_only']

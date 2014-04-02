@@ -83,11 +83,6 @@
 /* Search box */
 .form-search {
     margin-bottom: 15px;
-    /* @media (min-width: 992px) { */
-    /* 	position: absolute; */
-    /* 	right: 15px; */
-    /* 	width: 300px; */
-    /* } */
 }
 
 /* Loading indicators */
@@ -627,21 +622,25 @@ input,textarea {
 	}
 	.description {
 	    font-size: 120%;
-	    background-color: @primary-light-pale;
 	}
 	.collapse-label {
 	    display: inline;
 	}
 	.action-buttons {
-	    .opacify(70);
 	    .btn {
 		padding: 6px 12px 6px 12px;
 	    }
 	    .btn-label {
 		display: inline;
 	    }
-	    &:hover {
-		.opacify(100);
+	}
+	/* Auto-collapsing functionality */
+	.buttons,.deadline,.project {
+	    display: none;
+	}
+	.heading-row:hover {
+	    .buttons,.deadline,.project {
+		display: block;
 	    }
 	}
     }
