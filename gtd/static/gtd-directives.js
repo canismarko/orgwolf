@@ -589,7 +589,6 @@ owDirectives.directive('owListRow', ['$rootScope', 'todoStates', '$filter', func
 		if ( newDeadline ) {
 		    today = new Date();
 		    deadline = new Date(newDeadline);
-		    console.log(deadline, today);
 		    scope.owDate = $filter('deadline_str')(newDeadline);
 		    due = deadline - today;
 		}
@@ -647,7 +646,6 @@ owDirectives.directive('owListRow', ['$rootScope', 'todoStates', '$filter', func
 	link: link,
 	scope: {
 	    heading: '=owHeading',
-	    owDate: '@',
 	},
 	templateUrl: '/static/actions-list-row.html',
     };
