@@ -183,37 +183,39 @@ describe('filters in gtd-filters.js', function() {
 	    due_date = new Date(2014, 02, 21, 18, 1, 1);
 	}));
 	it('returns "" for a heading without a due date', function() {
-	    heading = {fields: {deadline_date: null}};
-	    expect(deadline_strFilter(heading)).toEqual('');
+	    heading = {deadline_date: null};
+	    expect(deadline_strFilter(heading.deadline_date)).toEqual('');
 	});
 	it('describes a heading due in the future', function() {
 	    due_date.setDate(due_date.getDate() + 2);
 	    due_date = due_date.toISOString().slice(0, 10);
 	    heading = {deadline_date: due_date};
-	    expect(deadline_strFilter(heading, today)).toEqual('Due in 2 days');
+	    expect(deadline_strFilter(heading.deadline_date, today))
+		.toEqual('Due in 2 days');
 	});
 	it('describes a heading due in the past', function() {
 	    due_date.setDate(due_date.getDate() - 2);
 	    due_date = due_date.toISOString().slice(0, 10);
 	    heading = {deadline_date: due_date};
-	    expect(deadline_strFilter(heading, today)).toEqual('Due 2 days ago');
+	    expect(deadline_strFilter(heading.deadline_date, today))
+		.toEqual('Due 2 days ago');
 	});
 	it('identifies a heading due today', function() {
 	    due_date = today.toISOString().slice(0, 10);
 	    heading = {deadline_date: due_date};
-	    expect(deadline_strFilter(heading, today)).toEqual('Due today');
+	    expect(deadline_strFilter(heading.deadline_date, today)).toEqual('Due today');
 	});
 	it('identifies a heading due tomorrow', function() {
 	    due_date.setDate(due_date.getDate() + 1);
 	    due_date = due_date.toISOString().slice(0, 10);
 	    heading = {deadline_date: due_date};
-	    expect(deadline_strFilter(heading, today)).toEqual('Due tomorrow');
+	    expect(deadline_strFilter(heading.deadline_date, today)).toEqual('Due tomorrow');
 	});
 	it('identifies a heading due yesterday', function() {
 	    due_date.setDate(due_date.getDate() - 1);
 	    due_date = due_date.toISOString().slice(0, 10);
 	    heading = {deadline_date: due_date};
-	    expect(deadline_strFilter(heading, today)).toEqual('Due yesterday');
+	    expect(deadline_strFilter(heading.deadline_date, today)).toEqual('Due yesterday');
 	});
     });
 
@@ -547,21 +549,17 @@ describe('directives in gtd-directives.js', function() {
 	    expect(hitApi).toEqual(false);
 	});
 
-	// it('sets scope.todoState during initialization', function() {
-	//     var scope;
-	//     $rootScope.$digest();
-	//     scope = element.isolateScope();
-	//     expect(scope.todoStateId)
-	// 	.toEqual($rootScope.heading.todo_state);
-	//     expectedState = dummyStates.filter(
-	// 	function(o) {return o.id===1;}
-	//     )[0];
-	//     expect(scope.todoState).toBe(expectedState);
-	// });
-
 	it('updates models when todoStateId changes', function() {
 	    var scope, expectedState;
-	    $rootScope.heading.$update = function() {};
+	    $rootScope.heading.$update = function() {
+		return {
+		    then: function() {
+			return {
+			    'catch': function() {}
+			};
+		    }
+		};
+	    };
 	    $rootScope.$digest();
 	    scope = element.isolateScope();
 	    scope.todoStateId = 2;

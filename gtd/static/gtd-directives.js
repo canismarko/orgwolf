@@ -572,7 +572,7 @@ owDirectives.directive('owTwisty', ['$compile', '$rootScope', 'Heading', functio
 * Directive sets the parameters of next
 * actions table row
 **************************************************/
-owDirectives.directive('owListRow', ['$rootScope', 'todoStates', function($rootScope, todoStates) {
+owDirectives.directive('owListRow', ['$rootScope', 'todoStates', '$filter', function($rootScope, todoStates, $filter) {
     function link(scope, element, attrs) {
 	var node_pk, $element;
 	$element = $(element);
@@ -589,13 +589,17 @@ owDirectives.directive('owListRow', ['$rootScope', 'todoStates', function($rootS
 		if ( newDeadline ) {
 		    today = new Date();
 		    deadline = new Date(newDeadline);
+		    console.log(deadline, today);
+		    scope.owDate = $filter('deadline_str')(newDeadline);
 		    due = deadline - today;
 		}
+		element.removeClass('overdue');
+		element.removeClass('upcoming');
 		if ( due === null ) {
 		    row_cls = '';
 		} else if ( due <= 0 ) {
 		    row_cls = 'overdue';
-		} else if ( due > 0 ) {
+		} else if ( 7*86400000 > due > 0 ) {
 		    row_cls = 'upcoming';
 		}
 		element.addClass(row_cls);
@@ -633,6 +637,11 @@ owDirectives.directive('owListRow', ['$rootScope', 'todoStates', function($rootS
 		$off();
 	    });
 	};
+	// Response when user edits the heading
+	scope.$on('finishEdit', function(e, newHeading) {
+	    e.stopPropagation();
+	    angular.extend(scope.heading, newHeading);
+	});
     }
     return {
 	link: link,

@@ -150,15 +150,15 @@ owFilters.filter('currentScope', function() {
 *
 **************************************************/
 owFilters.filter('deadline_str', ['$sce', function($sce) {
-    return function(heading, today) {
+    return function(deadline, today) {
 	var str, date, time_delta, day_delta;
 	if ( typeof today === 'undefined' ) {
 	    today = new Date();
 	}
 	str = '';
-	if ( heading.deadline_date ) {
+	if ( deadline ) {
 	    str = 'Due ';
-	    date = new Date(heading.deadline_date + 'T12:00:00');
+	    date = new Date(deadline + 'T12:00:00');
 	    today.setHours(12, 0, 0, 0);
 	    time_delta = date.getTime() - today.getTime();
 	    day_delta = Math.ceil(time_delta / (1000 * 3600 * 24));
