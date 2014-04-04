@@ -43,4 +43,14 @@ describe('the GTD outline page', function() {
 	$('.save-btn').click();
 	expect(firstRow.$('.ow-title').getText()).toEqual(oldText);
     });
+    it('lets the user add a heading', function() {
+	outlinePage.get();
+	var firstRow = outlinePage.getTwisty();
+	firstRow.click();
+	firstRow.$('.new-icon').click();
+	var titleBox = element(by.model('fields.title'));
+	titleBox.sendKeys('new e2e test child');
+	$('.save-btn').click();
+	expect(firstRow.getInnerHtml()).toMatch(/new e2e test child/);
+    });
 });

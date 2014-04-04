@@ -453,7 +453,7 @@ owDirectives.directive('owTwisty', ['$compile', '$rootScope', 'Heading', functio
 	// Handler for getting the children of this heading
 	scope.isLeafNode = ((scope.heading.rght - scope.heading.lft) === 1);
 	scope.getChildren = function() {
-	    if (!scope.loadedChildren && !scope.isLeafNode) {
+	    if (!scope.loadedChildren) {
 		scope.children = Heading.query({parent_id: scope.heading.id,
 						field_group: 'outline'});
 		scope.children.$promise.then(function(headings) {
