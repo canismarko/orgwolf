@@ -420,7 +420,6 @@ owDirectives.directive('owTwisty', ['$compile', '$rootScope', 'Heading', functio
 	scope.loadedChildren = false;
 	scope.state = 0;
 	element.addClass('state-'+scope.state);
-	// scope.isOpen = false;
 	scope.showArchived = $rootScope.showArchived;
 	// Get todo-states
 	if ($rootScope.todoStates) {
@@ -442,16 +441,17 @@ owDirectives.directive('owTwisty', ['$compile', '$rootScope', 'Heading', functio
 	// Process tag_string into tags
 	scope.tags = scope.heading.tag_string.slice(1, -1).split(':');
 	// Test for expandability
-	if (scope.heading.text) {
-	    hoverable.addClass('expandable');
-	} else if ((scope.heading.rght - scope.heading.lft) > 1) {
-	    // MPTT fields suggest expandability
-	    hoverable.addClass('lazy-expandable');
-	} else {
-	    hoverable.addClass('not-expandable');
-	}
+	scope.$watch(
+	    'heading.rght - heading.lft',
+	    function(newDiff) {
+		if (newDiff > 1) {
+		    hoverable.removeClass('leaf-node');
+		} else {
+		    hoverable.addClass('leaf-node');
+		}
+	    }
+	);
 	// Handler for getting the children of this heading
-	scope.isLeafNode = ((scope.heading.rght - scope.heading.lft) === 1);
 	scope.getChildren = function() {
 	    if (!scope.loadedChildren) {
 		scope.children = Heading.query({parent_id: scope.heading.id,

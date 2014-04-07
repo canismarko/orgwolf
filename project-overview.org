@@ -39,46 +39,14 @@ Second import concept: get the hacker base (software development?)
   - Provide tutorials for how to maximize value
     - Not require tutorials to be useable
   - An interface with others, even if they're not using this application
-* [2/9] People to brainstorm with
-  - [X] Emily Prettyman
-  - [ ] Jill McKeague
-  - [ ] Sarah Labadie
-  - [ ] Don Grantham
-  - [ ] David Allen Co.
-  - [X] r/GTD
-  - [ ] GTD forums
-  - [ ] Joe Merrell
-  - [ ] Mike Grammes
-  - [X] Ryan Cousins
+* Angular components
+** Outline twisty states
+   | Conditions           | MPTT condition  | # of states | Visual cue   |
+   |----------------------+-----------------+-------------+--------------|
+   | Children and details | lft - rght > 1  |           3 | 100% opacity |
+   | No children, details | lft - rght == 1 |           2 | 50% opacity  |
 * Development priorities
-** High (crucial for any level of functionality)
-*** DONE Write django models
-    CLOSED: [2012-10-11 Thu 14:17]
-*** DONE [4/4]Write org-mode importer plugin
-    CLOSED: [2012-10-13 Sat 00:53]
-    - [X] Node structure
-    - [X] Dates
-      - [X] scheduled
-      - [X] deadline
-      - [X] closed
-      - [X] repeating
-    - [X] text
-    - [X] tags
-*** DONE Write URL scheme for todo list and agenda
-    CLOSED: [2012-10-14 Sun 01:45]
-    - /gtd/ -> gettingthingsdone
-*** DONE Write view (Basic HTML) for TODO list
-    CLOSED: [2012-10-17 Wed 15:03]
-    - [X] Filter by TODO state
-    - [X] Filter by tools
-    - [ ] Filter by locations
-    - [ ] Filter by people
-*** DONE view (Basic HTML) for daily agenda
-    CLOSED: [2012-10-19 Fri 10:50]
-*** ACTN Get orgmode plugin to recognize changes to current database
-*** ACTN Modify plugin to take current user in to account
-*** NEXT Write unit tests for orgmode plugin
-** Medium (Things I need for my own use)
+** Things I need for my own use
    - Week long agendas
    - Built-in calendar
      - Time-specific vs day-specific
@@ -87,7 +55,7 @@ Second import concept: get the hacker base (software development?)
    - GMail import plugin
    - Google calendar import plugin
    - Google voice import plugin
-** Low (Things that other will need)
+** Things that others will need
    - Google tasks import plugin (Emily)
 * New messaging protocol
   - My inbox is not messages but a disorganized todo list
@@ -210,11 +178,6 @@ Second import concept: get the hacker base (software development?)
    - Work through items on a to-do list
 ** Weekly-Review Mode
    - Tied in to weekly review workflow?
-* Security
-  - Penetration testing
-  - Encryption scheme from server to client
-  - Encryption schede for messaging protocol
-  - Look into wordpress unique keys and salts
 * Django Models
   - Internationalization
   - django caching
@@ -233,13 +196,11 @@ Second import concept: get the hacker base (software development?)
     - eg. workout calendar
     - or is this just a project
   - Attachments
-** DONE GTD
-   CLOSED: [2012-10-11 Thu 14:19]
+** GTD
    - how to handle errands, as tool or as location?
    - contexts as a sequence of if...then statements
      - eg. if my students are not in the room then I can do these things
      - could be handled with tags?
-   - [ ] Doc strings
    - [ ] validate this model
 *** [15/15] class Node:
     - [X] get_children()
@@ -469,8 +430,5 @@ Second import concept: get the hacker base (software development?)
     - Collapsed
     - Show summary
     - show details
-* Hosting partners
-* Keep track of passwords
-* Kalsec copyright/patent disclaimer
 * Miscellaneous ideas
 ** Use natural selection to create new regular expressions
