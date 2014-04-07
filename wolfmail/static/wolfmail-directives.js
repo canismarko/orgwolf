@@ -16,13 +16,12 @@ owDirectives.directive('owMessageRow', function() {
 	$bProject = $element.find('.msg-project');
 	$bComplete = $element.find('.msg-complete');
 	$bDefer = $element.find('.msg-defer');
-	$bArchive = $element.find('.msg-save');
+	$bArchive = $element.find('.msg-archive');
 	$bDelete = $element.find('.msg-delete');
 	// Set button visibility for this row
 	if (attrs.owHandler === 'plugins.deferred') {
 	    // Deferred nodes
 	    $bProject.remove();
-	    $bDefer.remove();
 	    $bArchive.remove();
 	    $bDelete.remove();
 	} else {
@@ -158,7 +157,13 @@ owDirectives.directive('owMsgActions', ['Heading', function(Heading) {
 	scope.delete_node = function() {
 	    // Delete the message in the database
 	    scope.$delete_modal.modal('hide').one('hidden.bs.modal', function() {
-		scope.active_msg.delete_msg(scope.new_node);
+		scope.active_msg.$delete().then(function() {
+		    scope.messages.splice(
+			scope.messages.indexOf(scope.active_msg),
+			1
+		    );
+		});
+		// scope.active_msg.delete_msg(scope.new_node);
 	    });
 	};
     }

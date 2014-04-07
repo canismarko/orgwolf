@@ -648,6 +648,28 @@ input,textarea {
 
 /* Wolfmail inbox */
 #inbox {
+    .container;
+    .controls {
+	.make-row();
+	input {
+	    .form-control;
+	}
+	.refresh {
+	    .make-md-column(2);
+	    span.icon {
+		.glyphicon;
+		.glyphicon-refresh;
+	    }
+	    button {
+		.btn;
+		.btn-default;
+	    }
+	}
+	.current-date {
+	    .make-lg-column(2);
+	    .make-md-column(3);
+	}
+    }
     /* Alert if there are no message */
     .inbox-zero {
 	.container;
@@ -656,20 +678,6 @@ input,textarea {
     }
     /* List of message (e.g. Inbox) */
     .message-list {
-	.container;
-	.controls {
-	    .make-row();
-	    input {
-		.form-control;
-	    }
-	    .refresh {
-		.make-md-column(2);
-	    }
-	    .current-date {
-		.make-lg-column(2);
-		.make-md-column(3);
-	    }
-	}
 	.message-heading, .message-row {
 	    .make-row();
 	}

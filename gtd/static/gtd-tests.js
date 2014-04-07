@@ -689,23 +689,6 @@ describe('directives in gtd-directives.js', function() {
 	    scope = element.isolateScope();
 	    expect(typeof scope.getChildren).toEqual('function');
 	});
-	// it('does not get children if heading is a leaf node', function() {
-	//     // Prepare the DOM element
-	//     $scope = $rootScope.$new();
-	//     $scope.heading = {
-	// 	id: 2,
-	// 	lft: 2,
-	// 	rght: 3,
-	// 	tree_id: 1,
-	// 	level: 1,
-	// 	tag_string: ''
-	//     };
-	//     element = $compile(
-	// 	'<div ow-twisty ow-heading="heading" ng-click="toggleHeading($event)"></div>'
-	//     )($scope);
-	//     $rootScope.$digest();
-	//     scope = element.isolateScope();
-	// });
 	it('responds to the open-descendants signal', function() {
 	    $httpBackend.expectGET('/gtd/nodes?field_group=outline&parent_id=1').respond(200, []);
 	    $rootScope.$digest();
