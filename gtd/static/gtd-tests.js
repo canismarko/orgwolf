@@ -636,14 +636,18 @@ describe('directives in gtd-directives.js', function() {
 	describe('expandability DOM classes', function() {
 	    it('identifies a leaf node', function() {
 		$rootScope.$digest();
+		scope = element.isolateScope();
 		expect(element.find('.ow-hoverable')).toHaveClass('leaf-node');
+		expect(scope.isLeafNode).toBeTruthy();
 	    });
 	    it('identifies a non-leaf node', function() {
 		$rootScope.$digest();
 		expect(element.find('.ow-hoverable')).toHaveClass('leaf-node');
 		$rootScope.heading.rght = 4;
 		$rootScope.$digest();
+		scope = element.isolateScope();
 		expect(element.find('.ow-hoverable')).not.toHaveClass('leaf-node');
+		expect(scope.isLeafNode).toBeFalsy();
 	    });
 	});
 	it('processes the tag_string', function() {
@@ -699,6 +703,7 @@ describe('directives in gtd-directives.js', function() {
 	});
 	it('cycles through all states when toggled', function() {
 	    $httpBackend.expectGET('/gtd/nodes?field_group=outline&parent_id=1').respond(200, []);
+	    $rootScope.heading.rght = 4;
 	    $rootScope.$digest();
 	    scope = element.isolateScope();
 	    expect(scope.state).toEqual(0);
@@ -709,6 +714,17 @@ describe('directives in gtd-directives.js', function() {
 	    scope.toggleHeading({target: element});
 	    expect(element).toHaveClass('state-2');
 	    expect(element).not.toHaveClass('state-1');
+	    expect(scope.state).toEqual(2);
+	    scope.toggleHeading({target: element});
+	    expect(scope.state).toEqual(0);
+	});
+	it('skips state 2 if heading is a leaf node', function() {
+	    $httpBackend.expectGET('/gtd/nodes?field_group=outline&parent_id=1').respond(200, []);
+	    $rootScope.$digest();
+	    scope = element.isolateScope();
+	    expect(scope.state).toEqual(0);
+	    scope.toggleHeading({target: element});
+	    $httpBackend.flush();
 	    expect(scope.state).toEqual(2);
 	    scope.toggleHeading({target: element});
 	    expect(scope.state).toEqual(0);

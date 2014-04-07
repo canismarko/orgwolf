@@ -446,8 +446,10 @@ owDirectives.directive('owTwisty', ['$compile', '$rootScope', 'Heading', functio
 	    function(newDiff) {
 		if (newDiff > 1) {
 		    hoverable.removeClass('leaf-node');
+		    scope.isLeafNode = false;
 		} else {
 		    hoverable.addClass('leaf-node');
+		    scope.isLeafNode = true;
 		}
 	    }
 	);
@@ -483,6 +485,10 @@ owDirectives.directive('owTwisty', ['$compile', '$rootScope', 'Heading', functio
 	    else if ($(newState.target).is(':not(.non-opening)')) {
 		// Verify that something should be toggled
 		scope.state = (scope.state + 1) % 3;
+		// Skip state 1 for leaf nodes
+		if (scope.isLeafNode && scope.state === 1) {
+		    scope.state = 2;
+		}
 	    }
 	    element.addClass('state-' + scope.state);
 	    // Get children if heading is now open
