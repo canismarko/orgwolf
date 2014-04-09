@@ -167,6 +167,7 @@ owDirectives.directive('owDetails', ['$timeout', '$rootScope', function($timeout
 		    scope.focusAreas.push(areaName);
 		}
 	    });
+	// TinyMCE text editor
 	$timeout(function() {
 	    if ( typeof tinymce !== 'undefined' ) {
 		tinymce.init({
@@ -262,12 +263,11 @@ owDirectives.directive('owEditable', ['$resource', '$rootScope', '$timeout', 'ow
 	$save = element.find('#edit-save');
 	// Scroll so element is in view
 	$('html').animate({scrollTop: element.offset().top - 27}, '500');
-	// Focus on the title field
-	element.find('#title').focus();
 	// Event handlers for the editable dialog
 	scope.save = function(e) {
 	    var newHeading;
 	    // When the user saves the edited heading
+	    scope.fields.text = tinyMCE.get(scope.editorId).getContent();
 	    if ( scope.heading ) {
 		newHeading = Heading.update(scope.fields);
 	    } else {
@@ -282,6 +282,30 @@ owDirectives.directive('owEditable', ['$resource', '$rootScope', '$timeout', 'ow
 		console.log(e);
 	    });
 	};
+	// TinyMCE text editor
+	scope.editorId = 'editable-text-';
+	if (scope.heading) {
+	    scope.editorId += scope.heading.id;
+	} else if (scope.parent) {
+	    scope.editorId += 'child-' + scope.parent.id;
+	} else {
+	    scope.editorId += 'new';
+	}
+	$timeout(function() {
+	    if ( typeof tinymce !== 'undefined' ) {
+		tinymce.init({
+		    plugins: 'charmap fullscreen hr image link table textcolor',
+		    toolbar: 'undo redo | fullscreen | styleselect | bold italic forecolor backcolor superscript subscript | alignleft aligncenter alignright alignjustify | bullist numlist outdent indent | hr link image',
+		    inline: true,
+		    tools: 'inserttable',
+		    mode: 'exact',
+		    elements: scope.editorId,
+		    auto_focus: false
+		});
+	    }
+	    // Focus on the title field
+	    element.find('#title').focus();
+	});
 	scope.cancelEdit = function(e) {
 	    scope.$emit('finishEdit');
 	};
