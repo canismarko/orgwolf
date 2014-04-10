@@ -385,7 +385,7 @@ class InboxSerializerTest(TestCase):
         serializer = InboxSerializer(messages[0])
         included = ['id', 'subject', 'sender', 'unread',
                     'handler_path', 'rcvd_date',
-                    'source_node', 'node_slug']
+                    'source_node', 'node_slug', 'repeats']
         self.assertEqual(
             included,
             serializer.data.keys(),

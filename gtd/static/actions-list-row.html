@@ -3,6 +3,9 @@
     <span ow-todo ow-heading="heading">
       {{ todoState.abbreviation }}
     </span>
+    <span class="priority" ng-show="heading.priority">
+      [#{{ heading.priority }}]
+    </span>
     <a href="/gtd/project/#{{ heading.id }}-{{ heading.slug }}">
       {{ heading.title}}</a>
     <span ng-if="heading.repeats"

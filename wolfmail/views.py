@@ -119,6 +119,7 @@ class MessageView(APIView):
             # Set some attributes on the newly created Node()
             node.todo_state = TodoState.objects.get(abbreviation='NEXT')
             node.title = data.get('title', node.title)
+            node.text = message.message_text
             pid = data.get('parent', None)
             if pid is not None:
                 node.parent = Node.objects.get(pk=pid)

@@ -304,3 +304,7 @@ class FeedbackAPI(TestCase):
             msg.sender,
             self.user.get_username()
         )
+        self.assertEqual(
+            msg.message_text,
+            data['body']
+        )

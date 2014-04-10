@@ -458,16 +458,31 @@ dd.todo
 .hidden {
     height: 0px;
 }
+
+.refresh-btn {
+    .make-md-column(2);
+    span.icon {
+	.glyphicon;
+	.glyphicon-refresh;
+    }
+    button {
+    	.btn;
+    	.btn-default;
+    }
+}
 /* Text styles for various statuses */
 .ow-hoverable[archived="true"],.archived-indicator {
     font-style: italic;
     .opacify(80);
 }
-.priorityA {
-    font-weight: bold;
+.priorityA .priority {
+    color: rgb(65, 65, 65);
 }
-.priorityC {
-    font-style: italic;
+.priorityB .priority {
+    color: rgb(124, 124, 124);
+}
+.priorityC .priority {
+    color: rgb(165, 165, 165);
 }
 .ow-hoverable,.todo-state {
     &[actionable="true"] {
@@ -589,6 +604,10 @@ input,textarea {
 /* Next actions list */
 #gtd-list {
     .container;
+    .date-widget {
+	.make-md-column(3);
+	h2 { margin-top: 0px; }
+    }
     a {
 	cursor: pointer
     }
@@ -668,17 +687,6 @@ input,textarea {
 	.make-row();
 	input {
 	    .form-control;
-	}
-	.refresh {
-	    .make-md-column(2);
-	    span.icon {
-		.glyphicon;
-		.glyphicon-refresh;
-	    }
-	    button {
-		.btn;
-		.btn-default;
-	    }
 	}
 	.current-date {
 	    .make-lg-column(2);

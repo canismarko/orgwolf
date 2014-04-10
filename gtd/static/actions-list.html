@@ -1,6 +1,11 @@
 <div id="gtd-list">
-  <!-- Current date widget -->
-  <div class="current-date" ow-current-date></div>
+  <div class="row">
+    <!-- Current date widget -->
+    <div class="date-widget" ow-current-date></div>
+    <div class="refresh-btn">
+      <button ng-click="refreshList()"><span class="icon"></span> Refresh</button>
+    </div>
+  </div>
   <!-- Hard scheduled List -->
   <div id="scheduled-list" ng-show="scheduledList.length">
     <div class="table-heading">

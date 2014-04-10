@@ -317,6 +317,9 @@ function listCtrl($sce, $scope, $resource, $location, $routeParams, $filter, Hea
     });
     // Receiver that retrieves GTD lists from server
     $scope.$on('refresh_list', function() {
+	$scope.refreshList();
+    });
+    $scope.refreshList = function() {
 	var upcomingParams;
 	$scope.actionsList = Heading.query($scope.list_params);
 	upcomingParams = angular.extend(
@@ -330,7 +333,7 @@ function listCtrl($sce, $scope, $resource, $location, $routeParams, $filter, Hea
 		todo_state: 8
 	    }
 	);
-    });
+    };
     // Receiver for when the active scope changes (by clicking a tab)
     $scope.$on('scope-changed', function(e, newScope) {
 	$scope.activeScope = newScope;

@@ -217,6 +217,7 @@ class BaseMessageHandlerTest(TestCase):
         message.owner = User.objects.get(pk=1)
         message.subject = 'ordinary message'
         message.rcvd_date = dt.datetime.now(pytz.utc)
+        message.message_text = 'Hi, person. Have a nice day'
         message.save()
         handler = BaseMessageHandler(message)
         node = handler.create_node()
@@ -229,7 +230,10 @@ class BaseMessageHandlerTest(TestCase):
             isinstance(node, Node),
             'create_node() returns a Node object'
         )
-
+        self.assertEqual(
+            node.text,
+            message.message_text
+        )
 
 class DeferredHandlerTest(TestCase):
     fixtures = ['gtd-env.json', 'gtd-test.json',

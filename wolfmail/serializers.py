@@ -45,12 +45,13 @@ class InboxSerializer(serializers.ModelSerializer):
     # Custom fields
     source_node = serializers.SerializerMethodField('get_node_id')
     node_slug = serializers.SerializerMethodField('get_node_slug')
+    repeats = serializers.SerializerMethodField('get_repeats')
 
     class Meta:
         model = Message
         fields = ['id', 'subject', 'sender',
                   'unread', 'handler_path', 'rcvd_date',
-                  'source_node', 'node_slug']
+                  'source_node', 'node_slug', 'repeats']
 
     def get_node_id(self, msg):
         if msg.source_node is not None:
@@ -65,3 +66,7 @@ class InboxSerializer(serializers.ModelSerializer):
         else:
             slug = None
         return slug
+
+    def get_repeats(self, msg):
+        if msg.source_node is not None:
+            return msg.source_node.repeats

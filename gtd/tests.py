@@ -205,6 +205,8 @@ class RepeatingNodeTest(TestCase):
     def test_scheduled_repetition(self):
         """Make sure the item is rescheduled properly."""
         node = Node.objects.get(pk=5)
+        node.scheduled_date = dt.datetime(2012, 12, 31)
+        node.deadline_date = dt.datetime(2012, 12, 31)
         closed = TodoState.objects.get(abbreviation='DONE')
         actionable = TodoState.objects.get(abbreviation='ACTN')
         self.assertTrue(node.repeats)
@@ -217,6 +219,7 @@ class RepeatingNodeTest(TestCase):
         self.assertEqual(actionable, node.todo_state)
         new_date = dt.datetime(2013, 1, 3, tzinfo=get_current_timezone())
         self.assertEqual(new_date.date(), node.scheduled_date)
+        self.assertEqual(new_date.date(), node.deadline_date)
 
     def test_all_repeat_units(self):
         """Make sure day, week, month and year repeating units work"""
