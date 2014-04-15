@@ -1,16 +1,16 @@
 <div id="inbox">
   <div class="controls">
     <!-- Refresh button and date selector -->
-    <div class="refresh">
+    <div class="date-widget" ow-current-date>
+    </div>
+    <div class="refresh-btn">
       <button ng-click="get_messages()">
 	<span class="icon"></span>
 	Refresh
       </button>
     </div>
-
-    <div class="current-date" ow-current-date>
-    </div>
   </div>
+
   <!-- Message to show if inbox is empty -->
   <div class="inbox-zero"
        ng-show="messages.length === 0 && messages.$resolved">

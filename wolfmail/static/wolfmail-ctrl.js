@@ -32,8 +32,8 @@ owMain.controller(
 );
 function owinbox($scope, $rootScope, $resource, Message, Heading, owWaitIndicator) {
     var ds, today, get_messages;
-    $('.ow-active').removeClass('active');
-    $('#nav-inbox').addClass('active');
+    // $('.ow-active').removeClass('active');
+    // $('#nav-inbox').addClass('active');
     // Date for this inbox allows user to see future dfrd msgs
     $scope.currentDate = new Date();
     $scope.$watch('currentDate', function(new_date, old_date) {

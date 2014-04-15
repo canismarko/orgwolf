@@ -28,16 +28,16 @@ describe('the GTD actions list page', function() {
 	actionsPage.getContextBox().click();
 	actionsPage.getContextOption(1).click();
 	navButton = element(by.id('nav-actions'));
-	expect(navButton.$('.nav-text').getText()).toEqual('House Actions');
+	expect(navButton.$('a:nth-child(2)').getText()).toEqual('House Actions');
 	expect(navButton.$('a').getAttribute('href'))
 	    .toContain('/gtd/actions/2/house');
 	browser.driver.navigate().refresh();
 	navButton = element(by.id('nav-actions'));
-	expect(navButton.$('.nav-text').getText()).toEqual('House Actions');
+	expect(navButton.$('a:nth-child(2)').getText()).toEqual('House Actions');
 	// Reset back to no context
 	actionsPage.getContextBox().click();
 	actionsPage.getContextOption(null).click();
 	navButton = element(by.id('nav-actions'));
-	expect(navButton.$('.nav-text').getText()).toEqual('Next Actions');
+	expect(navButton.$('a:nth-child(1)').getText()).toEqual('Next Actions');
     });
 });

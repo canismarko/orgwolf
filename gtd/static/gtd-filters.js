@@ -30,6 +30,22 @@ owFilters.filter('is_target', function() {
 });
 
 /*************************************************
+* Filter turns a string into a slug
+*
+**************************************************/
+owFilters.filter('slugify', function() {
+    return function(string) {
+	var s;
+	if (string !== undefined) {
+	    /*jslint regexp: true */
+	    s = string.toLowerCase().replace(/[^a-z_]/g, '-');
+	    /*jslint regexp: false */
+	}
+	return s;
+    };
+});
+
+/*************************************************
 * Filter that determines style of TodoState object
 *
 **************************************************/

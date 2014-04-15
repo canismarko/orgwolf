@@ -110,15 +110,18 @@ STATICFILES_FINDERS = (
 #    'django.contrib.staticfiles.finders.DefaultStorageFinder',
 )
 
-# Make this unique, and don't share it with anybody.
-SECRET_KEY = '(uo8+av7_)vmmd9hb^nd4(=3&amp;qh97!zn+vffxa@8pd+jti!slq'
-
 # List of callables that know how to import templates from various sources.
-TEMPLATE_LOADERS = (
-    'django.template.loaders.filesystem.Loader',
-    'django.template.loaders.app_directories.Loader',
-    'django.template.loaders.eggs.Loader',
+LOADERS_TEMP = (
+        'django.template.loaders.filesystem.Loader',
+        'django.template.loaders.app_directories.Loader',
+        'django.template.loaders.eggs.Loader',
 )
+if DEBUG:
+    TEMPLATE_LOADERS = LOADERS_TEMP
+else:
+    TEMPLATE_LOADERS = (
+        ('django.template.loaders.cached.Loader', LOADERS_TEMP),
+    )
 
 MIDDLEWARE_CLASSES = [
     'django.middleware.common.CommonMiddleware',
@@ -250,6 +253,16 @@ try:
     from local_settings import *
 except ImportError:
     pass
+
+# Make this long and unique, and don't share it with anybody.
+# This should be set in local_settings.py for deployment
+if DEBUG == True:
+    SECRET_KEY = '(uo8+av7_)vmmd9hb^nd4(=3&amp;qh97!zn+vffxa@8pd+jti!slq'
+
+# Enforce HTTPS
+if DEBUG == False:
+    CSRF_COOKIE_SECURE = True
+    SESSION_COOKIE_SECURE = True
 
 # Logging, uses values taken from ../local_settings.py
 LOGGING = {

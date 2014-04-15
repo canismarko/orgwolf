@@ -946,7 +946,15 @@ describe('controllers in gtd-main.js', function() {
 	    	$scope.toggleTodoState({id: 1});
 	    	expect($scope.cachedStates).toEqual([2, 1]);
 	    });
-
+	});
+	describe('the changeContext() method', function() {
+	    it('updates the cookies with the new context', function() {
+		$httpBackend.whenGET('/gtd/nodes?context=0&todo_state=2')
+		    .respond(200, {});
+		$httpBackend.whenGET('/gtd/nodes?context=0&todo_state=2&upcoming=2014-04-15')
+		    .respond(200, {});
+		$scope.changeContext()
+	    });
 	});
     });
     describe('the nodeOutline controller', function() {

@@ -3,7 +3,7 @@
 
 var owDirectives = angular.module(
     'owDirectives',
-    ['ngAnimate', 'ngResource', 'owServices']
+    ['ngAnimate', 'ngResource', 'ngCookies', 'owServices',]
 );
 
 /*************************************************

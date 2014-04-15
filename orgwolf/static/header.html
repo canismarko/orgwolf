@@ -1,0 +1,97 @@
+<!-- Boxes display results of actions -->
+<div ng-controller="owNotifications" class="notifications"
+     ng-show="notifyList.length > 0">
+  <div class="notification alert-{{ msg.cls }}"
+       ng-repeat="msg in notifyList" ng-bind-html="msg.msg">
+  </div>
+</div>
+
+<!-- Navigation bar -->
+<nav class="navbar navbar-default" role="navigation" ow-navbar>
+  <div class="navbar-header">
+    <button type="button" class="navbar-toggle"
+	    data-toggle="collapse" data-target=".navbar-ex1-collapse">
+      <span class="sr-only">Toggle Navigation</span>
+      <span class="icon-bar"></span>
+      <span class="icon-bar"></span>
+      <span class="icon-bar"></span>
+    </button>
+    <a class="navbar-brand" id="logo" href="/">
+      <img src="{{ 'orgwolf-logo.png' | static }}" />
+    </a>
+  </div>
+
+  <div class="collapse navbar-collapse navbar-ex1-collapse">
+    <ul class="nav navbar-nav">
+      <!-- Next actions -->
+      <li id="nav-actions">
+	<a href="/gtd/actions/" ng-hide="activeContext">
+	  <span class="glyphicon glyphicon-list"></span>
+	  Next Actions
+	</a>
+	<a href="/gtd/actions/{{ activeContext.id }}/{{ activeContext.name | slugify }}" ng-show="activeContext">
+	  <span class="glyphicon glyphicon-list"></span>
+	  {{ activeContext.name }} Actions
+	</a>
+      </li>
+      <!-- Inbox -->
+      <li id="nav-inbox">
+	<a href="/wolfmail/inbox/">
+	  <span class="glyphicon glyphicon-inbox"></span>
+	  Inbox
+	</a>
+      </li>
+      <!-- Project Outline -->
+      <li id="nav-projects">
+	<a href="/gtd/project/">
+	  <span class="glyphicon glyphicon-folder-open"></span>
+	  Projects</a>
+      </li>
+    </ul>
+
+    <form class="navbar-form navbar-left col-md-3"
+	  ng-controller="inboxCapture" ng-submit="capture($event)">
+      <div class="input-group">
+	<input type="text" name="new_inbox_item" id="new_inbox_item"
+	       class="form-control"
+	       placeholder="To inbox..."></input>
+	<span class="input-group-btn">
+	  <button type="submit" class="btn btn-default">
+	    Save
+	  </button>
+	</span>
+      </div>
+    </form>
+
+    <ul class="nav navbar-nav navbar-right">
+      <!-- Button for feedback form -->
+      <li class="pull-right ow-unauth-hide">
+	<a href="#" data-toggle="modal" data-target="#feedbackModal">
+	  Feedback
+	</a>
+      </li>
+
+      <li class="dropdown ow-unauth-hide">
+      	<a href="#" class="dropdown-toggle" data-toggle="dropdown">
+      	  Account <b class="caret"></b>
+      	</a>
+      	<ul class="dropdown-menu">
+      	  <li class="ow-staff-show">
+      	    <a href="/admin/">Admin</a>
+      	  </li>
+      	  <li>
+      	    <a href="/accounts/profile/" target="_self">Account</a>
+      	  </li>
+      	  <li>
+      	    <a href="#" id="logout" persona-button="logout">Logout</a>
+      	  </li>
+      	</ul>
+      </li>
+      <li class="ow-unauth-show">
+	<a href="#" class="navbar-brand" persona-button="login">
+	  <img src="{{ 'persona-button.png' | static }}" />
+	</a>
+      </li>
+    </ul>
+  </div>
+</nav><!-- </nav class="navbar"> -->

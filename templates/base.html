@@ -25,10 +25,6 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <title>
-      {% block title%}TODO: implement title{% endblock %}
-    </title>
-    {% block favicon %}
     {% if debug %}
     <link rel="icon"
 	  type="image/png"
@@ -40,20 +36,16 @@
     {% endif %}
     <link rel="apple-touch-icon"
 	  href="{{ STATIC_URL }}orgwolf-icon-114.png" />
-    {% endblock %}
-    {% if enable_css %}
-      {% block all_style %}
 
-	{% if local_net %}
-	  <link rel="stylesheet" type="text/css"
-		href="{{ STATIC_URL }}bower/bootstrap/dist/css/bootstrap.css" />
-	  <link rel="stylesheet" type="text/css"
-		href="{{ STATIC_URL }}bower/bootstrap-switch/build/css/bootstrap3/bootstrap-switch.css" />
-	{% else %}
-	  <link rel="stylesheet" type="text/css" href="//cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.1.1/css/bootstrap.min.css" />
-	  <link rel="stylesheet" type="text/css" href="//cdnjs.cloudflare.com/ajax/libs/bootstrap-switch/2.0.1/css/bootstrap3/bootstrap-switch.min.css" />
-
-	{% endif %}
+    {% if local_net %}
+    <link rel="stylesheet" type="text/css"
+	  href="{{ STATIC_URL }}bower/bootstrap/dist/css/bootstrap.css" />
+    <link rel="stylesheet" type="text/css"
+	  href="{{ STATIC_URL }}bower/bootstrap-switch/build/css/bootstrap3/bootstrap-switch.css" />
+    {% else %}
+    <link rel="stylesheet" type="text/css" href="//cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.1.1/css/bootstrap.min.css" />
+    <link rel="stylesheet" type="text/css" href="//cdnjs.cloudflare.com/ajax/libs/bootstrap-switch/2.0.1/css/bootstrap3/bootstrap-switch.min.css" />
+    {% endif %}
 
     {% if debug %}
     <link rel="stylesheet" type="text/css"
@@ -72,15 +64,6 @@
 	  href="{{ STATIC_URL }}orgwolf.css" />
     {% endif %}
 
-    {% block style %}
-    <style type="text/css">
-    </style>
-    {% endblock %}
-    {% endblock %}
-    {% endif %}
-    {% if enable_js %}
-    {% block all_script %}
-
     {% if local_net %}
     <!-- <script src="{{ STATIC_URL }}modernizr.min.js"></script> -->
     <script src="{{ STATIC_URL }}bower/requirejs/require.js"></script>
@@ -92,6 +75,7 @@
     <script src="{{ STATIC_URL }}bower/angular-animate/angular-animate.js"></script>
     <script src="{{ STATIC_URL }}bower/angular-resource/angular-resource.js"></script>
     <script src="{{ STATIC_URL }}bower/angular-sanitize/angular-sanitize.js"></script>
+    <script src="{{ STATIC_URL }}bower/angular-cookies/angular-cookies.js"></script>
     <script src="{{ STATIC_URL }}bower/angular-route/angular-route.js"></script>
     {% else %}
     <!-- <script src="//cdnjs.cloudflare.com/ajax/libs/modernizr/2.7.1/modernizr.min.js"></script> -->
@@ -105,6 +89,7 @@
     <script src="//ajax.googleapis.com/ajax/libs/angularjs/1.2.7/angular-animate.min.js"></script>
     <script src="//ajax.googleapis.com/ajax/libs/angularjs/1.2.7/angular-sanitize.min.js"></script>
     <script src="//ajax.googleapis.com/ajax/libs/angularjs/1.2.7/angular-resource.min.js"></script>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/angular.js/1.2.7/angular-cookies.min.js"></script>
     <script src="//ajax.googleapis.com/ajax/libs/angularjs/1.2.7/angular-route.min.js"></script>
     <script src="https://login.persona.org/include.js"></script>
     {% endif %}
@@ -122,6 +107,8 @@
       <script src="{{ STATIC_URL }}wolfmail-directives.js"></script>
       <script src="{{ STATIC_URL }}wolfmail-filters.js"></script>
       <script src="{{ STATIC_URL }}wolfmail-ctrl.js"></script>
+      <script src="{{ STATIC_URL }}orgwolf-filters.js"></script>
+      <script src="{{ STATIC_URL }}orgwolf-directives.js"></script>
     {% else %}
       <script src="{{ STATIC_URL }}orgwolf-min.js"></script>
     {% endif %}
@@ -131,24 +118,7 @@
       // Page specific persona setup
       owServices.value('personaUser', "{{ request.user.username }}");
       {% endif %}
-    $(document).ready(function() {
-	{% if request.user.is_authenticated %}
-	// Convert utility links to dropdown menu
-	$('.util-dropdown').wrapAll('<ul class="dropdown-menu" role="menu"' +
-				    ' aria_labeledby="lblAccounts" />');
-	$('.util-dropdown').parent().wrap('<li class="dropdown" />');
-	$('.util-dropdown').parent().before(
-	    '<a class="dropdown-toggle"' +
-		' id="lblAccounts"' +
-		' role="button"' +
-		' data-toggle="dropdown"' +
-		' href="#">' +
-		'{{ request.user.get_display }}' +
-		'</div>'
-	);
-	$('.util-dropdown').parent().prev('a.dropdown-toggle').append(
-	    '<b class="caret" />');
-	{% endif %}
+      $(document).ready(function() {
 
 	// Google analytics
 	{% if not debug %}
@@ -165,140 +135,28 @@
 	'todoStatesList',
 	{% todo_states_json %}
     );
+    owFilters.value('staticUrl', '{{ STATIC_URL }}');
 
     </script>
     {% endblock %}
-    {% endblock %}
-    {% endif %}
+
   </head>
-  <body ow-logged-in="{{ request.user.is_authenticated }}">
+
+  <body ow-logged-in="{{ request.user.is_authenticated }}"
+	ow-is-staff="{{ request.user.is_staff }}"
+	debug="{{ debug }}">
 
     {% block body %}
-    <!-- Boxes display results of actions -->
-    {% verbatim %}
-    <div ng-controller="owNotifications" class="notifications"
-	 ng-show="notifyList.length > 0">
-      <div class="notification alert-{{ msg.cls }}"
-	   ng-repeat="msg in notifyList" ng-bind-html="msg.msg">
-      </div>
-    </div>
-    {% endverbatim %}
 
-    <!-- Navigation bar -->
-    {% block nav %}
-    <nav class="navbar navbar-default" role="navigation">
-      <div class="navbar-header">
-	<button type="button" class="navbar-toggle"
-		data-toggle="collapse" data-target=".navbar-ex1-collapse">
-	  <span class="sr-only">Toggle Navigation</span>
-	  <span class="icon-bar"></span>
-	  <span class="icon-bar"></span>
-	  <span class="icon-bar"></span>
-	</button>
-	<a class="navbar-brand" id="logo" href="/">
-	  {% if debug %}
-	  <img src="{{ STATIC_URL }}orgwolf-logo-debug.png" />
-	  {% else %}
-	  <img src="{{ STATIC_URL }}orgwolf-logo.png" />
-	  {% endif %}
-	</a>
-      </div>
-
-      <div class="collapse navbar-collapse navbar-ex1-collapse">
-	<ul class="nav navbar-nav">
-	  <!-- Next actions -->
-	  <li id="nav-actions" class="ow-active{% if 'actions' in request.get_full_path %} active{% endif %}">
-	    {% if request.session.context_id %}
-	    <a href="{% url 'list_display' context_id=request.session.context_id context_slug=request.session.context_name|slugify %}">
-	      <span class="glyphicon glyphicon-list"></span>
-	      <span class="nav-text">
-		{{ request.session.context_name }} Actions
-	      </span>
-	    </a>
-	    {% else %}
-	    <a href="{% url 'list_display' %}">
-	      <span class="glyphicon glyphicon-list"></span>
-	      <span class="nav-text">
-		Next Actions
-	      </span>
-	    </a>
-	    {% endif %}
-	  </li>
-	  <!-- Inbox -->
-	  <li id="nav-inbox"
-	      class="ow-active {% if 'inbox' in request.get_full_path %} active{% endif %}">
-	    <a href="{% url 'inbox' %}">
-	      <span class="glyphicon glyphicon-inbox"></span>
-	      Inbox
-	    </a>
-	  </li>
-	  <!-- Project Outline -->
-	  <li id="nav-projects" class="ow-active {% if 'project' in request.get_full_path %} active{% endif %}">
-	    <a href="{% url 'projects' %}">
-	      <span class="glyphicon glyphicon-folder-open"></span>
-	      Projects</a>
-	  </li>
-	</ul>
-
-	{% block inbox_widget %}
-	  <form class="navbar-form navbar-left col-md-3"
-		ng-controller="inboxCapture" ng-submit="capture($event)">
-	    <div class="input-group">
-	      <input type="text" name="new_inbox_item" id="new_inbox_item"
-		     class="form-control"
-		     placeholder="To inbox..."
-		     {% if request.user.is_anonymous %} disabled{% endif %}>
-		   </input>
-	  <span class="input-group-btn">
-	    <button type="submit" class="btn btn-default"
-		    {% if request.user.is_anonymous %} disabled{% endif %}>
-	      Save
-	    </button>
-	  </span>
-	    </div>
-	  </form>
-	{% endblock %}
-
-	<ul class="nav navbar-nav navbar-right">
-	  <!-- Button for feedback form -->
-	  {% if request.user.is_authenticated %}
-	  <li class="pull-right">
-	    <a href="#" data-toggle="modal" data-target="#feedbackModal">
-	      Feedback
-	    </a>
-	  </li>
-
-	  {% if request.user.is_staff %}
-	  <li class="util-dropdown" role="menuitem">
-	    <a href="/admin/" target="_self">Admin</a>
-	  </li>
-	  {% endif %}
-	  <li class="util-dropdown" role="menuitem">
-	    <a href="/accounts/profile/" target="_self">Account</a>
-	  </li>
-	  <li class="util-dropdown" role="menuitem">
-	    <a href="#" id="logout" persona-button="logout">Logout</a>
-	  </li>
-	  {% else %}
-	  <li>
-	    <a href="#" class="navbar-brand" persona-button="login">
-	      <img src="{{ STATIC_URL }}persona-button.png" />
-	    </a>
-	  </li>
-	  {% endif %}
-	</ul>
-      </div>
-    </nav><!-- </nav class="navbar"> -->
-
-    {% endblock %}{# end of nav #}
+    <!-- Navigation and notifications -->
+    <div ng-include="'{{ STATIC_URL }}header.html'"></div>
 
     <!-- Form for submitting feedback -->
     <div ow-feedback>
     </div>
 
     <!-- Alert if the user is not logged in -->
-    {% if request.user.is_anonymous %}
-    <div class="container" id="unauth-warn">
+    <div class="container ow-unauth-show" id="unauth-warn">
       <div class="row">
 	<div class="alert alert-warning col-md-5 col-md-offset-3">
 	  You are in <strong>demo mode</strong>; changes will not be
@@ -309,29 +167,45 @@
 	</div>
       </div>
     </div>
-    {% endif %}
 
     <!-- Displays indicators if there's a noticeable wait time -->
     <div ow-wait-feedback class="wait-indicator">
       <div class="mask">
 	<div id="dark"></div>
 	<img id="spinner" alt="loading"
-	     src="{{ STATIC_URL }}/ajax-loader.gif"></img>
+	     src="{{ STATIC_URL }}ajax-loader.gif"></img>
       </div>
     </div>
 
-    <!-- <button class="btn btn-default" ng-click="notify('hello, all', 'info')">Notify!</button> -->
-    <!-- <button class="btn btn-default" ng-click="notify('world', 'danger')">Notify!</button> -->
-
     <!-- View for angular controller to fill in -->
     <div ng-view class="view-animate">
+
+      <!-- Fallback error message for non-javascript browsers -->
+      <div class="noscript">
+	<div class="row logo">
+	  <div>
+	    <img src="{{ STATIC_URL }}orgwolf-logo-big.jpg" alt="Orgwolf logo" />
+	  </div>
+	</div>
+	<div class="row">
+	  <div>
+	    <div class="alert alert-danger">
+	      <strong>Orgwolf requires javascript.</strong>
+	      Please enable javascript or upgrade your browser.
+	    </div>
+	  </div>
+	</div>
+	<div class="row">
+	  <img src="{{ STATIC_URL }}404.jpg" alt="ripped page graphic" />
+	</div>
+      </div>
+
     </div>
 
-    {% block content %}
-    <br />This feature is not yet impletemented. Check back later.<br />
-    {% endblock %}
-
 </div>
+
+{% block content %}
+{% endblock %}
 
 {% endblock %}
 

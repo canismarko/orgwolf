@@ -35,6 +35,51 @@
 	}
     }
 }
+[ow-logged-in=True] {
+    .ow-unauth-show {
+	display: none;
+    }
+}
+[ow-is-staff=False] {
+    .ow-staff-show {
+	display: none;
+    }
+}
+
+/* Make it obvious if the server is in debug mode */
+body[debug="True"] {
+    nav {
+	background: @state-warning-bg;
+	border-color: @state-warning-border;
+	a {
+	    color: @state-warning-text !important;
+	}
+	/* #gradient > .vertical(@state-warning-border, rgba(0, 0, 0, 0)); */
+    }
+}
+
+/* No-javascript alert */
+.noscript {
+    .container;
+    .row {
+	/* margin-top: 50px; */
+	/* margin-bottom: 50px; */
+	> div {
+	    .text-center;
+	    .make-md-column(6);
+	    .make-md-column-offset(3);
+	}
+    }
+    img {
+	.img-responsive();
+	margin-left: auto;
+	margin-right: auto;
+    }
+    .logo {
+	margin-top: 50px;
+	margin-bottom: 50px;
+    }
+}
 
 /* Navbar */
 .navbar-brand
@@ -315,11 +360,10 @@ dd.todo
 }
 
 /* Widget for changing the current date of lists and inbox */
-.current-date {
+.date-widget {
     h2 {
 	margin-top: 0px;
 	display: inline-block;
-	font-size: 24px;
     }
     input {
 	.form-control;
@@ -688,7 +732,7 @@ input,textarea {
 	input {
 	    .form-control;
 	}
-	.current-date {
+	.date-widget {
 	    .make-lg-column(2);
 	    .make-md-column(3);
 	}

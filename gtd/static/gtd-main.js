@@ -8,7 +8,7 @@ var test_headings, owConfig, HeadingFactory, outlineCtrl, listCtrl;
 **************************************************/
 var owMain = angular.module(
     'owMain',
-    ['ngAnimate', 'ngResource', 'ngSanitize', 'ngRoute',
+    ['ngAnimate', 'ngResource', 'ngSanitize', 'ngRoute', 'ngCookies',
      'owServices', 'owDirectives', 'owFilters']
 );
 
@@ -151,8 +151,8 @@ owMain.controller(
 function outlineCtrl($scope, $rootScope, $http, $resource, $filter, Heading,
 		     $location, $anchorScroll, owWaitIndicator) {
     var TodoState, Scope, url, get_heading, Parent, Tree, parent_tree_id, parent_level, target_headings, target_id, main_headings, newButton, showAllButton;
-    $('.ow-active').removeClass('active');
-    $('#nav-projects').addClass('active');
+    // $('.ow-active').removeClass('active');
+    // $('#nav-projects').addClass('active');
     newButton = $('#add-heading');
     showAllButton = $('#show-all');
     target_id = $location.hash().split('-')[0];
@@ -252,12 +252,12 @@ function outlineCtrl($scope, $rootScope, $http, $resource, $filter, Heading,
 owMain.controller(
     'nextActionsList',
     ['$sce', '$scope', '$resource', '$location', '$routeParams', '$filter',
-     'Heading', 'todoStates', listCtrl]
+     'Heading', 'todoStates', '$cookies', listCtrl]
 );
-function listCtrl($sce, $scope, $resource, $location, $routeParams, $filter, Heading, todoStates) {
+function listCtrl($sce, $scope, $resource, $location, $routeParams, $filter, Heading, todoStates, $cookies) {
     var i, TodoState, Context, today, update_url, get_list, parent_id, todo_states;
-    $('.ow-active').removeClass('active');
-    $('#nav-actions').addClass('active');
+    // $('.ow-active').removeClass('active');
+    // $('#nav-actions').addClass('active');
     $scope.list_params = {};
     $scope.showArchived = true;
     $scope.activeScope = null;
@@ -386,7 +386,7 @@ function listCtrl($sce, $scope, $resource, $location, $routeParams, $filter, Hea
 	$location.search(search);
     };
     // Handler for changing the context
-    $scope.changeContext = function(e) {
+    $scope.changeContext = function() {
 	var $navButton, $navText, $navLink, newContext;
 	// Get new list of headings for this context
 	$scope.list_params.context = $scope.activeContext || 0;
@@ -401,6 +401,7 @@ function listCtrl($sce, $scope, $resource, $location, $routeParams, $filter, Hea
 	$scope.$emit('refresh_list');
 	update_url($scope);
 	// Update navbar button
+	$cookies.activeContext = String($scope.activeContext);
 	$navButton = $('#nav-actions');
 	$navText = $navButton.find('.nav-text');
 	$navLink = $navButton.find('a');
@@ -413,7 +414,6 @@ function listCtrl($sce, $scope, $resource, $location, $routeParams, $filter, Hea
 	    $navText.text('Next Actions');
 	}
 	$navLink.attr('href', $location.absUrl());
-	console.log($location.absUrl());
     };
     // Handler for only showing one parent
     $scope.filter_parent = function(h) {
