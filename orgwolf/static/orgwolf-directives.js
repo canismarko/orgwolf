@@ -1,21 +1,25 @@
+/*globals owDirectives, $ */
+"use strict";
+
 owDirectives.directive('owNavbar', ['$location', '$cookies', function($location, $cookies) {
     function link(scope, element, attrs) {
+	var regexps;
 	regexps = {
 	    'actions': new RegExp('^/gtd/actions'),
 	    'inbox': new RegExp('^/wolfmail/inbox/'),
 	    'projects': new RegExp('^/gtd/project/')
 	};
 	function setActiveLink() {
-	    var found, r, currUrl;
+	    var found, r, currPath, linkId;
 	    // Clear old active links
 	    $('ul.navbar-nav li').removeClass('active');
 	    // Find and set new active link
 	    currPath = $location.path();
-	    for (key in regexps) {
-		if (regexps.hasOwnProperty(key)) {
-		    r = regexps[key].exec(currPath);
+	    for (linkId in regexps) {
+		if (regexps.hasOwnProperty(linkId)) {
+		    r = regexps[linkId].exec(currPath);
 		    if (r) {
-			$('#nav-' + key).addClass('active');
+			$('#nav-' + linkId).addClass('active');
 		    }
 		}
 	    }
@@ -26,13 +30,13 @@ owDirectives.directive('owNavbar', ['$location', '$cookies', function($location,
 	});
 	// Update the next actions link based on the currently selected scope
 	scope.$watch(function() {
-	    return $cookies.activeContext
+	    return $cookies.activeContext;
 	}, function(newContext) {
 	    newContext = parseInt(newContext, 10);
 	    scope.contexts.$promise.then(function() {
 		// Find the active context and set the link attributes
 		scope.activeContext = scope.contexts.filter(function(context) {
-		    return context.id === newContext
+		    return context.id === newContext;
 		})[0];
 		console.log(scope.activeContext);
 	    });

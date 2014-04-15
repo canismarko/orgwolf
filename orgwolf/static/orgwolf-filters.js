@@ -1,3 +1,4 @@
+/*globals owFilters */
 "use strict";
 
 owFilters.value('staticUrl', null);
