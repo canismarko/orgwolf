@@ -9,6 +9,7 @@ var test_headings, owConfig, HeadingFactory, outlineCtrl, listCtrl;
 var owMain = angular.module(
     'owMain',
     ['ngAnimate', 'ngResource', 'ngSanitize', 'ngRoute', 'ngCookies',
+     'ui.bootstrap', 'ui.calendar',
      'owServices', 'owDirectives', 'owFilters']
 );
 
@@ -28,6 +29,10 @@ owMain.config(
 	     when('/gtd/project/', {
 		 templateUrl: '/static/project-outline.html',
 		 controller: 'nodeOutline'
+	     }).
+	     when('/calendar/', {
+		 templateUrl: '/static/calendar.html',
+		 controller: 'calendar'
 	     }).
 	     when('/', {
 		 redirectTo: '/gtd/project/'
@@ -425,3 +430,156 @@ function listCtrl($sce, $scope, $resource, $location, $routeParams, $filter, Hea
 	update_url($scope);
     };
 }
+
+/*************************************************
+* Calendar controller
+*
+**************************************************/
+owMain.controller('calendar', ['$scope', 'Heading', function($scope, Heading) {
+    // Uses angular-ui-calendar from https://github.com/angular-ui/ui-calendar
+    var date, d, m, y;
+    date = new Date();
+    d = date.getDate();
+    m = date.getMonth();
+    y = date.getFullYear();
+    /* List of calendars that could be shown */
+    $scope.allCalendars = [
+	{ // Hard scheduled tasks
+	    name: 'Scheduled tasks [HARD]',
+	    color: 'rgb(92, 0, 92)',
+	    textColor: 'white',
+	    events: Heading.query(
+		{field_group: 'calendar',
+		todo_state__abbreviation: 'HARD'}),
+	},
+	{ // Deferred items
+	    name: 'Reminders [DFRD]',
+	    color: 'rgb(230, 138, 0)',
+	    textColor: 'white',
+	    events: Heading.query(
+		{field_group: 'calendar',
+		todo_state__abbreviation: 'DFRD'}),
+	},
+	{ // Deferred items
+	    name: 'Deadlines',
+	    color: 'rgb(204, 0, 0)',
+	    textColor: 'white',
+	    events: Heading.query(
+		{field_group: 'calendar_deadlines',
+		'deadline_date__gt': '1970-01-01'}),
+	}
+    ];
+    // List of calendars that are actually shown
+    $scope.activeCalendars = [];
+    console.log($scope.activeCalendars);
+    $scope.toggleCalendar = function(cal) {
+	// Method for adding/removing calendars from the list
+	var idx;
+	idx = $scope.activeCalendars.indexOf(cal);
+	if (idx > -1) {
+	    // Remove calendar
+	    $scope.activeCalendars.splice(idx, 1);
+	} else {
+	    // Add calendar
+	    $scope.activeCalendars.push(cal);
+	}
+    };
+    $scope.toggleCalendar($scope.allCalendars[0]);
+    /* event source that pulls from google.com */
+    // $scope.eventSource = {
+    //         url: "http://www.google.com/calendar/feeds/usa__en%40holiday.calendar.google.com/public/basic",
+    //         className: 'gcal-event',           // an option!
+    //         currentTimezone: 'America/Detroit' // an option!
+    // };
+    // $scope.events = [
+    //  {title: 'All Day Event',start: new Date(y, m, 1)},
+    //  {title: 'Long Event',start: new Date(y, m, d - 5),end: new Date(y, m, d - 2)},
+    //  {id: 999,title: 'Repeating Event',start: new Date(y, m, d - 3, 16, 0),allDay: false},
+    //  {id: 999,title: 'Repeating Event',start: new Date(y, m, d + 4, 16, 0),allDay: false},
+    //  {title: 'Birthday Party',start: new Date(y, m, d + 1, 19, 0),end: new Date(y, m, d + 1, 22, 30),allDay: false},
+    //  {title: 'Click for Google',start: new Date(y, m, 28),end: new Date(y, m, 29),url: 'http://google.com/'}
+    // ];
+    // $scope.eventsF = function (start, end, callback) {
+    //   var s = new Date(start).getTime() / 1000;
+    //   var e = new Date(end).getTime() / 1000;
+    //   var m = new Date(start).getMonth();
+    //   var events = [{title: 'Feed Me ' + m,start: s + (50000),end: s + (100000),allDay: false, className: ['customFeed']}];
+    //   callback(events);
+    // };
+
+    // $scope.calEventsExt = {
+    //    color: '#f00',
+    //    textColor: 'yellow',
+    //    events: [
+    //       {type:'party',title: 'Lunch',start: new Date(y, m, d, 12, 0),end: new Date(y, m, d, 14, 0),allDay: false},
+    //       {type:'party',title: 'Lunch 2',start: new Date(y, m, d, 12, 0),end: new Date(y, m, d, 14, 0),allDay: false},
+    //       {type:'party',title: 'Click for Google',start: new Date(y, m, 28),end: new Date(y, m, 29),url: 'http://google.com/'}
+    //     ]
+    // };
+    /* alert on eventClick */
+    // $scope.alertOnEventClick = function( event, allDay, jsEvent, view ){
+    //     $scope.alertMessage = (event.title + ' was clicked ');
+    // };
+    // /* alert on Drop */
+    //  $scope.alertOnDrop = function(event, dayDelta, minuteDelta, allDay, revertFunc, jsEvent, ui, view){
+    //    $scope.alertMessage = ('Event Droped to make dayDelta ' + dayDelta);
+    // };
+    // /* alert on Resize */
+    // $scope.alertOnResize = function(event, dayDelta, minuteDelta, revertFunc, jsEvent, ui, view ){
+    //    $scope.alertMessage = ('Event Resized to make dayDelta ' + minuteDelta);
+    // };
+    // add and removes an event source of choice
+    // $scope.addRemoveEventSource = function(sources,source) {
+    //   var canAdd = 0;
+    //   angular.forEach(sources,function(value, key){
+    //     if(sources[key] === source){
+    //       sources.splice(key,1);
+    //       canAdd = 1;
+    //     }
+    //   });
+    //   if(canAdd === 0){
+    //     sources.push(source);
+    //   }
+    // };
+    // /* add custom event*/
+    // $scope.addEvent = function() {
+    //   $scope.events.push({
+    //     title: 'Open Sesame',
+    //     start: new Date(y, m, 28),
+    //     end: new Date(y, m, 29),
+    //     className: ['openSesame']
+    //   });
+    // };
+    // /* remove event */
+    // $scope.remove = function(index) {
+    //   $scope.events.splice(index,1);
+    // };
+    // /* Change View */
+    // $scope.changeView = function(view,calendar) {
+    //   calendar.fullCalendar('changeView',view);
+    // };
+    // /* Change View */
+    // $scope.renderCalender = function(calendar) {
+    //   calendar.fullCalendar('render');
+    // };
+    // config object
+    // $scope.uiConfig = {
+    //   calendar:{
+    //     height: 450,
+    //     editable: true,
+    //     header:{
+    //       left: 'title',
+    //       center: '',
+    //       right: 'today prev,next'
+    //     },
+    //     eventClick: $scope.alertOnEventClick,
+    //     eventDrop: $scope.alertOnDrop,
+    //     eventResize: $scope.alertOnResize
+    //   }
+    // };
+
+    /* event sources array*/
+    // $scope.eventSources = [$scope.events, $scope.eventSource, $scope.eventsF];
+    // $scope.eventSources2 = [$scope.calEventsExt, $scope.eventsF, $scope.events];
+
+}]);

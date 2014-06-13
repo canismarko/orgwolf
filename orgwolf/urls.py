@@ -33,6 +33,7 @@ urlpatterns = patterns('',
                        url(r'^gtd/', include('gtd.urls')),
                        url(r'^messaging/', include('wolfmail.urls')),
                        url(r'^wolfmail/', include('wolfmail.urls')),
+                       url(r'^calendar/', TemplateView.as_view(template_name='angular.html')),
                        # Authentication stuff
                        url(r'', include('social_auth.urls')),
                        url(r'^accounts/login/$',
@@ -40,8 +41,6 @@ urlpatterns = patterns('',
                            name='login',
                        ),
                        url(r'^accounts/logout/$', logout),
-                       url(r'^accounts/register/',
-                           'orgwolf.views.new_user'),
                        # orgwolf settings
                        url(r'^accounts/profile/',
                            'orgwolf.views.profile'),
@@ -68,6 +67,7 @@ urlpatterns = patterns('',
                            'orgwolf.views.jstest'),
                        url(r'^test/jasmine/$',
                            TemplateView.as_view(template_name='jasmine.html'))
+
 )
 
 # Deprecated: ? # urlpatterns += staticfiles_urlpatterns()

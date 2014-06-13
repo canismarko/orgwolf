@@ -1,0 +1,7 @@
+django>=1.6
+django-social-auth
+south
+python-dateutil
+pytz
+djangorestframework
+requests

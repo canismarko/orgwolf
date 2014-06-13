@@ -18,6 +18,7 @@
 #######################################################################
 
 from __future__ import unicode_literals, absolute_import, print_function
+import datetime as dt
 
 from rest_framework import serializers
 
@@ -96,3 +97,80 @@ class NodeOutlineSerializer(NodeSerializer):
         fields = ['title', 'tag_string', 'lft', 'rght', 'id', 'priority',
                   'scope', 'level', 'archived', 'todo_state', 'repeats',
                   'scheduled_date', 'read_only']
+
+
+class CalendarSerializer(NodeSerializer):
+    """For displaying nodes as calendar objects in angular-ui-calendar"""
+    start = serializers.SerializerMethodField('get_start')
+    end = serializers.SerializerMethodField('get_end')
+    allDay = serializers.SerializerMethodField('get_all_day')
+
+    def get_start(self, obj,
+                  date_field='scheduled_date',
+                  time_field='scheduled_time'):
+        """Calculate this Node's calendar start date (and time if appropriate)"""
+        date = getattr(obj, date_field)
+        time = getattr(obj, time_field)
+        if date and time:
+            # Time specific
+            start_dt = dt.datetime.combine(date, time)
+        elif date:
+            # Date specific
+            start_dt = date
+        else:
+            # Unscheduled
+            start_dt = None
+        return start_dt
+
+    def get_end(self, obj,
+                date_field='scheduled_date',
+                time_field='scheduled_time'):
+        """Calculate this Node's calendar end date (and time if appropriate)"""
+        # TODO: Once duration data is in Node model, make this mock functional
+        if self.get_start(obj, date_field, time_field):
+            return self.get_start(obj, date_field, time_field) + dt.timedelta(hours=1)
+        else:
+            return None
+
+    def get_all_day(self, obj,
+                    date_field='scheduled_date',
+                    time_field='scheduled_time'):
+        """
+        Determine if this Node is day-specific (True) or time-specific (False).
+        """
+        date = getattr(obj, date_field)
+        time = getattr(obj, time_field)
+        if date and not time:
+            all_day = True
+        else:
+            all_day = False
+        return all_day
+
+    class Meta:
+        model = Node
+        fields = ['title', 'id', 'start', 'end', 'allDay']
+
+
+class CalendarDeadlineSerializer(CalendarSerializer):
+    """
+    For displaying nodes as calendar objects in angular-ui-calendar,
+    using deadline fields instead of scheduled.
+    """
+    start = serializers.SerializerMethodField('get_deadline_start')
+    end = serializers.SerializerMethodField('get_deadline_end')
+    allDay = serializers.SerializerMethodField('get_deadline_all_day')
+
+    def get_deadline_start(self, obj):
+        return self.get_start(obj,
+                              date_field='deadline_date',
+                              time_field='deadline_time')
+
+    def get_deadline_end(self, obj):
+        return self.get_end(obj,
+                              date_field='deadline_date',
+                              time_field='deadline_time')
+
+    def get_deadline_all_day(self, obj):
+        return self.get_all_day(obj,
+                              date_field='deadline_date',
+                              time_field='deadline_time')

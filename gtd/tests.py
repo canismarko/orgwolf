@@ -44,7 +44,8 @@ from rest_framework.renderers import JSONRenderer
 
 from gtd.models import Node, TodoState
 from gtd.models import Context, Scope
-from gtd.serializers import NodeSerializer
+from gtd.serializers import (NodeSerializer, CalendarSerializer,
+                             CalendarDeadlineSerializer)
 from gtd.shortcuts import parse_url, generate_url, order_nodes, load_fixture
 from gtd.templatetags.gtd_extras import escape_html
 from gtd.templatetags.gtd_extras import add_scope, breadcrumbs
@@ -1867,6 +1868,52 @@ class NodeAPI(TestCase):
             Node.objects.filter(title=data['title']).count(),
             0,
             'Node was saved to database'
+        )
+
+
+class CalendarSerializer(TestCase):
+    """
+    Verify that the CalendarSerializer correctly transforms a list of
+    Nodes into Calendar events that can be read by angular-ui-calendar.
+    """
+    Serializer = CalendarSerializer
+    fixtures = ['test-users.json', 'gtd-test.json', 'gtd-env.json']
+    def test_time_specific(self):
+        node = Node.objects.get(pk=2)
+        data = self.Serializer(node).data
+        self.assertEqual(
+            data['title'],
+            node.title
+        )
+        expected_dt = dt.datetime.combine(node.scheduled_date,
+                                          node.scheduled_time)
+        self.assertEqual(
+            data['start'],
+            expected_dt
+        )
+        self.assertEqual(
+            data['allDay'],
+            False
+        )
+
+    def test_date_specific(self):
+        node = Node.objects.get(pk=5)
+        data = self.Serializer(node).data
+        self.assertEqual(
+            data['start'],
+            node.scheduled_date,
+        )
+        self.assertEqual(
+            data['allDay'],
+            True
+        )
+
+    def test_deadline_serializer(self):
+        node = Node.objects.get(pk=6)
+        data = CalendarDeadlineSerializer(node).data
+        self.assertEqual(
+            data['start'],
+            node.deadline_date
         )
 
 

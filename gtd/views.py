@@ -48,7 +48,8 @@ from gtd.shortcuts import (parse_url, generate_url, get_todo_abbrevs,
                            order_nodes)
 from gtd.serializers import (ContextSerializer, ScopeSerializer,
                              TodoStateSerializer, NodeSerializer,
-                             NodeListSerializer, NodeOutlineSerializer,)
+                             NodeListSerializer, NodeOutlineSerializer,
+                             CalendarSerializer, CalendarDeadlineSerializer)
 from orgwolf import settings
 
 # Prepare logger
@@ -240,6 +241,8 @@ class NodeView(APIView):
             'default': NodeSerializer,
             'actions_list': NodeListSerializer,
             'outline': NodeOutlineSerializer,
+            'calendar': CalendarSerializer,
+            'calendar_deadlines': CalendarDeadlineSerializer,
         }
         get_dict = request.GET.copy()
         node_id = kwargs.get('pk')
