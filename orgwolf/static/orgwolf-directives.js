@@ -7,7 +7,8 @@ owDirectives.directive('owNavbar', ['$location', '$cookies', function($location,
 	regexps = {
 	    'actions': new RegExp('^/gtd/actions'),
 	    'inbox': new RegExp('^/wolfmail/inbox/'),
-	    'projects': new RegExp('^/gtd/project/')
+	    'projects': new RegExp('^/gtd/project/'),
+	    'calendar': new RegExp('^/calendar/')
 	};
 	function setActiveLink() {
 	    var found, r, currPath, linkId;

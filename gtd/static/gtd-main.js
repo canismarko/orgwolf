@@ -156,8 +156,6 @@ owMain.controller(
 function outlineCtrl($scope, $rootScope, $http, $resource, $filter, Heading,
 		     $location, $anchorScroll, owWaitIndicator) {
     var TodoState, Scope, url, get_heading, Parent, Tree, parent_tree_id, parent_level, target_headings, target_id, main_headings, newButton, showAllButton;
-    // $('.ow-active').removeClass('active');
-    // $('#nav-projects').addClass('active');
     newButton = $('#add-heading');
     showAllButton = $('#show-all');
     target_id = $location.hash().split('-')[0];
@@ -261,8 +259,6 @@ owMain.controller(
 );
 function listCtrl($sce, $scope, $resource, $location, $routeParams, $filter, Heading, todoStates, $cookies) {
     var i, TodoState, Context, today, update_url, get_list, parent_id, todo_states;
-    // $('.ow-active').removeClass('active');
-    // $('#nav-actions').addClass('active');
     $scope.list_params = {};
     $scope.showArchived = true;
     $scope.activeScope = null;
