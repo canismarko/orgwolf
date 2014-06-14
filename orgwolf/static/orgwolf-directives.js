@@ -39,7 +39,6 @@ owDirectives.directive('owNavbar', ['$location', '$cookies', function($location,
 		scope.activeContext = scope.contexts.filter(function(context) {
 		    return context.id === newContext;
 		})[0];
-		console.log(scope.activeContext);
 	    });
 	});
     }

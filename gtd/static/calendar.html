@@ -3,7 +3,7 @@
     <div class="col-md-3 calendar-list">
       <h2>Calendars</h2>
       <ul>
-	<li ng-repeat="calendar in allCalendars" style="background-color: {{ calendar.color }}; color: {{ calendar.textColor }}">
+	<li ng-repeat="calendar in allCalendars | orderBy:'order'" style="background-color: {{ calendar.color }}; color: {{ calendar.textColor }}">
 	  <input type="checkbox"
 		 ng-checked="activeCalendars.indexOf(calendar) > -1"
 		 ng-click="toggleCalendar(calendar)" />

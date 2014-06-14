@@ -439,39 +439,61 @@ owMain.controller('calendar', ['$scope', 'Heading', function($scope, Heading) {
     m = date.getMonth();
     y = date.getFullYear();
     /* List of calendars that could be shown */
-    $scope.allCalendars = [
-	{ // Hard scheduled tasks
+    $scope.allCalendars = [];
+    // List of calendars that are actually shown
+    $scope.activeCalendars = [];
+    // Add Hard scheduled tasks
+    Heading.query(
+	{field_group: 'calendar',
+	 todo_state__abbreviation: 'HARD',
+	 archived: false}
+    ).$promise.then(function(objs) {
+	var cal = {
+	    order: 10,
 	    name: 'Scheduled tasks [HARD]',
 	    color: 'rgb(92, 0, 92)',
 	    textColor: 'white',
-	    events: Heading.query(
-		{field_group: 'calendar',
-		todo_state__abbreviation: 'HARD'}),
-	},
-	{ // Deferred items
+	    events: objs,
+	};
+	$scope.allCalendars.push(cal);
+	$scope.activeCalendars.push(cal);
+    });
+    // Add Deferred items
+    Heading.query(
+	{field_group: 'calendar',
+	 todo_state__abbreviation: 'DFRD',
+	 archived: false}
+    ).$promise.then(function(objs) {
+	var cal = {
+	    order: 20,
 	    name: 'Reminders [DFRD]',
 	    color: 'rgb(230, 138, 0)',
 	    textColor: 'white',
-	    events: Heading.query(
-		{field_group: 'calendar',
-		todo_state__abbreviation: 'DFRD'}),
-	},
-	{ // Deferred items
+	    events: objs,
+	};
+	$scope.allCalendars.push(cal);
+    });
+    // Upcoming deadlines
+    Heading.query(
+	{field_group: 'calendar_deadlines',
+	 deadline_date__gt: '1970-01-01',
+	 archived: false}
+    ).$promise.then(function(objs) {
+	var cal = {
+	    order: 30,
 	    name: 'Deadlines',
 	    color: 'rgb(204, 0, 0)',
 	    textColor: 'white',
-	    events: Heading.query(
-		{field_group: 'calendar_deadlines',
-		'deadline_date__gt': '1970-01-01'}),
-	}
-    ];
-    // List of calendars that are actually shown
-    $scope.activeCalendars = [];
-    console.log($scope.activeCalendars);
+	    events: objs,
+	};
+	$scope.allCalendars.push(cal);
+    });
+
+    // Method for adding/removing calendars from the list
     $scope.toggleCalendar = function(cal) {
-	// Method for adding/removing calendars from the list
 	var idx;
 	idx = $scope.activeCalendars.indexOf(cal);
+	console.log(idx);
 	if (idx > -1) {
 	    // Remove calendar
 	    $scope.activeCalendars.splice(idx, 1);
@@ -479,8 +501,9 @@ owMain.controller('calendar', ['$scope', 'Heading', function($scope, Heading) {
 	    // Add calendar
 	    $scope.activeCalendars.push(cal);
 	}
+	console.log($scope.activeCalendars);
     };
-    $scope.toggleCalendar($scope.allCalendars[0]);
+    // $scope.toggleCalendar($scope.allCalendars[0]);
     /* event source that pulls from google.com */
     // $scope.eventSource = {
     //         url: "http://www.google.com/calendar/feeds/usa__en%40holiday.calendar.google.com/public/basic",
