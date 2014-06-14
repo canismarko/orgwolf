@@ -54,6 +54,13 @@ class BaseMessageHandler():
         self._msg.in_inbox = False
         self._msg.save()
 
+    def defer(self, new_date):
+        """
+        Reschedule the message to appear at a new time (presumably in the future.
+        """
+        self._msg.rcvd_date = new_date
+        self._msg.save()
+
 @receiver(models.signals.post_init, sender=Message)
 def add_handler(sender, instance, **kwargs):
     """Add the appropriate Handler() object as an attribute"""

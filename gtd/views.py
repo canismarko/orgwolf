@@ -55,9 +55,6 @@ from orgwolf import settings
 # Prepare logger
 logger = logging.getLogger('gtd.views')
 
-def home(request):
-    pass # Todo GTD/home view
-
 @login_required
 def list_display(request, url_string=""):
     """Determines which list the user has requested and fetches it."""

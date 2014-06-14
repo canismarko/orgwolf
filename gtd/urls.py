@@ -30,7 +30,6 @@ from gtd.views import (NodeView, TodoStateView,
 
 urlpatterns = patterns(
     'gtd.views',
-    url(r'^$', 'home'),
 
     url(r'^node/search/', 'node_search'),
 

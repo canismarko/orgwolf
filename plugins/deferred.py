@@ -72,3 +72,13 @@ class MessageHandler(BaseMessageHandler):
         else:
             new_node = source_node
         return new_node
+
+    def defer(self, new_date):
+        """
+        Reschedule the Message and Node objects to a new
+        (presumably future) date.
+        """
+        self._msg.source_node.scheduled_date = new_date
+        self._msg.source_node.save()
+        self._msg.rcvd_date = new_date
+        self._msg.save()

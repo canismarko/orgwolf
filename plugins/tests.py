@@ -23,6 +23,7 @@ from __future__ import unicode_literals
 import datetime as dt
 
 from django.test import TestCase
+from django.utils import timezone
 import pytz
 
 from gtd.models import Node, TodoState
@@ -235,6 +236,21 @@ class BaseMessageHandlerTest(TestCase):
             message.message_text
         )
 
+    def test_defer_message(self):
+        """Verify that a message can be rescheduled for the future."""
+        msg = Message(
+            rcvd_date=dt.datetime(2014, 6, 14, tzinfo=pytz.utc),
+            owner=User.objects.get(pk=1))
+        msg.save()
+        # Defer the message and refresh
+        new_date = dt.datetime(2014, 6, 15, tzinfo=pytz.utc)
+        msg.handler.defer(new_date)
+        msg = Message.objects.get(pk=msg.pk)
+        self.assertEqual(
+            msg.rcvd_date,
+            new_date
+        )
+
 class DeferredHandlerTest(TestCase):
     fixtures = ['gtd-env.json', 'gtd-test.json',
                 'test-users.json', 'messages-test.json', ]
@@ -352,4 +368,29 @@ class DeferredHandlerTest(TestCase):
             Message.DoesNotExist,
             lambda x: node.deferred_message,
             'New Node() starts out with a message'
+        )
+
+    def test_defer_message(self):
+        """Verify that a message can be rescheduled for the future."""
+        node = Node()
+        node.save()
+        msg = Message(
+            rcvd_date=dt.datetime(2014, 6, 12, tzinfo=pytz.utc),
+            owner=User.objects.get(pk=1),
+            handler_path='plugins.deferred',
+            source_node=node)
+        msg.save()
+        # Defer the message and refresh
+        new_date = dt.datetime(2014, 6, 15,
+                               tzinfo=timezone.get_current_timezone())
+        msg.handler.defer(new_date)
+        msg = Message.objects.get(pk=msg.pk)
+        self.assertEqual(
+            msg.rcvd_date,
+            new_date,
+        )
+        # Check that the Node was also rescheduled
+        self.assertEqual(
+            msg.source_node.scheduled_date,
+            new_date.date()
         )

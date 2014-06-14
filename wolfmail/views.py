@@ -98,8 +98,7 @@ class MessageView(APIView):
                 data['target_date'],
                 '%Y-%m-%d'
             ).replace(tzinfo=get_current_timezone())
-            message.rcvd_date = new_date
-            message.save()
+            message.handler.defer(new_date)
             serializer = MessageSerializer(message)
             r = {'status': 'success',
                  'message': serializer.data}
