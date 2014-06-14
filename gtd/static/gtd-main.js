@@ -493,7 +493,6 @@ owMain.controller('calendar', ['$scope', 'Heading', function($scope, Heading) {
     $scope.toggleCalendar = function(cal) {
 	var idx;
 	idx = $scope.activeCalendars.indexOf(cal);
-	console.log(idx);
 	if (idx > -1) {
 	    // Remove calendar
 	    $scope.activeCalendars.splice(idx, 1);
@@ -501,7 +500,6 @@ owMain.controller('calendar', ['$scope', 'Heading', function($scope, Heading) {
 	    // Add calendar
 	    $scope.activeCalendars.push(cal);
 	}
-	console.log($scope.activeCalendars);
     };
     // $scope.toggleCalendar($scope.allCalendars[0]);
     /* event source that pulls from google.com */
