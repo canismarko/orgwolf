@@ -343,7 +343,7 @@ class MessageAPI(TestCase):
             content_type='application/json'
         )
         # Now check that the new rcvd_date is set
-        msg = Message.objects.get(pk=1)
+        msg = Message.objects.get(pk=msg.pk)
         self.assertEqual(
             msg.rcvd_date,
             future_date,

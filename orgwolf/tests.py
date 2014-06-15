@@ -115,83 +115,83 @@ class HTMLParserTest(TestCase):
             '<p>'
         )
 
-class NewUser(TestCase):
-    """Check new user registration"""
-    fixtures = ['gtd-env.json']
-    def setUp(self):
-        self.url = '/accounts/register/'
-    def test_registration_form(self):
-        url = '/accounts/register/'
-        response = self.client.get(url)
-        form = RegistrationForm()
-        self.assertContains(response,
-                            form.as_table(),
-                            )
-        self.assertContains(response,
-                            '<form'
-                            )
-        self.assertContains(response,
-                            '<button type="submit"'
-                            )
-    def test_registration_via_client(self):
-        self.assertFalse(
-            User.objects.all().exists()
-            )
-        url = self.url
-        data = {
-            'username': 'test3',
-            'password': 'secret',
-            'password_2': 'secret'
-            }
-        response = self.client.post(url, data, follow=True)
-        self.assertTrue(
-            User.objects.all().exists(),
-            'User object not was created upon form submission'
-            )
-        # User starts out authenticated
-        self.assertEqual(
-            200,
-            response.status_code
-            )
-        self.assertEqual(
-            'http://testserver/gtd/project',
-            response.redirect_chain[-1][0]
-            )
-    def test_bad_registration(self):
-        """Tests failure of bad credentials or invalid data for login"""
-        data = {
-            'username': '',
-            'password': 'secret'
-            }
-        response = self.client.post(self.url, data)
-        self.assertFalse(
-            User.objects.all().exists(),
-            'Blank username does not trigger validation error'
-            )
-        data = {
-            'username': 'test',
-            'password': 'secret',
-            'password_2': ''
-            }
-        response = self.client.post(self.url, data)
-        self.assertFalse(
-            User.objects.all().exists(),
-            'password_2 left blank does not trigger validation error'
-            )
-        data = {
-            'username': 'test',
-            'password': 'secret',
-            'password_2': 'secert'
-            }
-        response = self.client.post(self.url, data)
-        self.assertFalse(
-            User.objects.all().exists(),
-            'non-matching passwords do not trigger validation error'
-            )
-        self.assertContains(
-            response,
-            'Passwords do not match'
-            )
+# class NewUser(TestCase):
+#     """Check new user registration"""
+#     fixtures = ['gtd-env.json']
+#     def setUp(self):
+#         self.url = '/accounts/register/'
+#     def test_registration_form(self):
+#         url = '/accounts/register/'
+#         response = self.client.get(url)
+#         form = RegistrationForm()
+#         self.assertContains(response,
+#                             form.as_table(),
+#                             )
+#         self.assertContains(response,
+#                             '<form'
+#                             )
+#         self.assertContains(response,
+#                             '<button type="submit"'
+#                             )
+#     def test_registration_via_client(self):
+#         self.assertFalse(
+#             User.objects.all().exists()
+#             )
+#         url = self.url
+#         data = {
+#             'username': 'test3',
+#             'password': 'secret',
+#             'password_2': 'secret'
+#             }
+#         response = self.client.post(url, data, follow=True)
+#         self.assertTrue(
+#             User.objects.all().exists(),
+#             'User object not was created upon form submission'
+#             )
+#         # User starts out authenticated
+#         self.assertEqual(
+#             200,
+#             response.status_code
+#             )
+#         self.assertEqual(
+#             'http://testserver/gtd/project',
+#             response.redirect_chain[-1][0]
+#             )
+#     def test_bad_registration(self):
+#         """Tests failure of bad credentials or invalid data for login"""
+#         data = {
+#             'username': '',
+#             'password': 'secret'
+#             }
+#         response = self.client.post(self.url, data)
+#         self.assertFalse(
+#             User.objects.all().exists(),
+#             'Blank username does not trigger validation error'
+#             )
+#         data = {
+#             'username': 'test',
+#             'password': 'secret',
+#             'password_2': ''
+#             }
+#         response = self.client.post(self.url, data)
+#         self.assertFalse(
+#             User.objects.all().exists(),
+#             'password_2 left blank does not trigger validation error'
+#             )
+#         data = {
+#             'username': 'test',
+#             'password': 'secret',
+#             'password_2': 'secert'
+#             }
+#         response = self.client.post(self.url, data)
+#         self.assertFalse(
+#             User.objects.all().exists(),
+#             'non-matching passwords do not trigger validation error'
+#             )
+#         self.assertContains(
+#             response,
+#             'Passwords do not match'
+#             )
 
 class ChangePassword(TestCase):
     fixtures = ['test-users.json']

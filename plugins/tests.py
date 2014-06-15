@@ -372,14 +372,12 @@ class DeferredHandlerTest(TestCase):
 
     def test_defer_message(self):
         """Verify that a message can be rescheduled for the future."""
-        node = Node()
+        dfrd = TodoState.objects.get(abbreviation="DFRD")
+        node = Node(title='Sample Node',
+                    todo_state=dfrd,
+                    owner=User.objects.get(pk=1))
         node.save()
-        msg = Message(
-            rcvd_date=dt.datetime(2014, 6, 12, tzinfo=pytz.utc),
-            owner=User.objects.get(pk=1),
-            handler_path='plugins.deferred',
-            source_node=node)
-        msg.save()
+        msg = node.deferred_message
         # Defer the message and refresh
         new_date = dt.datetime(2014, 6, 15,
                                tzinfo=timezone.get_current_timezone())

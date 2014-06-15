@@ -6,8 +6,10 @@
     <span class="priority" ng-show="heading.priority">
       [#{{ heading.priority }}]
     </span>
-    <a href="/gtd/project/#{{ heading.id }}-{{ heading.slug }}">
+    <a ng-click="edit(heading)" ng-hide="heading.read_only">
       {{ heading.title}}</a>
+    <span ng-show="heading.read_only">
+      {{ heading.title}}</span>
     <span ng-if="heading.repeats"
 	  class="repeat-icon"></span>
   </div>

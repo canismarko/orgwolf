@@ -241,6 +241,10 @@ owDirectives.directive('owEditable', ['$resource', '$rootScope', '$timeout', 'ow
 	    // ...or use defaults if no parent
 	    scope.fields.scope = [];
 	    scope.fields.priority = 'B';
+	    // Set Scope if a tab is active
+	    if ($rootScope.activeScope && $rootScope.activeScope.id > 0) {
+		scope.fields.scope.push($rootScope.activeScope.id);
+	    }
 	}
 	scope.priorities = [{sym: 'A',
 			     display: 'A - high'},
@@ -337,6 +341,7 @@ owDirectives.directive('owScopeTabs', ['$resource', '$rootScope', '$timeout', fu
 	};
 	scope.owScopes = [nullScope].concat($rootScope.scopes);
 	scope.activeScope = nullScope;
+	$rootScope.activeScope = nullScope;
 	$timeout(function() {
 	    element.find('#scope-tab-0').addClass('active');
 	});
@@ -346,6 +351,7 @@ owDirectives.directive('owScopeTabs', ['$resource', '$rootScope', '$timeout', fu
 	    // User has requested a different scope
 	    element.find('#scope-tab-' + scope.activeScope.id).removeClass('active');
 	    scope.activeScope = newScope;
+	    $rootScope.activeScope = newScope;
 	    element.find('#scope-tab-' + scope.activeScope.id).addClass('active');
 	    // Send the relevant signals
 	    emittedScope = newScope.id ? newScope : null;

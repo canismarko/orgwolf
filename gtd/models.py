@@ -632,6 +632,14 @@ class Node(MPTTModel):
             elif key in time_fields and value is not None:
                 # Convert to time object
                 setattr(self, key, dateutil.parser.parse(value).time())
+            elif key == 'scope':
+                # Handle scope many-to-many specially (signal handler)
+                curr_scopes = set(self.scope.values_list('id', flat=True))
+                new_scopes = set(value)
+                scopes_to_rm = list(curr_scopes-new_scopes)
+                scopes_to_add = list(new_scopes-curr_scopes)
+                self.scope.add(*scopes_to_add)
+                self.scope.remove(*scopes_to_rm)
             # Set other things
             else:
                 setattr(self, key, value)
@@ -713,6 +721,7 @@ def set_deferred_message(sender, instance, **kwargs):
             if message is not None and message.pk is not None:
                 instance.deferred_message.delete()
 
+
 @receiver(signals.pre_save, sender=Node)
 def clean_text(sender, instance, **kwargs):
     """pre_save receiver that cleans up the text before saving
@@ -724,8 +733,10 @@ def clean_text(sender, instance, **kwargs):
 
 @receiver(signals.pre_save, sender=Node)
 def node_repeat(sender, **kwargs):
-    """Handle repeating information if the Node has the Node.repeats
-    flag set."""
+    """
+    Handle repeating information if the Node has the Node.repeats
+    flag set.
+    """
     if not kwargs['raw']:
         def _get_new_time(original, number, unit):
             """Helper function to determine new repeated timestamp"""
@@ -817,6 +828,22 @@ def auto_archive(sender, **kwargs):
             old_node = Node.objects.get(pk=instance.pk)
             if not getattr(old_node.todo_state, 'closed', False):
                 instance.archived = True
+
+
+@receiver(signals.m2m_changed, sender=Node.scope.through)
+def update_scope(sender, instance, action, pk_set, **kwargs):
+    """
+    If a Node has a Scope added or removed, this receiver applies to operation
+    to all its descendants.
+    """
+    # Add a scope
+    if action == 'post_add':
+        for descendant in instance.get_descendants():
+            descendant.scope.add(*pk_set)
+    # Remove a scope
+    if action == 'post_remove':
+        for descendant in instance.get_descendants():
+            descendant.scope.remove(*pk_set)
 
 
 @python_2_unicode_compatible

@@ -80,5 +80,5 @@ class MessageHandler(BaseMessageHandler):
         """
         self._msg.source_node.scheduled_date = new_date
         self._msg.source_node.save()
-        self._msg.rcvd_date = new_date
-        self._msg.save()
+        # self._msg.rcvd_date = new_date
+        # self._msg.save()

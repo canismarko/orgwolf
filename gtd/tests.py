@@ -112,6 +112,20 @@ class NodeMutators(TestCase):
             node.get_hierarchy_as_string()
             )
 
+    def test_set_fields(self):
+        node = Node.objects.get(pk=1)
+        node.set_fields(
+            {'scope': [3]}
+        )
+        self.assertEqual(
+            node.scope.all().count(),
+            1
+        )
+        self.assertEqual(
+            node.scope.all().first().pk,
+            3
+        )
+
 
 class NodeManagers(TestCase):
     fixtures = ['test-users.json', 'gtd-test.json', 'gtd-env.json']
@@ -172,6 +186,7 @@ class NodeManagers(TestCase):
             'NodeQuerySet'
         )
 
+
 class NodeArchive(TestCase):
     fixtures = ['test-users.json', 'gtd-test.json', 'gtd-env.json']
     def test_auto_archive(self):
@@ -198,6 +213,33 @@ class NodeArchive(TestCase):
         node = Node.objects.get(pk=11)
         self.assertTrue(node.todo_state.closed)
         self.assertFalse(node.archived)
+
+
+class NodeSignals(TestCase):
+    """Test Node models signals, for example pre_save"""
+    fixtures = ['test-users.json', 'gtd-test.json', 'gtd-env.json']
+
+    def test_descendants_add_scopes(self):
+        """Changing the Scope of a Node should update all its descendants"""
+        parent = Node.objects.get(pk=1)
+        child = parent.get_descendants().first()
+        new_scope = Scope.objects.get(pk=3)
+        parent.scope.add(new_scope)
+        self.assertTrue(
+            child.scope.filter(pk=new_scope.pk).exists(),
+            'New scope not added to child Node'
+        )
+
+    def test_descendants_remove_scopes(self):
+        """Changing the Scope of a Node should update all its descendants"""
+        parent = Node.objects.get(pk=1)
+        child = parent.get_descendants().first()
+        old_scope = Scope.objects.get(pk=1)
+        parent.scope.remove(old_scope)
+        self.assertFalse(
+            child.scope.filter(pk=old_scope.pk).exists(),
+            'New scope not removed from child Node'
+        )
 
 
 class RepeatingNodeTest(TestCase):
@@ -325,6 +367,7 @@ class ParentStructure(TestCase):
         child = Node.objects.get(title='Meijer')
         parent = child.get_primary_parent()
         self.assertEqual(target_parent, parent)
+
 
 class ContextFiltering(TestCase):
     """Test the ability of the gtd list app to filter based on passed context"""

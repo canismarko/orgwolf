@@ -951,7 +951,7 @@ describe('controllers in gtd-main.js', function() {
 	    it('updates the cookies with the new context', function() {
 		$httpBackend.whenGET('/gtd/nodes?context=0&todo_state=2')
 		    .respond(200, {});
-		$httpBackend.whenGET('/gtd/nodes?context=0&todo_state=2&upcoming=2014-04-15')
+		$httpBackend.whenGET(/\/gtd\/nodes\?context=0&todo_state=2&upcoming=[0-9-]+/)
 		    .respond(200, {});
 		$scope.changeContext()
 	    });
