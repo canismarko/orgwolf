@@ -361,7 +361,7 @@ describe('directives in gtd-directives.js', function() {
     		title: 'Hello, world',
 		scope: [1, 2]
     	    };
-	    $httpBackend.whenGET('/gtd/nodes/2').respond(200, heading);
+	    $httpBackend.whenGET('/gtd/nodes/2?').respond(200, heading);
 	    $rootScope.heading = Heading.get({id: 2});
 	    $rootScope.scopes = [
 		{id: 1, display: 'Work'},
@@ -402,7 +402,7 @@ describe('directives in gtd-directives.js', function() {
 		$rootScope.heading = {
 		    id: 2,
 		};
-		$httpBackend.expect('GET', '/gtd/nodes/2').respond(200, fullNode);
+		$httpBackend.expect('GET', '/gtd/nodes/2?').respond(200, fullNode);
 	    });
 	    beforeEach(inject(function($injector) {
 		notifyList = $injector.get('notifyList');
@@ -828,7 +828,7 @@ describe('services in gtd-services.js', function() {
 	beforeEach(inject(function($injector) {
 	    $httpBackend = $injector.get('$httpBackend');
 	    // Create a mocked Heading object
-	    $httpBackend.when('GET', '/gtd/nodes/1')
+	    $httpBackend.when('GET', '/gtd/nodes/1?')
 	    	.respond(201, {
 		    id: 1,
 		    title: 'test heading 1'
@@ -843,14 +843,14 @@ describe('services in gtd-services.js', function() {
 	});
 
 	it('uses the PUT method to update', function() {
-	    $httpBackend.expect('PUT', '/gtd/nodes/1')
+	    $httpBackend.expect('PUT', '/gtd/nodes/1?')
 		.respond(201, {});
 	    heading.$update();
 	    $httpBackend.flush();
 	});
 
 	it('uses the POST method to update', function() {
-	    $httpBackend.expect('POST', '/gtd/nodes')
+	    $httpBackend.expect('POST', '/gtd/nodes?')
 		.respond(201, {});
 	    Heading.create({title: 'hello'});
 	    $httpBackend.flush();
@@ -997,6 +997,26 @@ describe('controllers in gtd-main.js', function() {
 	    $scope.$emit('scope-changed', newScope);
 	    expect($scope.activeScope).toBe(newScope);
 	});
+    });
+
+    describe('calendar control', function() {
+	var $scope;
+	beforeEach(inject(function($rootScope, $controller, _$httpBackend_) {
+	    $scope = $rootScope.$new();
+	    $controller('calendar', {$scope: $scope});
+	}));
+	it('creates the allCalendars list', function() {
+	    expect($scope.allCalendars.length).toBe(3);
+	});
+	it('creates the activeCalendars list', function() {
+	    expect($scope.activeCalendars.length).toBe(1);
+	    expect($scope.activeCalendars[0]).toBe($scope.allCalendars[0]);
+	});
+	it('toggles a currently active calendar', function() {
+	    $scope.toggleCalendar($scope.allCalendars[0]);
+	    expect($scope.activeCalendars.length).toEqual(0);
+	});
+	it('toggles a currently inactive calendar');
     });
 }); // End of gtd-main.js tests
 

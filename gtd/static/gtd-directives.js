@@ -222,6 +222,7 @@ owDirectives.directive('owEditable', ['$resource', '$rootScope', '$timeout', 'ow
 	scope.todoStates = todoStates;
 	scope.fields = {};
 	element.addClass('ow-editable'); // For animations
+	console.log(scope);
 	// Set some initial field values
 	if ( scope.heading ) {
 	    // Get the full fieldset if an existing heading is being edited

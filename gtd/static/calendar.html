@@ -1,3 +1,9 @@
+<script type="text/ng-template" id="edit-modal">
+  <div class="modal-body"
+       ow-editable ow-heading="editableEvent">
+  </div>
+</script>
+
 <div class="container">
   <div class="row">
     <div class="col-md-3 calendar-list">
@@ -13,7 +19,8 @@
       </ul>
     </div>
     <div class="col-md-9">
-      <div ui-calendar="uiConfig.calendar" class="calendar" ng-model="activeCalendars"></div>
+      <div ui-calendar="calendarOptions" class="calendar"
+	   ng-model="activeCalendars"></div>
     </div>
   </div>
 </div>

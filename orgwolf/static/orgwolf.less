@@ -537,14 +537,11 @@ dd.todo
 .editable {
     position: relative;
     padding-bottom: 10px;
-    .body {
-	color: @primary;
-	background: @primary-light-pale;
-	border-bottom-left-radius: 10px;
-	border-bottom-right-radius: 10px;
-    }
+    color: @primary;
+    background: @primary-light-pale;
+    border-radius: 10px;
     .body,.header {
-	padding: 3px 5px 3px 5px;;
+	padding: 3px 5px 3px 5px;
     }
     .twisty {
 	.opacify(100);
@@ -560,6 +557,7 @@ dd.todo
     .edit-text {
 	.editable-border;
 	margin-bottom: 10px;
+	min-height: 40px;
     }
     &:hover .edit-text {
 	.editable-border-active;
@@ -658,6 +656,18 @@ input,textarea {
 	border-radius: 5px;
 	padding: 3px 8px;
 	margin: 5px;
+    }
+}
+
+.calendar-edit {
+    .modal-dialog {
+	width: 95%;
+    }
+    .modal-content {
+	border-radius: 10px;
+    }
+    .modal-body {
+	padding: 0px;
     }
 }
 

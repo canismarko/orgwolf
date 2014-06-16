@@ -360,6 +360,10 @@ class DeferredHandlerTest(TestCase):
         self.assertTrue(
             isinstance(node.deferred_message, Message)
         )
+        self.assertEqual(
+            node.deferred_message.handler_path,
+            'plugins.deferred'
+        )
         # Now make the node NEXT and see that the message disappears
         node.todo_state = nxt
         node.save()

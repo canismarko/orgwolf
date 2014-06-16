@@ -12,14 +12,11 @@
       {{ heading.title}}</span>
     <span ng-if="heading.repeats"
 	  class="repeat-icon"></span>
+    <span class="read-only-label"
+	  ng-show="heading.read_only"></span>
   </div>
   <div class="buttons">
     <div class="action-buttons btn-group">
-      <button class="btn btn-default btn-xs"
-	      ng-click="edit(heading)" ng-disabled="heading.read_only">
-	<span class="glyphicon glyphicon-edit"></span>
-	<span class="collapse-label">Edit</span>
-      </button>
       <a href="/gtd/project/#{{heading.id}}-{{heading.slug}}"
 	 class="btn btn-default btn-xs"
 	 title="View this task in the project view">
@@ -27,8 +24,6 @@
 	<span class="collapse-label">Project</span>
       </a>
     </div>
-    <span class="read-only-label"
-	  ng-show="heading.read_only"></span>
   </div>
   <div class="deadline">
     {{ owDate }}

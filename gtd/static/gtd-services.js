@@ -119,7 +119,8 @@ owServices.factory('Heading', ['$resource', HeadingFactory]);
 function HeadingFactory($resource) {
     var res = $resource(
 	'/gtd/nodes/:id/',
-	{id: '@id'},
+	{id: '@id',
+	 field_group: '@field_group'},
 	{
 	    'update': {method: 'PUT'},
 	    'create': {method: 'POST'},

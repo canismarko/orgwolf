@@ -431,64 +431,48 @@ function listCtrl($sce, $scope, $resource, $location, $routeParams, $filter, Hea
 * Calendar controller
 *
 **************************************************/
-owMain.controller('calendar', ['$scope', 'Heading', function($scope, Heading) {
+owMain.controller('calendar', ['$scope', 'Heading', '$modal', function($scope, Heading, $modal) {
     // Uses angular-ui-calendar from https://github.com/angular-ui/ui-calendar
-    var date, d, m, y;
+    var date, d, m, y, hardCalendar, dfrdCalendar, upcomingCalendar;
+    // List of calendars that are actually shown
+    $scope.activeCalendars = [];
     date = new Date();
     d = date.getDate();
     m = date.getMonth();
     y = date.getFullYear();
-    /* List of calendars that could be shown */
-    $scope.allCalendars = [];
-    // List of calendars that are actually shown
-    $scope.activeCalendars = [];
-    // Add Hard scheduled tasks
-    Heading.query(
-	{field_group: 'calendar',
-	 todo_state__abbreviation: 'HARD',
-	 archived: false}
-    ).$promise.then(function(objs) {
-	var cal = {
-	    order: 10,
-	    name: 'Scheduled tasks [HARD]',
-	    color: 'rgb(92, 0, 92)',
-	    textColor: 'white',
-	    events: objs,
-	};
-	$scope.allCalendars.push(cal);
-	$scope.activeCalendars.push(cal);
-    });
-    // Add Deferred items
-    Heading.query(
-	{field_group: 'calendar',
-	 todo_state__abbreviation: 'DFRD',
-	 archived: false}
-    ).$promise.then(function(objs) {
-	var cal = {
-	    order: 20,
-	    name: 'Reminders [DFRD]',
-	    color: 'rgb(230, 138, 0)',
-	    textColor: 'white',
-	    events: objs,
-	};
-	$scope.allCalendars.push(cal);
-    });
+    // Hard scheduled tasks
+    hardCalendar = {
+	order: 10,
+	name: 'Scheduled tasks [HARD]',
+	color: 'rgb(92, 0, 92)',
+	textColor: 'white',
+	field_group: 'calendar',
+	events: Heading.query({field_group: 'calendar',
+			       todo_state__abbreviation: 'HARD',
+			       archived: false}),
+    };
+    // Deferred items/messages
+    dfrdCalendar = {
+	order: 20,
+	name: 'Reminders [DFRD]',
+	color: 'rgb(230, 138, 0)',
+	textColor: 'white',
+	field_group: 'calendar',
+	events: Heading.query({field_group: 'calendar',
+			       todo_state__abbreviation: 'DFRD',
+			       archived: false}),
+    };
     // Upcoming deadlines
-    Heading.query(
-	{field_group: 'calendar_deadlines',
-	 deadline_date__gt: '1970-01-01',
-	 archived: false}
-    ).$promise.then(function(objs) {
-	var cal = {
-	    order: 30,
-	    name: 'Deadlines',
-	    color: 'rgb(204, 0, 0)',
-	    textColor: 'white',
-	    events: objs,
-	};
-	$scope.allCalendars.push(cal);
-    });
-
+    upcomingCalendar = {
+	order: 30,
+	name: 'Deadlines',
+	color: 'rgb(204, 0, 0)',
+	textColor: 'white',
+	field_group: 'calendar_deadlines',
+	events: Heading.query({field_group: 'calendar_deadlines',
+			       deadline_date__gt: '1970-01-01',
+			       archived: false}),
+    };
     // Method for adding/removing calendars from the list
     $scope.toggleCalendar = function(cal) {
 	var idx;
@@ -500,6 +484,46 @@ owMain.controller('calendar', ['$scope', 'Heading', function($scope, Heading) {
 	    // Add calendar
 	    $scope.activeCalendars.push(cal);
 	}
+    };
+    // List of calendars that could be shown
+    $scope.allCalendars = [hardCalendar, dfrdCalendar, upcomingCalendar];
+    $scope.toggleCalendar(hardCalendar);
+    // Handler for editing an event
+    $scope.editEvent = function(obj) {
+	var newScope, $off, modal;
+	// Prepare and show the modal for editing the event
+	newScope = $scope.$new(true);
+	newScope.editableEvent = obj;
+	modal = $modal.open({
+	    scope: newScope,
+	    templateUrl: 'edit-modal',
+	    windowClass: 'calendar-edit'});
+	// Listen for a response from the edit dialog
+	$off = $scope.$on('finishEdit', function(e, newHeading) {
+	    console.log(newHeading);
+	    console.log(obj);
+	    obj.$get();
+	    modal.close();
+	    $off();
+	});
+    };
+    // Handler for drag & drop rescheduling
+    $scope.moveEvent = function(obj, dayDelta, minuteDelta) {
+	alert('Drag-drop scheduling *not* implemented yet. Yours changes have NOT been saved. Sorry =(');
+	console.log(dayDelta);
+	console.log(minuteDelta);
+    };
+    // config object
+    $scope.calendarOptions = {
+        editable: true,
+        // header:{
+        //   left: 'title',
+        //   center: '',
+        //   right: 'today prev,next'
+        // },
+        eventClick: $scope.editEvent,
+        eventDrop: $scope.moveEvent,
+        // eventResize: $scope.alertOnResize
     };
     // $scope.toggleCalendar($scope.allCalendars[0]);
     /* event source that pulls from google.com */
@@ -578,21 +602,6 @@ owMain.controller('calendar', ['$scope', 'Heading', function($scope, Heading) {
     // /* Change View */
     // $scope.renderCalender = function(calendar) {
     //   calendar.fullCalendar('render');
-    // };
-    // config object
-    // $scope.uiConfig = {
-    //   calendar:{
-    //     height: 450,
-    //     editable: true,
-    //     header:{
-    //       left: 'title',
-    //       center: '',
-    //       right: 'today prev,next'
-    //     },
-    //     eventClick: $scope.alertOnEventClick,
-    //     eventDrop: $scope.alertOnDrop,
-    //     eventResize: $scope.alertOnResize
-    //   }
     // };
 
     /* event sources array*/
