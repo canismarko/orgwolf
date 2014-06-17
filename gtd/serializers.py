@@ -123,14 +123,16 @@ class CalendarSerializer(NodeSerializer):
         return start_dt
 
     def get_end(self, obj,
-                date_field='scheduled_date',
-                time_field='scheduled_time'):
+                date_field='end_date',
+                time_field='end_time'):
         """Calculate this Node's calendar end date (and time if appropriate)"""
-        # TODO: Once duration data is in Node model, make this mock functional
-        if self.get_start(obj, date_field, time_field):
-            return self.get_start(obj, date_field, time_field) + dt.timedelta(hours=1)
+        if obj.end_date:
+            end_datetime = self.get_start(obj, date_field=date_field, time_field=time_field)
+        elif obj.scheduled_time:
+            end_datetime = self.get_start(obj) + dt.timedelta(hours=1)
         else:
-            return None
+            end_datetime = self.get_start(obj)
+        return end_datetime
 
     def get_all_day(self, obj,
                     date_field='scheduled_date',

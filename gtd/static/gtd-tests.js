@@ -219,6 +219,38 @@ describe('filters in gtd-filters.js', function() {
 	});
     });
 
+    describe('the duration filter', function() {
+	var durationFilter, node;
+	beforeEach(inject(function(_durationFilter_) {
+	    durationFilter = _durationFilter_;
+	}));
+	it('handles day-specific nodes', function() {
+	    node = {
+		scheduled_date: "2014-06-16",
+		end_date: "2014-06-18"
+	    }
+	    expect(durationFilter(node)).toEqual("2 days");
+	});
+	it('handles time-specific nodes', function() {
+	    node = {
+		scheduled_date: "2014-06-16",
+		scheduled_time: "17:15",
+		end_date: "2014-06-16",
+		end_time: "18:00",
+	    }
+	    expect(durationFilter(node)).toEqual("45 minutes");
+	});
+	it('handles complex time intervals', function() {
+	    node = {
+		scheduled_date: "2014-06-16",
+		scheduled_time: "17:15",
+		end_date: "2014-06-18",
+		end_time: "19:00",
+	    }
+	    expect(durationFilter(node)).toEqual("2 days, 1 hour, 45 minutes");
+	});
+    });
+
     describe('the scope filter', function() {
 	var dummyHeadings;
 	beforeEach(inject(function(_scopeFilter_) {
@@ -1031,7 +1063,6 @@ describe('controllers in gtd-main.js', function() {
 	});
 	it('reschedules a day-specific node', function() {
 	    var newDate = new Date('2014-06-16T04:00:00.000Z');
-	    console.log(newDate);
 	    $httpBackend.expectPUT('/gtd/nodes/1?',
 				   '{"id":1,"scheduled_date":"2014-6-16"}')
 		.respond(200, {});
@@ -1059,6 +1090,32 @@ describe('controllers in gtd-main.js', function() {
 			      start: newDate,
 			      allDay: true,
 			      field_group: 'calendar_deadlines'});
+	});
+	it('resizes a scheduled node with date only', function() {
+	    var newDate = new Date("2014-06-16T04:00:00.000Z");
+	    $httpBackend.expectPUT('/gtd/nodes/1?',
+				   '{"id":1,"end_date":"2014-6-16"}')
+		.respond(200, {});
+	    $scope.resizeEvent({id: 1,
+				end: newDate,
+				allDay: true,
+				field_group: 'calendar'});
+	});
+	it('resizes a scheduled node with date and time', function() {
+	    var newDate = new Date("2014-06-16T03:55:59.000Z");
+	    $httpBackend.expectPUT('/gtd/nodes/1?',
+				   '{"id":1,"end_date":"2014-6-15","end_time":"23:55"}')
+		.respond(200, {});
+	    $scope.resizeEvent({id: 1,
+				end: newDate,
+				allDay: false,
+				field_group: 'calendar'});
+	});
+	it('doesn\'t resize a deadline node', function() {
+	    // This test is valid since no $httpBackend call is expected
+	    $scope.resizeEvent({id: 1,
+				end: new Date(),
+				field_group: 'calendar_deadlines'});
 	});
     });
 }); // End of gtd-main.js tests

@@ -380,6 +380,8 @@ class Node(MPTTModel):
     # Scheduling details
     scheduled_time = models.TimeField(blank=True, null=True)
     scheduled_date = models.DateField(blank=True, null=True)
+    end_time = models.TimeField(blank=True, null=True)
+    end_date = models.DateField(blank=True, null=True)
     deadline_time = models.TimeField(blank=True, null=True)
     deadline_date = models.DateField(blank=True, null=True)
     opened = models.DateTimeField(auto_now_add=True, blank=True, null=True)
@@ -588,8 +590,8 @@ class Node(MPTTModel):
         database already so that foreign keys can be assigned.
         """
         boolean_fields = ['archived', 'auto_update']
-        date_fields = ['scheduled_date', 'deadline_date']
-        time_fields = ['scheduled_time', 'deadline_time']
+        date_fields = ['scheduled_date', 'deadline_date', 'end_date']
+        time_fields = ['scheduled_time', 'deadline_time', 'end_time']
         datetime_fields = ['opened', 'closed']
         for key, value in fields.iteritems():
             # {datetime_field: ''} -> {datetime_field: None}

@@ -56,6 +56,24 @@
 		     ng-disabled="!fields.scheduled_date"></input>
 	    </div>
 	  </div>
+	  <label for="scheduled_date">
+	    Until<span ng-show="fields.end_date">
+	      ({{ fields | duration }})</span>:
+	  </label>
+	  <div class="row">
+	    <div class="col-lg-9">
+	      <input type="date" placeholder="YYYY-MM-DD"
+		     ng-model="fields.end_date"
+		     ng-disabled="!fields.scheduled_date"></input>
+	    </div>
+	  </div>
+	  <div class="row">
+	    <div class="col-lg-9">
+	      <input type="time" id="scheduled_time"
+		     ng-model="fields.end_time"
+		     ng-disabled="!(fields.end_date && fields.scheduled_time)"></input>
+	    </div>
+	  </div>
 	</div>
 	<div class="col-md-3">
 	  <label for="deadline_date">Deadline:</label>

@@ -382,6 +382,7 @@ class DeferredHandlerTest(TestCase):
                     owner=User.objects.get(pk=1))
         node.save()
         msg = node.deferred_message
+        msg = Message.objects.get(pk=msg.pk)
         # Defer the message and refresh
         new_date = dt.datetime(2014, 6, 15,
                                tzinfo=timezone.get_current_timezone())

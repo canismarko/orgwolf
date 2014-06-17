@@ -1928,11 +1928,17 @@ class CalendarSerializer(TestCase):
             data['title'],
             node.title
         )
-        expected_dt = dt.datetime.combine(node.scheduled_date,
-                                          node.scheduled_time)
+        expected_start = dt.datetime.combine(node.scheduled_date,
+                                             node.scheduled_time)
+        expected_end = dt.datetime.combine(node.end_date,
+                                           node.end_time)
         self.assertEqual(
             data['start'],
-            expected_dt
+            expected_start
+        )
+        self.assertEqual(
+            data['end'],
+            expected_end
         )
         self.assertEqual(
             data['allDay'],
@@ -1947,8 +1953,57 @@ class CalendarSerializer(TestCase):
             node.scheduled_date,
         )
         self.assertEqual(
+            data['end'],
+            node.end_date,
+        )
+        self.assertEqual(
             data['allDay'],
             True
+        )
+
+    def test_no_end_date(self):
+        """
+        If scheduled_date (but not scheduled_time) is set but end_date is not,
+        default to same day event.
+        """
+        node = Node.objects.get(pk=5)
+        node.end_date = None
+        data = self.Serializer(node).data
+        self.assertEqual(
+            data['start'],
+            node.scheduled_date,
+        )
+        self.assertEqual(
+            data['end'],
+            node.scheduled_date,
+        )
+        self.assertEqual(
+            data['allDay'],
+            True
+        )
+
+    def test_no_end_datetime(self):
+        """
+        If scheduled_date and scheduled_time are set but end_date is not,
+        a reasonable default should be used.
+        """
+        node = Node.objects.get(pk=2)
+        node.end_date = None
+        data = self.Serializer(node).data
+        expected_start = dt.datetime.combine(node.scheduled_date,
+                                             node.scheduled_time)
+        expected_end = expected_start + dt.timedelta(hours=1)
+        self.assertEqual(
+            data['start'],
+            expected_start
+        )
+        self.assertEqual(
+            data['end'],
+            expected_end,
+        )
+        self.assertEqual(
+            data['allDay'],
+            False
         )
 
     def test_repeats(self):

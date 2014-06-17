@@ -534,20 +534,35 @@ owMain.controller('calendar', ['$scope', 'Heading', '$modal', function($scope, H
 	// Repeating icon
 	if (event.repeats) {
 	    element.find('.fc-event-title')
-		.after('<span class="repeat-icon"></span>');
+		.append('<span class="repeat-icon"></span>');
+	}
+    };
+    // Callback for resizing events
+    $scope.resizeEvent = function(event) {
+	var newData, dateString, timeString;
+	if (event.field_group === 'calendar') {
+	    newData = {id: event.id};
+	    dateString = event.end.getFullYear() + '-' + (event.end.getMonth() + 1) + '-' + event.end.getDate();
+	    newData.end_date = dateString;
+	    if (!event.allDay) {
+		// Time-specific
+		timeString = event.end.getHours() + ':' + event.end.getMinutes();
+		newData.end_time = timeString;
+	    }
+	    Heading.update(newData);
 	}
     };
     // Calendar config object
     $scope.calendarOptions = {
         editable: true,
-        // header:{
-        //   left: 'title',
-        //   center: '',
-        //   right: 'today prev,next'
-        // },
+        header:{
+          left: 'month agendaWeek agendaDay',
+          center: 'title',
+          right: 'today prev,next'
+        },
         eventClick: $scope.editEvent,
         eventDrop: $scope.moveEvent,
-        // eventResize: $scope.alertOnResize
+        eventResize: $scope.resizeEvent,
 	eventRender: $scope.renderEvent,
     };
     // $scope.toggleCalendar($scope.allCalendars[0]);
