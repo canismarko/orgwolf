@@ -529,6 +529,14 @@ owMain.controller('calendar', ['$scope', 'Heading', '$modal', function($scope, H
 	}
 	Heading.update(newData);
     };
+    // Callback for styling rendered events
+    $scope.renderEvent = function(event, element) {
+	// Repeating icon
+	if (event.repeats) {
+	    element.find('.fc-event-title')
+		.after('<span class="repeat-icon"></span>');
+	}
+    };
     // Calendar config object
     $scope.calendarOptions = {
         editable: true,
@@ -540,6 +548,7 @@ owMain.controller('calendar', ['$scope', 'Heading', '$modal', function($scope, H
         eventClick: $scope.editEvent,
         eventDrop: $scope.moveEvent,
         // eventResize: $scope.alertOnResize
+	eventRender: $scope.renderEvent,
     };
     // $scope.toggleCalendar($scope.allCalendars[0]);
     /* event source that pulls from google.com */

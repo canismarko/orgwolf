@@ -148,7 +148,7 @@ class CalendarSerializer(NodeSerializer):
 
     class Meta:
         model = Node
-        fields = ['title', 'id', 'start', 'end', 'allDay']
+        fields = ['title', 'id', 'start', 'end', 'allDay', 'repeats']
 
 
 class CalendarDeadlineSerializer(CalendarSerializer):

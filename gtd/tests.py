@@ -1951,6 +1951,14 @@ class CalendarSerializer(TestCase):
             True
         )
 
+    def test_repeats(self):
+        node = Node.objects.get(pk=5)
+        data = self.Serializer(node).data
+        self.assertEqual(
+            data['repeats'],
+            node.repeats,
+        )
+
     def test_deadline_serializer(self):
         node = Node.objects.get(pk=6)
         data = CalendarDeadlineSerializer(node).data
