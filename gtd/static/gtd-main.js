@@ -509,11 +509,27 @@ owMain.controller('calendar', ['$scope', 'Heading', '$modal', function($scope, H
     };
     // Handler for drag & drop rescheduling
     $scope.moveEvent = function(obj, dayDelta, minuteDelta) {
-	alert('Drag-drop scheduling *not* implemented yet. Yours changes have NOT been saved. Sorry =(');
-	console.log(dayDelta);
-	console.log(minuteDelta);
+	var newData, timeString, dateString, dateField, timeField;
+	// Determine if scheduled or deadline fields will be used
+	if (obj.field_group === 'calendar_deadlines') {
+	    dateField = 'deadline_date';
+	    timeField = 'deadline_time';
+	} else {
+	    dateField = 'scheduled_date';
+	    timeField = 'scheduled_time';
+	}
+	// Day-specific
+	newData = {id: obj.id};
+	dateString = obj.start.getFullYear() + '-' + (obj.start.getMonth() + 1) + '-' + obj.start.getDate();
+	newData[dateField] = dateString;
+	if (!obj.allDay) {
+	    // Time-specific
+	    timeString = obj.start.getHours() + ':' + obj.start.getMinutes();
+	    newData.scheduled_time = timeString;
+	}
+	Heading.update(newData);
     };
-    // config object
+    // Calendar config object
     $scope.calendarOptions = {
         editable: true,
         // header:{

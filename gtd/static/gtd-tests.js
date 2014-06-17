@@ -999,12 +999,21 @@ describe('controllers in gtd-main.js', function() {
 	});
     });
 
-    describe('calendar control', function() {
-	var $scope;
+    describe('calendar controller', function() {
+	var $scope, $httpBackend;
 	beforeEach(inject(function($rootScope, $controller, _$httpBackend_) {
 	    $scope = $rootScope.$new();
 	    $controller('calendar', {$scope: $scope});
+	    $httpBackend = _$httpBackend_;
+	    $httpBackend.whenGET('/gtd/context').respond(200);
+	    $httpBackend.whenGET('/gtd/scope').respond(200);
+	    $httpBackend.whenGET('/gtd/nodes?archived=false&field_group=calendar&todo_state__abbreviation=HARD').respond(200);
+	    $httpBackend.whenGET('/gtd/nodes?archived=false&field_group=calendar&todo_state__abbreviation=DFRD').respond(200);
+	    $httpBackend.whenGET('/gtd/nodes?archived=false&deadline_date__gt=1970-01-01&field_group=calendar_deadlines').respond(200);
 	}));
+	afterEach(function() {
+	    $httpBackend.verifyNoOutstandingExpectation();
+	});
 	it('creates the allCalendars list', function() {
 	    expect($scope.allCalendars.length).toBe(3);
 	});
@@ -1016,7 +1025,41 @@ describe('controllers in gtd-main.js', function() {
 	    $scope.toggleCalendar($scope.allCalendars[0]);
 	    expect($scope.activeCalendars.length).toEqual(0);
 	});
-	it('toggles a currently inactive calendar');
+	it('toggles a currently inactive calendar', function() {
+	    $scope.toggleCalendar($scope.allCalendars[1]);
+	    expect($scope.activeCalendars.length).toEqual(2);
+	});
+	it('reschedules a day-specific node', function() {
+	    var newDate = new Date('2014-06-16T04:00:00.000Z');
+	    console.log(newDate);
+	    $httpBackend.expectPUT('/gtd/nodes/1?',
+				   '{"id":1,"scheduled_date":"2014-6-16"}')
+		.respond(200, {});
+	    $scope.moveEvent({id: 1,
+			      start: newDate,
+			      allDay: true,
+			     });
+	});
+	it('reschedules a time-specific node', function() {
+	    var newDate = new Date("2014-06-17T03:17:05.746Z");
+	    $httpBackend.expectPUT('/gtd/nodes/1?',
+				   '{"id":1,"scheduled_date":"2014-6-16","scheduled_time":"23:17"}')
+		.respond(200, {});
+	    $scope.moveEvent({id: 1,
+			      start: newDate,
+			      allDay: false,
+			     });
+	});
+	it('reschedules a deadline node', function() {
+	    var newDate = new Date("2014-06-16T04:00:00.000Z");
+	    $httpBackend.expectPUT('/gtd/nodes/1?',
+				   '{"id":1,"deadline_date":"2014-6-16"}')
+		.respond(200, {});
+	    $scope.moveEvent({id: 1,
+			      start: newDate,
+			      allDay: true,
+			      field_group: 'calendar_deadlines'});
+	});
     });
 }); // End of gtd-main.js tests
 
