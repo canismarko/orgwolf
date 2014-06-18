@@ -431,7 +431,7 @@ function listCtrl($sce, $scope, $resource, $location, $routeParams, $filter, Hea
 * Calendar controller
 *
 **************************************************/
-owMain.controller('calendar', ['$scope', 'Heading', '$modal', function($scope, Heading, $modal) {
+owMain.controller('calendar', ['$scope', 'Heading', '$filter', '$modal', function($scope, Heading, $filter, $modal) {
     // Uses angular-ui-calendar from https://github.com/angular-ui/ui-calendar
     var date, d, m, y, hardCalendar, dfrdCalendar, upcomingCalendar;
     // List of calendars that are actually shown
@@ -451,17 +451,17 @@ owMain.controller('calendar', ['$scope', 'Heading', '$modal', function($scope, H
 			       todo_state__abbreviation: 'HARD',
 			       archived: false}),
     };
-    // Deferred items/messages
     dfrdCalendar = {
 	order: 20,
 	name: 'Reminders [DFRD]',
 	color: 'rgb(230, 138, 0)',
 	textColor: 'white',
 	field_group: 'calendar',
-	events: Heading.query({field_group: 'calendar',
+	allEvents: Heading.query({field_group: 'calendar',
 			       todo_state__abbreviation: 'DFRD',
 			       archived: false}),
     };
+    dfrdCalendar.events = dfrdCalendar.allEvents;
     // Upcoming deadlines
     upcomingCalendar = {
 	order: 30,
@@ -469,10 +469,11 @@ owMain.controller('calendar', ['$scope', 'Heading', '$modal', function($scope, H
 	color: 'rgb(204, 0, 0)',
 	textColor: 'white',
 	field_group: 'calendar_deadlines',
-	events: Heading.query({field_group: 'calendar_deadlines',
+	allEvents: Heading.query({field_group: 'calendar_deadlines',
 			       deadline_date__gt: '1970-01-01',
 			       archived: false}),
     };
+    upcomingCalendar.events = upcomingCalendar.allEvents;
     // Method for adding/removing calendars from the list
     $scope.toggleCalendar = function(cal) {
 	var idx;
@@ -500,8 +501,6 @@ owMain.controller('calendar', ['$scope', 'Heading', '$modal', function($scope, H
 	    windowClass: 'calendar-edit'});
 	// Listen for a response from the edit dialog
 	$off = $scope.$on('finishEdit', function(e, newHeading) {
-	    console.log(newHeading);
-	    console.log(obj);
 	    obj.$get();
 	    modal.close();
 	    $off();
@@ -531,6 +530,13 @@ owMain.controller('calendar', ['$scope', 'Heading', '$modal', function($scope, H
     };
     // Callback for styling rendered events
     $scope.renderEvent = function(event, element) {
+	// Verify if in active Scope
+	console.log($scope.activeScope);
+	if ($scope.activeScope && $scope.activeScope.id > 0) {
+	    if (event.scope.indexOf($scope.activeScope.id) === -1) {
+		return false;
+	    }
+	}
 	// Repeating icon
 	if (event.repeats) {
 	    element.find('.fc-event-title')
@@ -552,6 +558,16 @@ owMain.controller('calendar', ['$scope', 'Heading', '$modal', function($scope, H
 	    Heading.update(newData);
 	}
     };
+    // Respond to changes in activeScope
+    $scope.$on('scope-changed', function(e, newScope) {
+	var i, newList;
+	$scope.activeScope = newScope;
+	$scope.owCalendar.fullCalendar('rerenderEvents');
+	// for (i=0; i<$scope.activeCalendars.length; i+=1) {
+	//     newList = $filter('scope')($scope.activeCalendars[i].allEvents);
+	//     $scope.activeCalendars[i].events = newList;
+	// }
+    });
     // Calendar config object
     $scope.calendarOptions = {
         editable: true,

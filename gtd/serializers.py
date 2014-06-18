@@ -150,7 +150,7 @@ class CalendarSerializer(NodeSerializer):
 
     class Meta:
         model = Node
-        fields = ['title', 'id', 'start', 'end', 'allDay', 'repeats']
+        fields = ['title', 'id', 'start', 'end', 'allDay', 'repeats', 'scope']
 
 
 class CalendarDeadlineSerializer(CalendarSerializer):
@@ -168,9 +168,7 @@ class CalendarDeadlineSerializer(CalendarSerializer):
                               time_field='deadline_time')
 
     def get_deadline_end(self, obj):
-        return self.get_end(obj,
-                              date_field='deadline_date',
-                              time_field='deadline_time')
+        return None
 
     def get_deadline_all_day(self, obj):
         return self.get_all_day(obj,

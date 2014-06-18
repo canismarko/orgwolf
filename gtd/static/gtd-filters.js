@@ -256,9 +256,14 @@ owFilters.filter('duration', function() {
 * Filter a list (of headings) by the active scope
 *
 **************************************************/
-owFilters.filter('scope', function() {
+owFilters.filter('scope', function($rootScope) {
     return function(oldList, activeScope) {
 	var i, newList;
+	// Get activeScope if not supplied by caller
+	if (typeof activeScope === 'undefined' && $rootScope.activeScope) {
+	    activeScope = $rootScope.activeScope.id;
+	}
+	// Filter by the activeScope
 	if (activeScope) {
 	    newList = [];
 	    for (i=0; i<oldList.length; i+=1) {

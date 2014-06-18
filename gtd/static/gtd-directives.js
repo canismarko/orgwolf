@@ -355,7 +355,8 @@ owDirectives.directive('owScopeTabs', ['$resource', '$rootScope', '$timeout', fu
 	    element.find('#scope-tab-' + scope.activeScope.id).addClass('active');
 	    // Send the relevant signals
 	    emittedScope = newScope.id ? newScope : null;
-	    scope.$emit('scope-changed', emittedScope);
+	    // scope.$emit('scope-changed', emittedScope);
+	    $rootScope.$broadcast('scope-changed', emittedScope);
 	};
     }
     return {
