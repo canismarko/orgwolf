@@ -16,7 +16,7 @@
     </div>
 
     <div ow-list-row ng-repeat="heading in scheduledList" ow-heading="heading"
-	 ow-date="{{ heading.scheduled_date }} {{ heading.scheduled_time }}">
+	 ow-date="{{ heading.scheduled_date}} {{ heading.scheduled_time }}">
     </div>
     <!-- end repeating scheduled list -->
   </div><!-- /#scheduled-list -->
@@ -42,13 +42,13 @@
   </form>
 
   <!-- Indicator for current active project -->
-  <span ng-if="activeParent">
-    Project:
+  <div ng-if="activeParent" class="active-parent">
+    <label>Parent:</label>
     <a id="active_parent"
        href="/gtd/project/#{{activeParent.id}}-{{activeParent.slug}}">
       {{ activeParent.title }}</a>
-    [<a ng-click="$emit('filter-parent', null)">&times;</a>]
-  </span>
+    [<a class="cancel" ng-click="$emit('filter-parent', null)">&times;</a>]
+  </div>
 
   <!-- Scope Tabs -->
   <div ow-scope-tabs>
@@ -64,7 +64,7 @@
 
   <div ow-list-row
        ng-repeat="heading in visibleHeadings | order:'list'"
-       ow-heading="heading" ow-date="{{ heading | deadline_str }}"
+       ow-heading="heading" ow-date="{{ heading.deadline_date | deadline_str }}"
        ng-if="!activeScope || heading.scope.indexOf(activeScope.id) > -1">
   </div>
 

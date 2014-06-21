@@ -108,13 +108,19 @@ describe('filters in gtd-filters.js', function() {
 			       {'deadline_date': '2014-01-02'}];
 		expect(orderFilter(unsorted_data, 'list')).toEqual(sorted_data);
 	    });
-	    it('puts nodes without a deadline at the end', function() {
+	    it('puts nodes without an upcoming deadline at the end', function() {
+		d = new Date();
+		d.setDate(d.getDate() + 8);
+		future_str = d.getFullYear() + '-' + (d.getMonth()+1) + '-' + d.getDate();
+		console.log(future_str);
 		unsorted_data = [{'deadline_date': null},
+				 {'deadline_date': future_str},
 				 {'deadline_date': '2013-12-26'},
 				 {'deadline_date': '2014-01-02'}];
 		sorted_data = [{'deadline_date': '2013-12-26'},
 			       {'deadline_date': '2014-01-02'},
-			       {'deadline_date': null}];
+			       {'deadline_date': null},
+			       {'deadline_date': future_str}];
 		expect(orderFilter(unsorted_data, 'list')).toEqual(sorted_data);
 	    });
 	});

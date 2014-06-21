@@ -33,28 +33,34 @@ Array.prototype.order_by = function(field) {
 	num_b = Number(b_val);
 	// First check for new nodes
 	if (a.pk === 0) {
-	        response = -1;
-	        direction = 1;
-	    } else if (b.pk === 0) {
-		    response = 1;
-		    direction =1;
-		} else if ( DATEFIELDS.indexOf(key) > -1 ) {
-		        // Sorting by date
-		        response = new Date(a_val) - new Date(b_val);
-		    } else if ( num_a && num_b ) {
-			    // Sorting by number
-			    response = num_a - num_b;
-			} else {
-			        // Sorting by alphabet
-			        a_val = a_val.toUpperCase();
-			        b_val = b_val.toUpperCase();
-			        if ( a_val < b_val ) {
-				    response = -1;
-				        } else if ( a_val > b_val ) {
-					    response = 1;
-					        } else {
-						    response = 0;
-						        }
+	    response = -1;
+	    direction = 1;
+	} else if (b.pk === 0) {
+	    response = 1;
+	    direction =1;
+	} else if ( DATEFIELDS.indexOf(key) > -1 ) {
+	    // Sorting by date
+	    response = new Date(a_val) - new Date(b_val);
+	} else if ( num_a && num_b ) {
+	    // Sorting by number
+	    response = num_a - num_b;
+	} else {
+	    // Sorting by alphabet
+	    if (typeof a_val !== 'string') {
+		a_val = '';
+	    }
+	    if (typeof b_val !== 'string') {
+		b_val = '';
+	    }
+	    a_val = a_val.toUpperCase();
+	    b_val = b_val.toUpperCase();
+	    if ( a_val < b_val ) {
+		response = -1;
+	    } else if ( a_val > b_val ) {
+		response = 1;
+	    } else {
+		response = 0;
+	    }
 			    }
 	return response * direction;
     };

@@ -267,6 +267,7 @@ function listCtrl($sce, $scope, $resource, $location, $routeParams, $filter, Hea
     var i, TodoState, Context, today, update_url, get_list, parent_id, todo_states;
     $scope.list_params = {field_group: 'actions_list'};
     $scope.showArchived = true;
+    $scope.todoStates = todoStates;
     $scope.activeScope = null;
     // Context filtering
     if (typeof $routeParams.context_id !== 'undefined') {
@@ -277,8 +278,29 @@ function listCtrl($sce, $scope, $resource, $location, $routeParams, $filter, Hea
 	$scope.activeContext = null;
     }
     $scope.show_list = true;
+    // Get data from url query parameters
+    function getDataFromUrl() {
+	$scope.parentId = $location.search().parent;
+	todo_states = $location.search().todo_state;
+	if ( todo_states ) {
+	    // Pull from URL if provided
+	    if ( !Array.isArray(todo_states) ) {
+		todo_states = [todo_states];
+	    }
+	    // Convert strings to int
+	    todo_states = todo_states.map(function(v) {
+		return parseInt(v, 10);
+	    });
+	} else {
+	    todo_states = [2];
+	}
+	$scope.cachedStates = todo_states.slice(0);
+	$scope.activeStates = todo_states.slice(0);
+	$scope.list_params.todo_state = $scope.activeStates;
+    }
+    getDataFromUrl();
     // Filtering by a parent Node
-    $scope.parentId = $location.search().parent;
+    $scope.$on('$routeUpdate', getDataFromUrl);
     $scope.$on('filter-parent', function(callingScope, newParentId) {
 	$scope.parentId = newParentId;
 	update_url($scope);
@@ -294,27 +316,10 @@ function listCtrl($sce, $scope, $resource, $location, $routeParams, $filter, Hea
 	}
     });
     // Set todoStates
-    todo_states = $location.search().todo_state;
-    if ( todo_states ) {
-	// Pull from URL if provided
-	if ( !Array.isArray(todo_states) ) {
-	    todo_states = [todo_states];
-	}
-	// Convert strings to int
-	todo_states = todo_states.map(function(v) {
-	    return parseInt(v, 10);
-	});
-    } else {
-	todo_states = [2];
-    }
-    $scope.cachedStates = todo_states.slice(0);
-    $scope.activeStates = todo_states.slice(0);
-    $scope.list_params.todo_state = $scope.activeStates;
     $scope.currentDate = new Date();
     $scope.$watch('currentDate', function() {
 	$scope.$emit('refresh_list');
     }, true);
-    $scope.todoStates = todoStates;
     // Helper function finds which upcoming and action headings to display
     $scope.setVisibleHeadings = function() {
 	var currentListFilter = $filter('currentList');
@@ -368,7 +373,6 @@ function listCtrl($sce, $scope, $resource, $location, $routeParams, $filter, Hea
 	    $scope.activeStates.push(targetState.id);
 	}
 	update_url($scope);
-	$scope.setVisibleHeadings();
     };
     $scope.$watchCollection('activeStates', function(newList, oldList) {
 	var new_states, list_params;
@@ -384,6 +388,7 @@ function listCtrl($sce, $scope, $resource, $location, $routeParams, $filter, Hea
 		$scope.actionsList = $scope.actionsList.concat(new_states);
 	    });
 	}
+	$scope.setVisibleHeadings();
     });
     // Helper function for setting the browser URL for routing
     update_url = function(params) {

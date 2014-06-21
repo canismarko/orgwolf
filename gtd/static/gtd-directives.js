@@ -683,6 +683,7 @@ owDirectives.directive('owListRow', ['$rootScope', 'todoStates', '$filter', func
 	link: link,
 	scope: {
 	    heading: '=owHeading',
+	    owDate: '@',
 	},
 	templateUrl: '/static/actions-list-row.html',
     };

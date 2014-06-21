@@ -104,7 +104,21 @@ owFilters.filter('order', ['$sce', function($sce) {
 	var ordered, deadline, other;
 	if ( criterion === 'list' ) {
 	    other = obj.filter(function(currHeading) {
-		return currHeading.deadline_date === null;
+		var today, deadline, isOther, delta;
+		isOther = false; // Default value
+		if (currHeading.deadline_date === null) {
+		    // Check for unscheduled heading
+		    isOther = true;
+		} else {
+		    // Check for heading deadline > 7 days in the future
+		    today = new Date();
+		    deadline = new Date(currHeading.deadline_date);
+		    delta = deadline - today;
+		    if (delta > (7 * 24 * 3600 * 1000)) {
+			isOther = true;
+		    }
+		}
+		return isOther;
 	    });
 	    deadline = $(obj).not(other).get().order_by('deadline_date');
 	    ordered = deadline;
