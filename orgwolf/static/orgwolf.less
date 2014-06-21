@@ -23,11 +23,14 @@
     .outline {
 	margin-left: 50px;
 	margin-top: 50px;
-	.heading.open > .ow-hoverable[ow-level="0"] {
+	.heading.state-1,
+	.heading.state-2 {
+	    > .ow-hoverable.project {
 	    background: white;
 	    border: none;
+	    }
 	}
-	.ow-hoverable[ow-level="0"] {
+	.ow-hoverable.project {
 	    font-size: 130%;
 	    padding: 15px;
 	    background-color: @primary-light-pale;
