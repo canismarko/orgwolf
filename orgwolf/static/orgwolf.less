@@ -16,18 +16,21 @@
 }
 
 /* Modify content if user is anonymous */
-[ow-logged-in=False] {
+.ow-logged-out {
     .ow-unauth-hide {
 	display: none;
     }
     .outline {
 	margin-left: 50px;
 	margin-top: 50px;
-	.heading.open > .ow-hoverable[ow-level="0"] {
+	.heading.state-1,
+	.heading.state-2 {
+	    > .ow-hoverable.project {
 	    background: white;
 	    border: none;
+	    }
 	}
-	.ow-hoverable[ow-level="0"] {
+	.ow-hoverable.project {
 	    font-size: 130%;
 	    padding: 15px;
 	    background-color: @primary-light-pale;
@@ -35,7 +38,7 @@
 	}
     }
 }
-[ow-logged-in=True] {
+.ow-logged-in {
     .ow-unauth-show {
 	display: none;
     }

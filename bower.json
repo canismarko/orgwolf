@@ -1,34 +1,37 @@
 {
-    "name": "orgwolf",
-    "version": "0.0.0",
-    "homepage": "https://github.com/m3wolf/orgwolf",
-    "authors": [
-	"Mark Wolf <mark.wolf.music@gmail.com>"
-    ],
-    "description": "Organization app based on Django",
-    "license": "MIT",
-    "private": true,
-    "ignore": [
-	"**/.*",
-	"node_modules",
-	"bower_components",
-	"test",
-	"tests"
-    ],
-    "dependencies": {
-	"bootstrap": ">=3.1.1",
-	"less": ">=1.7.0",
-	"requirejs": ">=2.1.10",
-	"angular": "=1.2.7",
-	"angular-resource": "=1.2.7",
-	"angular-animate": "=1.2.7",
-	"angular-ui-calendar": "latest",
-	"angular-sanitize": "=1.2.7",
-	"angular-cookies": "=1.2.7",
-	"angular-route": "=1.2.7",
-	"angular-mocks": "=1.2.7",
-	"tinymce-release": "=4.0.2",
-	"bootstrap-switch": ">=2.0.1",
-	"jasmine": ">=2.0"
-    }
+  "name": "orgwolf",
+  "version": "0.0.0",
+  "homepage": "https://github.com/m3wolf/orgwolf",
+  "authors": [
+    "Mark Wolf <mark.wolf.music@gmail.com>"
+  ],
+  "description": "Organization app based on Django",
+  "license": "MIT",
+  "private": true,
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ],
+  "dependencies": {
+    "bootstrap": ">=3.1.1",
+    "less": ">=1.7.0",
+    "requirejs": ">=2.1.10",
+    "angular": "=1.2.7",
+    "angular-resource": "=1.2.7",
+    "angular-animate": "=1.2.7",
+    "angular-ui-calendar": "latest",
+    "angular-sanitize": "=1.2.7",
+    "angular-cookies": "=1.2.7",
+    "angular-route": "=1.2.7",
+    "angular-mocks": "=1.2.7",
+    "tinymce-release": "=4.0.2",
+    "bootstrap-switch": ">=2.0.1",
+    "jasmine": ">=2.0"
+  },
+  "resolutions": {
+    "jquery": ">=1.6"
+  }
 }

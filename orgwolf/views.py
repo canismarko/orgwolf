@@ -30,6 +30,7 @@ from django.contrib.auth.hashers import is_password_usable
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponse
 from django.views.generic import TemplateView
+from rest_framework.decorators import api_view
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -44,7 +45,6 @@ from wolfmail.models import Message
 def home(request):
     if request.user.is_authenticated():
         url = reverse(request.user.home)
-        print(request.user.home)
     else:
         url = reverse('projects')
     return redirect(url)
@@ -172,11 +172,12 @@ def change_password(request):
                                   locals(),
                                   RequestContext(request))
 
+@api_view(['POST'])
 def persona_login(request):
     """Authenticates a user based on the persona library by Mozilla."""
     # First validate assertiong with identifer
     data = {'audience': settings.PERSONA_AUDIENCE,
-            'assertion': request.POST['assertion'] }
+            'assertion': request.DATA['assertion'] }
     r = requests.post('https://verifier.login.persona.org/verify',
                              params=data, verify=True)
     r = r.json()
@@ -203,9 +204,9 @@ def persona_login(request):
             # Now login
             user.backend = 'django.contrib.auth.backends.ModelBackend'
             login(request, user)
+            r['user_id'] = user.id
             if request.GET.get('next'):
                 r['next'] = request.GET.get('next')
-                print(request.GET.get('next'))
             else:
                 r['next'] = reverse(user.home)
                 print('no next found')
@@ -215,7 +216,7 @@ def persona_login(request):
     return response
 
 def persona_logout(request):
-    print(logout(request))
+    logout(request)
     return HttpResponse(json.dumps({'status': 'success'}))
 
 def jstest(request):

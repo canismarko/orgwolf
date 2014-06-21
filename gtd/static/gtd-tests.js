@@ -357,6 +357,7 @@ describe('directives in gtd-directives.js', function() {
 		'<button ow-persona></button>'
 	    )($rootScope);
 	});
+	it('broadcasts the refresh-data signal');
 	// it('calls navigator.id.watch on init', function() {
 	//     expect(watchCalled).toBeTruthy();
 	// });
