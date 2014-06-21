@@ -13,7 +13,7 @@ var owServices = angular.module(
 *
 **************************************************/
 owServices.value('personaUser', null); // Default value, override in django
-owServices.factory('personaNavigator', ['personaUser', '$rootScope', 'owWaitIndicator', 'activeState', function(personaUser, $rootScope, owWaitIndicator, activeState) {
+owServices.factory('personaNavigator', ['personaUser', '$rootScope', '$http', 'owWaitIndicator', 'activeState', function(personaUser, $rootScope, $http, owWaitIndicator, activeState) {
     if ( typeof navigator.id !== 'undefined' ) {
 	// Setup the persona navigator before linking the directive
 	navigator.id.watch({
@@ -23,21 +23,16 @@ owServices.factory('personaNavigator', ['personaUser', '$rootScope', 'owWaitIndi
 		// 1. Send the assertion to your backend for verification and to create a session.
 		// 2. Update your UI.
 		owWaitIndicator.start_wait('medium', 'persona');
-		jQuery.ajax({
-		    type: 'POST',
-		    url: '/accounts/login/persona/',
-		    data: {assertion: assertion},
-		    success: function(res, status, xhr) {
+		$http.post('/accounts/login/persona/', {assertion: assertion})
+		    .success(function(res, status, headers, config) {
 			owWaitIndicator.end_wait('medium', 'persona');
-			res = JSON.parse(res);
 			activeState.user = res.user_id;
 			$rootScope.$broadcast('refresh-data');
-		    },
-		    error: function(xhr, status, err) {
+		    })
+		    .error(function(xhr, status, err) {
 			navigator.id.logout();
 			alert("Login failure: " + err);
-		    },
-		});
+		    });
 	    },
 	    onlogout: function() {
 		// A user has logged out! Here you need to:
@@ -46,16 +41,13 @@ owServices.factory('personaNavigator', ['personaUser', '$rootScope', 'owWaitIndi
 		// (That's a literal JavaScript null. Not false, 0, or undefined. null.)
 		// ow_waiting('spinner');
 		owWaitIndicator.start_wait('medium', 'persona');
-		jQuery.ajax({
-		    type: 'POST',
-		    url: '/accounts/logout/persona/', // This is a URL on your website.
-		    success: function(res, status, xhr) { window.location.reload(); },
-		    error: function(xhr, status, err) { alert("Logout failure: " + err); },
-		    complete: function() {
-			owWaitIndicator.start_wait('medium', 'persona');
-		    }
-		    // complete: function(jqXHR, status) { ow_waiting('clear'); }
-		});
+		$http.post('/accounts/logout/persona/', {logout: true})
+		    .success(function() {
+			window.location.reload();
+		    })
+		    .error(function(data, status, headers, config) {
+			alert("Logout failure: ");
+		    });
 	    }
 	});
     }

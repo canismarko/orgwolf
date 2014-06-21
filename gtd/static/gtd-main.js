@@ -447,19 +447,22 @@ owMain.controller('calendar', ['$scope', 'Heading', '$modal', function($scope, H
     // Method for adding/removing calendars from the list
     $scope.toggleCalendar = function(cal) {
 	var idx;
-	idx = $scope.activeCalendars.indexOf(cal);
+	idx = $scope.activeCalendars.indexOf(cal.calId);
 	if (idx > -1) {
 	    // Remove calendar
 	    $scope.activeCalendars.splice(idx, 1);
 	} else {
 	    // Add calendar
-	    $scope.activeCalendars.push(cal);
+	    $scope.activeCalendars.push(cal.calId);
 	}
+	$scope.owCalendar.fullCalendar('render');
     };
     // Retrieves the calendars via the API
+    $scope.allCalendars = [];
     $scope.refreshCalendars = function() {
 	// Hard scheduled tasks
 	hardCalendar = {
+	    calId: 1,
 	    order: 10,
 	    name: 'Scheduled tasks [HARD]',
 	    color: 'rgb(92, 0, 92)',
@@ -471,6 +474,7 @@ owMain.controller('calendar', ['$scope', 'Heading', '$modal', function($scope, H
 	};
 	// Deferred items/messages
 	dfrdCalendar = {
+	    calId: 2,
 	    order: 20,
 	    name: 'Reminders [DFRD]',
 	    color: 'rgb(230, 138, 0)',
@@ -482,6 +486,7 @@ owMain.controller('calendar', ['$scope', 'Heading', '$modal', function($scope, H
 	};
 	// Upcoming deadlines
 	upcomingCalendar = {
+	    calId: 3,
 	    order: 30,
 	    name: 'Deadlines',
 	    color: 'rgb(204, 0, 0)',
@@ -491,9 +496,11 @@ owMain.controller('calendar', ['$scope', 'Heading', '$modal', function($scope, H
 				   deadline_date__gt: '1970-01-01',
 				   archived: false}),
 	};
-	// List of calendars that could be shown
-	$scope.activeCalendars = [hardCalendar, dfrdCalendar, upcomingCalendar];
-	// $scope.toggleCalendar(hardCalendar);
+	// Reset list of calendars
+	$scope.allCalendars.length = 0;
+	$scope.allCalendars.push(hardCalendar);
+	$scope.allCalendars.push(dfrdCalendar);
+	$scope.allCalendars.push(upcomingCalendar);
     };
     $scope.$on('refresh-data', $scope.refreshCalendars);
     $scope.refreshCalendars();
@@ -509,8 +516,6 @@ owMain.controller('calendar', ['$scope', 'Heading', '$modal', function($scope, H
 	    windowClass: 'calendar-edit'});
 	// Listen for a response from the edit dialog
 	$off = $scope.$on('finishEdit', function(e, newHeading) {
-	    console.log(newHeading);
-	    console.log(obj);
 	    obj.$get();
 	    modal.close();
 	    $off();
@@ -544,6 +549,9 @@ owMain.controller('calendar', ['$scope', 'Heading', '$modal', function($scope, H
 	if (event.repeats) {
 	    element.find('.fc-event-title')
 		.append('<span class="repeat-icon"></span>');
+	}
+	if ($scope.activeCalendars.indexOf(event.calId) === -1) {
+	    return false;
 	}
     };
     // Callback for resizing events
