@@ -7,7 +7,7 @@ ORGWOLF_LESS = $(STATIC)orgwolf.less $(STATIC)orgwolf-animations.less
 MIN_JS = $(STATIC)orgwolf-min.js
 GTD_JS = gtd/static/gtd-models.js gtd/static/gtd-services.js gtd/static/gtd-directives.js gtd/static/gtd-filters.js gtd/static/gtd-main.js
 WM_JS = wolfmail/static/wolfmail-models.js wolfmail/static/wolfmail-services.js wolfmail/static/wolfmail-directives.js wolfmail/static/wolfmail-filters.js wolfmail/static/wolfmail-ctrl.js
-OW_JS = orgwolf/static/orgwolf-directives.js orgwolf/static/orgwolf-filters.js
+OW_JS = orgwolf/static/orgwolf-services.js orgwolf/static/orgwolf-directives.js orgwolf/static/orgwolf-filters.js
 LESS = lessc --clean-css
 DIVIDER = @echo "========================="
 YUI = yuicompressor
