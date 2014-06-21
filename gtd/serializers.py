@@ -75,10 +75,11 @@ class NodeListSerializer(NodeSerializer):
     root_name = serializers.SerializerMethodField('get_root_name')
     class Meta:
         model = Node
-        fields = ['id', 'title', 'tree_id', 'todo_state', 'tag_string',
+        fields = ['id', 'title', 'todo_state', 'tag_string',
                   'slug', 'scope', 'root_id', 'root_name', 'priority',
                   'deadline_date', 'deadline_time',
                   'scheduled_date', 'scheduled_time',
+                  'tree_id', 'lft', 'rght',
                   'repeats', 'read_only']
 
     def get_root_id(self, obj):

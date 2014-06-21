@@ -124,7 +124,7 @@ owFilters.filter('order', ['$sce', function($sce) {
 *
 **************************************************/
 owFilters.filter('currentList', function() {
-    return function(headings, todoStates, upcomingList) {
+    return function(headings, todoStates, upcomingList, activeParent) {
 	var upcomingListIds;
 	// Filter by todoStates
 	if ( todoStates ) {
@@ -139,6 +139,21 @@ owFilters.filter('currentList', function() {
 	    });
 	    headings = headings.filter(function(h) {
 		return upcomingListIds.indexOf(h.id) === -1;
+	    });
+	}
+	// Remove headings that aren't descendants of the active parent
+	if ( activeParent) {
+	    headings = headings.filter(function(h) {
+		var isDescendant;
+		if (h.tree_id === activeParent.tree_id &&
+		    h.lft >= activeParent.lft &&
+		    h.rght <= activeParent.rght
+		   ) {
+		    isDescendant = true;
+		} else {
+		    isDescendant = false;
+		}
+		return isDescendant;
 	    });
 	}
 	return headings;

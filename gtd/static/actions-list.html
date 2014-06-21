@@ -42,11 +42,12 @@
   </form>
 
   <!-- Indicator for current active project -->
-  <span ng-if="parent">
+  <span ng-if="activeParent">
     Project:
-    <a id="active_project" href="/gtd/project/#{{parent.id}}-{{parent.slug}}">
-      {{ parent.title }}</a>
-    [<a ng-click="filter_parent(null)">&times;</a>]
+    <a id="active_parent"
+       href="/gtd/project/#{{activeParent.id}}-{{activeParent.slug}}">
+      {{ activeParent.title }}</a>
+    [<a ng-click="$emit('filter-parent', null)">&times;</a>]
   </span>
 
   <!-- Scope Tabs -->

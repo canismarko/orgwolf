@@ -152,6 +152,19 @@ describe('filters in gtd-filters.js', function() {
 	    expect(result.length).toEqual(1);
 	    expect(result[0]).toBe(headings[0]);
 	});
+	it('filters by activeParent', function() {
+	    headings = [
+		{id: 1, tree_id: 1, lft: 2, rght: 5},
+		{id: 2, tree_id: 2, lft: 1, rght: 2},
+		{id: 3, tree_id: 1, lft: 6, rght: 7},
+		{id: 4, tree_id: 1, lft: 3, rght: 4},
+	    ];
+	    var activeParent = headings[0]
+	    result = currentListFilter(headings, null, [], activeParent);
+	    expect(result.length).toEqual(2);
+	    expect(result[0].id).toEqual(1);
+	    expect(result[1].id).toEqual(4);
+	});
     });
 
     describe('the "currentScope" filter', function() {
@@ -924,8 +937,8 @@ describe('controllers in gtd-main.js', function() {
 	    $httpBackend.whenGET('/gtd/context').respond(200, []);
 	    $httpBackend.whenGET('/gtd/scope').respond(200, []);
 	    // $httpBackend.whenGET(/\/gtd\/nodes?[^t]?.*/).respond(201, []);
-	    $httpBackend.whenGET('/gtd/nodes?todo_state=2').respond(201, []);
-	    $httpBackend.whenGET(/\/gtd\/nodes\?todo_state=2&upcoming=[-0-9]+/)
+	    $httpBackend.whenGET('/gtd/nodes?field_group=actions_list&todo_state=2').respond(201, []);
+	    $httpBackend.whenGET(/\/gtd\/nodes\?field_group=actions_list&todo_state=2&upcoming=[-0-9]+/)
 		.respond(201, []);
 	    $httpBackend.whenGET(/\/gtd\/nodes\?field_group=actions_list&scheduled_date__lte=[-0-9]+&todo_state=8/)
 	    	.respond(201, []);
@@ -981,11 +994,27 @@ describe('controllers in gtd-main.js', function() {
 	});
 	describe('the changeContext() method', function() {
 	    it('updates the cookies with the new context', function() {
-		$httpBackend.whenGET('/gtd/nodes?context=0&todo_state=2')
+		$httpBackend.whenGET('/gtd/nodes?context=0&field_group=actions_list&todo_state=2')
 		    .respond(200, {});
-		$httpBackend.whenGET(/\/gtd\/nodes\?context=0&todo_state=2&upcoming=[0-9-]+/)
+		$httpBackend.whenGET(/\/gtd\/nodes\?context=0&field_group=actions_list&todo_state=2&upcoming=[0-9-]+/)
 		    .respond(200, {});
 		$scope.changeContext()
+	    });
+	});
+	describe('project filtering', function() {
+	    beforeEach(function() {
+		$httpBackend.expectGET('/gtd/nodes/1?')
+		    .respond(200, {id: 1});
+	    });
+	    it('responds to filter-parent signals', function() {
+		$scope.$emit('filter-parent', 1);
+		expect($scope.parentId).toEqual(1);
+	    });
+	    it('watches for changes to parentId', function() {
+		$scope.parentId = 1;
+		$scope.$digest();
+		$httpBackend.flush();
+		$scope.activeParent.id = 1;
 	    });
 	});
     });

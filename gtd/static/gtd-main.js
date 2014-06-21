@@ -25,6 +25,7 @@ owMain.config(
 	     when('/gtd/actions/:context_id?/:context_slug?', {
 		 templateUrl: '/static/actions-list.html',
 		 controller: 'nextActionsList',
+		 reloadOnSearch: false,
 	     }).
 	     when('/gtd/project/', {
 		 templateUrl: '/static/project-outline.html',
@@ -259,7 +260,7 @@ owMain.controller(
 );
 function listCtrl($sce, $scope, $resource, $location, $routeParams, $filter, Heading, todoStates, $cookies) {
     var i, TodoState, Context, today, update_url, get_list, parent_id, todo_states;
-    $scope.list_params = {};
+    $scope.list_params = {field_group: 'actions_list'};
     $scope.showArchived = true;
     $scope.activeScope = null;
     // Context filtering
@@ -271,15 +272,22 @@ function listCtrl($sce, $scope, $resource, $location, $routeParams, $filter, Hea
 	$scope.activeContext = null;
     }
     $scope.show_list = true;
-    // See if there's a parent specified
-    parent_id = $location.search().parent;
-    if ( parent_id ) {
-	parent_id = parseInt(parent_id, 10);
-	$scope.parent_id = parent_id;
-	$scope.list_params.parent = parent_id;
-	$scope.parent = $resource('/gtd/node/:id/')
-	    .get({id: parent_id});
-    }
+    // Filtering by a parent Node
+    $scope.parentId = $location.search().parent;
+    $scope.$on('filter-parent', function(callingScope, newParentId) {
+	$scope.parentId = newParentId;
+	update_url($scope);
+    });
+    $scope.$watch('parentId', function(newParentId) {
+	// Retrieve the full parent object
+	if (newParentId) {
+	    $scope.activeParent = Heading.get({id: newParentId});
+	    $scope.activeParent.$promise.then($scope.setVisibleHeadings);
+	} else {
+	    $scope.activeParent = null;
+	    $scope.setVisibleHeadings();
+	}
+    });
     // Set todoStates
     todo_states = $location.search().todo_state;
     if ( todo_states ) {
@@ -305,10 +313,17 @@ function listCtrl($sce, $scope, $resource, $location, $routeParams, $filter, Hea
     // Helper function finds which upcoming and action headings to display
     $scope.setVisibleHeadings = function() {
 	var currentListFilter = $filter('currentList');
-	$scope.visibleHeadings = $scope.upcomingList.slice(0);
-	$scope.visibleHeadings = $scope.visibleHeadings.concat(
-	    currentListFilter($scope.actionsList, $scope.activeStates, $scope.upcomingList)
-	);
+	$scope.visibleHeadings = [];
+	if ( $scope.upcomingList ) {
+	    $scope.visibleHeadings = $scope.visibleHeadings.concat(
+		$scope.upcomingList);
+	    $scope.visibleHeadings = $scope.visibleHeadings.concat(
+		currentListFilter($scope.actionsList,
+				  $scope.activeStates,
+				  $scope.upcomingList,
+				  $scope.activeParent)
+	    );
+	}
     };
     $scope.$watchCollection('actionsList', function() {
 	$scope.setVisibleHeadings();
@@ -380,8 +395,8 @@ function listCtrl($sce, $scope, $resource, $location, $routeParams, $filter, Hea
 	}
 	$location.path(path);
 	search = {};
-	if ($scope.parent_id) {
-	    search.parent = $scope.parent_id;
+	if ($scope.parentId) {
+	    search.parent = $scope.parentId;
 	}
 	search.todo_state = $scope.activeStates;
 	$location.search(search);
@@ -415,15 +430,6 @@ function listCtrl($sce, $scope, $resource, $location, $routeParams, $filter, Hea
 	    $navText.text('Next Actions');
 	}
 	$navLink.attr('href', $location.absUrl());
-    };
-    // Handler for only showing one parent
-    $scope.filter_parent = function(h) {
-	if ( h === null ) {
-	    delete $scope.parent_id;
-	} else {
-	    $scope.parent_id = h.root_id;
-	}
-	update_url($scope);
     };
 }
 

@@ -17,6 +17,11 @@
   </div>
   <div class="buttons">
     <div class="action-buttons btn-group">
+      <button class="btn btn-default btn-xs"
+	      ng-click="edit(heading)" ng-disabled="heading.read_only">
+	<span class="glyphicon glyphicon-edit"></span>
+	<span class="collapse-label">Edit</span>
+      </button>
       <a href="/gtd/project/#{{heading.id}}-{{heading.slug}}"
 	 class="btn btn-default btn-xs"
 	 title="View this task in the project view">
@@ -31,7 +36,8 @@
   <div class="project">
     <span class="collapse-label">Project:</span>
     {{ heading.root_name }}
-    <button class="filter-button btn" ng-click="filter_parent(heading)">
+    <button class="filter-button btn"
+	    ng-click="$emit('filter-parent', heading.root_id)">
       <span class="icon"></span>
       Filter
     </button>
