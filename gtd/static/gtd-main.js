@@ -363,6 +363,7 @@ function listCtrl($sce, $scope, $resource, $location, $routeParams, $filter, Hea
 	} else {
 	    $scope.activeStates.push(targetState.id);
 	}
+	update_url($scope);
 	$scope.setVisibleHeadings();
     };
     $scope.$watchCollection('activeStates', function(newList, oldList) {

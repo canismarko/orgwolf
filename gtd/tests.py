@@ -1461,8 +1461,8 @@ class NodeAPI(TestCase):
         )
 
     def test_get_node_collection(self):
-        """Check that a collection of nodes can be retried with optional filters
-        applied by parameters"""
+        """Check that a collection of nodes can be retrieved with optional
+        filters applied by parameters"""
         nodes = Node.objects.mine(self.user, get_archived=True)
         url = reverse('node_object')
         response = self.client.get(
@@ -1509,6 +1509,28 @@ class NodeAPI(TestCase):
             nodes,
             [node['id'] for node in r],
             transform=lambda x: x.pk,
+            ordered=False,
+        )
+
+    def test_node_get_collection_multiple_states(self):
+        """
+        Test that passing more than one todo state for filtering
+        returns nodes for both states
+        """
+        nodes = Node.objects.mine(self.user, get_archived=True).filter(
+            todo_state__in=[1, 2])
+        url = reverse('node_object')
+        response = self.client.get(
+            url,
+            {'todo_state': ['1', '2']},
+            HTTP_X_REQUESTED_WITH='XMLHttpRequest',
+            HTTP_ACCEPT='application/json',
+        )
+        r = json.loads(response.content)
+        self.assertQuerysetEqual(
+            nodes,
+            [node['title'] for node in r],
+            transform=lambda x: x.title,
             ordered=False,
         )
 

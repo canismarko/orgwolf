@@ -281,12 +281,17 @@ class NodeView(APIView):
         get_dict = request.GET.copy()
         parent_id = get_dict.get('parent_id', None)
         if parent_id == '0':
-            get_dict['parent_id'] = None
+            nodes = nodes.filter(parent=None)
+            get_dict.pop('parent_id')
         # Apply each criterion to the queryset
-        for param, value in get_dict.iteritems():
-            if param in BOOLS and value == 'false':
-                value = False
-            query = {param: value}
+        for key in get_dict.keys():
+            value_list = get_dict.getlist(key)
+            if key in BOOLS and get_dict[key] == 'false':
+                query = {key: False}
+            else:
+            # Convert to (param__in=[]) style list filtering
+                param = "{}__in".format(key)
+                query = {param: value_list}
             try:
                 nodes = nodes.filter(**query)
             except FieldError:
