@@ -162,10 +162,13 @@ function outlineCtrl($scope, $rootScope, $http, $resource, $filter, Heading,
     if ( target_id ) {
 	$scope.target_heading = Heading.get({id: target_id});
     }
-    // modified array to hold all the tasks
-    $scope.children = Heading.query({'parent_id': 0,
-				     'archived': false,
-				     'field_group': 'outline'});
+    // Get all the top-level projects
+    function getHeadings() {
+	$scope.children = Heading.query({'parent_id': 0,
+					 'archived': false,
+					 'field_group': 'outline'});
+    }
+    getHeadings();
     $scope.activeScope = null;
     $scope.sortField = 'title';
     $scope.sortFields = [
@@ -242,6 +245,8 @@ function outlineCtrl($scope, $rootScope, $http, $resource, $filter, Heading,
 	    $off();
 	});
     };
+    // Respond to refresh-data signals (logging in, etc)
+    $scope.$on('refresh-data', getHeadings);
     // Handler for changing the scope
     $scope.$on('scope-changed', function(e, newScope) {
 	$scope.activeScope = newScope;
@@ -317,9 +322,6 @@ function listCtrl($sce, $scope, $resource, $location, $routeParams, $filter, Hea
 	$scope.setVisibleHeadings();
     });
     // Receiver that retrieves GTD lists from server
-    $scope.$on('refresh_list', function() {
-	$scope.refreshList();
-    });
     $scope.refreshList = function() {
 	var upcomingParams;
 	$scope.actionsList = Heading.query($scope.list_params);
@@ -335,6 +337,8 @@ function listCtrl($sce, $scope, $resource, $location, $routeParams, $filter, Hea
 	    }
 	);
     };
+    $scope.$on('refresh_list', $scope.refreshList);
+    $scope.$on('refresh-data', $scope.refreshList);
     // Receiver for when the active scope changes (by clicking a tab)
     $scope.$on('scope-changed', function(e, newScope) {
 	$scope.activeScope = newScope;
@@ -440,39 +444,6 @@ owMain.controller('calendar', ['$scope', 'Heading', '$modal', function($scope, H
     d = date.getDate();
     m = date.getMonth();
     y = date.getFullYear();
-    // Hard scheduled tasks
-    hardCalendar = {
-	order: 10,
-	name: 'Scheduled tasks [HARD]',
-	color: 'rgb(92, 0, 92)',
-	textColor: 'white',
-	field_group: 'calendar',
-	events: Heading.query({field_group: 'calendar',
-			       todo_state__abbreviation: 'HARD',
-			       archived: false}),
-    };
-    // Deferred items/messages
-    dfrdCalendar = {
-	order: 20,
-	name: 'Reminders [DFRD]',
-	color: 'rgb(230, 138, 0)',
-	textColor: 'white',
-	field_group: 'calendar',
-	events: Heading.query({field_group: 'calendar',
-			       todo_state__abbreviation: 'DFRD',
-			       archived: false}),
-    };
-    // Upcoming deadlines
-    upcomingCalendar = {
-	order: 30,
-	name: 'Deadlines',
-	color: 'rgb(204, 0, 0)',
-	textColor: 'white',
-	field_group: 'calendar_deadlines',
-	events: Heading.query({field_group: 'calendar_deadlines',
-			       deadline_date__gt: '1970-01-01',
-			       archived: false}),
-    };
     // Method for adding/removing calendars from the list
     $scope.toggleCalendar = function(cal) {
 	var idx;
@@ -485,9 +456,47 @@ owMain.controller('calendar', ['$scope', 'Heading', '$modal', function($scope, H
 	    $scope.activeCalendars.push(cal);
 	}
     };
-    // List of calendars that could be shown
-    $scope.allCalendars = [hardCalendar, dfrdCalendar, upcomingCalendar];
-    $scope.toggleCalendar(hardCalendar);
+    // Retrieves the calendars via the API
+    $scope.refreshCalendars = function() {
+	// Hard scheduled tasks
+	hardCalendar = {
+	    order: 10,
+	    name: 'Scheduled tasks [HARD]',
+	    color: 'rgb(92, 0, 92)',
+	    textColor: 'white',
+	    field_group: 'calendar',
+	    events: Heading.query({field_group: 'calendar',
+				   todo_state__abbreviation: 'HARD',
+				   archived: false}),
+	};
+	// Deferred items/messages
+	dfrdCalendar = {
+	    order: 20,
+	    name: 'Reminders [DFRD]',
+	    color: 'rgb(230, 138, 0)',
+	    textColor: 'white',
+	    field_group: 'calendar',
+	    events: Heading.query({field_group: 'calendar',
+				   todo_state__abbreviation: 'DFRD',
+				   archived: false}),
+	};
+	// Upcoming deadlines
+	upcomingCalendar = {
+	    order: 30,
+	    name: 'Deadlines',
+	    color: 'rgb(204, 0, 0)',
+	    textColor: 'white',
+	    field_group: 'calendar_deadlines',
+	    events: Heading.query({field_group: 'calendar_deadlines',
+				   deadline_date__gt: '1970-01-01',
+				   archived: false}),
+	};
+	// List of calendars that could be shown
+	$scope.activeCalendars = [hardCalendar, dfrdCalendar, upcomingCalendar];
+	// $scope.toggleCalendar(hardCalendar);
+    };
+    $scope.$on('refresh-data', $scope.refreshCalendars);
+    $scope.refreshCalendars();
     // Handler for editing an event
     $scope.editEvent = function(obj) {
 	var newScope, $off, modal;

@@ -108,7 +108,6 @@
 
     {% if debug %}
       <script src="{{ STATIC_URL }}jquery.cookie.js"></script>
-      <script src="{{ STATIC_URL }}orgwolf.js"></script>
       <script src="{{ STATIC_URL }}gtd-models.js"></script>
       <script src="{{ STATIC_URL }}gtd-services.js"></script>
       <script src="{{ STATIC_URL }}gtd-directives.js"></script>
@@ -119,6 +118,7 @@
       <script src="{{ STATIC_URL }}wolfmail-directives.js"></script>
       <script src="{{ STATIC_URL }}wolfmail-filters.js"></script>
       <script src="{{ STATIC_URL }}wolfmail-ctrl.js"></script>
+      <script src="{{ STATIC_URL }}orgwolf-services.js"></script>
       <script src="{{ STATIC_URL }}orgwolf-filters.js"></script>
       <script src="{{ STATIC_URL }}orgwolf-directives.js"></script>
     {% else %}
@@ -127,8 +127,11 @@
     {% block script %}
     <script type="text/javascript">
       {% if request.user.is_authenticated %}
-      // Page specific persona setup
-      owServices.value('personaUser', "{{ request.user.username }}");
+// Page specific persona setup
+owServices.value('personaUser', "{{ request.user.username }}");
+angular.module('owServices').run(function(activeState) {
+    activeState.user = {{ request.user.id }};
+});
       {% endif %}
       $(document).ready(function() {
 

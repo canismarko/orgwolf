@@ -203,6 +203,7 @@ def persona_login(request):
             # Now login
             user.backend = 'django.contrib.auth.backends.ModelBackend'
             login(request, user)
+            r['user_id'] = user.id
             if request.GET.get('next'):
                 r['next'] = request.GET.get('next')
                 print(request.GET.get('next'))

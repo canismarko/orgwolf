@@ -13,7 +13,7 @@ var owServices = angular.module(
 *
 **************************************************/
 owServices.value('personaUser', null); // Default value, override in django
-owServices.factory('personaNavigator', ['personaUser', 'owWaitIndicator', function(personaUser, owWaitIndicator) {
+owServices.factory('personaNavigator', ['personaUser', '$rootScope', 'owWaitIndicator', 'activeState', function(personaUser, $rootScope, owWaitIndicator, activeState) {
     if ( typeof navigator.id !== 'undefined' ) {
 	// Setup the persona navigator before linking the directive
 	navigator.id.watch({
@@ -29,7 +29,9 @@ owServices.factory('personaNavigator', ['personaUser', 'owWaitIndicator', functi
 		    data: {assertion: assertion},
 		    success: function(res, status, xhr) {
 			owWaitIndicator.end_wait('medium', 'persona');
-			window.location.reload();
+			res = JSON.parse(res);
+			activeState.user = res.user_id;
+			$rootScope.$broadcast('refresh-data');
 		    },
 		    error: function(xhr, status, err) {
 			navigator.id.logout();
