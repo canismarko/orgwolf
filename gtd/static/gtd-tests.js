@@ -1073,15 +1073,15 @@ describe('controllers in gtd-main.js', function() {
 	    $httpBackend.whenGET('/gtd/nodes?archived=false&field_group=calendar&todo_state__abbreviation=DFRD').respond(200);
 	    $httpBackend.whenGET('/gtd/nodes?archived=false&deadline_date__gt=1970-01-01&field_group=calendar_deadlines').respond(200);
 	}));
+	beforeEach(function() {
+	    $scope.owCalendar = {fullCalendar: function() {}};
+	    $scope.activeCalendars = [1];
+	});
 	afterEach(function() {
 	    $httpBackend.verifyNoOutstandingExpectation();
 	});
 	it('creates the allCalendars list', function() {
 	    expect($scope.allCalendars.length).toBe(3);
-	});
-	it('creates the activeCalendars list', function() {
-	    expect($scope.activeCalendars.length).toBe(1);
-	    expect($scope.activeCalendars[0]).toBe($scope.allCalendars[0]);
 	});
 	it('toggles a currently active calendar', function() {
 	    $scope.toggleCalendar($scope.allCalendars[0]);
