@@ -6,7 +6,10 @@
 
 <div class="container">
   <div class="row">
-    <div class="col-md-3 calendar-list">
+    <div class="calendar-list">
+      <!-- Search box -->
+      <div ng-include="'/static/search-box.html'">
+      </div>
       <h2>Calendars</h2>
       <ul>
 	<li ng-repeat="calendar in allCalendars | orderBy:'order'"
