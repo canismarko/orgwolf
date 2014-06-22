@@ -1534,6 +1534,28 @@ class NodeAPI(TestCase):
             ordered=False,
         )
 
+    def test_node_get_collection_scheduled(self):
+        """
+        Test for a bug that doesn't correctly filter out
+        future scheduled dates.
+        """
+        nodes = Node.objects.mine(self.user, get_archived=True).filter(
+            scheduled_date__lte="2014-06-21")
+        url = reverse('node_object')
+        response = self.client.get(
+            url,
+            {'scheduled_date__lte': '2014-6-21'},
+            HTTP_X_REQUESTED_WITH='XMLHttpRequest',
+            HTTP_ACCEPT='application/json',
+        )
+        r = json.loads(response.content)
+        self.assertQuerysetEqual(
+            nodes,
+            [node['title'] for node in r],
+            transform=lambda x: x.title,
+            ordered=False,
+        )
+
     def test_node_get_collection_anonymous(self):
         """
         Test that Nodes with user=None are returned

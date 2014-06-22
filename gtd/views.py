@@ -277,6 +277,7 @@ class NodeView(APIView):
         method is to be used instead.
         """
         BOOLS = ('archived',) # Translate 'False' -> False for these fields
+        M2M = ['todo_state'] # For filtering on arrays
         nodes = Node.objects.mine(request.user, get_archived=True)
         get_dict = request.GET.copy()
         parent_id = get_dict.get('parent_id', None)
@@ -285,13 +286,15 @@ class NodeView(APIView):
             get_dict.pop('parent_id')
         # Apply each criterion to the queryset
         for key in get_dict.keys():
-            value_list = get_dict.getlist(key)
             if key in BOOLS and get_dict[key] == 'false':
                 query = {key: False}
-            else:
+            elif key in M2M:
             # Convert to (param__in=[]) style list filtering
+                value_list = get_dict.getlist(key)
                 param = "{}__in".format(key)
                 query = {param: value_list}
+            else:
+                query = {key: get_dict[key]}
             try:
                 nodes = nodes.filter(**query)
             except FieldError:
