@@ -112,7 +112,6 @@ describe('filters in gtd-filters.js', function() {
 		d = new Date();
 		d.setDate(d.getDate() + 8);
 		future_str = d.getFullYear() + '-' + (d.getMonth()+1) + '-' + d.getDate();
-		console.log(future_str);
 		unsorted_data = [{'deadline_date': null},
 				 {'deadline_date': future_str},
 				 {'deadline_date': '2013-12-26'},
@@ -1028,32 +1027,8 @@ describe('controllers in gtd-main.js', function() {
     describe('the nodeOutline controller', function() {
 	var $scope;
 	beforeEach(inject(function($rootScope, $controller, _$httpBackend_) {
-	    // $httpBackend = _$httpBackend_
-	    // $httpBackend.whenGET('/gtd/todostate').respond(201, dummyStates);
-	    // $httpBackend.whenGET('/gtd/context').respond(201, []);
-	    // $httpBackend.whenGET('/gtd/scope').respond(201, []);
-	    // // $httpBackend.whenGET(/\/gtd\/nodes?[^t]?.*/).respond(201, []);
-	    // $httpBackend.whenGET('/gtd/nodes?todo_state=2').respond(201, []);
-	    // $httpBackend.whenGET(/\/gtd\/nodes\?todo_state=2&upcoming=[-0-9]+/)
-	    // 	.respond(201, []);
-	    // $httpBackend.whenGET(/\/gtd\/nodes\?field_group=actions_list&scheduled_date__lte=[-0-9]+&todo_state=8/)
-	    // 	.respond(201, []);
 	    $scope = $rootScope.$new();
 	    $controller('nodeOutline', {$scope: $scope});
-	    // $httpBackend.flush();
-	    // $scope.actionsList = [
-	    // 	{id: 1,
-	    // 	 scope: [1],
-	    // 	 todo_state: 2},
-	    // 	{id: 2,
-	    // 	 scope: []},
-	    // ];
-	    // $scope.upcomingList = [
-	    // 	{id: 2,
-	    // 	 scope: [1]},
-	    // 	{id: 3,
-	    // 	 scope: []},
-	    // ];
 	}));
 	// Reset httpBackend calls
 	afterEach(function() {
@@ -1065,6 +1040,43 @@ describe('controllers in gtd-main.js', function() {
 	    $scope.$emit('scope-changed', newScope);
 	    expect($scope.activeScope).toBe(newScope);
 	});
+    });
+
+    describe('the search controller', function() {
+	var $scope, $controller, $location, $httpBackend, titleResults, textResults;
+	beforeEach(inject(function($rootScope, _$controller_, _$location_,_$httpBackend_) {
+	    // Fake response data
+	    titleResults = [
+		{title: "hello, world"}
+	    ];
+	    textResults = [
+		{text: "hello m'darling"}
+	    ];
+	    // Dependency injection and setup
+	    $scope = $rootScope.$new();
+	    $controller = _$controller_;
+	    $location = _$location_;
+	    $httpBackend = _$httpBackend_;
+	    $httpBackend.whenGET(/\/gtd\/(context|scope)/).respond(200, []);
+	}));
+	afterEach(function() {
+	    $httpBackend.verifyNoOutstandingExpectation();
+	});
+	it('fetches nodes based on title', function() {
+	    // Set up fake query and check for API call
+	    $location.search('q', 'hello');
+	    $httpBackend.expectGET('/gtd/nodes?title__contains=hello')
+		.respond(200, titleResults);
+	    $httpBackend.expectGET('/gtd/nodes?text__contains=hello')
+		.respond(200, textResults);
+	    $controller('search', {$scope: $scope});
+	    $httpBackend.flush();
+	    // Check for results added to $scope.results
+	    expect($scope.results[0].title).toEqual(titleResults[0].title);
+	    expect($scope.results[1].text).toEqual(textResults[0].text);
+	});
+	it('splits multiple words into separate queries');
+	it('ignores trivial words');
     });
 
     describe('calendar controller', function() {

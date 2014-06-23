@@ -279,7 +279,7 @@ owDirectives.directive('owEditable', ['$resource', '$rootScope', '$timeout', 'ow
 	    }
 	    newHeading.$promise.then(function(data) {
 		notify('Saved', 'success');
-		scope.$emit('finishEdit', newHeading);
+		scope.endEdit(newHeading);
 	    })['catch'](function(e) {
 		notify('<strong>Not saved!</strong> Check your internet connection and try again.', 'danger');
 		console.log('Save failed:');
@@ -311,7 +311,12 @@ owDirectives.directive('owEditable', ['$resource', '$rootScope', '$timeout', 'ow
 	    element.find('#title').focus();
 	});
 	scope.cancelEdit = function(e) {
-	    scope.$emit('finishEdit');
+	    scope.endEdit(e);
+	};
+	// Process the callbacks for when editing is done
+	scope.endEdit = function(e) {
+	    scope.$emit('finishEdit', e);
+	    scope.$parent.$parent.$eval(scope.finishCallback);
 	};
     }
     return {
@@ -319,6 +324,7 @@ owDirectives.directive('owEditable', ['$resource', '$rootScope', '$timeout', 'ow
 	scope: {
 	    heading: '=owHeading',
 	    parent: '=owParent',
+	    finishCallback: '@owEditFinish',
 	},
 	require: '?ngModel',
 	templateUrl: '/static/editable.html'

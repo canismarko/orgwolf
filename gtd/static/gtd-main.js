@@ -31,6 +31,10 @@ owMain.config(
 		 templateUrl: '/static/project-outline.html',
 		 controller: 'nodeOutline'
 	     }).
+	     when('/search/', {
+		 templateUrl: '/static/search-results.html',
+		 controller: 'search'
+	     }).
 	     when('/calendar/', {
 		 templateUrl: '/static/calendar.html',
 		 controller: 'calendar'
@@ -444,10 +448,26 @@ function listCtrl($sce, $scope, $resource, $location, $routeParams, $filter, Hea
 }
 
 /*************************************************
+* Search controller
+*
+**************************************************/
+owMain.controller('search', ['$scope', '$location', 'Heading', function($scope, $location, Heading) {
+    $scope.query = $location.search().q;
+    $scope.results = [];
+    // Fetch query results and combine into one array
+    Heading.query({'title__contains': $scope.query}).$promise.then(function(r) {
+	$scope.results = $scope.results.concat(r);
+    });
+    Heading.query({'text__contains': $scope.query}).$promise.then(function(r) {
+	$scope.results = $scope.results.concat(r);
+    });
+}])
+
+/*************************************************
 * Calendar controller
 *
 **************************************************/
-owMain.controller('calendar', ['$scope', 'Heading', '$filter', '$modal', function($scope, Heading, $filter, $modal) {
+.controller('calendar', ['$scope', 'Heading', '$filter', '$modal', function($scope, Heading, $filter, $modal) {
     // Uses angular-ui-calendar from https://github.com/angular-ui/ui-calendar
     var date, d, m, y;
     // List of calendars that are actually shown

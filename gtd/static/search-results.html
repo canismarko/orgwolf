@@ -1,0 +1,15 @@
+<div class="container">
+
+  <div ng-include="'/static/search-box.html'"></div>
+
+  <ul class="search-results">
+  <li ng-repeat="result in results">
+    <span ng-hide="isEditable">
+      <span ow-todo ow-heading="result"></span>
+      <a ng-click="isEditable=!isEditable" class="search-title">
+	{{ result.title }}</a>
+    </span>
+    <div ow-editable ng-if="isEditable" ow-edit-finish="isEditable = false"
+	 ow-heading="result"></div>
+  </li>
+  </ul>

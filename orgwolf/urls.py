@@ -37,7 +37,8 @@ urlpatterns = patterns(
 
     # Angular entry points
     url(r'^$', 'orgwolf.views.home', name='home'),
-    url(r'^calendar/', AngularView.as_view()),
+    url(r'^search/?', AngularView.as_view(), name="search"),
+    url(r'^calendar/?', AngularView.as_view()),
 
     # API entry points
     url(r'^feedback/?$', FeedbackView.as_view(), name='feedback'),

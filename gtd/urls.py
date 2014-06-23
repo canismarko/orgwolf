@@ -32,7 +32,6 @@ urlpatterns = patterns(
     'gtd.views',
 
     # urls for angular pages
-    url(r'^node/search/', AngularView.as_view(), name="search"),
     url(r'^project/?$', AngularView.as_view(), name='projects'),
     url(r'^actions(?:/\d+/[-A-Za-z0-9_]+)?/?$',
         AngularView.as_view(), name='list_display'),
