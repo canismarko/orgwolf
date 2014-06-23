@@ -42,6 +42,13 @@ from orgwolf.forms import RegistrationForm, ProfileForm, PasswordForm
 from wolfmail.models import Message
 
 
+class AngularView(TemplateView):
+    """
+    View class that serves up the base angular template.
+    """
+    template_name = 'angular.html'
+
+
 def home(request):
     if request.user.is_authenticated():
         url = reverse(request.user.home)
@@ -49,36 +56,36 @@ def home(request):
         url = reverse('projects')
     return redirect(url)
 
-def new_user(request):
-    """New user registration"""
-    if request.method == 'POST':
-        # Validate and create new user
-        data = request.POST.copy()
-        data['last_login'] = data.get('last_login', dt.datetime.now())
-        data['date_joined'] = data.get('date_joined', dt.datetime.now())
-        data['home'] = data.get('home', 'projects')
-        new_user_form = RegistrationForm(data)
-        if new_user_form.is_valid():
-            # Create the new user and log her in
-            new_user = User()
-            new_user.username = data['username']
-            new_user.set_password(data['password'])
-            new_user.home = data['home']
-            new_user.save()
-            user = authenticate(username=data['username'],
-                                password=data['password'])
-            if user != None:
-                login(request, user)
-                return redirect(reverse(user.home))
-        # Show the standard new user registration page
-        return render_to_response('registration/new_user.html',
-                                  locals(),
-                                  RequestContext(request))
-    else:
-        new_user_form = RegistrationForm()
-        return render_to_response('registration/new_user.html',
-                                  locals(),
-                                  RequestContext(request))
+# def new_user(request):
+#     """New user registration"""
+#     if request.method == 'POST':
+#         # Validate and create new user
+#         data = request.POST.copy()
+#         data['last_login'] = data.get('last_login', dt.datetime.now())
+#         data['date_joined'] = data.get('date_joined', dt.datetime.now())
+#         data['home'] = data.get('home', 'projects')
+#         new_user_form = RegistrationForm(data)
+#         if new_user_form.is_valid():
+#             # Create the new user and log her in
+#             new_user = User()
+#             new_user.username = data['username']
+#             new_user.set_password(data['password'])
+#             new_user.home = data['home']
+#             new_user.save()
+#             user = authenticate(username=data['username'],
+#                                 password=data['password'])
+#             if user != None:
+#                 login(request, user)
+#                 return redirect(reverse(user.home))
+#         # Show the standard new user registration page
+#         return render_to_response('registration/new_user.html',
+#                                   locals(),
+#                                   RequestContext(request))
+#     else:
+#         new_user_form = RegistrationForm()
+#         return render_to_response('registration/new_user.html',
+#                                   locals(),
+#                                   RequestContext(request))
 
 
 class FeedbackView(APIView):
@@ -218,10 +225,3 @@ def persona_login(request):
 def persona_logout(request):
     logout(request)
     return HttpResponse(json.dumps({'status': 'success'}))
-
-def jstest(request):
-    """Executes the javascript test runner (QUnit).
-    Unit tests are stored in `appname/static/`."""
-    return render_to_response('qunit.html',
-                              locals(),
-                              RequestContext(request))

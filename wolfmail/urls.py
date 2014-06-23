@@ -18,6 +18,8 @@
 #######################################################################
 
 from django.conf.urls import patterns, url
+
+from orgwolf.views import AngularView
 from wolfmail.views import MessageView
 
 # Uncomment the next two lines to enable the admin:
@@ -26,7 +28,6 @@ admin.autodiscover()
 
 urlpatterns = patterns(
     'wolfmail.views',
-    url(r'^inbox/?$', 'inbox', name='inbox'),
-    url(r'^inbox/(?:\d+)/?', 'inbox'),
+    url(r'^inbox/(?:\d+)?/?$', AngularView.as_view()),
     url(r'^message(?:/(?P<pk>\d+))?/?$', MessageView.as_view(), name='messages')
 )

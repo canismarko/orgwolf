@@ -1173,30 +1173,6 @@ class MultiUser(TestCase):
                 username='test', password='secret')
         )
 
-    def test_get_nodes(self):
-        self.assertEqual(
-            'instancemethod',
-            Node.objects.owned.__class__.__name__
-            )
-        url = reverse('projects')
-        request = self.factory.get(url)
-        request.user = self.user2
-        self.assertEqual(
-            'NodeQuerySet',
-            Node.objects.owned(request.user).__class__.__name__)
-        self.assertEqual(
-            list(Node.objects.filter(owner = self.user2)),
-            list(Node.objects.owned(request.user, get_archived=True))
-            )
-        request.user = AnonymousUser()
-        self.assertFalse(
-            request.user.is_authenticated()
-            )
-        self.assertEqual(
-            list(Node.objects.none()),
-            list(Node.objects.owned(request.user))
-            )
-
     def test_auto_contact(self):
         """Determine if adding a user automatically creates a contact"""
         user = User()
@@ -1205,7 +1181,7 @@ class MultiUser(TestCase):
             user.contact_set.count(),
             1,
             'Creating a new user does not create a new Contact'
-            )
+        )
 
     def test_get_mine(self):
         """Test the Node.get_mine() method. It returns a queryset of all
@@ -1235,72 +1211,6 @@ class MultiUser(TestCase):
                 node.archived,
                 'Node {0} is archived'.format(node)
                 )
-
-    def test_assigned_in_responses(self):
-        """Make sure that Nodes to which the user is assigned show up in the
-        right places."""
-        contact = self.user1.contact_set.all()[0]
-        assigned = contact.assigned_node_set.all()[0]
-        if assigned.parent:
-            kwargs={'pk': assigned.parent.pk}
-        else:
-            kwargs={}
-        new_url = reverse('projects', kwargs=kwargs)
-        response = self.client.get(new_url)
-        self.assertContains(
-            response,
-            assigned.title,
-            )
-
-    def test_list_view(self):
-        url = reverse('node_object')
-        response = self.client.get(url, {'context': None})
-        self.assertContains(
-            response,
-            'Test user owned node',
-            status_code=200
-            )
-        self.assertContains(
-            response,
-            'Test user assigned node',
-            status_code=200
-            )
-        self.assertNotContains(
-            response,
-            'Test user others node',
-            status_code=200
-            )
-
-    def test_node_view(self):
-        url = reverse('projects')
-        response = self.client.get(url)
-        self.assertContains(
-            response,
-            'Test user owned node',
-            status_code=200
-            )
-        self.assertNotContains(
-            response,
-            'test-users node',
-            status_code=200,
-            msg_prefix='node view',
-            )
-
-    def test_get_unauthorized_node(self):
-        """Trying to access another person's node by URL
-        should redirect the user to the login screen"""
-        node = Node.objects.get(pk=9)
-        url = reverse('projects', kwargs={'pk': node.pk,
-                                          'slug': node.slug})
-        response = self.client.get(url)
-        self.assertEqual(
-            302,
-            response.status_code,
-        )
-        self.assertEqual(
-            response['Location'],
-            'http://testserver/accounts/login/?next=/gtd/project/9/',
-        )
 
 
 class HTMLEscape(TestCase):
@@ -1357,63 +1267,9 @@ class DBOptimization(TestCase):
             reverse('list_display')
         )
         self.assertNumQueries(
-            5,
+            3,
             self.client.get,
             reverse('list_display'),
-        )
-
-
-class ProjectView(TestCase):
-    """
-    Check the /gtd/node/<node_pk>/<slug>/ functionality.
-    """
-    fixtures = ['test-users.json', 'gtd-test.json', 'gtd-env.json']
-
-    def setUp(self):
-        self.node = Node.objects.get(pk=1)
-        self.new_url = reverse('node_object')
-        self.url = reverse(
-            'projects',
-            kwargs={'pk': self.node.pk}
-        )
-        self.view = NodeView()
-        self.repeating_node = Node.objects.get(pk=7)
-        self.repeating_url = reverse(
-            'projects',
-            kwargs={'pk': self.repeating_node.pk}
-        )
-        self.slug = slugify(self.node.title)
-        self.url_slug = reverse(
-            'projects',
-            kwargs={'pk': self.node.pk,
-                    'slug': self.node.slug}
-        )
-        self.actionable = TodoState.objects.get(abbreviation='NEXT')
-        self.closed = TodoState.objects.get(abbreviation='DONE')
-        self.user = User.objects.get(username='test')
-        self.assertTrue(
-            self.client.login(username=self.user.username, password='secret')
-        )
-
-    def test_url_slug(self):
-        """Check if using /<pk>/<slug>/operates as expected"""
-        response = self.client.get(
-            self.url_slug,
-        )
-        self.assertEqual(
-            200,
-            response.status_code,
-            'Slugged response doesn\'t return 200 ({0})'.format(
-                response.status_code)
-        )
-        response = self.client.get(
-            self.url
-        )
-        self.assertEqual(
-            302,
-            response.status_code,
-            'Non-slugged response doesn\'t return 302 ({0})'
-            .format(response.status_code)
         )
 
 

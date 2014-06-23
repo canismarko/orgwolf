@@ -163,66 +163,10 @@ angular.module('owServices').run(function(activeState) {
 
     {% block body %}
 
-    <!-- Navigation and notifications -->
-    <div ng-include="'{{ STATIC_URL }}header.html'"></div>
+    {% block content %}
+    {% endblock %}
 
-    <!-- Form for submitting feedback -->
-    <div ow-feedback>
-    </div>
+    {% endblock %}
 
-    <!-- Alert if the user is not logged in -->
-    <div class="container ow-unauth-show" id="unauth-warn">
-      <div class="row">
-	<div class="alert alert-warning col-md-5 col-md-offset-3">
-	  You are in <strong>demo mode</strong>; changes will not be
-	  saved.<br />Please
-	  <a href="#" persona-button="login">
-	    <img src="{{ STATIC_URL}}persona-button-small.png" /></a>
-	  to create a new account.
-	</div>
-      </div>
-    </div>
-
-    <!-- Displays indicators if there's a noticeable wait time -->
-    <div ow-wait-feedback class="wait-indicator">
-      <div class="mask">
-	<div id="dark"></div>
-	<img id="spinner" alt="loading"
-	     src="{{ STATIC_URL }}ajax-loader.gif"></img>
-      </div>
-    </div>
-
-    <!-- View for angular controller to fill in -->
-    <div ng-view class="view-animate">
-
-      <!-- Fallback error message for non-javascript browsers -->
-      <div class="noscript">
-	<div class="row logo">
-	  <div>
-	    <img src="{{ STATIC_URL }}orgwolf-logo-big.jpg" alt="Orgwolf logo" />
-	  </div>
-	</div>
-	<div class="row">
-	  <div>
-	    <div class="alert alert-danger">
-	      <strong>Orgwolf requires javascript.</strong>
-	      Please enable javascript or upgrade your browser.
-	    </div>
-	  </div>
-	</div>
-	<div class="row">
-	  <img src="{{ STATIC_URL }}404.jpg" alt="ripped page graphic" />
-	</div>
-      </div>
-
-    </div>
-
-</div>
-
-{% block content %}
-{% endblock %}
-
-{% endblock %}
-
-</body>
+  </body>
 </html>

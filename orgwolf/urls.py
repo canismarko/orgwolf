@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 #######################################################################
 # Copyright 2012 Mark Wolf
 #
@@ -21,53 +22,39 @@ from django.conf.urls import patterns, include, url
 from django.contrib.auth.views import login, logout
 from django.views.generic import TemplateView
 
-from orgwolf.views import FeedbackView, AccountsView
+from orgwolf.views import FeedbackView, AccountsView, AngularView
 
 # Uncomment the next two lines to enable the admin:
 from django.contrib import admin
 admin.autodiscover()
-urlpatterns = patterns('',
-                       url(r'^$', 'orgwolf.views.home', name='home'),
-                       url(r'^feedback/?$', FeedbackView.as_view(),
-                           name='feedback'),
-                       url(r'^gtd/', include('gtd.urls')),
-                       url(r'^messaging/', include('wolfmail.urls')),
-                       url(r'^wolfmail/', include('wolfmail.urls')),
-                       url(r'^calendar/', TemplateView.as_view(template_name='angular.html')),
-                       # Authentication stuff
-                       url(r'', include('social_auth.urls')),
-                       url(r'^accounts/login/$',
-                           login,
-                           name='login',
-                       ),
-                       url(r'^accounts/logout/$', logout),
-                       # orgwolf settings
-                       url(r'^accounts/profile/',
-                           'orgwolf.views.profile'),
-                       url(r'^accounts/accounts/',
-                           AccountsView.as_view(),
-                           name='ow-accounts'),
-                       url(r'^accounts/password/',
-                           'orgwolf.views.change_password',
-                           name='change_password'),
-                       url(r'^accounts/login/persona/',
-                           'orgwolf.views.persona_login'),
-                       url(r'^accounts/logout/persona/$',
-                           'orgwolf.views.persona_logout'),
 
-                       #Uncomment the admin/doc line below to enable admin documentation
-                       url(r'^admin/doc/',
-                           include('django.contrib.admindocs.urls')),
-                       # Uncomment the next line to enable the admin
-                       url(r'^admin/',
-                           include(admin.site.urls)),
+urlpatterns = patterns(
+    '',
 
-                       # Javascript unit tests
-                       url(r'^test/qunit/$',
-                           'orgwolf.views.jstest'),
-                       url(r'^test/jasmine/$',
-                           TemplateView.as_view(template_name='jasmine.html'))
+    # Redirect to other apps
+    url(r'^gtd/', include('gtd.urls')),
+    url(r'^wolfmail/', include('wolfmail.urls')),
+
+    # Angular entry points
+    url(r'^$', 'orgwolf.views.home', name='home'),
+    url(r'^calendar/', AngularView.as_view()),
+
+    # API entry points
+    url(r'^feedback/?$', FeedbackView.as_view(), name='feedback'),
+
+    # Authentication stuff
+    url(r'^accounts/login/$', login, name='login'),
+    url(r'^accounts/logout/$', logout),
+    url(r'^accounts/login/persona/', 'orgwolf.views.persona_login'),
+    url(r'^accounts/logout/persona/$', 'orgwolf.views.persona_logout'),
+
+    #Uncomment the admin/doc line below to enable admin documentation
+    # url(r'^admin/doc/',
+    #     include('django.contrib.admindocs.urls')),
+    # Uncomment the next line to enable the admin
+    url(r'^admin/', include(admin.site.urls)),
+
+    # Javascript unit tests
+    url(r'^test/jasmine/$', TemplateView.as_view(template_name='jasmine.html'))
 
 )
-
-# Deprecated: ? # urlpatterns += staticfiles_urlpatterns()

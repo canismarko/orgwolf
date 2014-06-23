@@ -20,46 +20,27 @@
 
 from django.conf.urls import patterns, url
 
+from orgwolf.views import AngularView
+
 # Uncomment the next two lines to enable the admin:
 from django.contrib import admin
 admin.autodiscover()
 
-from gtd.views import (NodeView, TodoStateView,
-                       ScopeView, ContextView,
-                       ProjectView)
+from gtd.views import NodeView, TodoStateView, ScopeView, ContextView
 
 urlpatterns = patterns(
     'gtd.views',
 
-    url(r'^node/search/', 'node_search'),
+    # urls for angular pages
+    url(r'^node/search/', AngularView.as_view(), name="search"),
+    url(r'^project/?$', AngularView.as_view(), name='projects'),
+    url(r'^actions(?:/\d+/[-A-Za-z0-9_]+)?/?$',
+        AngularView.as_view(), name='list_display'),
 
-    url(r'^project(?:/(?P<pk>\d+))?(?:/(?P<slug>[-\w\d]*))?(:?/(?P<show_all>all/))?/?$',
-        ProjectView.as_view(),
-        name='projects'
-    ),
-
-    url(r'^nodes(?:/(?P<pk>\d+))?/?$',
-        NodeView.as_view(),
-        name='node_object'
-    ),
-
+    # Urls for api entry points
+    url(r'^nodes(?:/(?P<pk>\d+))?/?$', NodeView.as_view(), name='node_object'),
     url(r'^todostate(?:/(?P<pk>\d+))?/?$',
-        TodoStateView.as_view(),
-        name='todo_state'
-    ),
-
-    url(r'^actions(?:/(?P<context_id>\d+)/(?P<context_slug>[-A-Za-z0-9_]+))?/?$',
-        'actions',
-        name='list_display'
-    ),
-
-    url(r'^scope/?$',
-        ScopeView.as_view(),
-        name='scope_api',
-    ),
-
-    url(r'^context/?$',
-        ContextView.as_view(),
-        name='context_api',
-    )
+        TodoStateView.as_view(), name='todo_state'),
+    url(r'^scope/?$', ScopeView.as_view(), name='scope_api'),
+    url(r'^context/?$', ContextView.as_view(), name='context_api',),
 )
