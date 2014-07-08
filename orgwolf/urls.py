@@ -42,8 +42,10 @@ urlpatterns = patterns(
 
     # API entry points
     url(r'^feedback/?$', FeedbackView.as_view(), name='feedback'),
+    url(r'^accounts/providers/?', 'orgwolf.views.socialauth_providers'),
 
     # Authentication stuff
+    url('', include('social.apps.django_app.urls', namespace='social')),
     url(r'^accounts/login/$', login, name='login'),
     url(r'^accounts/logout/$', logout),
     url(r'^accounts/login/persona/', 'orgwolf.views.persona_login'),

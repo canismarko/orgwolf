@@ -34,11 +34,12 @@ from rest_framework.decorators import api_view
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from social.backends import google
 
 from gtd.shortcuts import load_fixture
 from orgwolf import settings
-from orgwolf.models import OrgWolfUser as User
 from orgwolf.forms import RegistrationForm, ProfileForm, PasswordForm
+from orgwolf.models import OrgWolfUser as User
 from wolfmail.models import Message
 
 
@@ -161,6 +162,26 @@ class AccountsView(TemplateView):
         context['backends'] = list(settings.SOCIAL_AUTH_BACKENDS)
         context['accounts'] = self.request.user.social_auth.all()
         return context
+
+
+@api_view(['GET'])
+def socialauth_providers(request):
+    """
+    Returns data needed by angularjs to make social auth buttons,
+    mostly from settings.py.
+    """
+    def google_provider():
+        dict = {
+            "plus_scope": ' '.join(google.GooglePlusAuth.DEFAULT_SCOPE),
+            "plus_id": settings.SOCIAL_AUTH_GOOGLE_OAUTH2_KEY,
+        }
+        return dict
+    dispatcher_dict = {
+        'google': google_provider
+    }
+    providers = settings.SOCIAL_AUTH_PROVIDERS
+    data = [dispatcher_dict[provider]() for provider in providers]
+    return Response(data)
 
 
 def change_password(request):

@@ -47,6 +47,17 @@ DATABASES = {
 
 AUTH_USER_MODEL = 'orgwolf.OrgWolfUser'
 
+# social auth details
+SOCIAL_AUTH_USER_MODEL = AUTH_USER_MODEL
+SOCIAL_AUTH_AUTHENTICATION_BACKENDS = [
+    'social.backends.google.GoogleOAuth2'
+]
+SOCIAL_AUTH_PROTECTED_USER_FIELDS = ['email',]
+# Backend specific social auth
+SOCIAL_AUTH_GOOGLE_OAUTH2_KEY = '955970863814.apps.googleusercontent.com'
+SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET = 'LXZ4lWKCDbQIuGkbFmFzXLHn'
+SOCIAL_AUTH_PROVIDERS = ['google']
+
 # Local time zone for this installation. Choices can be found here:
 # http://en.wikipedia.org/wiki/List_of_tz_zones_by_name
 # although not all choices may be available on all operating systems.
@@ -141,6 +152,8 @@ TEMPLATE_CONTEXT_PROCESSORS += (
     'orgwolf.context_processors.debug_variables',
     'orgwolf.context_processors.scope_context',
     'django.core.context_processors.request',
+    'social.apps.django_app.context_processors.backends',
+   'social.apps.django_app.context_processors.login_redirect',
     )
 
 ROOT_URLCONF = 'orgwolf.urls'
@@ -175,7 +188,7 @@ INSTALLED_APPS = [
     'wolfmail',
     'south',
     'mptt',
-    'social_auth',
+    'social.apps.django_app.default',
     # Uncomment the next line to enable the admin:
     'django.contrib.admin',
     # Uncomment the next line to enable admin documentation:
@@ -192,52 +205,25 @@ DEBUG_BAR = False
 # Persona authentication settings
 PERSONA_AUDIENCE = 'http://localhost:8000'
 
-# Django-social-auth configuration
-SOCIAL_AUTH_BACKENDS = [
-    {'title': 'Facebook',
-     'class': 'btn-facebook',
-     'view': 'facebook',
-     'backend': 'social_auth.backends.facebook.FacebookBackend',
-     'icon': 'facebook'},
-    {'title': 'GitHub',
-     'class': 'btn-github',
-     'view': 'github',
-     'backend': 'social_auth.backends.contrib.github.GithubBackend',
-     'icon': 'github'},
-    {'title': 'Google',
-     'class': 'btn-google',
-     'view': 'google-oauth2',
-     'backend': 'social_auth.backends.google.GoogleOAuth2Backend',
-     'icon': 'google-plus'},
-    {'title': 'Twitter',
-     'class': 'btn-twitter',
-     'view': 'twitter',
-     'backend': 'social_auth.backends.twitter.TwitterBackend',
-     'icon': 'twitter'},
-    ]
 SOCIAL_AUTH_USER_MODEL = "orgwolf.OrgWolfUser"
 
 AUTHENTICATION_BACKENDS = [
     'django.contrib.auth.backends.ModelBackend',
+    'social.backends.google.GoogleOAuth2',
 ]
-
-for service in SOCIAL_AUTH_BACKENDS:
-    AUTHENTICATION_BACKENDS.append(service['backend'])
 
 LOGIN_URL = '/accounts/login/'
 LOGIN_REDIRECT_URL = '/accounts/accounts/'
 LOGIN_ERROR_URL = '/accounts/login-error/'
-SOCIAL_AUTH_DEFAULT_USERNAME = 'orguser'
+# SOCIAL_AUTH_DEFAULT_USERNAME = 'orguser'
 # Per-application configuration
-FACEBOOK_APP_ID = "336968653082120"
-FACEBOOK_API_SECRET = "b2c356dc4bd9924712e16394298069ca"
-FACEBOOK_EXTENDED_PERMISSIONS = ['email']
-GITHUB_APP_ID = 'a5492082d01e4ddc36c3'
-GITHUB_API_SECRET = 'ab1226ddfa61e09495f62970eca1223332ecb606'
-GOOGLE_OAUTH2_CLIENT_ID = '955970863814.apps.googleusercontent.com'
-GOOGLE_OAUTH2_CLIENT_SECRET = 'LXZ4lWKCDbQIuGkbFmFzXLHn'
-TWITTER_CONSUMER_KEY = 'mdCrIYcrHUqohrOvCKPz3Q'
-TWITTER_CONSUMER_SECRET = 'SLir3qh8IFzuFe6VI58kHpBnzAnAohpWzqjhdmXKqQ'
+# FACEBOOK_APP_ID = "336968653082120"
+# FACEBOOK_API_SECRET = "b2c356dc4bd9924712e16394298069ca"
+# FACEBOOK_EXTENDED_PERMISSIONS = ['email']
+# GITHUB_APP_ID = 'a5492082d01e4ddc36c3'
+# GITHUB_API_SECRET = 'ab1226ddfa61e09495f62970eca1223332ecb606'
+# TWITTER_CONSUMER_KEY = 'mdCrIYcrHUqohrOvCKPz3Q'
+# TWITTER_CONSUMER_SECRET = 'SLir3qh8IFzuFe6VI58kHpBnzAnAohpWzqjhdmXKqQ'
 
 # A sample logging configuration. The only tangible logging
 # performed by this configuration is to send an email to
