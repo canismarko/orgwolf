@@ -73,7 +73,8 @@
        ng-if="!activeScope || heading.scope.indexOf(activeScope.id) > -1">
   </div>
 
-  <div class="alert-empty" ng-show="visibleHeadings.length === 0">
+  <div class="alert-empty"
+       ng-show="visibleHeadings.length === 0 && !isLoading">
     No actions here. Try another Scope, Context or
     TodoState combination.
   </div>

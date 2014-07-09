@@ -265,9 +265,9 @@ function outlineCtrl($scope, $rootScope, $http, $resource, $filter, Heading,
 owMain.controller(
     'nextActionsList',
     ['$sce', '$scope', '$resource', '$location', '$routeParams', '$filter',
-     'Heading', 'todoStates', '$cookies', listCtrl]
+     'Heading', 'todoStates', 'owWaitIndicator', '$cookies', listCtrl]
 );
-function listCtrl($sce, $scope, $resource, $location, $routeParams, $filter, Heading, todoStates, $cookies) {
+function listCtrl($sce, $scope, $resource, $location, $routeParams, $filter, Heading, todoStates, owWaitIndicator, $cookies) {
     var i, TodoState, Context, today, update_url, get_list, parent_id, todo_states;
     $scope.list_params = {field_group: 'actions_list'};
     $scope.showArchived = true;
@@ -328,6 +328,7 @@ function listCtrl($sce, $scope, $resource, $location, $routeParams, $filter, Hea
     $scope.setVisibleHeadings = function() {
 	var currentListFilter = $filter('currentList');
 	$scope.visibleHeadings = [];
+	console.log($scope.actionsList);
 	if ( $scope.upcomingList ) {
 	    $scope.visibleHeadings = $scope.visibleHeadings.concat(
 		$scope.upcomingList);
@@ -347,8 +348,15 @@ function listCtrl($sce, $scope, $resource, $location, $routeParams, $filter, Hea
     });
     // Receiver that retrieves GTD lists from server
     $scope.refreshList = function() {
-	var upcomingParams;
+	var upcomingParams, $unwatch;
+	// Variables for tracking status
+	$scope.isLoading = true;
+	owWaitIndicator.start_wait('quick', 'loadLists');
+	$scope.completedRequests = [];
 	$scope.actionsList = Heading.query($scope.list_params);
+	$scope.actionsList.$promise.then(function() {
+	    console.log($scope.actionsList);
+	});
 	upcomingParams = angular.extend(
 	    {upcoming: $scope.currentDate.ow_date()},
 	    $scope.list_params);
@@ -360,6 +368,20 @@ function listCtrl($sce, $scope, $resource, $location, $routeParams, $filter, Hea
 		todo_state: 8
 	    }
 	);
+	// Check for all lists to be retrieved
+	$unwatch = $scope.$watch(
+	    function() {
+		return ($scope.actionsList.$resolved &&
+			$scope.upcomingList.$resolved &&
+			$scope.scheduledList.$resolved);
+	    },
+	    function (loadingIsComplete) {
+		$scope.isLoading = !loadingIsComplete;
+		if (loadingIsComplete) {
+		    owWaitIndicator.end_wait('quick', 'loadLists');
+		    $unwatch();
+		}
+	    });
     };
     $scope.$on('refresh_list', $scope.refreshList);
     $scope.$on('refresh-data', $scope.refreshList);

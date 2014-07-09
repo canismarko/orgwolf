@@ -936,34 +936,33 @@ describe('controllers in gtd-main.js', function() {
 	]
     });
     describe('nextActionsList controller', function() {
-	var $httpBackend
+	var $httpBackend, actionsList, upcomingList;
 	beforeEach(inject(function($rootScope, $controller, _$httpBackend_) {
 	    $httpBackend = _$httpBackend_
-	    $httpBackend.whenGET('/gtd/todostate').respond(200, dummyStates);
-	    $httpBackend.whenGET('/gtd/context').respond(200, []);
-	    $httpBackend.whenGET('/gtd/scope').respond(200, []);
-	    // $httpBackend.whenGET(/\/gtd\/nodes?[^t]?.*/).respond(201, []);
-	    $httpBackend.whenGET('/gtd/nodes?field_group=actions_list&todo_state=2').respond(201, []);
-	    $httpBackend.whenGET(/\/gtd\/nodes\?field_group=actions_list&todo_state=2&upcoming=[-0-9]+/)
-		.respond(201, []);
-	    $httpBackend.whenGET(/\/gtd\/nodes\?field_group=actions_list&scheduled_date__lte=[-0-9]+&todo_state=8/)
-	    	.respond(201, []);
-	    $scope = $rootScope.$new();
-	    $controller('nextActionsList', {$scope: $scope});
-	    $httpBackend.flush();
-	    $scope.actionsList = [
+	    actionsList = [
 		{id: 1,
 		 scope: [1],
 		 todo_state: 2},
 		{id: 2,
 		 scope: []},
 	    ];
-	    $scope.upcomingList = [
+	    upcomingList = [
 		{id: 2,
 		 scope: [1]},
 		{id: 3,
 		 scope: []},
 	    ];
+	    $httpBackend.whenGET('/gtd/todostate').respond(200, dummyStates);
+	    $httpBackend.whenGET('/gtd/context').respond(200, []);
+	    $httpBackend.whenGET('/gtd/scope').respond(200, []);
+	    // $httpBackend.whenGET(/\/gtd\/nodes?[^t]?.*/).respond(201, []);
+	    $httpBackend.whenGET(/\/gtd\/nodes\?field_group=actions_list&todo_state=2(&todo_state=1)?/).respond(201, actionsList);
+	    $httpBackend.whenGET(/\/gtd\/nodes\?field_group=actions_list&todo_state=2&upcoming=[-0-9]+/)
+		.respond(201, upcomingList);
+	    $httpBackend.whenGET(/\/gtd\/nodes\?field_group=actions_list&scheduled_date__lte=[-0-9]+&todo_state=8/)
+	    	.respond(201, []);
+	    $scope = $rootScope.$new();
+	    $controller('nextActionsList', {$scope: $scope});
 	}));
 	// Reset httpBackend calls
 	afterEach(function() {
@@ -971,7 +970,14 @@ describe('controllers in gtd-main.js', function() {
 	});
 	it('sets the visibleHeadings list upon initialization', function() {
 	    $scope.$digest();
-	    expect($scope.visibleHeadings.length).toEqual(3);
+	    $httpBackend.flush();
+	    expect($scope.visibleHeadings.length).toEqual(2);
+	});
+	it('sets an indicator for loading status', function() {
+	    expect($scope.$digest());
+	    expect($scope.isLoading).toBeTruthy();
+	    $httpBackend.flush();
+	    expect($scope.isLoading).toBeFalsy();
 	});
 	describe('the toggleTodoState() method', function() {
 	    it('adds the todo-state if it\'s not active', function() {

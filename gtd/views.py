@@ -82,6 +82,7 @@ class NodeView(APIView):
             'calendar': CalendarSerializer,
             'calendar_deadlines': CalendarDeadlineSerializer,
         }
+        import time
         get_dict = request.GET.copy()
         node_id = kwargs.get('pk')
         # Look for the reserved query parameters
