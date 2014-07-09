@@ -93,10 +93,6 @@ owMain.run(['$rootScope', '$resource', function($rootScope, $resource) {
     $rootScope.scopes = Scope.query();
 }]);
 
-owMain.controller('owNotifications', ['$scope', 'notifyList', function($scope, notifyList) {
-    $scope.notifyList = notifyList;
-}]);
-
 /*************************************************
 * Handler sends google analytics tracking on
 * angular route change
@@ -328,7 +324,6 @@ function listCtrl($sce, $scope, $resource, $location, $routeParams, $filter, Hea
     $scope.setVisibleHeadings = function() {
 	var currentListFilter = $filter('currentList');
 	$scope.visibleHeadings = [];
-	console.log($scope.actionsList);
 	if ( $scope.upcomingList ) {
 	    $scope.visibleHeadings = $scope.visibleHeadings.concat(
 		$scope.upcomingList);

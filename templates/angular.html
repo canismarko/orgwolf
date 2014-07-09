@@ -2,7 +2,7 @@
 
 {% block content %}
 
-<!-- Navigation and notifications -->
+<!-- Navigation -->
 <div ng-include="'{{ STATIC_URL }}header.html'"></div>
 
 <!-- Form for submitting feedback -->
@@ -30,6 +30,9 @@
 	 src="{{ STATIC_URL }}ajax-loader.gif"></img>
   </div>
 </div>
+
+<!-- Popup notifications -->
+<toaster-container></toaster-container>
 
 <!-- View for angular controller to fill in -->
 <div ng-view class="view-animate">

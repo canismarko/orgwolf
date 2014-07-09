@@ -438,33 +438,6 @@ describe('directives in gtd-directives.js', function() {
 	    $templateCache.put('/static/editable.html',
 			       '<div class="editable"></div>');
 	});
-	describe('when an existing node is being edited ([ow-heading])', function() {
-	    var notifyList;
-	    beforeEach(function() {
-		// Prepare the DOM element
-		element = $compile(
-		    '<div ow-editable ow-heading="heading"></div>'
-		)($rootScope);
-		// Fake heading for processing the directive
-		fullNode = {
-		    id: 2,
-		    title: 'full dummy node 1'
-		}
-		$rootScope.heading = {
-		    id: 2,
-		};
-		$httpBackend.expect('GET', '/gtd/nodes/2?').respond(200, fullNode);
-	    });
-	    beforeEach(inject(function($injector) {
-		notifyList = $injector.get('notifyList');
-	    }));
-
-	    it('retrieves the heading object from the server', function() {
-		$httpBackend.flush();
-		$rootScope.$digest();
-		expect(element.isolateScope().fields.title).toBe(fullNode.title);
-	    });
-	});
 	describe('when a new node is being created ([ow-parent])', function() {
 	    var parentScope;
 	    beforeEach(function() {
@@ -847,30 +820,6 @@ describe('services in gtd-services.js', function() {
 	    waitIndicator.end_wait('tests');
 	    expect(waitIndicator.waitLists['quick'].length).toEqual(0);
 	    expect(waitIndicator.waitLists['medium'].length).toEqual(0);
-	});
-    });
-
-    describe('the notify service', function() {
-	var notify, notifyList, $timeout;
-	beforeEach(inject(function($injector) {
-	    notify = $injector.get('notify');
-	    notifications = $injector.get('notifyList');
-	    $timeout = $injector.get('$timeout');
-	}));
-	it('adds a new notification to the list', function() {
-	    expect(notifications.length).toEqual(0);
-	    notify('hello, world');
-	    expect(notifications.length).toEqual(1);
-	    expect(JSON.stringify(notifications))
-		.toEqual(JSON.stringify([{
-		    msg: 'hello, world', cls: 'info'
-		}]));
-	});
-	it('removes notifications after a while', function() {
-	    notify('hello, world');
-	    expect(notifications.length).toEqual(1);
-	    $timeout.flush();
-	    expect(notifications.length).toEqual(0);
 	});
     });
 

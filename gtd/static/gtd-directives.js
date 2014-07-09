@@ -3,7 +3,7 @@
 
 var owDirectives = angular.module(
     'owDirectives',
-    ['ngAnimate', 'ngResource', 'ngCookies', 'owServices',]
+    ['ngAnimate', 'ngResource', 'ngCookies', 'owServices', 'toaster']
 );
 
 /*************************************************
@@ -214,7 +214,7 @@ owDirectives.directive('owDetails', ['$timeout', '$rootScope', function($timeout
 * is a new child.
 *
 **************************************************/
-owDirectives.directive('owEditable', ['$resource', '$rootScope', '$timeout', 'owWaitIndicator', 'Heading', 'todoStates', 'notify', function($resource, $rootScope, $timeout, owWaitIndicator, Heading, todoStates, notify) {
+owDirectives.directive('owEditable', ['$resource', '$rootScope', '$timeout', 'owWaitIndicator', 'Heading', 'todoStates', 'toaster', function($resource, $rootScope, $timeout, owWaitIndicator, Heading, todoStates, toaster) {
     // Directive creates the pieces that allow the user to edit a heading
     function link(scope, element, attrs) {
 	var defaultParent, $text, heading, $save, heading_id, parent, editorId;
@@ -278,10 +278,10 @@ owDirectives.directive('owEditable', ['$resource', '$rootScope', '$timeout', 'ow
 		newHeading = Heading.create(scope.fields);
 	    }
 	    newHeading.$promise.then(function(data) {
-		notify('Saved', 'success');
+		toaster.pop('success', "Saved");
 		scope.endEdit(newHeading);
 	    })['catch'](function(e) {
-		notify('<strong>Not saved!</strong> Check your internet connection and try again.', 'danger');
+		toaster.pop('error', "Error, not saved!", "Check your internet connection and try again.");
 		console.log('Save failed:');
 		console.log(e);
 	    });
@@ -376,7 +376,7 @@ owDirectives.directive('owScopeTabs', ['$resource', '$rootScope', '$timeout', fu
 * Directive that lets a user change the todo state
 * with a popover menu
 **************************************************/
-owDirectives.directive('owTodo', ['$rootScope', '$filter', 'todoStates', 'notify', function($rootScope, $filter, todoStates, notify) {
+owDirectives.directive('owTodo', ['$rootScope', '$filter', 'todoStates', 'toaster', function($rootScope, $filter, todoStates, toaster) {
     // Directive creates the pieces that allow the user to edit a heading
     function link(scope, element, attrs) {
 	var i, $span, $popover, $options, state, content, s, isInitialized;
@@ -397,10 +397,11 @@ owDirectives.directive('owTodo', ['$rootScope', '$filter', 'todoStates', 'notify
 			    // Notify the user that the heading is rescheduled
 			    var s = 'Rescheduled for ';
 			    s += data.scheduled_date;
-			    notify(s, 'info');
+			    toaster.pop('info', null, s);
 			}
 		    })['catch'](function(e) {
-			notify('<strong>Not saved!</strong> Check your internet connection and try again.', 'danger');
+			toaster.pop('error', "Error, not saved!",
+				    "Check your internet connection and try again.");
 			console.log('Save failed:');
 			console.log(e);
 		    });

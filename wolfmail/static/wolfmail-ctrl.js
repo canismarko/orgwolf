@@ -1,12 +1,14 @@
-/*globals document, $, jQuery, owMain, Message*/
+/*globals jQuery, angular */
 "use strict";
 var MessageFactory, owinbox, owmessage;
+
+angular.module('owMain')
 
 /*************************************************
 * Angular routing
 *
 **************************************************/
-owMain.config(
+.config(
     ['$routeProvider', '$locationProvider',
      function($routeProvider, $locationProvider) {
 	 $locationProvider.html5Mode(true);
@@ -19,21 +21,14 @@ owMain.config(
 		 templateUrl: '/static/message.html',
 		 controller: 'owMessage'
 	     });
-}]);
+}])
 
 /*************************************************
 * Angular inbox controller
 *
 **************************************************/
-owMain.controller(
-    'owInbox',
-    ['$scope', '$rootScope', '$resource',
-     'Message', 'Heading', 'owWaitIndicator', owinbox]
-);
-function owinbox($scope, $rootScope, $resource, Message, Heading, owWaitIndicator) {
+.controller('owInbox', ['$scope', '$rootScope', '$resource', 'Message', 'Heading', 'owWaitIndicator', 'toaster', function($scope, $rootScope, $resource, Message, Heading, owWaitIndicator, toaster) {
     var ds, today, get_messages;
-    // $('.ow-active').removeClass('active');
-    // $('#nav-inbox').addClass('active');
     // Date for this inbox allows user to see future dfrd msgs
     $scope.currentDate = new Date();
     $scope.$watch('currentDate', function(new_date, old_date) {
@@ -41,7 +36,7 @@ function owinbox($scope, $rootScope, $resource, Message, Heading, owWaitIndicato
     }, true);
     // Get list of messages
     $scope.get_messages = function(e) {
-	owWaitIndicator.start_wait('medium', 'get-messages');
+	owWaitIndicator.start_wait('quick', 'get-messages');
 	$scope.messages = Message.query(
 	    {in_inbox: true,
 	     rcvd_date__lte: $scope.currentDate.ow_date(),
@@ -52,7 +47,7 @@ function owinbox($scope, $rootScope, $resource, Message, Heading, owWaitIndicato
 	    owWaitIndicator.end_wait('get-messages');
 	});
 	$scope.messages.$promise['catch'](function() {
-	    $scope.notify('Could not get messages. Check your internet connection and try again', 'danger');
+	    toaster.pop('error', "Error getting messages.", "Check your internet connection and try again");
 	});
     };
     $rootScope.$on('refresh_messages', $scope.get_messages);
@@ -84,17 +79,13 @@ function owinbox($scope, $rootScope, $resource, Message, Heading, owWaitIndicato
     $scope.success = function(msg) {
 	$scope.messages.remove(msg);
     };
-}
+}])
 
 /*************************************************
 * Angular controller for viewing a specific message
 *
 **************************************************/
-owMain.controller(
-    'owMessage',
-    ['$scope', '$routeParams', '$location', 'Message', owmessage]
-);
-function owmessage($scope, $routeParams, $location, Message) {
+.controller('owMessage', ['$scope', '$routeParams', '$location', 'Message', function($scope, $routeParams, $location, Message) {
     var msg, msg_id;
     msg_id = $routeParams.msg_id;
     $scope.msg = Message.get({id: msg_id});
@@ -102,38 +93,30 @@ function owmessage($scope, $routeParams, $location, Message) {
     $scope.success = function(msg) {
 	$location.path('/wolfmail/inbox');
     };
-}
+}])
 
 /*************************************************
 * Angular controller for delivering feedback
 *
 **************************************************/
-owMain.directive('owFeedback', function() {
+.directive('owFeedback', ['$http', '$timeout', function($http, $timeout) {
     function link(scope, element, attrs) {
-	var $element, $modal;
-	$element = $(element);
-	$modal = $element.find('#feedbackModal');
+	var $modal;
+	$modal = element.find('#feedbackModal');
 	scope.feedback = {};
 	scope.send_feedback = function(feedback) {
-	    $.ajax('/feedback/', {
-		type: 'POST',
-		data: {body: feedback.text},
-		success: function() {
-		    scope.$apply(function() {
-                        // Confirmation feedback to the user
-                        scope.success = true;
-                        setTimeout(function() {
-                            scope.$apply(function() {
-                                scope.success = false;
-                                scope.feedback = {};
-                                $modal.modal('hide');
-                            });
-                        }, 1200);
-                    });
-		},
-		error: function(jqXHR, textStatus, error) {
-		    console.log(error);
-		}
+	    $http.post('/feedback/', {body: feedback.text})
+	    .success(function() {
+                // Confirmation feedback to the user
+                scope.success = true;
+		$timeout(function() {
+                    scope.success = false;
+                    scope.feedback = {};
+                    $modal.modal('hide');
+                }, 1200);
+	    })
+	    .error(function(data, status, headers) {
+		    console.log(data);
 	    });
 	};
     }
@@ -141,4 +124,4 @@ owMain.directive('owFeedback', function() {
 	link: link,
 	templateUrl: '/static/feedback-modal.html'
     };
-});
+}]);
