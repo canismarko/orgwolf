@@ -29,7 +29,7 @@ from django.utils import timezone
 
 from orgwolf.models import OrgWolfUser as User
 from orgwolf.stack import Stack
-from gtd.models import Node, TodoState, Scope
+from gtd.models import Node, TodoState, FocusArea
 
 ## Regular expressions used in this module for finding org-mode content
 # Find headings (eg * TODO [#A] Heading :tag:)

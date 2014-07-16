@@ -157,7 +157,7 @@ owServices.value(
 **************************************************/
 owServices.factory('todoStates', ['$resource', 'todoStatesList', function($resource, todoStatesList) {
     var states, TodoState;
-    TodoState = $resource('/gtd/todostate/');
+    TodoState = $resource('/gtd/todostates/');
     states = TodoState.query();
     states = todoStatesList;
     states.getState = function(stateId) {

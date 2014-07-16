@@ -28,7 +28,6 @@ class NodeAdminForm(NodeForm):
         model = gtd.Node
 
 class NodeAdmin(MPTTModelAdmin):
-# class NodeAdmin(admin.ModelAdmin):
     form = NodeAdminForm
 
 admin.site.register(gtd.TodoState)
@@ -37,4 +36,4 @@ admin.site.register(gtd.Context)
 admin.site.register(gtd.Tool)
 admin.site.register(gtd.Location)
 admin.site.register(gtd.Contact)
-admin.site.register(gtd.Scope)
+admin.site.register(gtd.FocusArea)

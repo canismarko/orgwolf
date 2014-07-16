@@ -313,8 +313,8 @@ class DeferredHandlerTest(TestCase):
             message.source_node.title,
         )
         self.assertQuerysetEqual(
-            new_node.scope.all(),
-            [repr(x) for x in message.source_node.scope.all()]
+            new_node.focus_areas.all(),
+            [repr(x) for x in message.source_node.focus_areas.all()]
         )
         self.assertEqual(
             new_node.parent.pk,

@@ -125,18 +125,6 @@ def breadcrumbs(qs, base_url):
     return mark_safe(h)
 
 @register.filter()
-def add_scope(string, scope=None):
-    """Returns a string formatted with the scope.pk
-    added in to the formatting blocks. String should resemble
-    '/example/{scope}/' where {pk} is replaced by
-    the primary key of scope."""
-    if scope:
-        scope_s = 'scope{0}'.format(scope.pk)
-        return string.format(scope=scope_s)
-    else:
-        return re.sub('{scope}/?', '', string)
-
-@register.filter()
 def upcoming_deadline(node, agenda_dt=None):
     """Pretty prints how many days until the deadline comes up"""
     return node.overdue('deadline',

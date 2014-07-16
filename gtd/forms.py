@@ -56,7 +56,7 @@ class NodeForm(forms.ModelForm):
                   'deadline_date',
                   'deadline_time',
                   'priority',
-                  'scope',
+                  'focus_areas',
                   'repeats',
                   'repeating_number',
                   'repeating_unit',
@@ -76,7 +76,7 @@ class NodeForm(forms.ModelForm):
         if parent and not self.instance.pk: # A new node with a parent
             related = parent.related_projects.all()
             self.fields['related_projects'].initial = related
-            self.fields['scope'].initial = parent.scope.all()
+            self.fields['focus_area'].initial = parent.focus_areas.all()
         # Limit todo states to those valid to the user
         self.fields['todo_state'].queryset = TodoState.get_visible(user=user)
 

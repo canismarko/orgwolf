@@ -218,7 +218,7 @@ owDirectives.directive('owEditable', ['$resource', '$rootScope', '$timeout', 'ow
     // Directive creates the pieces that allow the user to edit a heading
     function link(scope, element, attrs) {
 	var defaultParent, $text, heading, $save, heading_id, parent, editorId;
-	scope.scopes = $rootScope.scopes;
+	scope.focusAreas = $rootScope.focusAreas;
 	scope.todoStates = todoStates;
 	scope.fields = {};
 	element.addClass('ow-editable'); // For animations
@@ -234,16 +234,16 @@ owDirectives.directive('owEditable', ['$resource', '$rootScope', '$timeout', 'ow
 	    });
 	} else if ( scope.parent ) {
 	    // Else inherit some attributes from parent...
-	    scope.fields.scope = scope.parent.scope;
+	    scope.fields.focus_areas = scope.parent.focus_areas;
 	    scope.fields.priority = scope.parent.priority;
 	    scope.fields.parent = scope.parent.id;
 	} else {
 	    // ...or use defaults if no parent
-	    scope.fields.scope = [];
+	    scope.fields.focus_areas = [];
 	    scope.fields.priority = 'B';
 	    // Set Scope if a tab is active
-	    if ($rootScope.activeScope && $rootScope.activeScope.id > 0) {
-		scope.fields.scope.push($rootScope.activeScope.id);
+	    if ($rootScope.activeFocusArea && $rootScope.activeFocusArea.id > 0) {
+		scope.fields.focus_areas.push($rootScope.activeFocusArea.id);
 	    }
 	}
 	scope.priorities = [{sym: 'A',
@@ -332,43 +332,40 @@ owDirectives.directive('owEditable', ['$resource', '$rootScope', '$timeout', 'ow
 }]);
 
 /*************************************************
-* Directive that shows a list of Scopes tabs.
+* Directive that shows a list of FocusArea tabs.
 * When a tab is clicked, this directive emits the
-* 'scope-changed' signal via the scope's $emit()
-* method with the new scope as the first argument.
+* 'focus-area-changed' signal via the scope's $emit()
+* method with the new focus area as the first argument.
 *
 **************************************************/
-owDirectives.directive('owScopeTabs', ['$resource', '$rootScope', '$timeout', function($resource, $rootScope, $timeout) {
-    // Directive creates tabs that allow a user to filter by scope
+owDirectives.directive('owFocusAreaTabs', ['$resource', '$rootScope', '$timeout', function($resource, $rootScope, $timeout) {
+    // Directive creates tabs that allow a user to filter by focus area
     function link(scope, element, attrs) {
-	var nullScope = {
+	var nullFocusArea = {
 	    id: 0,
 	    display: 'All'
 	};
-	scope.owScopes = [nullScope].concat($rootScope.scopes);
-	scope.activeScope = nullScope;
-	$rootScope.activeScope = nullScope;
+	scope.owFocusAreas = [nullFocusArea].concat($rootScope.focusAreas);
+	scope.activeFocusArea = nullFocusArea;
+	$rootScope.activeFocusArea = nullFocusArea;
 	$timeout(function() {
-	    element.find('#scope-tab-0').addClass('active');
+	    element.find('#fa-tab-0').addClass('active');
 	});
 	// Tab click handler
-	scope.changeScope = function(newScope) {
-	    var emittedScope;
-	    // User has requested a different scope
-	    element.find('#scope-tab-' + scope.activeScope.id).removeClass('active');
-	    scope.activeScope = newScope;
-	    $rootScope.activeScope = newScope;
-	    element.find('#scope-tab-' + scope.activeScope.id).addClass('active');
+	scope.changeFocusArea = function(newFocusArea) {
+	    // Update UI
+	    element.find('#fa-tab-' + scope.activeFocusArea.id).removeClass('active');
+	    scope.activeFocusArea = newFocusArea;
+	    $rootScope.activeFocusArea = newFocusArea;
+	    element.find('#fa-tab-' + scope.activeFocusArea.id).addClass('active');
 	    // Send the relevant signals
-	    emittedScope = newScope.id ? newScope : null;
-	    // scope.$emit('scope-changed', emittedScope);
-	    $rootScope.$broadcast('scope-changed', emittedScope);
+	    $rootScope.$broadcast('focus-area-changed', newFocusArea);
 	};
     }
     return {
 	link: link,
 	scope: {},
-	templateUrl: '/static/scope-tabs.html'
+	templateUrl: '/static/focus-area-tabs.html'
     };
 }]);
 

@@ -271,7 +271,7 @@
 },
 {
     "pk": 1, 
-    "model": "gtd.scope", 
+    "model": "gtd.focusarea", 
     "fields": {
         "owner": null, 
         "name": "Personal", 
@@ -280,7 +280,7 @@
 },
 {
     "pk": 2, 
-    "model": "gtd.scope", 
+    "model": "gtd.focusarea", 
     "fields": {
         "owner": null, 
         "name": "Work", 

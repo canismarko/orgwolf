@@ -27,7 +27,7 @@ owMain.config(
 		 controller: 'nextActionsList',
 		 reloadOnSearch: false,
 	     }).
-	     when('/gtd/project/', {
+	     when('/gtd/projects/', {
 		 templateUrl: '/static/project-outline.html',
 		 controller: 'nodeOutline'
 	     }).
@@ -40,7 +40,7 @@ owMain.config(
 		 controller: 'calendar'
 	     }).
 	     when('/', {
-		 redirectTo: '/gtd/project/'
+		 redirectTo: '/gtd/projects/'
 	     });
 }]);
 
@@ -84,13 +84,13 @@ function owConfig($httpProvider, $locationProvider) {
 **************************************************/
 owMain.run(['$rootScope', '$resource', function($rootScope, $resource) {
     // Get todo states
-    var TodoState, Context, Scope, getState;
+    var TodoState, Context, FocusArea, getState;
     // Get list of contexts for filtering against
-    Context = $resource('/gtd/context/');
+    Context = $resource('/gtd/contexts/');
     $rootScope.contexts = Context.query();
     // Get list of scopes for tabs
-    Scope = $resource('/gtd/scope/');
-    $rootScope.scopes = Scope.query();
+    FocusArea = $resource('/gtd/focusareas/');
+    $rootScope.focusAreas = FocusArea.query();
 }]);
 
 /*************************************************
@@ -248,9 +248,9 @@ function outlineCtrl($scope, $rootScope, $http, $resource, $filter, Heading,
     };
     // Respond to refresh-data signals (logging in, etc)
     $scope.$on('refresh-data', getHeadings);
-    // Handler for changing the scope
-    $scope.$on('scope-changed', function(e, newScope) {
-	$scope.activeScope = newScope;
+    // Handler for changing the focus area
+    $scope.$on('focus-area-changed', function(e, newFocusArea) {
+	$scope.activeFocusArea = newFocusArea;
     });
 }
 
@@ -349,9 +349,6 @@ function listCtrl($sce, $scope, $resource, $location, $routeParams, $filter, Hea
 	owWaitIndicator.start_wait('quick', 'loadLists');
 	$scope.completedRequests = [];
 	$scope.actionsList = Heading.query($scope.list_params);
-	$scope.actionsList.$promise.then(function() {
-	    console.log($scope.actionsList);
-	});
 	upcomingParams = angular.extend(
 	    {upcoming: $scope.currentDate.ow_date()},
 	    $scope.list_params);
@@ -380,9 +377,9 @@ function listCtrl($sce, $scope, $resource, $location, $routeParams, $filter, Hea
     };
     $scope.$on('refresh_list', $scope.refreshList);
     $scope.$on('refresh-data', $scope.refreshList);
-    // Receiver for when the active scope changes (by clicking a tab)
-    $scope.$on('scope-changed', function(e, newScope) {
-	$scope.activeScope = newScope;
+    // Receiver for when the active focus area changes (by clicking a tab)
+    $scope.$on('focus-area-changed', function(e, newFocusArea) {
+	$scope.activeFocusArea = newFocusArea;
     });
     // Todo state filtering
     $scope.toggleTodoState = function(targetState) {
@@ -596,9 +593,8 @@ owMain.controller('search', ['$scope', '$location', 'Heading', function($scope, 
     // Callback for styling rendered events
     $scope.renderEvent = function(event, element) {
 	// Verify if in active Scope
-	console.log($scope.activeScope);
-	if ($scope.activeScope && $scope.activeScope.id > 0) {
-	    if (event.scope.indexOf($scope.activeScope.id) === -1) {
+	if ($scope.activeFocusArea && $scope.activeFocusArea.id > 0) {
+	    if (event.focus_areas.indexOf($scope.activeFocusArea.id) === -1) {
 		return false;
 	    }
 	}
@@ -626,15 +622,11 @@ owMain.controller('search', ['$scope', '$location', 'Heading', function($scope, 
 	    Heading.update(newData);
 	}
     };
-    // Respond to changes in activeScope
-    $scope.$on('scope-changed', function(e, newScope) {
+    // Respond to changes in activeFocusArea
+    $scope.$on('focus-area-changed', function(e, newFocusArea) {
 	var i, newList;
-	$scope.activeScope = newScope;
+	$scope.activeFocusArea = newFocusArea;
 	$scope.owCalendar.fullCalendar('rerenderEvents');
-	// for (i=0; i<$scope.activeCalendars.length; i+=1) {
-	//     newList = $filter('scope')($scope.activeCalendars[i].allEvents);
-	//     $scope.activeCalendars[i].events = newList;
-	// }
     });
     // Calendar config object
     $scope.calendarOptions = {

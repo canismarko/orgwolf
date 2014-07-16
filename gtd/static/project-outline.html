@@ -34,19 +34,16 @@
 
   </div><!-- /.container -->
 
-  <div ow-scope-tabs active-scope="activeScope">
+  <div ow-focus-area-tabs active-focus-area="activeFocusArea">
   </div>
 
   <div class="outline">
     <div ow-editable ng-if="newProject"></div>
     <div ow-twisty ow-heading="heading"
-	 ng-repeat="heading in children | currentScope:activeScope |order:sortField"
+	 ng-repeat="heading in children | currentFocusArea:activeFocusArea | order:sortField"
 	 ng-if="!heading.archived || showArchived"></div>
   </div>
 
 </div><!-- /#outline-appliance -->
-
-<!-- <\!-- Inline dialog to allow heading edits -\-> -->
-<!-- <script type="text/ng-template" id="editable"> -->
 
 <!-- </script> -->

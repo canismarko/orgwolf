@@ -174,21 +174,6 @@ owFilters.filter('currentList', function() {
     };
 });
 
-/*************************************************
-* Filter that only shows headings that are visible
-* in the current scope.
-*
-**************************************************/
-owFilters.filter('currentScope', function() {
-    return function(headings, activeScope) {
-	if ( activeScope ) {
-	    headings = headings.filter(function(h) {
-		return h.scope.indexOf(activeScope.id) > -1;
-	    });
-	}
-	return headings;
-    };
-});
 
 /*************************************************
 * Filter that displays the deadline for a heading
@@ -282,21 +267,27 @@ owFilters.filter('duration', function() {
 });
 
 /*************************************************
-* Filter a list (of headings) by the active scope
+* Filter a list (of headings) by the active
+* focus area
 *
 **************************************************/
-owFilters.filter('scope', function($rootScope) {
-    return function(oldList, activeScope) {
-	var i, newList;
-	// Get activeScope if not supplied by caller
-	if (typeof activeScope === 'undefined' && $rootScope.activeScope) {
-	    activeScope = $rootScope.activeScope.id;
+owFilters.filter('currentFocusArea', function($rootScope) {
+    return function(oldList, activeFocusArea) {
+	var i, newList, activeId;
+	// Get id of active focus area if not supplied by caller
+	if (typeof activeFocusArea === 'undefined' && $rootScope.activeFocusArea) {
+	    activeId = parseInt($rootScope.activeFocusArea.id, 10);
+	} else if (activeFocusArea) {
+	    // Filter by the active focus area
+	    activeId = parseInt(activeFocusArea.id, 10);
+	} else {
+	    activeId = 0;
 	}
-	// Filter by the activeScope
-	if (activeScope) {
+	// Now do the actual filtering
+	if (activeId) {
 	    newList = [];
 	    for (i=0; i<oldList.length; i+=1) {
-		if( oldList[i].scope.indexOf(activeScope) > -1 ) {
+		if( oldList[i].focus_areas.indexOf(activeId) > -1 ) {
 		    newList.push(oldList.slice(i, i+1)[0]);
 		}
 	    }

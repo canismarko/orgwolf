@@ -43,12 +43,12 @@ from django.views.generic import View
 from rest_framework.renderers import JSONRenderer
 
 from gtd.models import Node, TodoState
-from gtd.models import Context, Scope
+from gtd.models import Context, FocusArea
 from gtd.serializers import (NodeSerializer, CalendarSerializer,
                              CalendarDeadlineSerializer)
-from gtd.shortcuts import parse_url, generate_url, order_nodes, load_fixture
+from gtd.shortcuts import order_nodes, load_fixture
 from gtd.templatetags.gtd_extras import escape_html
-from gtd.templatetags.gtd_extras import add_scope, breadcrumbs
+from gtd.templatetags.gtd_extras import breadcrumbs
 from gtd.views import NodeView
 from orgwolf.models import OrgWolfUser as User
 from plugins.deferred import MessageHandler as DeferredMessageHandler
@@ -115,14 +115,14 @@ class NodeMutators(TestCase):
     def test_set_fields(self):
         node = Node.objects.get(pk=1)
         node.set_fields(
-            {'scope': [3]}
+            {'focus_areas': [3]}
         )
         self.assertEqual(
-            node.scope.all().count(),
+            node.focus_areas.all().count(),
             1
         )
         self.assertEqual(
-            node.scope.all().first().pk,
+            node.focus_areas.all().first().pk,
             3
         )
 
@@ -219,26 +219,29 @@ class NodeSignals(TestCase):
     """Test Node models signals, for example pre_save"""
     fixtures = ['test-users.json', 'gtd-test.json', 'gtd-env.json']
 
-    def test_descendants_add_scopes(self):
-        """Changing the Scope of a Node should update all its descendants"""
+    def test_descendants_add_focus_areas(self):
+        """
+        Check that changing the focus_areas of a Node
+        updates all its descendants.
+        """
         parent = Node.objects.get(pk=1)
         child = parent.get_descendants().first()
-        new_scope = Scope.objects.get(pk=3)
-        parent.scope.add(new_scope)
+        new_focus_area = FocusArea.objects.get(pk=3)
+        parent.focus_areas.add(new_focus_area)
         self.assertTrue(
-            child.scope.filter(pk=new_scope.pk).exists(),
-            'New scope not added to child Node'
+            child.focus_areas.filter(pk=new_focus_area.pk).exists(),
+            'New focus_area not added to child Node'
         )
 
-    def test_descendants_remove_scopes(self):
-        """Changing the Scope of a Node should update all its descendants"""
+    def test_descendants_remove_focus_areas(self):
+        """Changing the FocusArea of a Node should update all its descendants"""
         parent = Node.objects.get(pk=1)
         child = parent.get_descendants().first()
-        old_scope = Scope.objects.get(pk=1)
-        parent.scope.remove(old_scope)
+        old_focus_area = FocusArea.objects.get(pk=1)
+        parent.focus_areas.remove(old_focus_area)
         self.assertFalse(
-            child.scope.filter(pk=old_scope.pk).exists(),
-            'New scope not removed from child Node'
+            child.focus_areas.filter(pk=old_focus_area.pk).exists(),
+            'New focus_area not removed from child Node'
         )
 
 
@@ -510,8 +513,8 @@ class Shortcuts(TestCase):
             response_dict['fields']['priority']
             )
         self.assertEqual(
-            list(node.scope.values_list('pk', flat=True)),
-            response_dict['fields']['scope']
+            list(node.focus_areas.values_list('pk', flat=True)),
+            response_dict['fields']['focus_areas']
             )
         self.assertEqual(
             node.repeats,
@@ -621,138 +624,44 @@ class NodePermissions(TestCase):
         )
 
 
-class UrlParse(TestCase):
-    """Tests for the gtd url_parser that extracts context and scope information
-    from the URL string and returns it as a useful dictionary."""
+class FocusAreaAPI(TestCase):
     fixtures = ['test-users.json', 'gtd-test.json', 'gtd-env.json']
 
     def setUp(self):
-        pass
-
-    def test_function_exists(self):
-        self.assertEqual(parse_url.__class__.__name__, 'function')
-        return_value = parse_url('')
-        self.assertEqual(return_value.__class__.__name__, 'dict')
-
-    def test_processes_context(self):
-        context2 = Context.objects.get(pk=2)
-        # Successfully finds an existing context
-        self.assertEqual(context2, parse_url('/context2/')['context'])
-        # Non-existent context raises 404
-        self.assertRaises(
-            Http404,
-            parse_url,
-            '/context99/'
-            )
-        # Finds a context if mixed in with scope
-        self.assertEqual(context2, parse_url('/scope1/context2/')['context'])
-
-    def test_processes_scope(self):
-        scope1 = Scope.objects.get(pk=1)
-        # Successfully finds an existing scope
-        self.assertEqual(scope1, parse_url('/scope1/')['scope'])
-        # Non-existent scope raises 404
-        self.assertRaises(
-            Http404,
-            parse_url,
-            '/scope99/'
-            )
-        # Finds a context if mixed in with scope
-        self.assertEqual(scope1, parse_url('/scope1/context1/')['scope'])
-
-    def test_processes_states(self):
-        hard = TodoState.objects.get(pk=8)
-        self.assertEqual(
-            hard,
-            parse_url('/hard/next/')['todo_states'][0]
-            )
-        self.assertEqual(
-            hard,
-            parse_url('/hard/scope1/context1/')['todo_states'][0]
-            )
-
-    def test_processes_parents(self):
-        node = Node.objects.get(pk=1)
-        self.assertEqual(
-            node,
-            parse_url('/parent1/')['parent']
-            )
-        self.assertEqual(
-            node,
-            parse_url('/parent1/next/')['parent']
-            )
-
-    def test_bad_urls(self):
-        """Tests to make sure that the system properly raises
-        404 errors when bad urls are passed"""
-        bad_urls = ['/junk/',
-                    '/junk/scope1/',
-                    '/scope1/junk/',
-                    ]
-        for url in bad_urls:
-            self.assertRaises(
-                Http404,
-                parse_url,
-                url)
-
-
-class ScopeFilter(TestCase):
-    fixtures = ['gtd-env.json']
-
-    def setUp(self):
-        self.s = '/gtd/lists/{scope}/'
-
-    def test_basic_scope(self):
-        scope = Scope.objects.get(pk=1)
-        self.assertEqual(
-            '/gtd/lists/scope1/',
-            add_scope(self.s, scope)
-            )
-
-    def test_no_scope(self):
-        self.assertEqual(
-            '/gtd/lists/',
-            add_scope(self.s)
-            )
-
-
-class ScopeAPI(TestCase):
-    fixtures = ['test-users.json', 'gtd-test.json', 'gtd-env.json']
-
-    def setUp(self):
-        self.url = reverse('scope_api');
+        self.url = reverse('focus_area_api');
         self.user = User.objects.get(username='test')
         self.assertTrue(
             self.client.login(
                 username=self.user.username, password='secret')
         )
-        self.scopes = Scope.objects.filter(owner=self.user)
-        self.scopes = Scope.objects.filter(owner=None) | self.scopes
+        self.focus_areas = FocusArea.objects.filter(owner=self.user)
+        self.focus_areas = (FocusArea.objects.filter(owner=None)
+                            | self.focus_areas)
 
-    def test_get_scope_collection(self):
+    def test_get_focus_area_collection(self):
         response = self.client.get(self.url)
-        expected = self.scopes.values()
+        expected = self.focus_areas.values()
         self.assertEqual(
             [x['id'] for x in json.loads(response.content)],
             [x['id'] for x in expected],
         )
 
-    def test_get_scope_anonymous(self):
-        # Does the Scope interface return public scopes if user not logged in
+    def test_get_focus_area_anonymous(self):
+        # Does the Focus Area interface return public focus if not logged in
         self.client.logout()
         response = self.client.get(self.url)
-        expected = Scope.objects.filter(owner=None)
+        expected = FocusArea.objects.filter(owner=None)
         self.assertEqual(
             [x['id'] for x in json.loads(response.content)],
             [x.pk for x in expected],
         )
 
-    def test_scope_get_visible(self):
+    def test_focus_area_get_visible(self):
         expected = []
-        for scope in self.scopes:
-            expected.append(repr(scope))
+        for focus_area in self.focus_areas:
+            expected.append(repr(focus_area))
         self.assertQuerysetEqual(
-            Scope.get_visible(user=self.user),
+            FocusArea.get_visible(user=self.user),
             expected,
             ordered=False,
         )
@@ -883,84 +792,6 @@ class OverdueFilter(TestCase):
             'in 2 days')
 
 
-class UrlGenerate(TestCase):
-    """Tests for the gtd url_generator that returns a URL string based
-    on scope/context/etc."""
-    fixtures = ['test-users.json', 'gtd-test.json', 'gtd-env.json']
-
-    def test_meta(self):
-        """Test if it exists and returns a string"""
-        self.assertEqual(
-            'function',
-            generate_url.__class__.__name__
-            )
-        self.assertTrue(
-            isinstance(generate_url(), unicode),
-            'generate_url() did not return string. Got {0}'.format(
-                generate_url().__class__
-                )
-            )
-
-    def test_individual_entries(self):
-        """Test passing each parameter type one at a time"""
-        state1 = TodoState.objects.get(pk=1)
-        self.assertEqual(
-            '/{0}/'.format(state1.abbreviation.lower()),
-            generate_url(todo=state1)
-            )
-        states = TodoState.objects.filter(pk__lte = 2)
-        expected_url = '/'
-        for state in states:
-            expected_url += '{0}/'.format(state.abbreviation.lower())
-        self.assertEqual(
-            expected_url,
-            generate_url(todo=states)
-            )
-        # Scope
-        scope = Scope.objects.get(pk=1)
-        self.assertEqual(
-            '/scope{0}/'.format(scope.pk),
-            generate_url(scope=scope)
-            )
-        # Context
-        context = Context.objects.get(pk=1)
-        self.assertEqual(
-            '/context{0}/'.format(context.pk),
-            generate_url(context=context)
-            )
-        # Parent
-        parent = Node.objects.get(pk=2)
-        self.assertEqual(
-            '/parent{0}/'.format(parent.pk),
-            generate_url(parent=parent)
-            )
-
-    def test_multiple_entries(self):
-        """Test various combinations of parameters to generate_url"""
-        states = TodoState.objects.filter(pk__lte = 2)
-        todo_url = ''
-        for state in states:
-            todo_url += '{0}/'.format(state.abbreviation.lower())
-        scope = Scope.objects.get(pk=1)
-        context = Context.objects.get(pk=1)
-        parent = Node.objects.get(pk=2)
-        expected_url = '/parent{0}/{todo}scope{1}/context{2}/'.format(
-            parent.pk,
-            scope.pk,
-            context.pk,
-            todo=todo_url
-            )
-        self.assertEqual(
-            expected_url,
-            generate_url(
-                scope=scope,
-                context=context,
-                todo=states,
-                parent=parent
-                )
-            )
-
-
 class TodoStateRetrieval(TestCase):
     """Tests the methods of TodoState that retrieves the list of "in play"
     todo states.
@@ -1030,13 +861,13 @@ class ListViewQueryset(TestCase):
             ordered=False,
         )
 
-    def test_filter_scope(self):
-        scope = Scope.objects.get(pk=1)
-        request = self.factory.get(self.url, {'scope': scope.pk})
+    def test_filter_focus_area(self):
+        focus_area = FocusArea.objects.get(pk=1)
+        request = self.factory.get(self.url, {'focus_area': focus_area.pk})
         request.user = self.user
         qs = self.view.get_actions_list(request)
         expected = Node.objects.assigned(self.user)
-        expected = expected.filter(scope=scope)
+        expected = expected.filter(focus_areas=focus_area)
         self.assertQuerysetEqual(
             qs,
             [repr(x) for x in expected],
@@ -1130,7 +961,7 @@ class ListAPI(TestCase):
         included = ['id', 'tree_id', 'todo_state', 'tag_string', 'slug',
                     'deadline_date', 'deadline_time',
                     'scheduled_date', 'scheduled_time',
-                    'root_id', 'root_name', 'scope', 'priority',
+                    'root_id', 'root_name', 'focus_areas', 'priority',
                     'repeats']
         response = self.client.get(
             reverse('node_object'),

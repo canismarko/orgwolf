@@ -20,26 +20,28 @@
 
 from django.conf.urls import patterns, url
 
+from gtd import views as gtd_views
 from orgwolf.views import AngularView
 
 # Uncomment the next two lines to enable the admin:
 from django.contrib import admin
 admin.autodiscover()
 
-from gtd.views import NodeView, TodoStateView, ScopeView, ContextView
+# from gtd.views import NodeView, TodoStateView, FocusAreaView, ContextView
 
 urlpatterns = patterns(
     'gtd.views',
 
     # urls for angular pages
-    url(r'^project/?$', AngularView.as_view(), name='projects'),
+    url(r'^projects/?$', AngularView.as_view(), name='projects'),
     url(r'^actions(?:/\d+/[-A-Za-z0-9_]+)?/?$',
         AngularView.as_view(), name='list_display'),
 
     # Urls for api entry points
-    url(r'^nodes(?:/(?P<pk>\d+))?/?$', NodeView.as_view(), name='node_object'),
-    url(r'^todostate(?:/(?P<pk>\d+))?/?$',
-        TodoStateView.as_view(), name='todo_state'),
-    url(r'^scope/?$', ScopeView.as_view(), name='scope_api'),
-    url(r'^context/?$', ContextView.as_view(), name='context_api',),
+    url(r'^nodes(?:/(?P<pk>\d+))?/?$',
+        gtd_views.NodeView.as_view(), name='node_object'),
+    url(r'^todostates(?:/(?P<pk>\d+))?/?$',
+        gtd_views.TodoStateView.as_view(), name='todo_state'),
+    url(r'^focusareas/?$', gtd_views.FocusAreaView.as_view(), name='focus_area_api'),
+    url(r'^contexts/?$', gtd_views.ContextView.as_view(), name='context_api',),
 )

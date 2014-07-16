@@ -22,12 +22,12 @@ import datetime as dt
 
 from rest_framework import serializers
 
-from gtd.models import Context, Scope, Node, TodoState
+from gtd.models import Context, FocusArea, Node, TodoState
 
 
-class ScopeSerializer(serializers.ModelSerializer):
+class FocusAreaSerializer(serializers.ModelSerializer):
     class Meta:
-        model = Scope
+        model = FocusArea
 
 
 class TodoStateSerializer(serializers.ModelSerializer):
@@ -39,7 +39,8 @@ class TodoStateSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = TodoState
-        fields = ['id', 'color', 'actionable', 'abbreviation', 'closed', 'display_text']
+        fields = ['id', 'color', 'actionable', 'abbreviation',
+                  'closed', 'display_text']
 
 
 class ContextSerializer(serializers.ModelSerializer):
@@ -55,7 +56,8 @@ class NodeSerializer(serializers.ModelSerializer):
         self.request = request
         if kwargs.get('many', False):
             # Prefetch related fields only if passing a queryset
-            qs = qs.select_related('owner').prefetch_related('scope', 'users')
+            qs = qs.select_related('owner')
+            qs = qs.prefetch_related('focus_areas', 'users')
         return super(NodeSerializer, self).__init__(qs, *args, **kwargs)
 
     def get_read_only(self, obj):
@@ -76,7 +78,7 @@ class NodeListSerializer(NodeSerializer):
     class Meta:
         model = Node
         fields = ['id', 'title', 'todo_state', 'tag_string',
-                  'slug', 'scope', 'root_id', 'root_name', 'priority',
+                  'slug', 'focus_areas', 'root_id', 'root_name', 'priority',
                   'deadline_date', 'deadline_time',
                   'scheduled_date', 'scheduled_time',
                   'tree_id', 'lft', 'rght',
@@ -96,7 +98,7 @@ class NodeOutlineSerializer(NodeSerializer):
     class Meta:
         model = Node
         fields = ['title', 'tag_string', 'lft', 'rght', 'id', 'priority',
-                  'scope', 'level', 'archived', 'todo_state', 'repeats',
+                  'focus_areas', 'level', 'archived', 'todo_state', 'repeats',
                   'scheduled_date', 'read_only']
 
 
@@ -151,7 +153,8 @@ class CalendarSerializer(NodeSerializer):
 
     class Meta:
         model = Node
-        fields = ['title', 'id', 'start', 'end', 'allDay', 'repeats', 'scope']
+        fields = ['title', 'id', 'start', 'end', 'allDay',
+                  'repeats', 'focus_areas']
 
 
 class CalendarDeadlineSerializer(CalendarSerializer):

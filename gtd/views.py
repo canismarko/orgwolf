@@ -43,10 +43,9 @@ from rest_framework.response import Response
 from rest_framework import mixins, generics
 
 from gtd.forms import NodeForm
-from gtd.models import TodoState, Node, Context, Scope
-from gtd.shortcuts import (parse_url, generate_url, get_todo_abbrevs,
-                           order_nodes)
-from gtd.serializers import (ContextSerializer, ScopeSerializer,
+from gtd.models import TodoState, Node, Context, FocusArea
+from gtd.shortcuts import get_todo_abbrevs, order_nodes
+from gtd.serializers import (ContextSerializer, FocusAreaSerializer,
                              TodoStateSerializer, NodeSerializer,
                              NodeListSerializer, NodeOutlineSerializer,
                              CalendarSerializer, CalendarDeadlineSerializer)
@@ -166,10 +165,10 @@ class NodeView(APIView):
         for todo_state in todo_states_params:
             final_Q = final_Q | Q(todo_state=todo_state)
         nodes = nodes.filter(final_Q)
-        # Filter by Scope
-        scope = request.GET.get('scope', None)
-        if scope:
-            nodes = nodes.filter(scope=scope)
+        # Filter by FocusArea
+        focus_area = request.GET.get('focus_area', None)
+        if focus_area:
+            nodes = nodes.filter(focus_areas=focus_area)
         # Filter by context
         context_id = request.GET.get('context', None)
         if context_id == '0':
@@ -296,11 +295,11 @@ class TodoStateView(mixins.ListModelMixin,
             return self.list(request, *args, **kwargs)
 
 
-class ScopeView(APIView):
-    """RESTful interaction with the gtd.Scope object"""
+class FocusAreaView(APIView):
+    """RESTful interaction with the gtd.FocusArea object"""
     def get(self, request, *args, **kwargs):
-        scopes = Scope.get_visible(request.user)
-        serializer = ScopeSerializer(scopes, many=True)
+        focus_areas = FocusArea.get_visible(request.user)
+        serializer = FocusAreaSerializer(focus_areas, many=True)
         return Response(serializer.data)
 
 

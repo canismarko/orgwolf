@@ -168,7 +168,7 @@ describe('directives in wolfmail-directives.js', function() {
 	beforeEach(function() {
 	    $rootScope.heading = {id: 1};
 	    element = $compile('<div ow-message-heading></div>')($rootScope);
-	    $httpBackend.whenGET('/gtd/todostate').respond(200, []);
+	    $httpBackend.whenGET('/gtd/todostates').respond(200, []);
 	});
 	it('responds to the finishEdit signal', function() {
 	    $rootScope.$digest();
@@ -252,8 +252,8 @@ describe('wolfmail-ctrl.js', function() {
 	$scope = $rootScope.$new();
 	dummyMessages = [{id: 1}];
 	$httpBackend = $injector.get('$httpBackend');
-	$httpBackend.whenGET('/gtd/context').respond(200, []);
-	$httpBackend.whenGET('/gtd/scope').respond(200, []);
+	$httpBackend.whenGET('/gtd/contexts').respond(200, []);
+	$httpBackend.whenGET('/gtd/focusareas').respond(200, []);
 	$httpBackend.whenGET(/\/wolfmail\/message\?.*/).respond(200, dummyMessages);
 	$httpBackend.whenGET(/\/gtd\/nodes.*/).respond(200, []);
     }));
