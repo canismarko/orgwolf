@@ -2,18 +2,19 @@
 "use strict";
 var HeadingFactory;
 
-var owServices = angular.module(
+angular.module(
     'owServices',
     ['ngResource', 'toaster']
-);
+)
 
 /*************************************************
 * Factory returns the persona navigator for
 * login/logout functions.
 *
 **************************************************/
-owServices.value('personaUser', null); // Default value, override in django
-owServices.factory('personaNavigator', ['personaUser', '$rootScope', '$http', 'owWaitIndicator', 'activeState', function(personaUser, $rootScope, $http, owWaitIndicator, activeState) {
+.value('personaUser', null) // Default value, override in django
+
+.factory('personaNavigator', ['personaUser', '$rootScope', '$http', 'owWaitIndicator', 'activeState', function(personaUser, $rootScope, $http, owWaitIndicator, activeState) {
     if ( typeof navigator.id !== 'undefined' ) {
 	// Setup the persona navigator before linking the directive
 	navigator.id.watch({
@@ -52,7 +53,7 @@ owServices.factory('personaNavigator', ['personaUser', '$rootScope', '$http', 'o
 	});
     }
     return navigator;
-}]);
+}])
 
 /*************************************************
 * Factory returns an object for showing feedback
@@ -60,7 +61,7 @@ owServices.factory('personaNavigator', ['personaUser', '$rootScope', '$http', 'o
 * are rendered using the waitFeedback directive.
 *
 **************************************************/
-owServices.factory('owWaitIndicator', ['$rootScope', function($rootScope) {
+.factory('owWaitIndicator', ['$rootScope', function($rootScope) {
     var obj, end_wait;
     // Object contains lists and accessors for those lists
     obj = {
@@ -98,19 +99,18 @@ owServices.factory('owWaitIndicator', ['$rootScope', function($rootScope) {
 	}
     };
     return obj;
-}]);
+}])
 
 /*************************************************
 * Factory creates GtdHeading objects
 *
 **************************************************/
-owServices.factory('OldHeading', ['$resource', '$http', function($resource, $http) {
-    return function(data) {
-        return new GtdHeading(data);
-    };
-}]);
-owServices.factory('Heading', ['$resource', HeadingFactory]);
-function HeadingFactory($resource) {
+// .factory('OldHeading', ['$resource', '$http', function($resource, $http) {
+//     return function(data) {
+//         return new GtdHeading(data);
+//     };
+// }])
+.factory('Heading', ['$resource', function($resource) {
     var res = $resource(
 	'/gtd/nodes/:id/',
 	{id: '@id',
@@ -121,14 +121,14 @@ function HeadingFactory($resource) {
 	}
     );
     return res;
-}
+}])
 
 /*************************************************
 * Default todo states. Override in template from
 * server.
 *
 **************************************************/
-owServices.value(
+.value(
     'todoStatesList',
     [
 	{id: 1,
@@ -149,13 +149,13 @@ owServices.value(
 	 }
 	},
     ]
-);
+)
 
 /*************************************************
 * Factory returns the request todoStates
 *
 **************************************************/
-owServices.factory('todoStates', ['$resource', 'todoStatesList', function($resource, todoStatesList) {
+.factory('todoStates', ['$resource', 'todoStatesList', function($resource, todoStatesList) {
     var states, TodoState;
     TodoState = $resource('/gtd/todostates/');
     states = TodoState.query();
@@ -173,4 +173,12 @@ owServices.factory('todoStates', ['$resource', 'todoStatesList', function($resou
 	return foundState;
     };
     return states;
+}])
+
+/*************************************************
+* Factory returns all the available focus areas
+*
+**************************************************/
+.factory('focusAreas', ['$resource', function($resource) {
+    return $resource('/gtd/focusareas/').query();
 }]);

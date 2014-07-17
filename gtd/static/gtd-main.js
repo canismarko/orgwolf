@@ -83,14 +83,10 @@ function owConfig($httpProvider, $locationProvider) {
 *
 **************************************************/
 owMain.run(['$rootScope', '$resource', function($rootScope, $resource) {
-    // Get todo states
     var TodoState, Context, FocusArea, getState;
     // Get list of contexts for filtering against
     Context = $resource('/gtd/contexts/');
     $rootScope.contexts = Context.query();
-    // Get list of scopes for tabs
-    FocusArea = $resource('/gtd/focusareas/');
-    $rootScope.focusAreas = FocusArea.query();
 }]);
 
 /*************************************************

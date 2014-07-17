@@ -132,14 +132,18 @@
     {% endif %}
     {% block script %}
     <script type="text/javascript">
+angular.module('owServices')
       {% if request.user.is_authenticated %}
 // Page specific persona setup
-owServices.value('personaUser', "{{ request.user.username }}");
-angular.module('owServices').run(function(activeState) {
+.value('personaUser', "{{ request.user.username }}")
+.run(function(activeState) {
     activeState.user = {{ request.user.id }};
-});
+})
       {% endif %}
-      $(document).ready(function() {
+.value('todoStatesList',
+       {% todo_states_json %}
+      )
+$(document).ready(function() {
 
 	// Google analytics
 	{% if not debug %}
@@ -152,10 +156,6 @@ angular.module('owServices').run(function(activeState) {
 	ga('send', 'pageview');
 	{% endif %}
     });
-    owServices.value(
-	'todoStatesList',
-	{% todo_states_json %}
-    );
     owFilters.value('staticUrl', '{{ STATIC_URL }}');
 
     </script>

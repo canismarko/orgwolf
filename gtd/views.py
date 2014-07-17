@@ -298,6 +298,7 @@ class TodoStateView(mixins.ListModelMixin,
 class FocusAreaView(APIView):
     """RESTful interaction with the gtd.FocusArea object"""
     def get(self, request, *args, **kwargs):
+        import time
         focus_areas = FocusArea.get_visible(request.user)
         serializer = FocusAreaSerializer(focus_areas, many=True)
         return Response(serializer.data)

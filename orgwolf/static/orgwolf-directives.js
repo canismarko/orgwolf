@@ -1,7 +1,9 @@
-/*globals owDirectives, $ */
+/*globals angular, $ */
 "use strict";
 
-owDirectives.directive('owNavbar', ['$location', '$cookies', function($location, $cookies) {
+angular.module('owDirectives')
+
+.directive('owNavbar', ['$location', '$cookies', function($location, $cookies) {
     function link(scope, element, attrs) {
 	var regexps;
 	regexps = {
