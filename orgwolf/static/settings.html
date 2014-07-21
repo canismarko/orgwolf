@@ -1,0 +1,43 @@
+<!-- Load javascript for Google+ signin -->
+<script src="//ajax.googleapis.com/ajax/libs/jquery/1.8.3/jquery.min.js" type="text/javascript"></script>
+<script type="text/javascript">
+    (function () {
+        var po = document.createElement('script');
+        po.type = 'text/javascript';
+        po.async = true;
+        po.src = 'https://plus.google.com/js/client:plusone.js?onload=start';
+        var s = document.getElementsByTagName('script')[0];
+        s.parentNode.insertBefore(po, s);
+    })();
+</script>
+
+<div class="settings">
+
+  <h1>Settings</h1>
+  <h2>Linked Accounts</h2>
+  <ul ng-repeat="account in linkedAccounts">
+    <li>{{ account.handler_path }}
+      <button class="btn btn-default" ng-click="disconnectAccount(account)">
+	<span class="glyphicon glyphicon-trash"></span>
+	Delete</button>
+    </li>
+  </ul>
+
+  <h3>Add New</h3>
+  <ul>
+    <li ng-repeat="provider in providers"
+	class="social-button {{ provider.button_type }}"
+	ng-click="addAccount(provider)">
+      <span ng-show="provider.button_type==='Google'"
+	    class="g-signin"
+	    data-scope="{{ provider.plus_scope}}"
+	    data-clientid="{{ provider.plus_id }}"
+            data-redirecturi="postmessage"
+            data-accesstype="offline"
+            data-cookiepolicy="single_host_origin"
+            data-callback="signInCallbacks">
+	Google
+      </span>
+    </li>
+
+</div>

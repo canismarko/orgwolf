@@ -264,7 +264,7 @@ class Priority(models.Model):
 
 
 @python_2_unicode_compatible
-class Scope(models.Model):
+class FocusArea(models.Model):
     """High-level area of focus.
     For example: work, family, health
     """
@@ -277,11 +277,11 @@ class Scope(models.Model):
 
     @staticmethod
     def get_visible(user=AnonymousUser()):
-        """Return a queryset of scopes that the user can subscribe to"""
+        """Return a queryset of focusareas that the user can subscribe to"""
         query = Q(owner=None)
         if not user.is_anonymous():
             query = query | Q(owner=user)
-        return Scope.objects.filter(query)
+        return FocusArea.objects.filter(query)
 
     def __str__(self):
         return self.display
@@ -418,7 +418,7 @@ class Node(MPTTModel):
         max_length=4, blank=True, null=True,
         choices=(('High', 'HI'),
                  ('Low', 'LO')))
-    scope = models.ManyToManyField('Scope', blank=True)
+    focus_areas = models.ManyToManyField('FocusArea', blank=True)
 
     # Info methods
     def is_todo(self):
@@ -634,14 +634,14 @@ class Node(MPTTModel):
             elif key in time_fields and value is not None:
                 # Convert to time object
                 setattr(self, key, dateutil.parser.parse(value).time())
-            elif key == 'scope':
-                # Handle scope many-to-many specially (signal handler)
-                curr_scopes = set(self.scope.values_list('id', flat=True))
-                new_scopes = set(value)
-                scopes_to_rm = list(curr_scopes-new_scopes)
-                scopes_to_add = list(new_scopes-curr_scopes)
-                self.scope.add(*scopes_to_add)
-                self.scope.remove(*scopes_to_rm)
+            elif key == 'focus_area':
+                # Handle focus_area many-to-many specially (signal handler)
+                curr_focus_areas = set(self.focus_areas.values_list('id', flat=True))
+                new_focus_areas = set(value)
+                focus_areas_to_rm = list(curr_focus_areas-new_focus_areas)
+                focus_areas_to_add = list(new_focus_areas-curr_focus_areas)
+                self.focus_areas.add(*focus_areas_to_add)
+                self.focus_areas.remove(*focus_areas_to_rm)
             # Set other things
             else:
                 setattr(self, key, value)
@@ -832,20 +832,20 @@ def auto_archive(sender, **kwargs):
                 instance.archived = True
 
 
-@receiver(signals.m2m_changed, sender=Node.scope.through)
-def update_scope(sender, instance, action, pk_set, **kwargs):
+@receiver(signals.m2m_changed, sender=Node.focus_areas.through)
+def update_focus_area(sender, instance, action, pk_set, **kwargs):
     """
-    If a Node has a Scope added or removed, this receiver applies to operation
+    If a Node has a FocusArea added or removed, this receiver applies to operation
     to all its descendants.
     """
-    # Add a scope
+    # Add a focus_area
     if action == 'post_add':
         for descendant in instance.get_descendants():
-            descendant.scope.add(*pk_set)
-    # Remove a scope
+            descendant.focus_areas.add(*pk_set)
+    # Remove a focus_area
     if action == 'post_remove':
         for descendant in instance.get_descendants():
-            descendant.scope.remove(*pk_set)
+            descendant.focus_areas.remove(*pk_set)
 
 
 @python_2_unicode_compatible

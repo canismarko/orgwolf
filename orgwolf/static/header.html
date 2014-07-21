@@ -1,11 +1,3 @@
-<!-- Boxes display results of actions -->
-<div ng-controller="owNotifications" class="notifications"
-     ng-show="notifyList.length > 0">
-  <div class="notification alert-{{ msg.cls }}"
-       ng-repeat="msg in notifyList" ng-bind-html="msg.msg">
-  </div>
-</div>
-
 <!-- Navigation bar -->
 <nav class="navbar navbar-default" role="navigation" ow-navbar>
   <div class="navbar-header">
@@ -47,7 +39,7 @@
       </li>
       <!-- Project Outline -->
       <li id="nav-projects">
-	<a href="/gtd/project/">
+	<a href="/gtd/projects/">
 	  <span class="glyphicon glyphicon-folder-open"></span>
 	  Projects</a>
       </li>
@@ -80,17 +72,20 @@
 
       <li class="dropdown ow-unauth-hide">
       	<a href="#" class="dropdown-toggle" data-toggle="dropdown">
-      	  Account <b class="caret"></b>
+	  <span class="glyphicon glyphicon-user"></span>
+	  Account <b class="caret"></b>
       	</a>
       	<ul class="dropdown-menu">
       	  <li class="ow-staff-show">
       	    <a href="/admin/" target="_self">Admin</a>
       	  </li>
       	  <li>
-      	    <a href="/accounts/profile/" target="_self">Account</a>
+      	    <a href="/accounts/settings/">
+	      <span class="glyphicon glyphicon-cog"></span> Settings</a>
       	  </li>
       	  <li>
-      	    <a href="#" id="logout" persona-button="logout">Logout</a>
+      	    <a href="#" id="logout" persona-button="logout">
+	      <span class="glyphicon glyphicon-log-out"></span> Logout</a>
       	  </li>
       	</ul>
       </li>

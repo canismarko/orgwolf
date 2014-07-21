@@ -50,12 +50,10 @@ AUTH_USER_MODEL = 'orgwolf.OrgWolfUser'
 # social auth details
 SOCIAL_AUTH_USER_MODEL = AUTH_USER_MODEL
 SOCIAL_AUTH_AUTHENTICATION_BACKENDS = [
-    'social.backends.google.GoogleOAuth2'
+    'social.backends.google.GooglePlusAuth'
 ]
 SOCIAL_AUTH_PROTECTED_USER_FIELDS = ['email',]
 # Backend specific social auth
-SOCIAL_AUTH_GOOGLE_OAUTH2_KEY = '955970863814.apps.googleusercontent.com'
-SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET = 'LXZ4lWKCDbQIuGkbFmFzXLHn'
 SOCIAL_AUTH_PROVIDERS = ['google']
 
 # Local time zone for this installation. Choices can be found here:
@@ -149,8 +147,6 @@ MIDDLEWARE_CLASSES = [
 # Additional context processors
 from django.conf.global_settings import TEMPLATE_CONTEXT_PROCESSORS
 TEMPLATE_CONTEXT_PROCESSORS += (
-    'orgwolf.context_processors.debug_variables',
-    'orgwolf.context_processors.scope_context',
     'django.core.context_processors.request',
     'social.apps.django_app.context_processors.backends',
    'social.apps.django_app.context_processors.login_redirect',
@@ -209,7 +205,7 @@ SOCIAL_AUTH_USER_MODEL = "orgwolf.OrgWolfUser"
 
 AUTHENTICATION_BACKENDS = [
     'django.contrib.auth.backends.ModelBackend',
-    'social.backends.google.GoogleOAuth2',
+    'social.backends.google.GooglePlusAuth',
 ]
 
 LOGIN_URL = '/accounts/login/'

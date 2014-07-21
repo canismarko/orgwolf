@@ -196,7 +196,7 @@ dd.todo
 }
 
 /* Miscellaneous components */
-.ow-scope-tabs {
+.ow-focus-area-tabs {
     a {
 	color: @primary;
     }
@@ -570,7 +570,7 @@ dd.todo
     .title,.todo-state {
 	.make-md-column(3);
     }
-    .tag-string,.scope {
+    .tag-string,.focus-area {
 	.make-md-column(2);
     }
     .priority {
@@ -844,27 +844,35 @@ input,textarea {
     }
 }
 
-/* Account settings pages */
-table.accounts {
-    /* list-style-type: none; */
-    td .icon {
-	display: inline-block;
-	width: 22px;
-	height: 22px;
-	background-image: url('/static/social/auth-icons.png');
-	background-repeat: no-repeat;
-	background-clip: content-box;
-	&.facebook {
-	    background-color: #5872a7; /* Facebook blue */
-	}
-	&.twitter {
-	    background-position: -22px 0px;
-	}
-	&.github {
-	    background-position: -44px 0px;
-	}
-	&.google-oauth2 {
-	    background-position: -88px 0px;
-	}
+/* Accounts settings page */
+.settings {
+    .container;
+    .social-button {
+	cursor: pointer;
     }
 }
+
+/* Account settings pages */
+/* table.accounts { */
+/*     /\* list-style-type: none; *\/ */
+/*     td .icon { */
+/* 	display: inline-block; */
+/* 	width: 22px; */
+/* 	height: 22px; */
+/* 	background-image: url('/static/social/auth-icons.png'); */
+/* 	background-repeat: no-repeat; */
+/* 	background-clip: content-box; */
+/* 	&.facebook { */
+/* 	    background-color: #5872a7; /\* Facebook blue *\/ */
+/* 	} */
+/* 	&.twitter { */
+/* 	    background-position: -22px 0px; */
+/* 	} */
+/* 	&.github { */
+/* 	    background-position: -44px 0px; */
+/* 	} */
+/* 	&.google-oauth2 { */
+/* 	    background-position: -88px 0px; */
+/* 	} */
+/*     } */
+/* } */

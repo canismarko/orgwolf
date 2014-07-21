@@ -1,0 +1,56 @@
+/*globals angular */
+"use strict";
+
+angular.module('owMain')
+
+/*************************************************
+* Routing for site-wide urls (account settings, etc)
+*
+**************************************************/
+.config(['$routeProvider', function($routeProvider) {
+    $routeProvider
+	.when('/accounts/settings/', {
+	    templateUrl: '/static/settings.html',
+	    controller: 'settings',
+	});
+}])
+
+.controller('settings', ['$scope', '$window', '$resource', '$http', function($scope, $window, $resource, $http) {
+    var Provider, Account;
+    Provider = $resource('/providers/:backend');
+    $scope.providers = Provider.query();
+    Account = $resource('/accountassociations/:id/', {'id': '@id'});
+    // Get list of linked accounts
+    $scope.$on('refresh-data', function() {
+	$scope.linkedAccounts = Account.query();
+    });
+    $scope.linkedAccounts = Account.query();
+    $scope.disconnectAccount = function(account) {
+	account.$delete().then(function() {
+	    $scope.$emit('refresh-data');
+	});
+    };
+    // Handler for when the user adds a new account
+    $scope.addAccount = function(provider) {
+	var handlers, handler, isReadyToSave;
+	// Dictionary of handlers for adding various providers
+	handlers = {
+	    "Google": function(provider) {
+		$window.isReadyToSave = true;
+	    }
+	};
+	handler = handlers[provider.button_type];
+	handler(provider);
+    };
+    // Callback for google sign-in
+    $window.signInCallbacks = function(result) {
+	var data;
+	// Submit to the backend for verification
+	if ($window.isReadyToSave && !result.error) {
+	    data = {"access_token": result.access_token, "code": result.code};
+	    Provider.save({backend: 'gmail'}, data).$promise.then(function() {
+		$scope.$emit('refresh-data');
+	    });
+	}
+    };
+}]);

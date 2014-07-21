@@ -4,7 +4,7 @@
 
 var owFilters = angular.module(
     'owFilters',
-    ['ngSanitize']
+    ['ngSanitize', 'owServices']
 );
 
 /*************************************************
@@ -174,21 +174,6 @@ owFilters.filter('currentList', function() {
     };
 });
 
-/*************************************************
-* Filter that only shows headings that are visible
-* in the current scope.
-*
-**************************************************/
-owFilters.filter('currentScope', function() {
-    return function(headings, activeScope) {
-	if ( activeScope ) {
-	    headings = headings.filter(function(h) {
-		return h.scope.indexOf(activeScope.id) > -1;
-	    });
-	}
-	return headings;
-    };
-});
 
 /*************************************************
 * Filter that displays the deadline for a heading
@@ -282,21 +267,27 @@ owFilters.filter('duration', function() {
 });
 
 /*************************************************
-* Filter a list (of headings) by the active scope
+* Filter a list (of headings) by the active
+* focus area
 *
 **************************************************/
-owFilters.filter('scope', function($rootScope) {
-    return function(oldList, activeScope) {
-	var i, newList;
-	// Get activeScope if not supplied by caller
-	if (typeof activeScope === 'undefined' && $rootScope.activeScope) {
-	    activeScope = $rootScope.activeScope.id;
+owFilters.filter('currentFocusArea', ['$rootScope', function($rootScope) {
+    return function(oldList, activeFocusArea) {
+	var i, newList, activeId;
+	// Get id of active focus area if not supplied by caller
+	if (typeof activeFocusArea === 'undefined' && $rootScope.activeFocusArea) {
+	    activeId = parseInt($rootScope.activeFocusArea.id, 10);
+	} else if (activeFocusArea) {
+	    // Filter by the active focus area
+	    activeId = parseInt(activeFocusArea.id, 10);
+	} else {
+	    activeId = 0;
 	}
-	// Filter by the activeScope
-	if (activeScope) {
+	// Now do the actual filtering
+	if (activeId) {
 	    newList = [];
 	    for (i=0; i<oldList.length; i+=1) {
-		if( oldList[i].scope.indexOf(activeScope) > -1 ) {
+		if( oldList[i].focus_areas.indexOf(activeId) > -1 ) {
 		    newList.push(oldList.slice(i, i+1)[0]);
 		}
 	    }
@@ -305,4 +296,39 @@ owFilters.filter('scope', function($rootScope) {
 	}
 	return newList;
     };
-});
+}]);
+
+/*************************************************
+* Filter accepts a heading and returns a string of
+* its focus areas
+*
+**************************************************/
+owFilters.filter('listFocusAreas', ['focusAreas', function(focusAreas) {
+    return function(heading) {
+	var s, f, i, fa, activeFocusAreas, areaName;
+	// Build list of focus area names
+	activeFocusAreas = [];
+	f = function(fa) {return fa.id === heading.focus_areas[i];};
+	for (i=0; i<heading.focus_areas.length; i+=1) {
+	    areaName = focusAreas.filter(f)[0];
+	    activeFocusAreas.push(areaName);
+	}
+	// Combine focus area names into a string
+	s = '';
+	for (i=0; i<activeFocusAreas.length; i+=1) {
+	    fa = activeFocusAreas[i];
+	    if (i===0) {
+		// First entry
+		s += fa.display;
+	    } else if (i===(activeFocusAreas.length-1) &&
+		       activeFocusAreas.length > 1) {
+		// Last entry
+		s += ' and ' + fa.display;
+	    } else {
+		// All other entries
+		s += ', ' + fa.display;
+	    }
+	}
+	return s;
+    };
+}]);

@@ -43,10 +43,14 @@
     <link rel="stylesheet" type="text/css"
 	  href="{{ STATIC_URL }}bower/bootstrap-switch/build/css/bootstrap3/bootstrap-switch.css" />
     <link rel="stylesheet" type="text/css"
+	  href="{{ STATIC_URL }}bower/AngularJS-Toaster/toaster.css" />
+    <link rel="stylesheet" type="text/css"
 	  href="{{ STATIC_URL }}bower/fullcalendar/fullcalendar.css" />
     {% else %}
     <link rel="stylesheet" type="text/css" href="//cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.1.1/css/bootstrap.min.css" />
     <link rel="stylesheet" type="text/css" href="//cdnjs.cloudflare.com/ajax/libs/bootstrap-switch/2.0.1/css/bootstrap3/bootstrap-switch.min.css" />
+    <link rel="stylesheet" type="text/css"
+	  href="//cdnjs.cloudflare.com/ajax/libs/angularjs-toaster/0.4.4/toaster.min.css" />
     <link rel="stylesheet" type="text/css"
 	  href="//cdnjs.cloudflare.com/ajax/libs/fullcalendar/1.6.4/fullcalendar.css" />
     {% endif %}
@@ -81,6 +85,7 @@
     <script src="{{ STATIC_URL }}bower/angular-sanitize/angular-sanitize.js"></script>
     <script src="{{ STATIC_URL }}bower/angular-cookies/angular-cookies.js"></script>
     <script src="{{ STATIC_URL }}bower/angular-route/angular-route.js"></script>
+    <script src="{{ STATIC_URL }}bower/AngularJS-Toaster/toaster.js"></script>
     <script src="{{ STATIC_URL }}bower/jquery-ui/ui/jquery-ui.js"></script>
     <script src="{{ STATIC_URL }}bower/angular-bootstrap/ui-bootstrap-tpls.js"></script>
     <script src="{{ STATIC_URL }}bower/angular-ui-calendar/src/calendar.js"></script>
@@ -99,6 +104,7 @@
     <script src="//ajax.googleapis.com/ajax/libs/angularjs/1.2.7/angular-resource.min.js"></script>
     <script src="//cdnjs.cloudflare.com/ajax/libs/angular.js/1.2.7/angular-cookies.min.js"></script>
     <script src="//ajax.googleapis.com/ajax/libs/angularjs/1.2.7/angular-route.min.js"></script>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/angularjs-toaster/0.4.4/toaster.min.js"></script>
     <script src="//cdnjs.cloudflare.com/ajax/libs/jqueryui/1.10.4/jquery-ui.min.js"></script>
     <script src="//cdnjs.cloudflare.com/ajax/libs/angular-ui-bootstrap/0.10.0/ui-bootstrap-tpls.min.js"></script>
     <script src="//cdnjs.cloudflare.com/ajax/libs/angular-ui-calendar/0.8.0/calendar.js"></script>
@@ -121,19 +127,24 @@
       <script src="{{ STATIC_URL }}orgwolf-services.js"></script>
       <script src="{{ STATIC_URL }}orgwolf-filters.js"></script>
       <script src="{{ STATIC_URL }}orgwolf-directives.js"></script>
+      <script src="{{ STATIC_URL }}orgwolf-controllers.js"></script>
     {% else %}
       <script src="{{ STATIC_URL }}orgwolf-min.js"></script>
     {% endif %}
     {% block script %}
     <script type="text/javascript">
+angular.module('owServices')
       {% if request.user.is_authenticated %}
 // Page specific persona setup
-owServices.value('personaUser', "{{ request.user.username }}");
-angular.module('owServices').run(function(activeState) {
+.value('personaUser', "{{ request.user.username }}")
+.run(function(activeState) {
     activeState.user = {{ request.user.id }};
-});
+})
       {% endif %}
-      $(document).ready(function() {
+.value('todoStatesList',
+       {% todo_states_json %}
+      )
+$(document).ready(function() {
 
 	// Google analytics
 	{% if not debug %}
@@ -146,10 +157,6 @@ angular.module('owServices').run(function(activeState) {
 	ga('send', 'pageview');
 	{% endif %}
     });
-    owServices.value(
-	'todoStatesList',
-	{% todo_states_json %}
-    );
     owFilters.value('staticUrl', '{{ STATIC_URL }}');
 
     </script>

@@ -44,7 +44,7 @@ class MessageHandler(BaseMessageHandler):
             FIELDS = ('owner', 'title', 'slug', 'deadline_date',
                       'deadline_time', 'priority', 'tag_string',
                       'energy', 'time_needed', )
-            M2M_FIELDS = ('scope',)
+            M2M_FIELDS = ('focus_areas',)
             # Make a duplicate of the Node
             new_node = Node()
             # Set the appropriate fields

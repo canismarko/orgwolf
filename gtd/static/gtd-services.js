@@ -2,18 +2,19 @@
 "use strict";
 var HeadingFactory;
 
-var owServices = angular.module(
+angular.module(
     'owServices',
-    ['ngResource']
-);
+    ['ngResource', 'toaster']
+)
 
 /*************************************************
 * Factory returns the persona navigator for
 * login/logout functions.
 *
 **************************************************/
-owServices.value('personaUser', null); // Default value, override in django
-owServices.factory('personaNavigator', ['personaUser', '$rootScope', '$http', 'owWaitIndicator', 'activeState', function(personaUser, $rootScope, $http, owWaitIndicator, activeState) {
+.value('personaUser', null) // Default value, override in django
+
+.factory('personaNavigator', ['personaUser', '$rootScope', '$http', 'owWaitIndicator', 'activeState', function(personaUser, $rootScope, $http, owWaitIndicator, activeState) {
     if ( typeof navigator.id !== 'undefined' ) {
 	// Setup the persona navigator before linking the directive
 	navigator.id.watch({
@@ -52,7 +53,7 @@ owServices.factory('personaNavigator', ['personaUser', '$rootScope', '$http', 'o
 	});
     }
     return navigator;
-}]);
+}])
 
 /*************************************************
 * Factory returns an object for showing feedback
@@ -60,7 +61,7 @@ owServices.factory('personaNavigator', ['personaUser', '$rootScope', '$http', 'o
 * are rendered using the waitFeedback directive.
 *
 **************************************************/
-owServices.factory('owWaitIndicator', ['$rootScope', function($rootScope) {
+.factory('owWaitIndicator', ['$rootScope', function($rootScope) {
     var obj, end_wait;
     // Object contains lists and accessors for those lists
     obj = {
@@ -98,19 +99,18 @@ owServices.factory('owWaitIndicator', ['$rootScope', function($rootScope) {
 	}
     };
     return obj;
-}]);
+}])
 
 /*************************************************
 * Factory creates GtdHeading objects
 *
 **************************************************/
-owServices.factory('OldHeading', ['$resource', '$http', function($resource, $http) {
-    return function(data) {
-        return new GtdHeading(data);
-    };
-}]);
-owServices.factory('Heading', ['$resource', HeadingFactory]);
-function HeadingFactory($resource) {
+// .factory('OldHeading', ['$resource', '$http', function($resource, $http) {
+//     return function(data) {
+//         return new GtdHeading(data);
+//     };
+// }])
+.factory('Heading', ['$resource', function($resource) {
     var res = $resource(
 	'/gtd/nodes/:id/',
 	{id: '@id',
@@ -121,14 +121,14 @@ function HeadingFactory($resource) {
 	}
     );
     return res;
-}
+}])
 
 /*************************************************
 * Default todo states. Override in template from
 * server.
 *
 **************************************************/
-owServices.value(
+.value(
     'todoStatesList',
     [
 	{id: 1,
@@ -149,15 +149,15 @@ owServices.value(
 	 }
 	},
     ]
-);
+)
 
 /*************************************************
 * Factory returns the request todoStates
 *
 **************************************************/
-owServices.factory('todoStates', ['$resource', 'todoStatesList', function($resource, todoStatesList) {
+.factory('todoStates', ['$resource', 'todoStatesList', function($resource, todoStatesList) {
     var states, TodoState;
-    TodoState = $resource('/gtd/todostate/');
+    TodoState = $resource('/gtd/todostates/');
     states = TodoState.query();
     states = todoStatesList;
     states.getState = function(stateId) {
@@ -173,38 +173,12 @@ owServices.factory('todoStates', ['$resource', 'todoStatesList', function($resou
 	return foundState;
     };
     return states;
-}]);
+}])
 
 /*************************************************
-* A list of current messages. Manipulated by the
-* notify service.
+* Factory returns all the available focus areas
 *
 **************************************************/
-owServices.factory('notifyList', [function() {
-    var list = [];
-    return list;
-}]);
-
-/*************************************************
-* Creates function that lets components show
-* messages to the user
-*
-**************************************************/
-owServices.value('notifyTimeout', 4000); //in seconds
-owServices.factory('notify', ['notifyList', 'notifyTimeout', '$timeout', function(notifyList, notifyTimeout, $timeout) {
-    function removeMessage() {
-	notifyList.splice(0, 1);
-    }
-    function notify(msg, cls) {
-	if (typeof cls === 'undefined') {
-	    cls = 'info';
-	}
-	notifyList.push({
-	    msg: msg,
-	    cls: cls
-	});
-	// Drop the message after a few seconds
-	$timeout(removeMessage, notifyTimeout);
-    }
-    return notify;
+.factory('focusAreas', ['$resource', function($resource) {
+    return $resource('/gtd/focusareas/').query();
 }]);

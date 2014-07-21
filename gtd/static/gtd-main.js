@@ -11,41 +11,38 @@ var owMain = angular.module(
     ['ngAnimate', 'ngResource', 'ngSanitize', 'ngRoute', 'ngCookies',
      'ui.bootstrap', 'ui.calendar',
      'owServices', 'owDirectives', 'owFilters']
-);
+)
 
 /*************************************************
 * Angular routing
 *
 **************************************************/
-owMain.config(
-    ['$routeProvider', '$locationProvider',
-     function($routeProvider, $locationProvider) {
-	 $locationProvider.html5Mode(true);
-	 $routeProvider.
-	     when('/gtd/actions/:context_id?/:context_slug?', {
-		 templateUrl: '/static/actions-list.html',
-		 controller: 'nextActionsList',
-		 reloadOnSearch: false,
-	     }).
-	     when('/gtd/project/', {
-		 templateUrl: '/static/project-outline.html',
-		 controller: 'nodeOutline'
-	     }).
-	     when('/search/', {
-		 templateUrl: '/static/search-results.html',
-		 controller: 'search'
-	     }).
-	     when('/calendar/', {
-		 templateUrl: '/static/calendar.html',
-		 controller: 'calendar'
-	     }).
-	     when('/', {
-		 redirectTo: '/gtd/project/'
-	     });
-}]);
+.config(['$routeProvider', '$locationProvider', function($routeProvider, $locationProvider) {
+    $locationProvider.html5Mode(true);
+    $routeProvider
+	.when('/gtd/actions/:context_id?/:context_slug?', {
+	    templateUrl: '/static/actions-list.html',
+	    controller: 'nextActionsList',
+	    reloadOnSearch: false,
+	})
+	.when('/gtd/projects/', {
+	    templateUrl: '/static/project-outline.html',
+	    controller: 'nodeOutline'
+	})
+	.when('/search/', {
+	    templateUrl: '/static/search-results.html',
+	    controller: 'search'
+	})
+	.when('/calendar/', {
+	    templateUrl: '/static/calendar.html',
+	    controller: 'calendar'
+	})
+	.when('/', {
+	    redirectTo: '/gtd/projects/'
+	});
+}])
 
-owMain.config(['$httpProvider', '$locationProvider', owConfig]);
-function owConfig($httpProvider, $locationProvider) {
+.config(['$httpProvider', '$locationProvider', function ($httpProvider, $locationProvider) {
     // Add custom headers to $http objects
     $httpProvider.defaults.headers.common['X-Request-With'] = 'XMLHttpRequest';
     // Add django CSRF token to all $http objects
@@ -76,25 +73,17 @@ function owConfig($httpProvider, $locationProvider) {
 	    xhr.setRequestHeader('X-CSRFToken', csrftoken);
 	}
     });
-}
+}])
 
 /*************************************************
 * Run setup gets some app-wide data
 *
 **************************************************/
-owMain.run(['$rootScope', '$resource', function($rootScope, $resource) {
-    // Get todo states
-    var TodoState, Context, Scope, getState;
+.run(['$rootScope', '$resource', function($rootScope, $resource) {
+    var TodoState, Context, FocusArea, getState;
     // Get list of contexts for filtering against
-    Context = $resource('/gtd/context/');
+    Context = $resource('/gtd/contexts/');
     $rootScope.contexts = Context.query();
-    // Get list of scopes for tabs
-    Scope = $resource('/gtd/scope/');
-    $rootScope.scopes = Scope.query();
-}]);
-
-owMain.controller('owNotifications', ['$scope', 'notifyList', function($scope, notifyList) {
-    $scope.notifyList = notifyList;
 }]);
 
 /*************************************************
@@ -252,9 +241,9 @@ function outlineCtrl($scope, $rootScope, $http, $resource, $filter, Heading,
     };
     // Respond to refresh-data signals (logging in, etc)
     $scope.$on('refresh-data', getHeadings);
-    // Handler for changing the scope
-    $scope.$on('scope-changed', function(e, newScope) {
-	$scope.activeScope = newScope;
+    // Handler for changing the focus area
+    $scope.$on('focus-area-changed', function(e, newFocusArea) {
+	$scope.activeFocusArea = newFocusArea;
     });
 }
 
@@ -265,9 +254,9 @@ function outlineCtrl($scope, $rootScope, $http, $resource, $filter, Heading,
 owMain.controller(
     'nextActionsList',
     ['$sce', '$scope', '$resource', '$location', '$routeParams', '$filter',
-     'Heading', 'todoStates', '$cookies', listCtrl]
+     'Heading', 'todoStates', 'owWaitIndicator', '$cookies', listCtrl]
 );
-function listCtrl($sce, $scope, $resource, $location, $routeParams, $filter, Heading, todoStates, $cookies) {
+function listCtrl($sce, $scope, $resource, $location, $routeParams, $filter, Heading, todoStates, owWaitIndicator, $cookies) {
     var i, TodoState, Context, today, update_url, get_list, parent_id, todo_states;
     $scope.list_params = {field_group: 'actions_list'};
     $scope.showArchived = true;
@@ -347,7 +336,11 @@ function listCtrl($sce, $scope, $resource, $location, $routeParams, $filter, Hea
     });
     // Receiver that retrieves GTD lists from server
     $scope.refreshList = function() {
-	var upcomingParams;
+	var upcomingParams, $unwatch;
+	// Variables for tracking status
+	$scope.isLoading = true;
+	owWaitIndicator.start_wait('quick', 'loadLists');
+	$scope.completedRequests = [];
 	$scope.actionsList = Heading.query($scope.list_params);
 	upcomingParams = angular.extend(
 	    {upcoming: $scope.currentDate.ow_date()},
@@ -360,12 +353,26 @@ function listCtrl($sce, $scope, $resource, $location, $routeParams, $filter, Hea
 		todo_state: 8
 	    }
 	);
+	// Check for all lists to be retrieved
+	$unwatch = $scope.$watch(
+	    function() {
+		return ($scope.actionsList.$resolved &&
+			$scope.upcomingList.$resolved &&
+			$scope.scheduledList.$resolved);
+	    },
+	    function (loadingIsComplete) {
+		$scope.isLoading = !loadingIsComplete;
+		if (loadingIsComplete) {
+		    owWaitIndicator.end_wait('quick', 'loadLists');
+		    $unwatch();
+		}
+	    });
     };
     $scope.$on('refresh_list', $scope.refreshList);
     $scope.$on('refresh-data', $scope.refreshList);
-    // Receiver for when the active scope changes (by clicking a tab)
-    $scope.$on('scope-changed', function(e, newScope) {
-	$scope.activeScope = newScope;
+    // Receiver for when the active focus area changes (by clicking a tab)
+    $scope.$on('focus-area-changed', function(e, newFocusArea) {
+	$scope.activeFocusArea = newFocusArea;
     });
     // Todo state filtering
     $scope.toggleTodoState = function(targetState) {
@@ -579,9 +586,8 @@ owMain.controller('search', ['$scope', '$location', 'Heading', function($scope, 
     // Callback for styling rendered events
     $scope.renderEvent = function(event, element) {
 	// Verify if in active Scope
-	console.log($scope.activeScope);
-	if ($scope.activeScope && $scope.activeScope.id > 0) {
-	    if (event.scope.indexOf($scope.activeScope.id) === -1) {
+	if ($scope.activeFocusArea && $scope.activeFocusArea.id > 0) {
+	    if (event.focus_areas.indexOf($scope.activeFocusArea.id) === -1) {
 		return false;
 	    }
 	}
@@ -609,15 +615,11 @@ owMain.controller('search', ['$scope', '$location', 'Heading', function($scope, 
 	    Heading.update(newData);
 	}
     };
-    // Respond to changes in activeScope
-    $scope.$on('scope-changed', function(e, newScope) {
+    // Respond to changes in activeFocusArea
+    $scope.$on('focus-area-changed', function(e, newFocusArea) {
 	var i, newList;
-	$scope.activeScope = newScope;
+	$scope.activeFocusArea = newFocusArea;
 	$scope.owCalendar.fullCalendar('rerenderEvents');
-	// for (i=0; i<$scope.activeCalendars.length; i+=1) {
-	//     newList = $filter('scope')($scope.activeCalendars[i].allEvents);
-	//     $scope.activeCalendars[i].events = newList;
-	// }
     });
     // Calendar config object
     $scope.calendarOptions = {

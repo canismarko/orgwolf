@@ -1,16 +1,16 @@
 /*globals angular, $, Aloha, tinyMCE, tinymce*/
 "use strict";
 
-var owDirectives = angular.module(
+angular.module(
     'owDirectives',
-    ['ngAnimate', 'ngResource', 'ngCookies', 'owServices',]
-);
+    ['ngAnimate', 'ngResource', 'ngCookies', 'owServices', 'toaster']
+)
 
 /*************************************************
 * Directive that handles persona buttons for both
 * logging in an logging out
 **************************************************/
-owDirectives.directive('personaButton', ['personaNavigator', 'personaUser', function(personaNavigator, personaUser) {
+.directive('personaButton', ['personaNavigator', 'personaUser', function(personaNavigator, personaUser) {
     function link(scope, element, attrs) {
 	element.on('click', function() {
 	    if ( attrs.personaButton === 'login' ) {
@@ -24,13 +24,13 @@ owDirectives.directive('personaButton', ['personaNavigator', 'personaUser', func
 	restrict: 'AC',
 	link: link
     };
-}]);
+}])
 
 /*************************************************
 * Directive that turns checkboxes into switches
 *
 **************************************************/
-owDirectives.directive('owSwitch', function() {
+.directive('owSwitch', function() {
     function link($scope, $element, attrs, model) {
 	var $input;
 	$input = $element.find('input');
@@ -54,14 +54,14 @@ owDirectives.directive('owSwitch', function() {
 	link: link,
 	require: '?ngModel',
     };
-});
+})
 
 /*************************************************
 * Directive modifies the DOM after calls to
 * waitIndicator service
 *
 **************************************************/
-owDirectives.directive('owWaitFeedback', ['owWaitIndicator', function(owWaitIndicator) {
+.directive('owWaitFeedback', ['owWaitIndicator', function(owWaitIndicator) {
     // Directive creates the pieces that allow the user to edit a heading
     function link($scope, $element, attrs) {
 	var $mask;
@@ -96,14 +96,14 @@ owDirectives.directive('owWaitFeedback', ['owWaitIndicator', function(owWaitIndi
 	link: link,
 	scope: {},
     };
-}]);
+}])
 
 /*************************************************
 * Directive that lets a user change the current
 * active date for lists and inbox
 *
 **************************************************/
-owDirectives.directive('owCurrentDate', function() {
+.directive('owCurrentDate', function() {
     // Directive creates the pieces that allow the user to edit a heading
     function link($scope, $element, attrs) {
 	var $input;
@@ -142,7 +142,7 @@ owDirectives.directive('owCurrentDate', function() {
 	templateUrl: '/static/current-date.html',
 	scope: true,
     };
-});
+})
 
 /*************************************************
 * Directive that lets a user edit a node.
@@ -151,21 +151,14 @@ owDirectives.directive('owCurrentDate', function() {
 * is a new child.
 *
 **************************************************/
-owDirectives.directive('owDetails', ['$timeout', '$rootScope', function($timeout, $rootScope) {
+.directive('owDetails', ['$timeout', function($timeout) {
     function link(scope, element, attrs) {
 	var i;
 	scope.editorId = 'edit-text-' + scope.heading.id;
 	scope.heading.$get()
 	    .then(function(newHeading) {
-		var areaName, f;
+		// This avoids weird jumping around when actually editing the text
 		scope.headingText = newHeading.text;
-		// Build list of focus area names
-		scope.focusAreas = [];
-		f = function(scp) {return scp.id === newHeading.scope[i];};
-		for (i=0; i<newHeading.scope.length; i+=1) {
-		    areaName = $rootScope.scopes.filter(f)[0].display;
-		    scope.focusAreas.push(areaName);
-		}
 	    });
 	// TinyMCE text editor
 	$timeout(function() {
@@ -205,7 +198,7 @@ owDirectives.directive('owDetails', ['$timeout', '$rootScope', function($timeout
 	scope: { heading: '=owHeading' },
 	templateUrl: '/static/details.html'
     };
-}]);
+}])
 
 /*************************************************
 * Directive that lets a user edit a node.
@@ -214,11 +207,11 @@ owDirectives.directive('owDetails', ['$timeout', '$rootScope', function($timeout
 * is a new child.
 *
 **************************************************/
-owDirectives.directive('owEditable', ['$resource', '$rootScope', '$timeout', 'owWaitIndicator', 'Heading', 'todoStates', 'notify', function($resource, $rootScope, $timeout, owWaitIndicator, Heading, todoStates, notify) {
+.directive('owEditable', ['$resource', '$rootScope', '$timeout', 'owWaitIndicator', 'Heading', 'todoStates', 'focusAreas', 'toaster', function($resource, $rootScope, $timeout, owWaitIndicator, Heading, todoStates, focusAreas, toaster) {
     // Directive creates the pieces that allow the user to edit a heading
     function link(scope, element, attrs) {
 	var defaultParent, $text, heading, $save, heading_id, parent, editorId;
-	scope.scopes = $rootScope.scopes;
+	scope.focusAreas = focusAreas;
 	scope.todoStates = todoStates;
 	scope.fields = {};
 	element.addClass('ow-editable'); // For animations
@@ -234,16 +227,16 @@ owDirectives.directive('owEditable', ['$resource', '$rootScope', '$timeout', 'ow
 	    });
 	} else if ( scope.parent ) {
 	    // Else inherit some attributes from parent...
-	    scope.fields.scope = scope.parent.scope;
+	    scope.fields.focus_areas = scope.parent.focus_areas;
 	    scope.fields.priority = scope.parent.priority;
 	    scope.fields.parent = scope.parent.id;
 	} else {
 	    // ...or use defaults if no parent
-	    scope.fields.scope = [];
+	    scope.fields.focus_areas = [];
 	    scope.fields.priority = 'B';
 	    // Set Scope if a tab is active
-	    if ($rootScope.activeScope && $rootScope.activeScope.id > 0) {
-		scope.fields.scope.push($rootScope.activeScope.id);
+	    if ($rootScope.activeFocusArea && $rootScope.activeFocusArea.id > 0) {
+		scope.fields.focus_areas.push($rootScope.activeFocusArea.id);
 	    }
 	}
 	scope.priorities = [{sym: 'A',
@@ -278,10 +271,10 @@ owDirectives.directive('owEditable', ['$resource', '$rootScope', '$timeout', 'ow
 		newHeading = Heading.create(scope.fields);
 	    }
 	    newHeading.$promise.then(function(data) {
-		notify('Saved', 'success');
+		toaster.pop('success', "Saved");
 		scope.endEdit(newHeading);
 	    })['catch'](function(e) {
-		notify('<strong>Not saved!</strong> Check your internet connection and try again.', 'danger');
+		toaster.pop('error', "Error, not saved!", "Check your internet connection and try again.");
 		console.log('Save failed:');
 		console.log(e);
 	    });
@@ -329,54 +322,55 @@ owDirectives.directive('owEditable', ['$resource', '$rootScope', '$timeout', 'ow
 	require: '?ngModel',
 	templateUrl: '/static/editable.html'
     };
-}]);
+}])
 
 /*************************************************
-* Directive that shows a list of Scopes tabs.
+* Directive that shows a list of FocusArea tabs.
 * When a tab is clicked, this directive emits the
-* 'scope-changed' signal via the scope's $emit()
-* method with the new scope as the first argument.
+* 'focus-area-changed' signal via the scope's $emit()
+* method with the new focus area as the first argument.
 *
 **************************************************/
-owDirectives.directive('owScopeTabs', ['$resource', '$rootScope', '$timeout', function($resource, $rootScope, $timeout) {
-    // Directive creates tabs that allow a user to filter by scope
+.directive('owFocusAreaTabs', ['$resource', '$rootScope', '$timeout', 'focusAreas', function($resource, $rootScope, $timeout, focusAreas) {
+    // Directive creates tabs that allow a user to filter by focus area
     function link(scope, element, attrs) {
-	var nullScope = {
+	var nullFocusArea = {
 	    id: 0,
 	    display: 'All'
 	};
-	scope.owScopes = [nullScope].concat($rootScope.scopes);
-	scope.activeScope = nullScope;
-	$rootScope.activeScope = nullScope;
+	scope.focusAreas = [nullFocusArea];
+	focusAreas.$promise.then(function(apiData) {
+	    // Add "All" focus area to the list
+	    scope.focusAreas = scope.focusAreas.concat(apiData);
+	});
+	scope.activeFocusArea = nullFocusArea;
+	$rootScope.activeFocusArea = nullFocusArea;
 	$timeout(function() {
-	    element.find('#scope-tab-0').addClass('active');
+	    element.find('#fa-tab-0').addClass('active');
 	});
 	// Tab click handler
-	scope.changeScope = function(newScope) {
-	    var emittedScope;
-	    // User has requested a different scope
-	    element.find('#scope-tab-' + scope.activeScope.id).removeClass('active');
-	    scope.activeScope = newScope;
-	    $rootScope.activeScope = newScope;
-	    element.find('#scope-tab-' + scope.activeScope.id).addClass('active');
+	scope.changeFocusArea = function(newFocusArea) {
+	    // Update UI
+	    element.find('#fa-tab-' + scope.activeFocusArea.id).removeClass('active');
+	    scope.activeFocusArea = newFocusArea;
+	    $rootScope.activeFocusArea = newFocusArea;
+	    element.find('#fa-tab-' + scope.activeFocusArea.id).addClass('active');
 	    // Send the relevant signals
-	    emittedScope = newScope.id ? newScope : null;
-	    // scope.$emit('scope-changed', emittedScope);
-	    $rootScope.$broadcast('scope-changed', emittedScope);
+	    $rootScope.$broadcast('focus-area-changed', newFocusArea);
 	};
     }
     return {
 	link: link,
 	scope: {},
-	templateUrl: '/static/scope-tabs.html'
+	templateUrl: '/static/focus-area-tabs.html'
     };
-}]);
+}])
 
 /*************************************************
 * Directive that lets a user change the todo state
 * with a popover menu
 **************************************************/
-owDirectives.directive('owTodo', ['$rootScope', '$filter', 'todoStates', 'notify', function($rootScope, $filter, todoStates, notify) {
+.directive('owTodo', ['$rootScope', '$filter', 'todoStates', 'toaster', function($rootScope, $filter, todoStates, toaster) {
     // Directive creates the pieces that allow the user to edit a heading
     function link(scope, element, attrs) {
 	var i, $span, $popover, $options, state, content, s, isInitialized;
@@ -397,10 +391,11 @@ owDirectives.directive('owTodo', ['$rootScope', '$filter', 'todoStates', 'notify
 			    // Notify the user that the heading is rescheduled
 			    var s = 'Rescheduled for ';
 			    s += data.scheduled_date;
-			    notify(s, 'info');
+			    toaster.pop('info', null, s);
 			}
 		    })['catch'](function(e) {
-			notify('<strong>Not saved!</strong> Check your internet connection and try again.', 'danger');
+			toaster.pop('error', "Error, not saved!",
+				    "Check your internet connection and try again.");
 			console.log('Save failed:');
 			console.log(e);
 		    });
@@ -443,14 +438,14 @@ owDirectives.directive('owTodo', ['$rootScope', '$filter', 'todoStates', 'notify
 	},
 	templateUrl: '/static/todo-state-selector.html',
     };
-}]);
+}])
 
 /*************************************************
 * Directive forms a node in an outline (and takes
 * care of any child nodes).
 *
 **************************************************/
-owDirectives.directive('owTwisty', ['$compile', '$rootScope', 'Heading', function($compile, $rootScope, Heading) {
+.directive('owTwisty', ['$compile', '$rootScope', 'Heading', function($compile, $rootScope, Heading) {
     function link(scope, element, attrs) {
 	var hoverable, get_children;
 	scope.isEditing = false;
@@ -609,13 +604,13 @@ owDirectives.directive('owTwisty', ['$compile', '$rootScope', 'Heading', functio
 	    heading: '=owHeading',
 	},
     };
-}]);
+}])
 
 /*************************************************
 * Directive sets the parameters of next
 * actions table row
 **************************************************/
-owDirectives.directive('owListRow', ['$rootScope', 'todoStates', '$filter', function($rootScope, todoStates, $filter) {
+.directive('owListRow', ['$rootScope', 'todoStates', '$filter', function($rootScope, todoStates, $filter) {
     function link(scope, element, attrs) {
 	var node_pk, $element;
 	$element = $(element);

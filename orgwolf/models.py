@@ -36,6 +36,17 @@ class OrgWolfUser(AbstractUser):
         return display
 
 
+class AccountAssociation(models.Model):
+    """
+    Hold a relationship between a social account (eg Google) and a User.
+    """
+    ow_user = models.ForeignKey(OrgWolfUser)
+    access_token = models.TextField(blank=True)
+    handler_path = models.CharField(max_length=100)
+    remote_id = models.CharField(max_length=100)
+    extra_data = models.TextField(blank=True)
+
+
 class Color:
     """
     Describes an RGB color with alpha.

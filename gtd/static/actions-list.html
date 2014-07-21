@@ -55,8 +55,8 @@
     [<a class="cancel" ng-click="$emit('filter-parent', null)">&times;</a>]
   </div>
 
-  <!-- Scope Tabs -->
-  <div ow-scope-tabs>
+  <!-- Focus area tabs -->
+  <div ow-focus-area-tabs>
   </div>
 
   <!-- Actionable Items Header -->
@@ -68,13 +68,13 @@
   </div>
 
   <div ow-list-row
-       ng-repeat="heading in visibleHeadings | order:'list'"
-       ow-heading="heading" ow-date="{{ heading.deadline_date | deadline_str }}"
-       ng-if="!activeScope || heading.scope.indexOf(activeScope.id) > -1">
+       ng-repeat="heading in visibleHeadings | currentFocusArea:activeFocusArea | order:'list'"
+       ow-heading="heading" ow-date="{{ heading.deadline_date | deadline_str }}">
   </div>
 
-  <div class="alert-empty" ng-show="visibleHeadings.length === 0">
-    No actions here. Try another Scope, Context or
+  <div class="alert-empty"
+       ng-show="visibleHeadings.length === 0 && !isLoading">
+    No actions here. Try another Focus Area, Context or
     TodoState combination.
   </div>
 

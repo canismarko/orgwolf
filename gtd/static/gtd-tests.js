@@ -1,5 +1,5 @@
 // Jasmine tests for Getting Things Done javascript (mostly angular)
-var customMatchers, $rootScope;
+var customMatchers;
 var customMatchers = {
     toHaveClass: function(utils) {
 	// Checks that element has HTML class ala jQuery().hasClass()
@@ -132,10 +132,10 @@ describe('filters in gtd-filters.js', function() {
 	    headings = [
 		{id: 1,
 		 todo_state: 1,
-		 scope: [1]},
+		 focus_areas: [1]},
 		{id: 2,
 		 todo_state: 2,
-		 scope: []},
+		 focus_areas: []},
 	    ];
 	}));
 	it('passes the array back if no parameters given', function() {
@@ -169,27 +169,6 @@ describe('filters in gtd-filters.js', function() {
 	    expect(result.length).toEqual(2);
 	    expect(result[0].id).toEqual(1);
 	    expect(result[1].id).toEqual(4);
-	});
-    });
-
-    describe('the "currentScope" filter', function() {
-	var currentScopeFilter;
-	beforeEach(inject(function(_currentScopeFilter_) {
-	    currentScopeFilter = _currentScopeFilter_;
-	    headings = [
-		{id: 1,
-		 todo_state: 1,
-		 scope: [1]},
-		{id: 2,
-		 todo_state: 2,
-		 scope: []},
-	    ]
-	}));
-	it('filters by scope', function() {
-	    result = currentScopeFilter(headings, {id: 1});
-	    expect(result.length).toEqual(1);
-	    expect(JSON.stringify(result[0]))
-		.toEqual(JSON.stringify(headings[0]));
 	});
     });
 
@@ -269,34 +248,64 @@ describe('filters in gtd-filters.js', function() {
 	});
     });
 
-    describe('the scope filter', function() {
-	var dummyHeadings;
-	beforeEach(inject(function(_scopeFilter_) {
-	    scopeFilter = _scopeFilter_;
+    describe('the currentFocusArea filter', function() {
+	var dummyHeadings, focusAreaFilter;
+	beforeEach(inject(function(_currentFocusAreaFilter_) {
+	    focusAreaFilter = _currentFocusAreaFilter_;
 	    dummyHeadings = [
 		{id: 1,
-		 scope: [1, 2]},
+		 focus_areas: [1, 2]},
 		{id: 2,
-		 scope: [1]},
+		 focus_areas: [1]},
 		{id: 3,
-		 scope: []},
+		 focus_areas: []},
 		{id: 4,
-		 scope: [6]}
+		 focus_areas: [6]}
 	    ];
 	}));
 
-	it('filters headings based on active scope', function() {
-	    var filteredList = scopeFilter(dummyHeadings, 2);
+	it('filters headings based on active focus area', function() {
+	    var filteredList = focusAreaFilter(dummyHeadings, {id: 2});
 	    expect(filteredList.length).toBe(1);
 	    expect(JSON.stringify(filteredList[0]))
 		.toEqual(JSON.stringify( dummyHeadings[0] ));
 	});
 
-	it('allows all headings if no active scope', function() {
-	    var filteredList = scopeFilter(dummyHeadings, undefined);
+	it('allows all headings if no active focus area', function() {
+	    var filteredList = focusAreaFilter(dummyHeadings, {id: 0});
 	    expect(filteredList).toEqual(dummyHeadings);
 	});
+    });
 
+    describe('the listFocusAreas filter', function() {
+	var listFocusAreasFilter, $httpBackend;
+	beforeEach(inject(function($injector) {
+	    listFocusAreasFilter = $injector.get('listFocusAreasFilter');
+	    $httpBackend = $injector.get('$httpBackend');
+	    $httpBackend.whenGET('/gtd/focusareas')
+		.respond(200, [
+		    {id: 1,
+		     display: 'Work'},
+		    {id: 2,
+		     display: 'Home'},
+		    {id: 3,
+		     display: 'Health'},
+		]);
+	    $httpBackend.flush();
+	}));
+	it('processes a heading with one focus area', function() {
+	    heading = {focus_areas: [1]};
+	    expect(listFocusAreasFilter(heading)).toEqual('Work');
+	});
+	it('processes a heading with two focus areas', function() {
+	    heading = {focus_areas: [1, 2]};
+	    expect(listFocusAreasFilter(heading)).toEqual('Work and Home');
+	});
+	it('processes a heading with three focus areas', function() {
+	    heading = {focus_areas: [1, 2, 3]};
+	    expect(listFocusAreasFilter(heading))
+		.toEqual('Work, Home and Health');
+	});
     });
 });
 
@@ -328,7 +337,11 @@ describe('directives in gtd-directives.js', function() {
 	    }
 	];
 	$httpBackend = $injector.get('$httpBackend');
-	$httpBackend.whenGET('/gtd/todostate').respond(201, dummyStates);
+	$httpBackend.whenGET('/gtd/todostates').respond(201, dummyStates);
+	$httpBackend.whenGET('/gtd/focusareas').respond(200, [
+	    {id: 1, display: 'Work'},
+	    {id: 2, display: 'Home'}
+	]);
 	$templateCache = $injector.get('$templateCache');
     }));
     // Reset httpBackend calls
@@ -338,7 +351,7 @@ describe('directives in gtd-directives.js', function() {
 
     describe('the owPersona directive', function() {
 	var watchCalled, requestCalled, logoutCalled;
-	owServices.factory('personaNavigator', function() {
+	angular.module('owServices').factory('personaNavigator', function() {
 	    return {
 		id: {
 		    watch: function() {
@@ -363,19 +376,6 @@ describe('directives in gtd-directives.js', function() {
 	    )($rootScope);
 	});
 	it('broadcasts the refresh-data signal');
-	// it('calls navigator.id.watch on init', function() {
-	//     expect(watchCalled).toBeTruthy();
-	// });
-	// it('calls navigator.id.request on login', function() {
-	//     scope = element.isolateScope();
-	//     scope.login();
-	//     expect(requestCalled).toBeTruthy();
-	// });
-	// it('calls navigator.id.logout on logout', function() {
-	//     scope = element.isolateScope();
-	//     scope.logout();
-	//     expect(logoutCalled).toBeTruthy();
-	// });
     });
 
     describe('the owWaitFeedback directive', function() {
@@ -410,25 +410,20 @@ describe('directives in gtd-directives.js', function() {
     	    heading = {
     		id: 2,
     		title: 'Hello, world',
-		scope: [1, 2]
+		focus_areas: [1, 2]
     	    };
 	    $httpBackend.whenGET('/gtd/nodes/2?').respond(200, heading);
-	    $rootScope.heading = Heading.get({id: 2});
-	    $rootScope.scopes = [
+	    $httpBackend.whenGET('/gtd/focusareas').respond(200, [
 		{id: 1, display: 'Work'},
 		{id: 2, display: 'Home'}
-	    ];
+	    ]);
+	    $rootScope.heading = Heading.get({id: 2});
 	    $httpBackend.flush();
     	    element = $compile(
     		'<div ow-details ow-heading="heading"></div>'
     	    )($rootScope);
 	    $httpBackend.flush();
     	}));
-	it('sets scope.focusAreas', function() {
-	    scope = element.isolateScope();
-	    expect(scope.focusAreas.length).toEqual(2);
-	    expect(scope.focusAreas[0]).toEqual('Work');
-	});
     });
 
     describe('the owEditable directive', function() {
@@ -438,69 +433,36 @@ describe('directives in gtd-directives.js', function() {
 	    $templateCache.put('/static/editable.html',
 			       '<div class="editable"></div>');
 	});
-	describe('when an existing node is being edited ([ow-heading])', function() {
-	    var notifyList;
-	    beforeEach(function() {
-		// Prepare the DOM element
-		element = $compile(
-		    '<div ow-editable ow-heading="heading"></div>'
-		)($rootScope);
-		// Fake heading for processing the directive
-		fullNode = {
-		    id: 2,
-		    title: 'full dummy node 1'
-		}
-		$rootScope.heading = {
-		    id: 2,
-		};
-		$httpBackend.expect('GET', '/gtd/nodes/2?').respond(200, fullNode);
-	    });
-	    beforeEach(inject(function($injector) {
-		notifyList = $injector.get('notifyList');
-	    }));
 
-	    it('retrieves the heading object from the server', function() {
-		$httpBackend.flush();
-		$rootScope.$digest();
-		expect(element.isolateScope().fields.title).toBe(fullNode.title);
-	    });
-	});
 	describe('when a new node is being created ([ow-parent])', function() {
 	    var parentScope;
 	    beforeEach(function() {
 		element = $compile(
 		    '<div ow-editable ow-parent="heading"></div>'
 		)($rootScope);
-		parentScope = [1, 2];
+		parentFocusAreas = [1, 2];
 		$rootScope.heading = {
 		    id: 1,
 		    title: 'Root-level node 1',
-		    scope: parentScope,
+		    focus_areas: parentFocusAreas,
 		    priority: 'A'
 		};
 	    });
-	    it('inherits the parent $rootScope.scopes attribute', function() {
-		var dummyScopes = [{pk: 1, title: 'scp 1'},
-				   {pk: 2, title: 'scp 2'}];
-		$rootScope.scopes = dummyScopes;
+	    it('inherits parent\'s fields if creating a new node (priority and focus areas)', function() {
 		$rootScope.$digest();
-		expect(element.isolateScope().scopes).toEqual(dummyScopes);
-	    });
-
-	    it('inherits parent\'s fields if creating a new node (priority and scope)', function() {
-		$rootScope.$digest();
-		expect(element.isolateScope().fields.scope).toEqual(parentScope);
+		expect(element.isolateScope().fields.focus_areas).toEqual(parentFocusAreas);
 		expect(element.isolateScope().fields.priority).toEqual('A');
 	    });
 	});
+
 	describe('when a new root-level node is being created (no attrs)', function() {
 	    beforeEach(function() {
 		element = $compile('<div ow-editable></div>')($rootScope);
 	    });
 	    it('creates a new root-level node', function() {
-		// Simulate the $scope the is return from get_parent() for a top-level node
+		// Simulate the $scope that is return from get_parent() for a top-level node
 		$rootScope.$digest();
-		expect(element.isolateScope().fields.scope).toEqual([]);
+		expect(element.isolateScope().fields.focus_areas).toEqual([]);
 		expect(element.isolateScope().fields.priority).toEqual('B');
 	    });
 
@@ -511,67 +473,53 @@ describe('directives in gtd-directives.js', function() {
 	});
     });
 
-    describe('the owScopeTabs directive', function() {
+    describe('the owFocusAreaTabs directive', function() {
 	var $childScope;
 	beforeEach(function() {
-	    $rootScope.scopes = [
-		{id: 1},
-		{id: 2},
-	    ];
 	    $templateCache.put(
-		'/static/scope-tabs.html',
-		'<ul><li id="scope-tab-{{ scope.id }}" ng-repeat="scope in owScopes"></li></ul>'
+		'/static/focus-area-tabs.html',
+		'<ul><li id="fa-tab-{{ fa.id }}" ng-repeat="fa in focusAreas"></li></ul>'
 	    );
 	    element = $compile(
-		'<div ow-scope-tabs></div>'
+		'<div ow-focus-area-tabs></div>'
 	    )($rootScope);
 	});
-	it('emits the "change-scope" event on changeScope()', function() {
-	    var emittedStatus, targetScope;
+	it('emits the "change-focus-area" event on changeFocusArea()', function() {
+	    var emittedStatus, targetFocusArea;
 	    $rootScope.$digest();
 	    $childScope = element.isolateScope();
-	    targetScope = $rootScope.scopes[0];
 	    expect($childScope).toBeDefined();
-	    $rootScope.$on('scope-changed', function(e, newScope) {
+	    targetFocusArea = {id: 1};
+	    $rootScope.$on('focus-area-changed', function(e, newFocusArea) {
 		emittedStatus = true;
-		emittedScope = newScope;
+		emittedFocusArea = newFocusArea;
 	    });
-	    $childScope.changeScope(targetScope);
+	    $childScope.changeFocusArea(targetFocusArea);
 	    expect(emittedStatus).toBeTruthy();
-	    expect(emittedScope).toBe(targetScope);
+	    expect(emittedFocusArea).toBe(targetFocusArea);
 	});
-	it('emits with argument "null" if newScope is 0', function() {
-	    var targetScope, emittedScope;
+	it('sets scope.activeFocusArea on changeFocusArea()', function() {
+	    var newFocusArea;
+	    newFocusArea = {id: 1};
 	    $rootScope.$digest();
 	    $childScope = element.isolateScope();
-	    nullScope = $childScope.owScopes[0];
-	    $rootScope.$on('scope-changed', function(e, newScope) {
-		emittedScope = newScope;
-	    });
-	    $childScope.changeScope(nullScope);
-	    expect(emittedScope).toBe(null);
-	   });
-	it('sets scope.activeScope on changeScope()', function() {
-	    var newScope;
-	    newScope = $rootScope.scopes[0];
-	    $rootScope.$digest();
-	    $childScope = element.isolateScope();
-	    $childScope.changeScope(newScope);
-	    expect($childScope.activeScope).toBe(newScope);
+	    $childScope.changeFocusArea(newFocusArea);
+	    expect($childScope.activeFocusArea).toBe(newFocusArea);
 	});
-	it('moves the "active" class to a tab on changeScope()', function() {
-	    var newScope = $rootScope.scopes[0];
+	it('moves the "active" class to a tab on changeFocusArea()', function() {
+	    var newFocusArea = {id: 1};
+	    $httpBackend.flush();
 	    $rootScope.$digest();
-	    // Set the first scope
+	    // Set the first focus area
 	    $childScope = element.isolateScope();
-	    $childScope.changeScope(newScope);
-	    expect(element.find('#scope-tab-1')).toHaveClass('active');
-	    expect(element.find('#scope-tab-2')).not.toHaveClass('active');
-	    // Now change the scope
-	    newScope = $rootScope.scopes[1];
-	    $childScope.changeScope(newScope)
-	    expect(element.find('#scope-tab-2')).toHaveClass('active');
-	    expect(element.find('#scope-tab-1')).not.toHaveClass('active');
+	    $childScope.changeFocusArea(newFocusArea);
+	    expect(element.find('#fa-tab-1')).toHaveClass('active');
+	    expect(element.find('#fa-tab-2')).not.toHaveClass('active');
+	    // Now change the focus area
+	    newFocusArea = {id: 2};
+	    $childScope.changeFocusArea(newFocusArea)
+	    expect(element.find('#fa-tab-2')).toHaveClass('active');
+	    expect(element.find('#fa-tab-1')).not.toHaveClass('active');
 	});
     });
 
@@ -850,30 +798,6 @@ describe('services in gtd-services.js', function() {
 	});
     });
 
-    describe('the notify service', function() {
-	var notify, notifyList, $timeout;
-	beforeEach(inject(function($injector) {
-	    notify = $injector.get('notify');
-	    notifications = $injector.get('notifyList');
-	    $timeout = $injector.get('$timeout');
-	}));
-	it('adds a new notification to the list', function() {
-	    expect(notifications.length).toEqual(0);
-	    notify('hello, world');
-	    expect(notifications.length).toEqual(1);
-	    expect(JSON.stringify(notifications))
-		.toEqual(JSON.stringify([{
-		    msg: 'hello, world', cls: 'info'
-		}]));
-	});
-	it('removes notifications after a while', function() {
-	    notify('hello, world');
-	    expect(notifications.length).toEqual(1);
-	    $timeout.flush();
-	    expect(notifications.length).toEqual(0);
-	});
-    });
-
     describe('the Heading service', function() {
 	var Heading, heading, $rootScope, $httpBackend;
 	beforeEach(inject(function($injector) {
@@ -917,7 +841,7 @@ describe('services in gtd-services.js', function() {
 	    ];
 	    todoStates = $injector.get('todoStates');
 	    $httpBackend = $injector.get('$httpBackend');
-	    $httpBackend.whenGET('/gtd/todostate').respond(201, mockedStates);
+	    $httpBackend.whenGET('/gtd/todostates').respond(201, mockedStates);
 	}));
 	it('sets the getState() method', function() {
 	    $httpBackend.flush();
@@ -936,34 +860,36 @@ describe('controllers in gtd-main.js', function() {
 	]
     });
     describe('nextActionsList controller', function() {
-	var $httpBackend
+	var $httpBackend, actionsList, upcomingList;
 	beforeEach(inject(function($rootScope, $controller, _$httpBackend_) {
 	    $httpBackend = _$httpBackend_
-	    $httpBackend.whenGET('/gtd/todostate').respond(200, dummyStates);
-	    $httpBackend.whenGET('/gtd/context').respond(200, []);
-	    $httpBackend.whenGET('/gtd/scope').respond(200, []);
-	    // $httpBackend.whenGET(/\/gtd\/nodes?[^t]?.*/).respond(201, []);
-	    $httpBackend.whenGET('/gtd/nodes?field_group=actions_list&todo_state=2').respond(201, []);
-	    $httpBackend.whenGET(/\/gtd\/nodes\?field_group=actions_list&todo_state=2&upcoming=[-0-9]+/)
-		.respond(201, []);
-	    $httpBackend.whenGET(/\/gtd\/nodes\?field_group=actions_list&scheduled_date__lte=[-0-9]+&todo_state=8/)
-	    	.respond(201, []);
-	    $scope = $rootScope.$new();
-	    $controller('nextActionsList', {$scope: $scope});
-	    $httpBackend.flush();
-	    $scope.actionsList = [
+	    actionsList = [
 		{id: 1,
 		 scope: [1],
 		 todo_state: 2},
 		{id: 2,
 		 scope: []},
 	    ];
-	    $scope.upcomingList = [
+	    upcomingList = [
 		{id: 2,
 		 scope: [1]},
 		{id: 3,
 		 scope: []},
 	    ];
+	    $httpBackend.whenGET('/gtd/todostates').respond(200, dummyStates);
+	    $httpBackend.whenGET('/gtd/contexts').respond(200, []);
+	    $httpBackend.whenGET('/gtd/focusareas').respond(200, [
+		{id: 1, display: 'Work'},
+		{id: 2, display: 'Home'}
+	    ]);
+	    // $httpBackend.whenGET(/\/gtd\/nodes?[^t]?.*/).respond(201, []);
+	    $httpBackend.whenGET(/\/gtd\/nodes\?field_group=actions_list&todo_state=2(&todo_state=1)?/).respond(201, actionsList);
+	    $httpBackend.whenGET(/\/gtd\/nodes\?field_group=actions_list&todo_state=2&upcoming=[-0-9]+/)
+		.respond(201, upcomingList);
+	    $httpBackend.whenGET(/\/gtd\/nodes\?field_group=actions_list&scheduled_date__lte=[-0-9]+&todo_state=8/)
+	    	.respond(201, []);
+	    $scope = $rootScope.$new();
+	    $controller('nextActionsList', {$scope: $scope});
 	}));
 	// Reset httpBackend calls
 	afterEach(function() {
@@ -971,7 +897,14 @@ describe('controllers in gtd-main.js', function() {
 	});
 	it('sets the visibleHeadings list upon initialization', function() {
 	    $scope.$digest();
-	    expect($scope.visibleHeadings.length).toEqual(3);
+	    $httpBackend.flush();
+	    expect($scope.visibleHeadings.length).toEqual(2);
+	});
+	it('sets an indicator for loading status', function() {
+	    expect($scope.$digest());
+	    expect($scope.isLoading).toBeTruthy();
+	    $httpBackend.flush();
+	    expect($scope.isLoading).toBeFalsy();
 	});
 	describe('the toggleTodoState() method', function() {
 	    it('adds the todo-state if it\'s not active', function() {
@@ -1034,11 +967,11 @@ describe('controllers in gtd-main.js', function() {
 	afterEach(function() {
 	    // $httpBackend.verifyNoOutstandingExpectation();
 	});
-	it('handles the "scope-changed" signal', function() {
-	    expect($scope.activeScope).toBe(null);
-	    newScope = {id: 1};
-	    $scope.$emit('scope-changed', newScope);
-	    expect($scope.activeScope).toBe(newScope);
+	it('handles the "focus-area-changed" signal', function() {
+	    expect($scope.activeFocusArea).toBe(undefined);
+	    newFocusArea = {id: 1};
+	    $scope.$emit('focus-area-changed', newFocusArea);
+	    expect($scope.activeFocusArea).toBe(newFocusArea);
 	});
     });
 
@@ -1057,7 +990,7 @@ describe('controllers in gtd-main.js', function() {
 	    $controller = _$controller_;
 	    $location = _$location_;
 	    $httpBackend = _$httpBackend_;
-	    $httpBackend.whenGET(/\/gtd\/(context|scope)/).respond(200, []);
+	    $httpBackend.whenGET(/\/gtd\/(context|focusareas)/).respond(200, []);
 	}));
 	afterEach(function() {
 	    $httpBackend.verifyNoOutstandingExpectation();
@@ -1085,8 +1018,11 @@ describe('controllers in gtd-main.js', function() {
 	    $scope = $rootScope.$new();
 	    $controller('calendar', {$scope: $scope});
 	    $httpBackend = _$httpBackend_;
-	    $httpBackend.whenGET('/gtd/context').respond(200);
-	    $httpBackend.whenGET('/gtd/scope').respond(200);
+	    $httpBackend.whenGET('/gtd/contexts').respond(200);
+	    $httpBackend.whenGET('/gtd/focusareas').respond(200, [
+		{id: 1, display: 'Work'},
+		{id: 2, display: 'Home'}
+	    ]);
 	    $httpBackend.whenGET('/gtd/nodes?archived=false&field_group=calendar&todo_state__abbreviation=HARD').respond(200);
 	    $httpBackend.whenGET('/gtd/nodes?archived=false&field_group=calendar&todo_state__abbreviation=DFRD').respond(200);
 	    $httpBackend.whenGET('/gtd/nodes?archived=false&deadline_date__gt=1970-01-01&field_group=calendar_deadlines').respond(200);
@@ -1110,7 +1046,7 @@ describe('controllers in gtd-main.js', function() {
 	    expect($scope.activeCalendars.length).toEqual(2);
 	});
 	it('reschedules a day-specific node', function() {
-	    var newDate = new Date('2014-06-16T04:00:00.000Z');
+	    var newDate = new Date('2014-06-16T12:00:00.000Z');
 	    $httpBackend.expectPUT('/gtd/nodes/1?',
 				   '{"id":1,"scheduled_date":"2014-6-16"}')
 		.respond(200, {});
@@ -1121,8 +1057,12 @@ describe('controllers in gtd-main.js', function() {
 	});
 	it('reschedules a time-specific node', function() {
 	    var newDate = new Date("2014-06-17T03:17:05.746Z");
-	    $httpBackend.expectPUT('/gtd/nodes/1?',
-				   '{"id":1,"scheduled_date":"2014-6-16","scheduled_time":"23:17"}')
+	    expectedDate = '' + newDate.getFullYear() + '-' +
+		(newDate.getMonth() + 1) + '-' + newDate.getDate();
+	    expectedTime = '' + newDate.getHours() + ':' + newDate.getMinutes();
+	    expectedString = '{"id":1,"scheduled_date":"' + expectedDate +
+		'","scheduled_time":"' + expectedTime + '"}';
+	    $httpBackend.expectPUT('/gtd/nodes/1?', expectedString)
 		.respond(200, {});
 	    $scope.moveEvent({id: 1,
 			      start: newDate,
@@ -1130,7 +1070,7 @@ describe('controllers in gtd-main.js', function() {
 			     });
 	});
 	it('reschedules a deadline node', function() {
-	    var newDate = new Date("2014-06-16T04:00:00.000Z");
+	    var newDate = new Date("2014-06-16T12:00:00.000Z");
 	    $httpBackend.expectPUT('/gtd/nodes/1?',
 				   '{"id":1,"deadline_date":"2014-6-16"}')
 		.respond(200, {});
@@ -1140,7 +1080,7 @@ describe('controllers in gtd-main.js', function() {
 			      field_group: 'calendar_deadlines'});
 	});
 	it('resizes a scheduled node with date only', function() {
-	    var newDate = new Date("2014-06-16T04:00:00.000Z");
+	    var newDate = new Date("2014-06-16T12:00:00.000Z");
 	    $httpBackend.expectPUT('/gtd/nodes/1?',
 				   '{"id":1,"end_date":"2014-6-16"}')
 		.respond(200, {});
@@ -1150,9 +1090,15 @@ describe('controllers in gtd-main.js', function() {
 				field_group: 'calendar'});
 	});
 	it('resizes a scheduled node with date and time', function() {
+	    var newDate, expectedDate, expectedTime, expectedString;
 	    var newDate = new Date("2014-06-16T03:55:59.000Z");
-	    $httpBackend.expectPUT('/gtd/nodes/1?',
-				   '{"id":1,"end_date":"2014-6-15","end_time":"23:55"}')
+	    // Prepare expected request data string
+	    expectedDate = '' + newDate.getFullYear() + '-' +
+		(newDate.getMonth() + 1) + '-' + newDate.getDate();
+	    expectedTime = '' + newDate.getHours() + ':' + newDate.getMinutes();
+	    expectedString = '{"id":1,"end_date":"' + expectedDate +
+		'","end_time":"' + expectedTime + '"}';
+	    $httpBackend.expectPUT('/gtd/nodes/1?', expectedString)
 		.respond(200, {});
 	    $scope.resizeEvent({id: 1,
 				end: newDate,

@@ -1,14 +1,14 @@
-/*globals owMain, Message, owServices, angular*/
+/*globals angular*/
 "use strict";
-var MessageFactory;
+
+angular.module('owServices')
 
 /*************************************************
 * Message object represents a mail item,
 * DFRD node, quick-capture item, etc.
 *
 **************************************************/
-owServices.factory('Message', ['$resource', '$rootScope', MessageFactory]);
-function MessageFactory($resource, $rootScope) {
+.factory('Message', ['$resource', '$rootScope', function($resource, $rootScope) {
     var res = $resource(
 	'/wolfmail/message/:id', {id: '@id'},
 	{
@@ -44,4 +44,4 @@ function MessageFactory($resource, $rootScope) {
 	}
     );
     return res;
-}
+}]);

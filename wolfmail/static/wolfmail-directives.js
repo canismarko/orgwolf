@@ -1,11 +1,13 @@
-/*globals $, owMain, owDirectives */
+/*globals angular, $ */
 "use strict";
+
+angular.module('owDirectives')
 
 /*************************************************
 * Directive sets the parameters of next
 * actions table row
 **************************************************/
-owDirectives.directive('owMessageRow', function() {
+.directive('owMessageRow', function() {
     function link(scope, element, attrs) {
 	var $element, $bTask, $bProject, $bComplete, $bDefer, $bArchive, $bDelete;
 	$element = $(element);
@@ -38,14 +40,14 @@ owDirectives.directive('owMessageRow', function() {
 	scope: true,
 	link: link,
     };
-});
+})
 
 /*************************************************
 * Directive for showing the Headings that are
 * descended from a message.
 *   eg. Message --> new task (Heading)
 **************************************************/
-owDirectives.directive('owMessageHeading', ['todoStates', function(todoStates) {
+.directive('owMessageHeading', ['todoStates', function(todoStates) {
     function link(scope, element, attrs) {
 	scope.isEditable = false;
 	scope.$on('finishEdit', function() {
@@ -65,13 +67,13 @@ owDirectives.directive('owMessageHeading', ['todoStates', function(todoStates) {
 	scope: false,
 	link: link,
     };
-}]);
+}])
 
 /*************************************************
 * Directive that handles actions on messages
 *
 **************************************************/
-owDirectives.directive('owMsgActions', ['Heading', function(Heading) {
+.directive('owMsgActions', ['Heading', function(Heading) {
     // Directive handles actions modal on message object
     function link(scope, element, attrs) {
 	var $element, MessageApi;

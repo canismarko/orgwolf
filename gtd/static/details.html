@@ -21,9 +21,8 @@
   PRIORITY: {{ heading.priority }}
 </div>
 
-<div ng-show="heading.scope.length > 0">
-  FOCUS AREAS:
-  <span ng-repeat="area in focusAreas"><span ng-show="$first">{{ area }}</span><span ng-show="$middle">, {{ area }}</span><span ng-show="$last"> and {{ area }}</span></span>
+<div ng-show="heading.focus_areas.length > 0">
+  FOCUS AREAS: {{ heading | listFocusAreas }}
 </div>
 
 <div class="ow-text" id="edit-text-{{ heading.id }}"
