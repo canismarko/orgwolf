@@ -9,7 +9,7 @@ var test_headings, owConfig, HeadingFactory, outlineCtrl, listCtrl;
 var owMain = angular.module(
     'owMain',
     ['ngAnimate', 'ngResource', 'ngSanitize', 'ngRoute', 'ngCookies',
-     'ui.bootstrap', 'ui.calendar',
+     'ui.bootstrap', 'ui.calendar', 'toaster',
      'owServices', 'owDirectives', 'owFilters']
 )
 
