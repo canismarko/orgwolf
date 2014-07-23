@@ -331,4 +331,54 @@ owFilters.filter('listFocusAreas', ['focusAreas', function(focusAreas) {
 	}
 	return s;
     };
+}])
+
+/*************************************************
+* Filter takes a string and wraps the search
+* query in a span element
+*
+**************************************************/
+.filter('highlightSearch', [function() {
+    return function(sourceString, reString) {
+	var i, regex;
+	// Now apply the regular expression and wrap text
+	regex = new RegExp(reString, "ig");
+	sourceString = sourceString.replace(
+	    regex,
+	    '<span class="highlight">$&</span>'
+	);
+	return sourceString;
+    };
+}])
+
+/*************************************************
+* Filter takes text, trims it down then highlights
+* the matched queries.
+*
+**************************************************/
+.filter('highlightSearchText', [function() {
+    return function(sourceText, reString) {
+	var regex, workingString, firstMatch;
+	// First remove html tags
+	/*jslint regexp: true*/
+	sourceText = String(sourceText).replace(/<[^>]+>/gm, '');
+	/*jslint regexp: false*/
+	// Process the string
+	regex = new RegExp(reString, "ig");
+	firstMatch = sourceText.search(regex);
+	if (firstMatch > -1) {
+	    // Truncate extra text at the front
+	    if (firstMatch > 40) {
+		sourceText = '&hellip;' + sourceText.slice(firstMatch-40);
+	    }
+	    // Restrict total length
+	    if (sourceText.length > 500) {
+		sourceText = sourceText.slice(0, 500);
+		sourceText += '&hellip;';
+	    }
+	} else { // No match so return empty string
+	    sourceText = '';
+	}
+	return sourceText;
+    };
 }]);

@@ -307,6 +307,51 @@ describe('filters in gtd-filters.js', function() {
 		.toEqual('Work, Home and Health');
 	});
     });
+
+    describe('the highlightSearch filter', function() {
+	var filter;
+	beforeEach(inject(function($injector) {
+	    filter = $injector.get("highlightSearchFilter");
+	}));
+	it('wraps a search query in a span element', function() {
+	    var filteredTitle, expectedText;
+	    filteredTitle = filter("a very nice day", 'very');
+	    expect(filteredTitle).toEqual(
+		'a <span class="highlight">very</span> nice day');
+	})
+    });
+    describe('the highlightSearchText filter', function() {
+	var filter;
+	beforeEach(inject(function($injector) {
+	    filter = $injector.get("highlightSearchTextFilter");
+	}));
+	it('returns an empty string if no match was found', function() {
+	    var filteredText = filter("a very nice day", 'never');
+	    expect(filteredText).toEqual('');
+	});
+	it('returns 40 characters before the first match', function() {
+	    var filteredText = filter(
+		"it's a wonderful day in the neighbourhood and we can jam",
+		'and');
+	    expect(filteredText).toEqual(
+		"&hellip;'s a wonderful day in the neighbourhood and we can jam"
+	    );
+	});
+	it('truncates long text', function() {
+	    var dummyText;
+	    // Repeat this text a few times to get a long string
+	    dummyText = "Wishes are funny things. Unless you're a ghost. ";
+	    dummyText += dummyText + dummyText + dummyText;
+	    dummyText += dummyText + dummyText + dummyText;
+	    dummyText += dummyText + dummyText + dummyText;
+	    var filteredText = filter(
+		dummyText,
+		'wishes');
+	    expect(filteredText.length).toEqual(508);
+	    expect(filteredText.slice(-8)).toEqual('&hellip;');
+	});
+	it('appends the number of matches at the end');
+    });
 });
 
 describe('directives in gtd-directives.js', function() {
@@ -980,10 +1025,10 @@ describe('controllers in gtd-main.js', function() {
 	beforeEach(inject(function($rootScope, _$controller_, _$location_,_$httpBackend_) {
 	    // Fake response data
 	    titleResults = [
-		{title: "hello, world"}
+		{id: 1, title: "hello, world"}
 	    ];
 	    textResults = [
-		{text: "hello m'darling"}
+		{id: 2, text: "hello m'darling"}
 	    ];
 	    // Dependency injection and setup
 	    $scope = $rootScope.$new();
@@ -994,6 +1039,19 @@ describe('controllers in gtd-main.js', function() {
 	}));
 	afterEach(function() {
 	    $httpBackend.verifyNoOutstandingExpectation();
+	});
+	it('constructs a regex string based on the query', function() {
+	    $location.search('q', 'hello+world');
+	    $controller('search', {$scope: $scope});
+	    $httpBackend.whenGET('/gtd/nodes?title__contains=hello')
+		.respond(200, titleResults);
+	    $httpBackend.whenGET('/gtd/nodes?text__contains=hello')
+		.respond(200, textResults);
+	    $httpBackend.whenGET('/gtd/nodes?title__contains=world')
+		.respond(200, titleResults);
+	    $httpBackend.whenGET('/gtd/nodes?text__contains=world')
+		.respond(200, []);
+	    expect($scope.reString).toEqual('hello|world');
 	});
 	it('fetches nodes based on title', function() {
 	    // Set up fake query and check for API call
@@ -1008,8 +1066,37 @@ describe('controllers in gtd-main.js', function() {
 	    expect($scope.results[0].title).toEqual(titleResults[0].title);
 	    expect($scope.results[1].text).toEqual(textResults[0].text);
 	});
-	it('splits multiple words into separate queries');
+	it('splits multiple words into separate queries', function() {
+	    // Set up fake query and check for API call
+	    $location.search('q', 'hello+world');
+	    $httpBackend.expectGET('/gtd/nodes?title__contains=hello')
+		.respond(200, titleResults);
+	    $httpBackend.expectGET('/gtd/nodes?text__contains=hello')
+		.respond(200, textResults);
+	    $httpBackend.expectGET('/gtd/nodes?title__contains=world')
+		.respond(200, titleResults);
+	    $httpBackend.expectGET('/gtd/nodes?text__contains=world')
+		.respond(200, []);
+	    $controller('search', {$scope: $scope});
+	    $httpBackend.flush();
+	});
+	it('removes duplicate entries', function() {
+	    $location.search('q', 'hello+world');
+	    $httpBackend.whenGET('/gtd/nodes?title__contains=hello')
+		.respond(200, titleResults);
+	    $httpBackend.whenGET('/gtd/nodes?text__contains=hello')
+		.respond(200, textResults);
+	    $httpBackend.whenGET('/gtd/nodes?title__contains=world')
+		.respond(200, titleResults);
+	    $httpBackend.whenGET('/gtd/nodes?text__contains=world')
+		.respond(200, []);
+	    $controller('search', {$scope: $scope});
+	    $httpBackend.flush();
+	    expect($scope.results.length)
+		.toEqual(titleResults.length + textResults.length);
+	});
 	it('ignores trivial words');
+	it('keeps quotes search string as one query');
     });
 
     describe('calendar controller', function() {

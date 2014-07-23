@@ -36,7 +36,6 @@ from rest_framework.decorators import api_view
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from social.backends import google
 
 from gtd.shortcuts import load_fixture
 from orgwolf import settings
@@ -52,6 +51,14 @@ class AngularView(TemplateView):
     View class that serves up the base angular template.
     """
     template_name = 'angular.html'
+
+    def get_context_data(self, **kwargs):
+        """
+        Add local_net from settings variable.
+        """
+        context = super(AngularView, self).get_context_data(**kwargs)
+        context['local_net'] = settings.LOCAL_NET
+        return context
 
 
 def home(request):
@@ -137,6 +144,9 @@ class FeedbackView(APIView):
 #         return context
 
 
+GOOGLE_SCOPE = 'https://www.googleapis.com/auth/plus.login'
+
+
 @api_view(['GET'])
 def socialauth_providers(request):
     """
@@ -145,11 +155,9 @@ def socialauth_providers(request):
     """
     def google_provider():
         dict = {
-            "plus_scope": ' '.join(google.GooglePlusAuth.DEFAULT_SCOPE),
+            "plus_scope": ' '.join(GOOGLE_SCOPE),
             "plus_id": settings.GOOGLE_PLUS_KEY,
             "button_type": "Google",
-            "success_url": reverse('social:complete',
-                                    kwargs={"backend": "google-plus"}),
         }
         return dict
     # settings.py determines which of these providers get sent
@@ -171,7 +179,7 @@ def google_auth(request):
         client_id=settings.GOOGLE_PLUS_KEY,
         client_secret=settings.GOOGLE_PLUS_SECRET,
         redirect_uri='postmessage',
-        scope='https://www.googleapis.com/auth/plus.login')
+        scope=GOOGLE_SCOPE)
     credentials = oauth_flow.step2_exchange(code)
 
     # Check that the access token is valid.

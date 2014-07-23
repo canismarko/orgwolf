@@ -148,9 +148,7 @@ MIDDLEWARE_CLASSES = [
 from django.conf.global_settings import TEMPLATE_CONTEXT_PROCESSORS
 TEMPLATE_CONTEXT_PROCESSORS += (
     'django.core.context_processors.request',
-    'social.apps.django_app.context_processors.backends',
-   'social.apps.django_app.context_processors.login_redirect',
-    )
+)
 
 ROOT_URLCONF = 'orgwolf.urls'
 APPEND_SLASH = False
@@ -184,7 +182,6 @@ INSTALLED_APPS = [
     'wolfmail',
     'south',
     'mptt',
-    'social.apps.django_app.default',
     # Uncomment the next line to enable the admin:
     'django.contrib.admin',
     # Uncomment the next line to enable admin documentation:
@@ -205,7 +202,6 @@ SOCIAL_AUTH_USER_MODEL = "orgwolf.OrgWolfUser"
 
 AUTHENTICATION_BACKENDS = [
     'django.contrib.auth.backends.ModelBackend',
-    'social.backends.google.GooglePlusAuth',
 ]
 
 LOGIN_URL = '/accounts/login/'

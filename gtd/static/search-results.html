@@ -3,13 +3,31 @@
   <div ng-include="'/static/search-box.html'"></div>
 
   <ul class="search-results">
-  <li ng-repeat="result in results">
-    <span ng-hide="isEditable">
-      <span ow-todo ow-heading="result"></span>
-      <a ng-click="isEditable=!isEditable" class="search-title">
-	{{ result.title }}</a>
-    </span>
-    <div ow-editable ng-if="isEditable" ow-edit-finish="isEditable = false"
-	 ow-heading="result"></div>
-  </li>
+    <li ng-repeat="result in results">
+      <span ng-hide="isEditable">
+	<span ow-todo ow-heading="result"></span>
+	<a ng-click="isEditable=!isEditable" class="search-title"
+	   ng-bind-html="result.title | highlightSearch:reString">
+	</a>
+      </span>
+      <div ow-editable ng-if="isEditable" ow-edit-finish="isEditable = false"
+	   ow-heading="result"></div>
+      <div ng-bind-html="result.text | highlightSearchText:reString | highlightSearch:reString">
+      </div>
+    </li>
   </ul>
+
+  <!-- Show if no results -->
+  <div class="alert alert-warning"
+       ng-show="results.length===0">
+    <p>
+      <strong>No results found!</strong>
+    </p>
+    <p>
+      Your search
+      <strong>&ldquo;{{ queryString }}&rdquo;</strong>
+      did not return any results. Is everything spelled correctly?
+    </p>
+  </div>
+
+</div>
