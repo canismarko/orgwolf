@@ -181,4 +181,12 @@ angular.module(
 **************************************************/
 .factory('focusAreas', ['$resource', function($resource) {
     return $resource('/gtd/focusareas/').query();
+}])
+
+/*************************************************
+* Factory returns all the available contexts
+*
+**************************************************/
+.factory('contexts', ['$resource', function($resource) {
+    return $resource('/gtd/contexts/').query();
 }]);

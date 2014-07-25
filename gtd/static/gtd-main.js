@@ -76,17 +76,6 @@ var owMain = angular.module(
 }])
 
 /*************************************************
-* Run setup gets some app-wide data
-*
-**************************************************/
-.run(['$rootScope', '$resource', function($rootScope, $resource) {
-    var TodoState, Context, FocusArea, getState;
-    // Get list of contexts for filtering against
-    Context = $resource('/gtd/contexts/');
-    $rootScope.contexts = Context.query();
-}]);
-
-/*************************************************
 * Handler sends google analytics tracking on
 * angular route change
 **************************************************/
@@ -251,17 +240,12 @@ function outlineCtrl($scope, $rootScope, $http, $resource, $filter, Heading,
 * Angular actions list controller
 *
 **************************************************/
-owMain.controller(
-    'nextActionsList',
-    ['$sce', '$scope', '$resource', '$location', '$routeParams', '$filter',
-     'Heading', 'todoStates', 'owWaitIndicator', '$cookies', listCtrl]
-);
-function listCtrl($sce, $scope, $resource, $location, $routeParams, $filter, Heading, todoStates, owWaitIndicator, $cookies) {
+owMain.controller('nextActionsList', ['$sce', '$scope', '$resource', '$location', '$routeParams', '$filter', 'Heading', 'todoStates', 'contexts', 'owWaitIndicator', '$cookies', function listCtrl($sce, $scope, $resource, $location, $routeParams, $filter, Heading, todoStates, contexts, owWaitIndicator, $cookies) {
     var i, TodoState, Context, today, update_url, get_list, parent_id, todo_states;
     $scope.list_params = {field_group: 'actions_list'};
     $scope.showArchived = true;
     $scope.todoStates = todoStates;
-    $scope.activeScope = null;
+    $scope.contexts = contexts;
     // Context filtering
     if (typeof $routeParams.context_id !== 'undefined') {
 	$scope.activeContext = parseInt($routeParams.context_id, 10);
@@ -452,7 +436,7 @@ function listCtrl($sce, $scope, $resource, $location, $routeParams, $filter, Hea
 	}
 	$navLink.attr('href', $location.absUrl());
     };
-}
+}]);
 
 /*************************************************
 * Search controller
