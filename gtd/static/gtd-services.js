@@ -124,6 +124,35 @@ angular.module(
 }])
 
 /*************************************************
+* Holds the currently accessed Heading, for example
+* when the user visits /gtd/projects/#1-work-project
+*
+**************************************************/
+.factory('activeHeading', ['Heading', function(Heading) {
+    var HeadingObj;
+    HeadingObj = {
+	id: 0,
+	obj: null
+    };
+    HeadingObj.activate = function (HeadingId, requestData) {
+	var data;
+	this.id = parseInt(HeadingId, 10) || 0;
+	if (this.id) {
+	    data = angular.extend({}, {id: this.id}, requestData);
+	    this.obj = Heading.get(data);
+	} else {
+	    this.obj = null;
+	}
+    };
+    HeadingObj.ifActive = function(callback) {
+	if (this.obj) {
+	    this.obj.$promise.then(callback);
+	}
+    };
+    return HeadingObj;
+}])
+
+/*************************************************
 * Default todo states. Override in template from
 * server.
 *

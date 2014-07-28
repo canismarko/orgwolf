@@ -1,6 +1,6 @@
 var OutlinePage = function() {
     this.get = function() {
-	browser.get('http://localhost:8000/gtd/project/');
+	browser.get('http://localhost:8000/gtd/projects/');
     };
     this.getTwisty = function() {
 	return element(by.repeater('heading in children').row(0));

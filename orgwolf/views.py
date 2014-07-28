@@ -144,7 +144,7 @@ class FeedbackView(APIView):
 #         return context
 
 
-GOOGLE_SCOPE = 'https://www.googleapis.com/auth/plus.login'
+GOOGLE_SCOPE = 'https://www.googleapis.com/auth/plus.login https://www.googleapis.com/auth/gmail.modify'
 
 
 @api_view(['GET'])
@@ -155,10 +155,11 @@ def socialauth_providers(request):
     """
     def google_provider():
         dict = {
-            "plus_scope": ' '.join(GOOGLE_SCOPE),
+            "plus_scope": GOOGLE_SCOPE,
             "plus_id": settings.GOOGLE_PLUS_KEY,
             "button_type": "Google",
         }
+        print(dict)
         return dict
     # settings.py determines which of these providers get sent
     dispatcher_dict = {

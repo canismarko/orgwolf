@@ -445,7 +445,7 @@ angular.module(
 * care of any child nodes).
 *
 **************************************************/
-.directive('owTwisty', ['$compile', '$rootScope', 'Heading', function($compile, $rootScope, Heading) {
+.directive('owTwisty', ['$compile', '$rootScope', 'Heading', 'activeHeading', function($compile, $rootScope, Heading, activeHeading) {
     function link(scope, element, attrs) {
 	var hoverable, get_children;
 	scope.isEditing = false;
@@ -509,6 +509,7 @@ angular.module(
 	}
 	// Handlers for clicking on the heading (may be overridden by components)
 	scope.toggleHeading = function(newState) {
+	    // 0 is closed, 1 is partly open, 2 is fully open
 	    element.removeClass('state-' + scope.state);
 	    if ( /^\d+$/.test(newState) ) {
 		// Specific state is passed as an integer
@@ -580,6 +581,19 @@ angular.module(
 	    scope.heading.archived = !scope.heading.archived;
 	    scope.heading.$update();
 	};
+	// Check if this node is related to the active Node
+	activeHeading.ifActive(function(activeObj) {
+	    var isAncestor = (activeObj.tree_id === scope.heading.tree_id &&
+			      activeObj.lft > scope.heading.lft &&
+			      activeObj.rght < scope.heading.rght);
+	    if (activeObj.id === scope.heading.id) {
+		// This is the actual heading
+		element.addClass('active-heading');
+	    } else if (isAncestor) {
+		// This is an ancestor of activeHeading and should be open
+		scope.toggleHeading(1);
+	    }
+	});
     }
     // Special compile function that avoids a recursive dead-lock
     function compile(tElement, tAttr) {

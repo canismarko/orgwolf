@@ -123,6 +123,12 @@ describe('filters in gtd-filters.js', function() {
 		expect(orderFilter(unsorted_data, 'list')).toEqual(sorted_data);
 	    });
 	});
+	it('puts relatives of activeHeading to the top', function() {
+	    unsorted = [{title: 'last', tree_id: 1},
+			{title: 'first', tree_id: 2}];
+	    sorted = orderFilter(unsorted, 'none', {tree_id: 2});
+	    expect(sorted[0].title).toEqual('first');
+	})
     });
 
     describe('the "currentList" filter', function() {
@@ -893,6 +899,32 @@ describe('services in gtd-services.js', function() {
 	    expect(todoStates.getState(1).id).toEqual(1);
 	});
     });
+
+    describe('the activeHeading.activate() method', function() {
+	var $httpBackend, activeNode;
+	beforeEach(inject(function($injector) {
+	    $httpBackend = $injector.get('$httpBackend');
+	    activeHeading = $injector.get('activeHeading');
+	}));
+	afterEach(function() {
+	    $httpBackend.verifyNoOutstandingExpectation();
+	});
+	it('retrieves the heading from the server', function() {
+	    activeHeading.activate(1);
+	    $httpBackend.expectGET('/gtd/nodes/1?').respond(200, {
+		id: 1,
+		tree_id: 1,
+	    });
+	    $httpBackend.flush();
+	    expect(activeHeading.id).toEqual(1);
+	});
+	it("resets the object if an empty string is supplied", function() {
+	    activeHeading.obj = 'Not reset'; // To test for proper resetting
+	    activeHeading.activate('');
+	    expect(activeHeading.obj).toBe(null);
+	    expect(activeHeading.id).toBe(0);
+	});
+    });
 }); // End of gtd-services.js tests
 
 describe('controllers in gtd-main.js', function() {
@@ -904,6 +936,9 @@ describe('controllers in gtd-main.js', function() {
 	    {id: 2},
 	]
     });
+    beforeEach(inject(function($httpBackend) {
+	$httpBackend.whenGET(/\/gtd\/(context|focusareas)/).respond(200, []);
+    }));
     describe('nextActionsList controller', function() {
 	var $httpBackend, actionsList, upcomingList;
 	beforeEach(inject(function($rootScope, $controller, _$httpBackend_) {
@@ -922,7 +957,6 @@ describe('controllers in gtd-main.js', function() {
 		 scope: []},
 	    ];
 	    $httpBackend.whenGET('/gtd/todostates').respond(200, dummyStates);
-	    $httpBackend.whenGET('/gtd/contexts').respond(200, []);
 	    $httpBackend.whenGET('/gtd/focusareas').respond(200, [
 		{id: 1, display: 'Work'},
 		{id: 2, display: 'Home'}
@@ -1003,20 +1037,36 @@ describe('controllers in gtd-main.js', function() {
 	});
     });
     describe('the nodeOutline controller', function() {
-	var $scope;
-	beforeEach(inject(function($rootScope, $controller, _$httpBackend_) {
-	    $scope = $rootScope.$new();
-	    $controller('nodeOutline', {$scope: $scope});
+	var $scope, $controller, $httpBackend, $location;
+	beforeEach(inject(function($injector) {
+	    var nodesUrl = '/gtd/nodes?archived=false&field_group=outline&parent_id=0';
+	    // Set up backend stuffs
+	    $httpBackend = $injector.get('$httpBackend');
+	    $httpBackend.whenGET(nodesUrl).respond(200, []);
+	    $location = $injector.get('$location');
+	    $controller = $injector.get('$controller');
+	    $scope = $injector.get('$rootScope').$new();
 	}));
 	// Reset httpBackend calls
 	afterEach(function() {
-	    // $httpBackend.verifyNoOutstandingExpectation();
+	    $httpBackend.verifyNoOutstandingExpectation();
 	});
 	it('handles the "focus-area-changed" signal', function() {
+	    $controller('nodeOutline', {$scope: $scope});
 	    expect($scope.activeFocusArea).toBe(undefined);
 	    newFocusArea = {id: 1};
 	    $scope.$emit('focus-area-changed', newFocusArea);
 	    expect($scope.activeFocusArea).toBe(newFocusArea);
+	});
+	it('activates the activeNode if given in location string', function() {
+	    $location.hash('1-test-title');
+	    $httpBackend.expectGET('/gtd/nodes/1?')
+		.respond(200, {
+		    id: 1,
+		    tree_id: 1
+		});
+	    $controller('nodeOutline', {$scope: $scope});
+	    $httpBackend.flush();
 	});
     });
 

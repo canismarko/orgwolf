@@ -100,8 +100,8 @@ owFilters.filter('asHtml', ['$sce', function($sce) {
 *
 **************************************************/
 owFilters.filter('order', ['$sce', function($sce) {
-    return function(obj, criterion) {
-	var ordered, deadline, other;
+    return function(obj, criterion, activeHeading) {
+	var ordered, deadline, other, i;
 	if ( criterion === 'list' ) {
 	    other = obj.filter(function(currHeading) {
 		var today, deadline, isOther, delta;
@@ -128,9 +128,25 @@ owFilters.filter('order', ['$sce', function($sce) {
 	} else {
 	    ordered = obj.order_by(criterion);
 	}
+	// Move activeHeading tree to the top if provided
+	if (activeHeading) {
+	    for (i=0; i<ordered.length; i+=1) {
+		if (ordered[i].tree_id === activeHeading.tree_id) {
+		    // move to the top
+		    ordered.unshift(ordered.splice(i, 1)[0]);
+		}
+	    }
+	}
 	return ordered;
     };
 }]);
+
+/*************************************************
+* Filter that sorts the activeHeading to the top
+* of the given list
+*
+**************************************************/
+
 
 /*************************************************
 * Filter that only shows headings that are visible

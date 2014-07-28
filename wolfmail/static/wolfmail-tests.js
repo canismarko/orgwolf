@@ -52,7 +52,7 @@ describe('filters in wolfmail-filters.js:', function() {
 		node_slug: 'dfrd-node',
 	    };
 	    expect(format_subjectFilter(dfrdNode).toString())
-		.toEqual('<a href="/gtd/project/#1-dfrd-node">DFRD Node</a>');
+		.toEqual('<a href="/gtd/projects/#1-dfrd-node">DFRD Node</a>');
 	});
 
 	it('formats a generic message', function() {
