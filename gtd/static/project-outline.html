@@ -40,7 +40,7 @@
   <div class="outline">
     <div ow-editable ng-if="newProject"></div>
     <div ow-twisty ow-heading="heading"
-	 ng-repeat="heading in children | currentFocusArea:activeFocusArea | order:sortField"
+	 ng-repeat="heading in children | currentFocusArea:activeFocusArea | order:sortField:activeHeading.obj"
 	 ng-if="!heading.archived || showArchived"></div>
   </div>
 

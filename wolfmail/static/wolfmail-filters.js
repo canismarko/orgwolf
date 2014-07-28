@@ -30,7 +30,7 @@ owFilters.filter('format_subject', ['$sce', function($sce) {
 	s = '';
 	if (msg.handler_path === 'plugins.deferred') {
 	    // Message from a deferred Node
-	    s = '<a href="/gtd/project/#';
+	    s = '<a href="/gtd/projects/#';
 	    s += msg.source_node + '-';
 	    s += msg.node_slug + '">';
 	    s += msg.subject;

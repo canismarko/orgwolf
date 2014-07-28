@@ -97,9 +97,9 @@ class NodeOutlineSerializer(NodeSerializer):
     """Fields needed for constructing an outline with minimal details."""
     class Meta:
         model = Node
-        fields = ['title', 'tag_string', 'lft', 'rght', 'id', 'priority',
-                  'focus_areas', 'level', 'archived', 'todo_state', 'repeats',
-                  'scheduled_date', 'read_only']
+        fields = ['title', 'tag_string', 'lft', 'rght', 'tree_id', 'id',
+                  'priority', 'focus_areas', 'level', 'archived',
+                  'todo_state', 'repeats', 'scheduled_date', 'read_only']
 
 
 class CalendarSerializer(NodeSerializer):

@@ -9,7 +9,7 @@ angular.module('owDirectives')
 	regexps = {
 	    'actions': new RegExp('^/gtd/actions'),
 	    'inbox': new RegExp('^/wolfmail/inbox/'),
-	    'projects': new RegExp('^/gtd/project/'),
+	    'projects': new RegExp('^/gtd/projects/'),
 	    'calendar': new RegExp('^/calendar/')
 	};
 	function setActiveLink() {

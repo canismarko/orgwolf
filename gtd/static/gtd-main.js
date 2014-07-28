@@ -145,17 +145,16 @@ owMain.controller(
 owMain.controller(
     'nodeOutline',
     ['$scope', '$rootScope', '$http', '$resource', '$filter', 'Heading',
-     '$location', '$anchorScroll', 'owWaitIndicator',  outlineCtrl]
+     '$location', '$anchorScroll', 'owWaitIndicator', 'activeHeading', outlineCtrl]
 );
 function outlineCtrl($scope, $rootScope, $http, $resource, $filter, Heading,
-		     $location, $anchorScroll, owWaitIndicator) {
-    var TodoState, Scope, url, get_heading, Parent, Tree, parent_tree_id, parent_level, target_headings, target_id, main_headings, newButton, showAllButton;
+		     $location, $anchorScroll, owWaitIndicator, activeHeading) {
+    var TodoState, Scope, url, get_heading, Parent, Tree, parent_tree_id, parent_level, target_headings, targetId, main_headings, newButton, showAllButton;
     newButton = $('#add-heading');
     showAllButton = $('#show-all');
-    target_id = $location.hash().split('-')[0];
-    if ( target_id ) {
-	$scope.target_heading = Heading.get({id: target_id});
-    }
+    // Check if the user is requesting a specific node in the URL
+    activeHeading.activate($location.hash().split('-')[0]);
+    $scope.activeHeading = activeHeading;
     // Get all the top-level projects
     function getHeadings() {
 	$scope.children = Heading.query({'parent_id': 0,

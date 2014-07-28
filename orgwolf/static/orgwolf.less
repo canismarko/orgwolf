@@ -402,6 +402,10 @@ dd.todo
 	    padding-right: 8px;
 	    overflow: hidden;
 	}
+	/* If this is the active heading */
+	.heading.active-heading > .ow-hoverable {
+	    background: @brand-success;
+	}
 	/* If the content/children should be presented to the user */
 	.heading.state-1 > .ow-hoverable span.twisty {
 	    .rotate(45deg);
@@ -849,6 +853,12 @@ input,textarea {
 
 /* Accounts settings page */
 .settings {
+    color: @primary;
+    h2 {
+	border-style: solid;
+	border-width: 6px 0px 0px 0px;
+	border-color: @primary-light;
+    }
     .container;
     .social-button {
 	cursor: pointer;
