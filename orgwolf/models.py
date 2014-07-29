@@ -17,6 +17,8 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #######################################################################
 
+import importlib
+
 from django.db import models
 from django.contrib.auth.models import AbstractUser
 from django.utils.html import conditional_escape as escape
@@ -45,6 +47,29 @@ class AccountAssociation(models.Model):
     handler_path = models.CharField(max_length=100)
     remote_id = models.CharField(max_length=100)
     extra_data = models.TextField(blank=True)
+    sync_mail = models.BooleanField(default=False)
+    sync_calendar = models.BooleanField(default=False)
+
+    @property
+    def handler(self):
+        """
+        An object that holds methods associated with the plugin that
+        created this account.
+        """
+        handler = getattr(self, '_handler', None)
+        if handler is None:
+            # Handler does not yet exist so create one on demand
+            if self.handler_path == '':
+                from plugins import BaseAccountHandler
+                handler = BaseAccountHandler(self)
+            else:
+                module = importlib.import_module(self.handler_path)
+                handler = module.AccountHandler(self)
+            self._handler = handler
+        return handler
+
+    class Meta:
+        unique_together = ('ow_user', 'remote_id', 'handler_path')
 
 
 class Color:

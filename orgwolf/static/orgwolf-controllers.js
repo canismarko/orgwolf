@@ -17,7 +17,7 @@ angular.module('owMain')
 
 .controller('settings', ['$scope', '$window', '$resource', '$http', 'toaster', function($scope, $window, $resource, $http, toaster) {
     var Provider, Account, isReadyToSave;
-    Provider = $resource('/providers/:backend');
+    Provider = $resource('/providers/');
     $scope.providers = Provider.query();
     Account = $resource('/accountassociations/:id/', {'id': '@id'});
     // Get list of linked accounts
@@ -48,16 +48,24 @@ angular.module('owMain')
 	var data;
 	// Submit to the backend for verification
 	if (isReadyToSave && !result.error) {
-	    data = {"access_token": result.access_token, "code": result.code};
+	    data = {"access_token": result.access_token, "code": result.code,
+		    "handler_path": "plugins.google"};
 	    toaster.pop('info', 'Saving...');
-	    Provider.save({backend: 'gmail'}, data).$promise.then(function(response) {
-		if (response.status === 'success') {
+	    Account.save({}, data).$promise.then(
+		function(response) {
+		    // Success callback
 		    toaster.pop('success', 'Saved');
 		    $scope.$emit('refresh-data');
-		} else if (response.status === 'unchanged') {
-		    toaster.pop('error', 'Not saved', 'Duplicate Account');
+		},
+		function(response) {
+		    if (response.data.reason === 'duplicate') {
+			toaster.pop('error', 'Not saved', 'Duplicate Account');
+		    } else {
+			toaster.pop('error', 'Not saved', 'An error occured. Please check your internet connection and try again.');
+			console.log(response);
+		    }
 		}
-	    });
+	    );
 	}
     };
 }]);

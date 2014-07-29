@@ -44,7 +44,6 @@ urlpatterns = patterns(
     # API entry points
     url(r'^feedback/?$', FeedbackView.as_view(), name='feedback'),
     url(r'^providers/?$', 'orgwolf.views.socialauth_providers'),
-    url(r'^providers/gmail/?$', 'orgwolf.views.google_auth'),
     url(r'^accountassociations(?:/(?P<id>\d+))?/?$', AccountAssociationView.as_view()),
 
     # Authentication stuff

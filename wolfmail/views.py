@@ -21,6 +21,7 @@ from __future__ import unicode_literals, absolute_import, print_function
 
 import datetime as dt
 
+from django.conf import settings
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponseForbidden, HttpResponseNotAllowed
 from django.shortcuts import render_to_response
@@ -32,6 +33,7 @@ from rest_framework.views import APIView
 
 from gtd.models import Node, TodoState
 from gtd.serializers import NodeSerializer
+from orgwolf.models import AccountAssociation
 from wolfmail.models import Message
 from wolfmail.serializers import InboxSerializer, MessageSerializer
 
@@ -77,6 +79,8 @@ class MessageView(APIView):
             if msg.owner != request.user:
                 return HttpResponseForbidden()
             serializer = MessageSerializer(msg)
+        account = AccountAssociation.objects.first()
+        return Response(account.handler.get_messages())
         return Response(serializer.data)
 
     def put(self, request, pk):

@@ -21,10 +21,9 @@ from __future__ import unicode_literals
 from django.core.urlresolvers import reverse
 from django.test import TestCase
 
-from orgwolf.models import OrgWolfUser as User
-# from orgwolf import wsgi # For unit testing code coverage
-from orgwolf.models import HTMLEscaper
 from orgwolf.forms import RegistrationForm
+from orgwolf.models import OrgWolfUser as User, HTMLEscaper, AccountAssociation
+from plugins import BaseAccountHandler, google
 from wolfmail.models import Message
 
 class HTMLParserTest(TestCase):
@@ -147,6 +146,28 @@ class UserMutators(TestCase):
             username,
             user.get_display()
             )
+
+
+class AccountAssociationTests(TestCase):
+    def test_handler_property(self):
+        acc = AccountAssociation()
+        self.assertTrue(isinstance(
+            acc.handler,
+            BaseAccountHandler
+        ))
+        acc.handler.test_string = 'hello'
+        self.assertEqual(
+            acc.handler.test_string,
+            'hello',
+            'AccountAssociation().handler not preserved'
+        )
+
+    def test_overridden_handler(self):
+        acc = AccountAssociation(handler_path="plugins.google")
+        self.assertTrue(isinstance(
+            acc.handler,
+            google.AccountHandler
+        ))
 
 
 class FeedbackAPI(TestCase):

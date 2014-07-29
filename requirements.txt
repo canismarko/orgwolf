@@ -1,6 +1,7 @@
 django>=1.6
 django-mptt
 oauth2client
+google-api-python-client
 south
 python-dateutil
 pytz

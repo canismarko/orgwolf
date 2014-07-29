@@ -19,6 +19,7 @@
 
 from django.contrib import admin
 
-from orgwolf.models import OrgWolfUser
+from orgwolf.models import OrgWolfUser, AccountAssociation
 
 admin.site.register(OrgWolfUser)
+admin.site.register(AccountAssociation)

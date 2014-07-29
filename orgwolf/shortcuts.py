@@ -17,19 +17,19 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #######################################################################
 
-from __future__ import unicode_literals, absolute_import, print_function
-import datetime as dt
+import importlib
 
-from rest_framework import serializers
-
-from orgwolf.models import AccountAssociation
-
-class AccountAssociationSerializer(serializers.ModelSerializer):
-
-    name = serializers.SerializerMethodField('get_plugin_name')
-
-    def get_plugin_name(self, obj):
-        return obj.handler.name
-
-    class Meta:
-        model = AccountAssociation
+def import_plugin(plugin_module, handler_obj=None):
+    """
+    Shortcut for importing a plugin and optionally an object.
+    """
+    if plugin_module == "":
+        # Get default module
+        handler_cls = 'Base' + handler_cls
+        plugin_module = 'plugins'
+    module = importlib.import_module(plugin_module)
+    if handler_obj:
+        plugin = getattr(module, handler_obj)
+    else:
+        plugin = module
+    return plugin
