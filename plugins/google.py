@@ -21,16 +21,11 @@ class AccountHandler(BaseAccountHandler):
     def get_messages(self):
         # Get GMail message
         account = AccountAssociation.objects.first()
-        messages = []
         credentials = client.AccessTokenCredentials(account.access_token, '')
         http = credentials.authorize(Http())
-        batch = BatchHttpRequest(callback=callback)
         service = build('gmail', 'v1', http=http)
         message_list = service.users().messages().list(userId="me").execute()
-        for message in message_list['messages']:
-            batch.add(service.users().messages().get(userId="me", id=message["id"]))
-        batch.execute(http=http)
-        return messages
+        return message_list
 
     @staticmethod
     def authorize_account(request_data, user):

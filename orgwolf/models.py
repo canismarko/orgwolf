@@ -18,11 +18,33 @@
 #######################################################################
 
 import importlib
+import json
 
 from django.db import models
 from django.contrib.auth.models import AbstractUser
 from django.utils.html import conditional_escape as escape
 from HTMLParser import HTMLParser
+
+
+class JSONField(models.TextField):
+    """
+    Serializes and deserializes arbitrary JSON data from the model.
+    """
+
+    def __init__(self, *args, **kwargs):
+        def empty_dictionary():
+            return {}
+        kwargs['default'] = empty_dictionary
+        super(JSONField, self).__init__(*args, **kwargs)
+
+    def to_python(self, value):
+        if instance(value, dict):
+            return value
+        # value is string so deserialize
+        return json.loads(value)
+
+    def get_prep_value(self, value):
+        return json.dumps(value)
 
 class OrgWolfUser(AbstractUser):
     """Holds profile information for users."""
@@ -46,7 +68,7 @@ class AccountAssociation(models.Model):
     access_token = models.TextField(blank=True)
     handler_path = models.CharField(max_length=100)
     remote_id = models.CharField(max_length=100)
-    extra_data = models.TextField(blank=True)
+    extra_data = JSONField(blank=True)
     sync_mail = models.BooleanField(default=False)
     sync_calendar = models.BooleanField(default=False)
 
