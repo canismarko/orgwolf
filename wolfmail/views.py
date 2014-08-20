@@ -80,7 +80,6 @@ class MessageView(APIView):
                 return HttpResponseForbidden()
             serializer = MessageSerializer(msg)
         account = AccountAssociation.objects.first()
-        return Response(account.handler.get_messages())
         return Response(serializer.data)
 
     def put(self, request, pk):

@@ -8,6 +8,7 @@
   <span ow-todo ow-heading="heading"></span>
   <div class="ow-title">
     {{heading.title}}
+    <span ng-show="heading.has_text && state < 2">&hellip;</span>
   </div>
   <span ng-if="heading.repeats"
 	class="repeat-icon non-opening"></span>

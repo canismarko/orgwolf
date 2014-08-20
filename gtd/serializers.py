@@ -51,6 +51,7 @@ class ContextSerializer(serializers.ModelSerializer):
 
 class NodeSerializer(serializers.ModelSerializer):
     read_only = serializers.SerializerMethodField('get_read_only')
+    has_text = serializers.SerializerMethodField('get_has_text')
     def __init__(self, qs, request=None, *args, **kwargs):
         # Perform some optimization before hitting the database
         self.request = request
@@ -68,6 +69,12 @@ class NodeSerializer(serializers.ModelSerializer):
             status = False
         return status
 
+    def get_has_text(self, obj):
+        has_text = False
+        if obj.text:
+            has_text = True
+        return has_text
+
     class Meta:
         model = Node
 
@@ -82,7 +89,7 @@ class NodeListSerializer(NodeSerializer):
                   'deadline_date', 'deadline_time',
                   'scheduled_date', 'scheduled_time',
                   'tree_id', 'lft', 'rght',
-                  'repeats', 'read_only']
+                  'repeats', 'read_only', 'has_text']
 
     def get_root_id(self, obj):
         root = obj.get_root()
@@ -99,7 +106,8 @@ class NodeOutlineSerializer(NodeSerializer):
         model = Node
         fields = ['title', 'tag_string', 'lft', 'rght', 'tree_id', 'id',
                   'priority', 'focus_areas', 'level', 'archived',
-                  'todo_state', 'repeats', 'scheduled_date', 'read_only']
+                  'todo_state', 'repeats', 'scheduled_date',
+                  'read_only', 'has_text']
 
 
 class CalendarSerializer(NodeSerializer):

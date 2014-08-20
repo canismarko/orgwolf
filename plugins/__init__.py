@@ -68,8 +68,11 @@ def add_handler(sender, instance, **kwargs):
     if instance.handler_path == '':
         instance.handler = BaseMessageHandler(instance)
     else:
-        module = importlib.import_module(instance.handler_path)
-        instance.handler = module.MessageHandler(instance)
+        try:
+            module = importlib.import_module(instance.handler_path)
+            instance.handler = module.MessageHandler(instance)
+        except AttributeError:
+            instance.handler = BaseMessageHandler(instance)
 
 
 class BaseAccountHandler():

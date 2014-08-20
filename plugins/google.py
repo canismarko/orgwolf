@@ -1,6 +1,7 @@
 from httplib2 import Http
 from apiclient.discovery import build
 from apiclient.http import BatchHttpRequest
+import dateutil.parser
 from django.conf import settings
 from django.db import IntegrityError
 import json
@@ -9,10 +10,40 @@ from rest_framework import status
 
 from orgwolf.models import AccountAssociation
 from plugins import BaseAccountHandler
+from wolfmail.models import Message
 
 
 NAME = "Google"
 GOOGLE_SCOPE = 'https://www.googleapis.com/auth/plus.login https://www.googleapis.com/auth/gmail.modify'
+
+
+class GoogleMessage(Message):
+    """Proxy model that knows about gmails response format."""
+    def __init__(self, g_data, *args, **kwargs):
+        super(GoogleMessage, self).__init__(*args, **kwargs)
+        self.handler_path = 'plugins.google'
+        # Set up init values based on google data
+        self.payload = g_data['payload']
+        self.subject = self.get_header('Subject')
+        self.sender = self.get_header('From')
+        self.rcvd_date = dateutil.parser.parse(self.get_header('Date'))
+        from base64 import urlsafe_b64decode as decode
+        message_parts = [decode(p['body']['data'].encode('UTF-8')) for p in self.payload['parts'] if p['mimeType'] == 'text/html']
+        for part in message_parts:
+            self.message_text += part
+
+    def get_header(self, param):
+        """Return a header field from the e-mail payload"""
+        result_list = [i['value'] for i in self.payload['headers']
+                       if i['name'] == param]
+        if len(result_list) == 1:
+            result = result_list[0]
+        else:
+            result = None
+        return result
+
+    class Meta:
+        proxy = True
 
 
 class AccountHandler(BaseAccountHandler):
@@ -70,4 +101,21 @@ class AccountHandler(BaseAccountHandler):
             association = None
             response_data['reason'] = "duplicate"
             response_status = status.HTTP_409_CONFLICT
+        # Get list of gmail messages
+        h = credentials.authorize(h)
+        gmail_service = build('gmail', 'v1', http=h)
+        query = 'label:Inbox'
+        response = gmail_service.users().messages().list(userId='me', q=query).execute()
+        # Get gmail message details
+        def create_message(request_id, response, exception):
+            # Create a new Message object from a gmail message
+            import base64
+            msg = GoogleMessage(response)
+            msg.owner = user
+            msg.save()
+            print('===')
+        batch = BatchHttpRequest(callback=create_message)
+        for gmail_msg in response['messages']:
+            batch.add(gmail_service.users().messages().get(userId='me', id=gmail_msg['id']))
+        batch.execute(http=h)
         return (association, response_data, response_status)
