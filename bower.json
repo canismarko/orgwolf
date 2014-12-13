@@ -34,6 +34,8 @@
     "jasmine": ">=2.0"
   },
   "resolutions": {
-    "jquery": ">=1.6"
+    "jquery": ">=1.6",
+    "angular": ">1.2.6",
+    "angular-animate": ">1.2.8"
   }
 }
