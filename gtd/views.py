@@ -300,6 +300,7 @@ class FocusAreaView(APIView):
     def get(self, request, *args, **kwargs):
         import time
         focus_areas = FocusArea.get_visible(request.user)
+        focus_areas = focus_areas.filter(**request.QUERY_PARAMS)
         serializer = FocusAreaSerializer(focus_areas, many=True)
         return Response(serializer.data)
 

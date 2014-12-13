@@ -209,5 +209,5 @@ angular.module(
 *
 **************************************************/
 .factory('focusAreas', ['$resource', function($resource) {
-    return $resource('/gtd/focusareas/').query();
+    return $resource('/gtd/focusareas/').query({is_visible: true});
 }]);

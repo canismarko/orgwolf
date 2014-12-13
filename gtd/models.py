@@ -274,6 +274,7 @@ class FocusArea(models.Model):
     public = models.BooleanField(default=False)
     display = models.CharField(max_length=50)
     name = models.CharField(max_length=50)
+    is_visible = models.BooleanField(default=True)
 
     @staticmethod
     def get_visible(user=AnonymousUser()):

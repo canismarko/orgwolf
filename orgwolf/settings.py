@@ -243,14 +243,13 @@ if DEBUG == False:
     CSRF_COOKIE_SECURE = True
     SESSION_COOKIE_SECURE = True
 
-# Logging, uses values taken from ../local_settings.py
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,
     'filters': {
         'require_debug_false': {
             '()': 'django.utils.log.RequireDebugFalse'
-        }
+        },
     },
     'formatters': {
         'query_entry': {
