@@ -79,7 +79,6 @@ class MessageView(APIView):
             if msg.owner != request.user:
                 return HttpResponseForbidden()
             serializer = MessageSerializer(msg)
-        account = AccountAssociation.objects.first()
         return Response(serializer.data)
 
     def put(self, request, pk):

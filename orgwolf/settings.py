@@ -22,6 +22,7 @@ from django.core.exceptions import ImproperlyConfigured
 # Django settings for orgwolf project.
 
 DEBUG = True
+LOCAL_NET = False
 TEMPLATE_DEBUG = DEBUG
 ENABLE_CSS = True
 ENABLE_JS = True

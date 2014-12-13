@@ -16,13 +16,14 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #######################################################################
+
 from __future__ import unicode_literals
 
 from django.core.urlresolvers import reverse
 from django.test import TestCase
 
 from orgwolf.forms import RegistrationForm
-from orgwolf.models import OrgWolfUser as User, HTMLEscaper, AccountAssociation
+from orgwolf.models import OrgWolfUser as User, HTMLEscaper, AccountAssociation, JSONField
 from plugins import BaseAccountHandler, google
 from wolfmail.models import Message
 
