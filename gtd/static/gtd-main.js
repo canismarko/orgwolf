@@ -9,7 +9,7 @@ var test_headings, owConfig, HeadingFactory, outlineCtrl, listCtrl;
 var owMain = angular.module(
     'owMain',
     ['ngAnimate', 'ngResource', 'ngSanitize', 'ngRoute', 'ngCookies',
-     'ui.bootstrap', 'ui.calendar', 'toaster',
+     'ngDragDrop', 'ui.bootstrap', 'ui.calendar', 'toaster',
      'owServices', 'owDirectives', 'owFilters']
 )
 
@@ -139,17 +139,19 @@ owMain.controller(
 );
 
 /*************************************************
-* Angular project ouline appliance controller
+* Angular project outline appliance controller
 *
 **************************************************/
 owMain.controller(
     'nodeOutline',
     ['$scope', '$rootScope', '$http', '$resource', '$filter', 'Heading',
-     '$location', '$anchorScroll', 'owWaitIndicator', 'activeHeading', outlineCtrl]
+     '$location', '$anchorScroll', 'owWaitIndicator', 'activeHeading', 'activeDragDrop', outlineCtrl]
 );
 function outlineCtrl($scope, $rootScope, $http, $resource, $filter, Heading,
-		     $location, $anchorScroll, owWaitIndicator, activeHeading) {
+		     $location, $anchorScroll, owWaitIndicator, activeHeading,
+		     activeDragDrop) {
     var TodoState, Scope, url, get_heading, Parent, Tree, parent_tree_id, parent_level, target_headings, targetId, main_headings, newButton, showAllButton;
+    $scope.list1={title: 'drag me'};
     newButton = $('#add-heading');
     showAllButton = $('#show-all');
     // Check if the user is requesting a specific node in the URL
@@ -244,6 +246,34 @@ function outlineCtrl($scope, $rootScope, $http, $resource, $filter, Heading,
     $scope.$on('focus-area-changed', function(e, newFocusArea) {
 	$scope.activeFocusArea = newFocusArea;
     });
+    // Handler for dropped a dragged heading
+    $scope.activeDragDrop = activeDragDrop;
+    $scope.onDrop = function(event, dragDrop, newParent, currentList) {
+	// Update the parent attribute and save
+	var newChild = activeDragDrop.draggable;
+	activeDragDrop.droppable = newParent;
+	newChild.parent = newParent.id;
+	console.log(newChild.parent);
+	//newChild.$update();
+	// Remove from current list
+	currentList = activeDragDrop.currentList;
+	currentList.splice(currentList.indexOf(newChild), 1);
+	// Reset activeDragDrop
+	activeDragDrop.clear();
+	// Notification to user
+	// newChild.$promise.then(function(data) {
+	//     toaster.pop('success', "Saved");
+	// })['catch'](function(e) {
+	//     toaster.pop('error', "Error, not saved!", "Check your internet connection and try again.");
+	//     console.log('Save failed:');
+	//     console.log(e);
+	// });
+    };
+    // Handler for saving the dragged heading for later
+    $scope.setDraggable = function(event, draggable, heading, currentList) {
+	activeDragDrop.draggable = heading;
+	activeDragDrop.currentList = currentList;
+    };
 }
 
 /*************************************************

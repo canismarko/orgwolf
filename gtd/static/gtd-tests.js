@@ -118,8 +118,8 @@ describe('filters in gtd-filters.js', function() {
 				 {'deadline_date': '2014-01-02'}];
 		sorted_data = [{'deadline_date': '2013-12-26'},
 			       {'deadline_date': '2014-01-02'},
-			       {'deadline_date': null},
-			       {'deadline_date': future_str}];
+			       {'deadline_date': future_str},
+			       {'deadline_date': null}];
 		expect(orderFilter(unsorted_data, 'list')).toEqual(sorted_data);
 	    });
 	});
@@ -288,7 +288,7 @@ describe('filters in gtd-filters.js', function() {
 	beforeEach(inject(function($injector) {
 	    listFocusAreasFilter = $injector.get('listFocusAreasFilter');
 	    $httpBackend = $injector.get('$httpBackend');
-	    $httpBackend.whenGET('/gtd/focusareas')
+	    $httpBackend.whenGET('/gtd/focusareas?is_visible=true')
 		.respond(200, [
 		    {id: 1,
 		     display: 'Work'},
@@ -389,7 +389,7 @@ describe('directives in gtd-directives.js', function() {
 	];
 	$httpBackend = $injector.get('$httpBackend');
 	$httpBackend.whenGET('/gtd/todostates').respond(201, dummyStates);
-	$httpBackend.whenGET('/gtd/focusareas').respond(200, [
+	$httpBackend.whenGET('/gtd/focusareas?is_visible=true').respond(200, [
 	    {id: 1, display: 'Work'},
 	    {id: 2, display: 'Home'}
 	]);
@@ -1046,6 +1046,7 @@ describe('controllers in gtd-main.js', function() {
 	    $location = $injector.get('$location');
 	    $controller = $injector.get('$controller');
 	    $scope = $injector.get('$rootScope').$new();
+	    activeDragDrop = $injector.get('activeDragDrop');
 	}));
 	// Reset httpBackend calls
 	afterEach(function() {
@@ -1067,6 +1068,15 @@ describe('controllers in gtd-main.js', function() {
 		});
 	    $controller('nodeOutline', {$scope: $scope});
 	    $httpBackend.flush();
+	});
+	it('updates the heading on dropping', function() {
+	    $controller('nodeOutline', {$scope: $scope});
+	    newParent = {id:5};
+	    newChild = {parent: null, $update: function() {}};
+	    activeDragDrop.draggable = newChild
+	    $scope.onDrop({}, {}, newParent);
+	    expect(activeDragDrop.droppable).toBe(newParent);
+	    expect(newChild.parent).toEqual(5);
 	});
     });
 

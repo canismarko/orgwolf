@@ -3,10 +3,11 @@
      ng-show="!isEditing"
      ng-click="toggleHeading($event)"
      style="{{ heading | headingStyle }}"
-     archived="{{ heading.archived }}">
-  <span class="twisty"></span>
+     archived="{{ heading.archived }}"
+     >
+  <span class="twisty drag-handle"></span>
   <span ow-todo ow-heading="heading"></span>
-  <div class="ow-title">
+  <div class="ow-title drag-handle">
     {{heading.title}}
     <span ng-show="heading.has_text && state < 2">&hellip;</span>
   </div>
@@ -53,7 +54,9 @@
     Loading...
   </div>
   <div ow-twisty ng-repeat="heading in children" ow-heading="heading"
-       ng-if="!heading.archived || showArchived"></div>
+       ng-if="!heading.archived || showArchived"
+	 data-drag="true" jqyoui-draggable="{animate: true}"
+	 data-jqyoui-options="{revert: 'invalid', handle: '>.ow-hoverable>.drag-handle'}"></div>
   <div class="archived-indicator"
        ng-show="numArchived && !showArchived && !showGlobalArchived"
        ng-click="showArchived = !showArchived">
