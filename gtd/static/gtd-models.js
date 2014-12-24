@@ -18,7 +18,7 @@ Array.prototype.order_by = function(field) {
     compare = function( a, b ) {
 	var a_val, b_val, num_a, num_b, response;
 	// Test whether key is in heading.fields
-	if ( typeof a.fields === 'undefined' || typeof b.fields === 'undefined' ){
+	if ( a.fields === undefined || b.fields === undefined ){
 	        // Failsafe in case not using actual heading objects
 	        a_val = a[key];
 	        b_val = b[key];

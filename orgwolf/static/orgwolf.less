@@ -253,6 +253,26 @@ dd.todo
     border-color: rgba(255, 255, 0, 100);
 }
 
+/* Drag n' drop features */
+.droppable-target {
+    /* Hidden target that becomes visible when dragging is active */
+    height: 23px;
+    width: 300px;
+    padding-left: 5px;
+    color: @primary;
+    border-radius: 5px;
+    border-style: dashed;
+    border-color: @primary;
+    border-width: 2px;
+    visibility: hidden;
+}
+.droppable-over {
+    background: @primary-light-pale;
+}
+.droppable-active {
+    visibility: visible;
+}
+
 /* Global grid layout style */
 .table-heading,.heading-row {
     .make-row();

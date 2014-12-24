@@ -110,14 +110,27 @@ angular.module(
 //         return new GtdHeading(data);
 //     };
 // }])
-.factory('Heading', ['$resource', function($resource) {
-    var res = $resource(
+.factory('Heading', ['$http', '$resource', 'toaster', function($http, $resource, toaster) {
+    var interceptor, res;
+    interceptor = {
+	'response': function(response) {
+	    toaster.pop('success', 'Saved');
+	    return response;
+	},
+	'responseError': function(reason) {
+	    toaster.pop('error', "Error, not saved!",
+			"Check your internet connection and try again");
+	    console.log('Save failed:');
+	    console.log(reason);
+	},
+    };
+    res = $resource(
 	'/gtd/nodes/:id/',
 	{id: '@id',
 	 field_group: '@field_group'},
 	{
-	    'update': {method: 'PUT'},
-	    'create': {method: 'POST'},
+	    'update': {method: 'PUT', interceptor: interceptor},
+	    'create': {method: 'POST', interceptor: interceptor},
 	}
     );
     return res;

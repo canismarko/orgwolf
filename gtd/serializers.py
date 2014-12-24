@@ -52,9 +52,9 @@ class ContextSerializer(serializers.ModelSerializer):
 class NodeSerializer(serializers.ModelSerializer):
     read_only = serializers.SerializerMethodField('get_read_only')
     has_text = serializers.SerializerMethodField('get_has_text')
-    def __init__(self, qs, request=None, *args, **kwargs):
+    def __init__(self, qs, *args, **kwargs):
         # Perform some optimization before hitting the database
-        self.request = request
+        self.request = kwargs.pop('request', None)
         if kwargs.get('many', False):
             # Prefetch related fields only if passing a queryset
             qs = qs.select_related('owner')
@@ -162,7 +162,7 @@ class CalendarSerializer(NodeSerializer):
     class Meta:
         model = Node
         fields = ['title', 'id', 'start', 'end', 'allDay',
-                  'repeats', 'focus_areas']
+                  'repeats', 'focus_areas', 'read_only', 'has_text']
 
 
 class CalendarDeadlineSerializer(CalendarSerializer):

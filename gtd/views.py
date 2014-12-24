@@ -108,7 +108,8 @@ class NodeView(APIView):
         Serializer = SERIALIZERS[field_group]
         # Serialize and return the queryset or object
         is_many = isinstance(nodes, QuerySet)
-        serializer = Serializer(nodes, request, many=is_many)
+        serializer = Serializer(nodes, many=is_many, request=request)
+
         return Response(serializer.data)
 
     def get_queryset(self, request, *args, **kwargs):
@@ -231,7 +232,7 @@ class NodeView(APIView):
         self.node.save()
         # Return newly saved node as json
         self.node = Node.objects.get(pk=self.node.pk)
-        serializer = NodeSerializer(self.node, request)
+        serializer = NodeSerializer(self.node, request=request)
         data = serializer.data
         # Don't keep nodes sent via the public interface
         if request.user.is_anonymous():
@@ -275,7 +276,7 @@ class NodeView(APIView):
         if not request.user.is_anonymous():
             node.save()
             node = Node.objects.get(pk=node.pk)
-        serializer = NodeSerializer(node, request)
+        serializer = NodeSerializer(node, request=request)
         return Response(serializer.data)
 
 

@@ -134,7 +134,7 @@ class MessageView(APIView):
             else:
                 message = Message.objects.filter(pk=pk).first()
                 message_data = MessageSerializer(message).data
-            heading_serializer = NodeSerializer(node, request)
+            heading_serializer = NodeSerializer(node, request=request)
             r = {'status': 'success',
                  'heading': heading_serializer.data}
             r['message'] = message_data

@@ -139,7 +139,7 @@ owMain.controller(
 );
 
 /*************************************************
-* Angular project ouline appliance controller
+* Angular project outline appliance controller
 *
 **************************************************/
 owMain.controller(
@@ -156,12 +156,15 @@ function outlineCtrl($scope, $rootScope, $http, $resource, $filter, Heading,
     activeHeading.activate($location.hash().split('-')[0]);
     $scope.activeHeading = activeHeading;
     // Get all the top-level projects
-    function getHeadings() {
+    $scope.getChildren = function() {
 	$scope.children = Heading.query({'parent_id': 0,
 					 'archived': false,
 					 'field_group': 'outline'});
-    }
-    getHeadings();
+    };
+    $scope.getChildren();
+    $scope.toggleHeading = function(state) {
+	// No-op to avoid "function not found" error
+    };
     $scope.activeScope = null;
     $scope.sortField = 'title';
     $scope.sortFields = [
@@ -239,7 +242,7 @@ function outlineCtrl($scope, $rootScope, $http, $resource, $filter, Heading,
 	});
     };
     // Respond to refresh-data signals (logging in, etc)
-    $scope.$on('refresh-data', getHeadings);
+    $scope.$on('refresh-data', $scope.getChildren);
     // Handler for changing the focus area
     $scope.$on('focus-area-changed', function(e, newFocusArea) {
 	$scope.activeFocusArea = newFocusArea;

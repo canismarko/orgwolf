@@ -1,7 +1,6 @@
 /*globals angular, $*/
 "use strict";
 
-
 var owFilters = angular.module(
     'owFilters',
     ['ngSanitize', 'owServices']
