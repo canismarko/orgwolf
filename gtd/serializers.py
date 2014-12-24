@@ -31,7 +31,7 @@ class FocusAreaSerializer(serializers.ModelSerializer):
 
 
 class TodoStateSerializer(serializers.ModelSerializer):
-    color = serializers.SerializerMethodField('get_color')
+    color = serializers.SerializerMethodField()
 
     def get_color(self, obj):
         """Convert the _color_* fields into an integer color dictionary."""
@@ -50,8 +50,8 @@ class ContextSerializer(serializers.ModelSerializer):
 
 
 class NodeSerializer(serializers.ModelSerializer):
-    read_only = serializers.SerializerMethodField('get_read_only')
-    has_text = serializers.SerializerMethodField('get_has_text')
+    read_only = serializers.SerializerMethodField()
+    has_text = serializers.SerializerMethodField()
     def __init__(self, qs, *args, **kwargs):
         # Perform some optimization before hitting the database
         self.request = kwargs.pop('request', None)
@@ -80,8 +80,8 @@ class NodeSerializer(serializers.ModelSerializer):
 
 class NodeListSerializer(NodeSerializer):
     """Returns values relevant for next actions lists"""
-    root_id = serializers.SerializerMethodField('get_root_id')
-    root_name = serializers.SerializerMethodField('get_root_name')
+    root_id = serializers.SerializerMethodField()
+    root_name = serializers.SerializerMethodField()
     class Meta:
         model = Node
         fields = ['id', 'title', 'todo_state', 'tag_string',
@@ -112,8 +112,8 @@ class NodeOutlineSerializer(NodeSerializer):
 
 class CalendarSerializer(NodeSerializer):
     """For displaying nodes as calendar objects in angular-ui-calendar"""
-    start = serializers.SerializerMethodField('get_start')
-    end = serializers.SerializerMethodField('get_end')
+    start = serializers.SerializerMethodField()
+    end = serializers.SerializerMethodField()
     allDay = serializers.SerializerMethodField('get_all_day')
 
     def get_start(self, obj,

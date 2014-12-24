@@ -181,7 +181,6 @@ INSTALLED_APPS = [
     'gtd',
     'plugins',
     'wolfmail',
-    'south',
     'mptt',
     # Uncomment the next line to enable the admin:
     'django.contrib.admin',
@@ -227,6 +226,8 @@ LOGIN_ERROR_URL = '/accounts/login-error/'
 LOGFILE = None
 SQL_LOGFILE = None
 DEBUG_LOGFILE = None
+
+TEST_RUNNER = 'django.test.runner.DiscoverRunner'
 
 try:
     from local_settings import *
