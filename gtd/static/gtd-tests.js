@@ -670,6 +670,17 @@ describe('directives in gtd-directives.js', function() {
 	    childScope.$emit('finishEdit');
 	    expect(parentScope.isEditable).toBeFalsy();
 	});
+
+	it('responds when a node has just been closed', function() {
+	    var parentScope, childScope;
+	    $rootScope.$digest();
+	    parentScope = element.isolateScope();
+	    childScope = parentScope.$new();
+	    childScope.$emit('finishEdit', {}, true);
+	    expect(parentScope.completed).toBeTruthy();
+	    childScope.$emit('finishEdit', {}, false);
+	    expect(parentScope.completed).toBeFalsy();
+	});
     });
 
     describe('the owTwisty directive', function() {

@@ -470,8 +470,8 @@ angular.module(
 		oldDate = scope.heading.scheduled_date;
 		scope.heading.$update()
 		    .then(function(response) {
-			console.log(response.data.scheduled_date);
-			console.log(oldDate);
+			scope.$emit('finishEdit', response.data,
+				    scope.todoState.closed);
 			if (response.data.scheduled_date !== oldDate) {
 			    // Notify the user that the heading is rescheduled
 			    var s = 'Rescheduled for ';
@@ -769,9 +769,10 @@ angular.module(
 	    });
 	};
 	// Response when user edits the heading
-	scope.$on('finishEdit', function(e, newHeading) {
+	scope.$on('finishEdit', function(e, newHeading, completed) {
 	    e.stopPropagation();
 	    angular.extend(scope.heading, newHeading);
+	    scope.completed = completed;
 	});
     }
     return {
