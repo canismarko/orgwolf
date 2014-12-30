@@ -6,7 +6,7 @@ var test_headings, owConfig, HeadingFactory, outlineCtrl, listCtrl;
 * Angular module for all GTD components
 *
 **************************************************/
-var owMain = angular.module(
+angular.module(
     'owMain',
     ['ngAnimate', 'ngResource', 'ngSanitize', 'ngRoute', 'ngCookies',
      'ui.bootstrap', 'ui.calendar', 'toaster',
@@ -68,7 +68,7 @@ var owMain = angular.module(
 	return cookieValue;
     }
     var csrftoken = getCookie('csrftoken');
-    $.ajaxSetup({
+    jQuery.ajaxSetup({
 	beforeSend: function(xhr) {
 	    xhr.setRequestHeader('X-CSRFToken', csrftoken);
 	}
@@ -76,79 +76,58 @@ var owMain = angular.module(
 }])
 
 /*************************************************
-* Run setup gets some app-wide data
-*
-**************************************************/
-.run(['$rootScope', '$resource', function($rootScope, $resource) {
-    var TodoState, Context, FocusArea, getState;
-    // Get list of contexts for filtering against
-    Context = $resource('/gtd/contexts/');
-    $rootScope.contexts = Context.query();
-}]);
-
-/*************************************************
 * Handler sends google analytics tracking on
 * angular route change
 **************************************************/
-owMain.run(['$rootScope', '$location', function($rootScope, $location) {
+.run(['$rootScope', '$location', function($rootScope, $location) {
     $rootScope.$on('$routeChangeSuccess', function() {
 	// Only active if django DEBUG == True
 	if ( typeof ga !== 'undefined' ) {
 	    ga('send', 'pageview', {'page': $location.path()});
 	}
     });
-}]);
+}])
 
 /*************************************************
 * Angular controller for capturing quick thoughts
 * to the inbox
 **************************************************/
-owMain.controller(
-    'inboxCapture',
-    ['$scope', '$rootScope', 'owWaitIndicator',
-    function ($scope, $rootScope, owWaitIndicator) {
-	$scope.capture = function(e) {
-	    // Send a captured inbox item to the server for processing
-	    var text, data, $textbox;
-	    data = {handler_path: 'plugins.quickcapture'};
-	    $textbox = $(e.target).find('#new_inbox_item');
-	    data.subject = $textbox.val();
-	    owWaitIndicator.start_wait('medium', 'quickcapture');
-	    $.ajax(
-		'/wolfmail/message/',
-		{type: 'POST',
-		 data: data,
-		 complete: function() {
-		     $scope.$apply( function() {
-			 owWaitIndicator.end_wait('quickcapture');
-		     });
-		 },
-		 success: function() {
-		     $textbox.val('');
-		     $rootScope.$emit('refresh_messages');
-		 },
-		 error: function(jqXHR, status, error) {
-		     alert('Failed!');
-		     console.log(status);
-		     console.log(error);
-		 }
-		}
-	    );
-	};
-    }]
-);
+.controller('inboxCapture', ['$scope', '$rootScope', 'owWaitIndicator', function ($scope, $rootScope, owWaitIndicator) {
+    $scope.capture = function(e) {
+	// Send a captured inbox item to the server for processing
+	var text, data, $textbox;
+	data = {handler_path: 'plugins.quickcapture'};
+	$textbox = $(e.target).find('#new_inbox_item');
+	data.subject = $textbox.val();
+	owWaitIndicator.start_wait('medium', 'quickcapture');
+	jQuery.ajax(
+	    '/wolfmail/message/',
+	    {type: 'POST',
+	     data: data,
+	     complete: function() {
+		 $scope.$apply( function() {
+		     owWaitIndicator.end_wait('quickcapture');
+		 });
+	     },
+	     success: function() {
+		 $textbox.val('');
+		 $rootScope.$emit('refresh_messages');
+	     },
+	     error: function(jqXHR, status, error) {
+		 alert('Failed!');
+		 console.log(status);
+		 console.log(error);
+	     }
+	    }
+	);
+    };
+}])
 
 /*************************************************
 * Angular project outline appliance controller
 *
 **************************************************/
-owMain.controller(
-    'nodeOutline',
-    ['$scope', '$rootScope', '$http', '$resource', '$filter', 'Heading',
-     '$location', '$anchorScroll', 'owWaitIndicator', 'activeHeading', outlineCtrl]
-);
-function outlineCtrl($scope, $rootScope, $http, $resource, $filter, Heading,
-		     $location, $anchorScroll, owWaitIndicator, activeHeading) {
+.controller('nodeOutline', ['$scope', '$rootScope', '$http', '$resource', '$filter', 'Heading', '$location', '$anchorScroll', 'owWaitIndicator', 'activeHeading', function outlineCtrl($scope, $rootScope, $http, $resource, $filter, Heading, $location, $anchorScroll, owWaitIndicator, activeHeading) {
     var TodoState, Scope, url, get_heading, Parent, Tree, parent_tree_id, parent_level, target_headings, targetId, main_headings, newButton, showAllButton;
     newButton = $('#add-heading');
     showAllButton = $('#show-all');
@@ -247,22 +226,18 @@ function outlineCtrl($scope, $rootScope, $http, $resource, $filter, Heading,
     $scope.$on('focus-area-changed', function(e, newFocusArea) {
 	$scope.activeFocusArea = newFocusArea;
     });
-}
+}])
 
 /*************************************************
 * Angular actions list controller
 *
 **************************************************/
-owMain.controller(
-    'nextActionsList',
-    ['$sce', '$scope', '$resource', '$location', '$routeParams', '$filter',
-     'Heading', 'todoStates', 'owWaitIndicator', '$cookies', listCtrl]
-);
-function listCtrl($sce, $scope, $resource, $location, $routeParams, $filter, Heading, todoStates, owWaitIndicator, $cookies) {
+.controller('nextActionsList', ['$sce', '$scope', '$resource', '$location', '$routeParams', '$filter', 'contexts', 'Heading', 'todoStates', 'owWaitIndicator', '$cookies',function listCtrl($sce, $scope, $resource, $location, $routeParams, $filter, contexts, Heading, todoStates, owWaitIndicator, $cookies) {
     var i, TodoState, Context, today, update_url, get_list, parent_id, todo_states;
     $scope.list_params = {field_group: 'actions_list'};
     $scope.showArchived = true;
     $scope.todoStates = todoStates;
+    $scope.contexts = contexts;
     $scope.activeScope = null;
     // Context filtering
     if (typeof $routeParams.context_id !== 'undefined') {
@@ -454,13 +429,13 @@ function listCtrl($sce, $scope, $resource, $location, $routeParams, $filter, Hea
 	}
 	$navLink.attr('href', $location.absUrl());
     };
-}
+}])
 
 /*************************************************
 * Search controller
 *
 **************************************************/
-owMain.controller('search', ['$scope', '$location', 'Heading', function($scope, $location, Heading) {
+.controller('search', ['$scope', '$location', 'Heading', function($scope, $location, Heading) {
     var i, query, resultIds, result, reString, addToResults;
     $scope.rawResults = [];
     // Process search string into seperate queries

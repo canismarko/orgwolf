@@ -417,17 +417,13 @@ angular.module(
 .directive('owFocusAreaTabs', ['$resource', '$rootScope', '$timeout', 'focusAreas', function($resource, $rootScope, $timeout, focusAreas) {
     // Directive creates tabs that allow a user to filter by focus area
     function link(scope, element, attrs) {
-	var nullFocusArea = {
+	scope.nullFocusArea = {
 	    id: 0,
 	    display: 'All'
 	};
-	scope.focusAreas = [nullFocusArea];
-	focusAreas.$promise.then(function(apiData) {
-	    // Add "All" focus area to the list
-	    scope.focusAreas = scope.focusAreas.concat(apiData);
-	});
-	scope.activeFocusArea = nullFocusArea;
-	$rootScope.activeFocusArea = nullFocusArea;
+	scope.focusAreas = focusAreas;
+	scope.activeFocusArea = scope.nullFocusArea;
+	$rootScope.activeFocusArea = scope.nullFocusArea;
 	$timeout(function() {
 	    element.find('#fa-tab-0').addClass('active');
 	});

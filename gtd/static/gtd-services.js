@@ -221,6 +221,45 @@ angular.module(
 * Factory returns all the available focus areas
 *
 **************************************************/
-.factory('focusAreas', ['$resource', function($resource) {
-    return $resource('/gtd/focusareas/').query({is_visible: true});
+.factory('focusAreas', ['$resource', '$rootScope', function($resource, $rootScope) {
+    var url, params, focusAreas, i;
+    url = '/gtd/focusareas/';
+    params = {is_visible: true};
+    focusAreas = $resource(url).query(params);
+    $rootScope.$on('refresh-data', function() {
+	// Remove old focus areas and replace with new ones
+	focusAreas.splice(0, focusAreas.length);
+	$resource(url).query(params).$promise.then(function(newFocusAreas) {
+	    for(i=0; i<newFocusAreas.length; i+=1) {
+		focusAreas.push(newFocusAreas[i]);
+	    }
+	});
+    });
+    return focusAreas;
+}])
+
+    .factory('GtdObject', ['$resource', '$rootScope', function($resource, $rootScope) {
+    return function(url, params) {
+	var objs
+	objs = $resource(url).query(params);
+	$rootScope.$on('refresh-data', function() {
+	    // Remove old objects and replace with new ones
+	    contexts.splice(0, objs.length);
+	    $resource(url).query(params).$promise.then(function(newObjs) {
+		for(i=0; i<newObjs.length; i+=1) {
+		    objs.push(newObjs[i]);
+		}
+	    });
+	});
+	return objs;
+    };
+}])
+
+/*************************************************
+* Factory returns all the available
+* Context objects
+*
+**************************************************/
+.factory('contexts', ['GtdObject', function(GtdObject) {
+    return GtdObject('/gtd/contexts', {});
 }]);
