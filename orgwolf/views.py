@@ -42,7 +42,7 @@ from orgwolf import settings
 from orgwolf.forms import RegistrationForm, ProfileForm, PasswordForm
 from orgwolf.models import AccountAssociation
 from orgwolf.models import OrgWolfUser as User
-from orgwolf.serializers import AccountAssociationSerializer
+from orgwolf.serializers import AccountAssociationSerializer, UserSerializer
 from orgwolf.shortcuts import import_plugin
 from wolfmail.models import Message
 
@@ -126,6 +126,14 @@ class AccountAssociationView(APIView):
                                                               request.user)
         return Response(response, status=status)
 
+
+class UserView(APIView):
+    """User details and permissions"""
+
+    def get(self, request, *args, **kwargs):
+        """ Return the currently logged in user by default"""
+        serializer = UserSerializer(request.user)
+        return Response(serializer.data)
 
 def change_password(request):
     """Provides the change password form or changes password based on

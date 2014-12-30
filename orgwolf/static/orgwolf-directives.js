@@ -3,9 +3,10 @@
 
 angular.module('owDirectives')
 
-.directive('owNavbar', ['$location', '$cookies', 'contexts', function($location, $cookies, contexts) {
+.directive('owNavbar', ['$location', '$cookies', 'contexts', 'currentUser', function($location, $cookies, contexts, currentUser) {
     function link(scope, element, attrs) {
 	var regexps;
+	scope.user = currentUser;
 	regexps = {
 	    'actions': new RegExp('^/gtd/actions'),
 	    'inbox': new RegExp('^/wolfmail/inbox/'),

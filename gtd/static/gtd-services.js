@@ -238,7 +238,7 @@ angular.module(
     return focusAreas;
 }])
 
-    .factory('GtdObject', ['$resource', '$rootScope', function($resource, $rootScope) {
+.factory('GtdObject', ['$resource', '$rootScope', function($resource, $rootScope) {
     return function(url, params) {
 	var objs
 	objs = $resource(url).query(params);

@@ -163,9 +163,7 @@ $(document).ready(function() {
 
   </head>
 
-  <body ow-logged-in="{{ request.user.is_authenticated }}"
-	ow-is-staff="{{ request.user.is_staff }}"
-	debug="{{ debug }}">
+  <body debug="{{ debug }}">
 
     {% block body %}
 

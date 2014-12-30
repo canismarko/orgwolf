@@ -22,7 +22,13 @@ import datetime as dt
 
 from rest_framework import serializers
 
-from orgwolf.models import AccountAssociation
+from orgwolf.models import AccountAssociation, OrgWolfUser
+
+class UserSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = OrgWolfUser
+        fields = ['id', 'first_name', 'last_name', 'is_staff', 'is_active']
 
 class AccountAssociationSerializer(serializers.ModelSerializer):
 
