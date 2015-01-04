@@ -9,7 +9,7 @@ var test_headings, owConfig, HeadingFactory, outlineCtrl, listCtrl;
 angular.module(
     'owMain',
     ['ngAnimate', 'ngResource', 'ngSanitize', 'ngRoute', 'ngCookies',
-     'ngDragDrop', 'ui.bootstrap', 'ui.calendar', 'toaster',
+     'ui.bootstrap', 'ui.calendar', 'toaster',
      'owServices', 'owDirectives', 'owFilters']
 )
 
@@ -129,7 +129,6 @@ angular.module(
 **************************************************/
 .controller('nodeOutline', ['$scope', '$rootScope', '$http', '$resource', '$filter', 'Heading', '$location', '$anchorScroll', 'owWaitIndicator', 'activeHeading', function outlineCtrl($scope, $rootScope, $http, $resource, $filter, Heading, $location, $anchorScroll, owWaitIndicator, activeHeading) {
     var TodoState, Scope, url, get_heading, Parent, Tree, parent_tree_id, parent_level, target_headings, targetId, main_headings, newButton, showAllButton;
-    $scope.list1={title: 'drag me'};
     newButton = $('#add-heading');
     showAllButton = $('#show-all');
     // Check if the user is requesting a specific node in the URL

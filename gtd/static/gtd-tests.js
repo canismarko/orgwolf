@@ -1062,7 +1062,6 @@ describe('controllers in gtd-main.js', function() {
 	    $location = $injector.get('$location');
 	    $controller = $injector.get('$controller');
 	    $scope = $injector.get('$rootScope').$new();
-	    activeDragDrop = $injector.get('activeDragDrop');
 	}));
 	// Reset httpBackend calls
 	afterEach(function() {
@@ -1084,15 +1083,6 @@ describe('controllers in gtd-main.js', function() {
 		});
 	    $controller('nodeOutline', {$scope: $scope});
 	    $httpBackend.flush();
-	});
-	it('updates the heading on dropping', function() {
-	    $controller('nodeOutline', {$scope: $scope});
-	    newParent = {id:5};
-	    newChild = {parent: null, $update: function() {}};
-	    activeDragDrop.draggable = newChild
-	    $scope.onDrop({}, {}, newParent);
-	    expect(activeDragDrop.droppable).toBe(newParent);
-	    expect(newChild.parent).toEqual(5);
 	});
     });
 

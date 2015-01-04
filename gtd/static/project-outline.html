@@ -44,11 +44,7 @@
     <div ow-twisty ow-heading="heading"
 	 ow-draggable
 	 ng-repeat="heading in children | currentFocusArea:activeFocusArea | order:sortField:activeHeading.obj"
-	 data-drag="true" jqyoui-draggable="{animate: true, onStart: 'setDraggable(heading, children)'}"
-	 data-jqyoui-options="{revert: 'invalid', handle: '>.ow-hoverable>.drag-handle'}"
-	 data-drop="true" jqyoui-droppable="{onDrop: 'onDrop(heading)'}" data-jqyoui-options
 	 ng-if="!heading.archived || showArchived"></div>
-    <div class="project-droppable" data-drop="true" jqyoui-droppable="{onDrop: 'onDrop({id: null})'}" data-jqyoui-options ng-show="activeDragDrop.draggable">{{ onDrop }}New project</div>
   </div>
 
 </div><!-- /#outline-appliance -->
