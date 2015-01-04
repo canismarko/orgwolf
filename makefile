@@ -10,7 +10,7 @@ WM_JS = wolfmail/static/wolfmail-models.js wolfmail/static/wolfmail-services.js 
 OW_JS = orgwolf/static/orgwolf-services.js orgwolf/static/orgwolf-directives.js orgwolf/static/orgwolf-filters.js orgwolf/static/orgwolf-controllers.js
 LESS = lessc --clean-css
 DIVIDER = @echo "========================="
-YUI = yuicompressor
+YUI = yuicompressor -v
 JSLINT = @jslint --color --white --terse
 bold = `tput bold`
 normal = `tput sgr0`
@@ -26,8 +26,5 @@ $(ORGWOLF_CSS): $(ORGWOLF_LESS) $(STATIC)social/auth-buttons.css
 
 $(MIN_JS): $(GTD_JS) $(WM_JS) $(OW_JS) $(STATIC)jquery.cookie.js
 	$(DIVIDER)
-	@echo "$(bold)Linting javascript files...$(normal)"
-	$(JSLINT) $(GTD_JS) $(WM_JS) $(OW_JS)
-	$(DIVIDER)
 	@echo "$(bold)Minifying javascript files...$(normal)"
-	cat $(STATIC)jquery.cookie.js $(GTD_JS) $(WM_JS) $(OW_JS) | $(YUI) --type js -o $(MIN_JS)
+	uglifyjs $(STATIC)jquery.cookie.js $(GTD_JS) $(WM_JS) $(OW_JS) -o $(MIN_JS)

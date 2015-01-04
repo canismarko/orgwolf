@@ -3,9 +3,10 @@
 
 angular.module('owDirectives')
 
-.directive('owNavbar', ['$location', '$cookies', function($location, $cookies) {
+.directive('owNavbar', ['$location', '$cookies', 'contexts', 'currentUser', function($location, $cookies, contexts, currentUser) {
     function link(scope, element, attrs) {
 	var regexps;
+	scope.user = currentUser;
 	regexps = {
 	    'actions': new RegExp('^/gtd/actions'),
 	    'inbox': new RegExp('^/wolfmail/inbox/'),
@@ -36,9 +37,9 @@ angular.module('owDirectives')
 	    return $cookies.activeContext;
 	}, function(newContext) {
 	    newContext = parseInt(newContext, 10);
-	    scope.contexts.$promise.then(function() {
+	    contexts.$promise.then(function() {
 		// Find the active context and set the link attributes
-		scope.activeContext = scope.contexts.filter(function(context) {
+		scope.activeContext = contexts.filter(function(context) {
 		    return context.id === newContext;
 		})[0];
 	    });

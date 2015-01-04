@@ -1,4 +1,4 @@
-/*globals jQuery, angular */
+/*globals angular */
 "use strict";
 var MessageFactory, owinbox, owmessage;
 

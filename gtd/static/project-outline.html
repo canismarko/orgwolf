@@ -38,8 +38,11 @@
   </div>
 
   <div class="outline">
+    <div ow-droppable class="droppable-target">
+    Convert to top-level project&hellip;</div>
     <div ow-editable ng-if="newProject"></div>
     <div ow-twisty ow-heading="heading"
+	 ow-draggable
 	 ng-repeat="heading in children | currentFocusArea:activeFocusArea | order:sortField:activeHeading.obj"
 	 data-drag="true" jqyoui-draggable="{animate: true, onStart: 'setDraggable(heading, children)'}"
 	 data-jqyoui-options="{revert: 'invalid', handle: '>.ow-hoverable>.drag-handle'}"

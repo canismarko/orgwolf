@@ -480,7 +480,7 @@ class Shortcuts(TestCase):
             )
         response = node.as_json()
         self.assertEqual(
-            'str',
+            'unicode',
             response.__class__.__name__
             )
         response_dict = json.loads(response)
@@ -750,7 +750,7 @@ class ContextAPI(TestCase):
 class OverdueFilter(TestCase):
     """Tests the `overdue` node method that makes dates into
     prettier "in 1 day" strings, etc."""
-    fixtures = ['gtd-test.json']
+    fixtures = ['gtd-test.json', 'test-users.json', 'gtd-env.json']
 
     def setUp(self):
         self.node = Node.objects.get(pk=1)
@@ -1565,12 +1565,13 @@ class NodeAPI(TestCase):
         self.repeating_node.todo_state = self.closed
         data = self.repeating_node.as_json()
         # Add the auto-repeat field
-        data = '{0}, "auto_update": true{1}'.format(data[:-2], data[-2:])
+        data = '{0}, "auto_update": true{1}'.format(data[:-1], data[-1:])
         response = self.client.put(
             self.repeating_url, data,
             HTTP_X_REQUESTED_WITH='XMLHttpRequest',
             content_type='application/json'
             )
+        print(response)
         self.assertEqual(
             200,
             response.status_code,

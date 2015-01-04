@@ -43,7 +43,7 @@
 	display: none;
     }
 }
-[ow-is-staff=False] {
+.ow-not-staff {
     .ow-staff-show {
 	display: none;
     }
@@ -251,6 +251,26 @@ dd.todo
 .editable-border-active() {
     .editable-border;
     border-color: rgba(255, 255, 0, 100);
+}
+
+/* Drag n' drop features */
+.droppable-target {
+    /* Hidden target that becomes visible when dragging is active */
+    height: 23px;
+    width: 300px;
+    padding-left: 5px;
+    color: @primary;
+    border-radius: 5px;
+    border-style: dashed;
+    border-color: @primary;
+    border-width: 2px;
+    visibility: hidden;
+}
+.droppable-over {
+    background: @primary-light-pale;
+}
+.droppable-active {
+    visibility: visible;
 }
 
 /* Global grid layout style */
@@ -671,9 +691,11 @@ input,textarea {
 }
 
 /* Calendars */
+.calendar-area {
+    .make-md-column(9);
+}
 .calendar-list {
     .make-md-column(3);
-    .pull-right;
     ul {
 	padding: 0px;
     }
@@ -733,12 +755,14 @@ input,textarea {
 	/* Cell properties and layout */
 	.description {
 	    .make-md-column(5);
+	    min-height: 22px;
 	}
 	.buttons {
 	    .make-md-column(2);
 	}
 	.deadline {
 	    .make-md-column(2);
+	    min-height: 22px;
 	}
 	.project {
 	    .make-md-column(3);
@@ -750,6 +774,17 @@ input,textarea {
 	}
 	&.overdue {
 	    background-color: @state-danger-bg;
+	}
+    }
+    .completed div{
+	position: relative;
+	&::after {
+	    border-bottom: 2px solid;
+	    content: "";
+	    left: 0;
+	    position: absolute;
+	    right: 0;
+	    top: 45%;
 	}
     }
     #scheduled-list {
