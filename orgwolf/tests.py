@@ -21,9 +21,11 @@ from __future__ import unicode_literals
 
 from django.core.urlresolvers import reverse
 from django.test import TestCase
+from django.contrib.auth.models import AnonymousUser
 
 from orgwolf.forms import RegistrationForm
 from orgwolf.models import OrgWolfUser as User, HTMLEscaper, AccountAssociation, JSONField
+from orgwolf.serializers import UserSerializer
 from plugins import BaseAccountHandler, google
 from wolfmail.models import Message
 
@@ -147,6 +149,27 @@ class UserMutators(TestCase):
             username,
             user.get_display()
             )
+
+
+class UserSerializerTest(TestCase):
+    fixtures = ['test-users.json']
+    def test_anonymous_user(self):
+        """Does the serializer respond correctly when not logged in"""
+        anon_user = AnonymousUser()
+        serializer = UserSerializer(anon_user)
+        self.assertEqual(
+            serializer.data['name'],
+            'Guest'
+        )
+
+    def test_user_name(self):
+        """Does the serializer provide the users full name"""
+        user = User.objects.get(pk=3)
+        serializer = UserSerializer(user)
+        self.assertEqual(
+            serializer.data['name'],
+            'Mark Wolf'
+        )
 
 
 class AccountAssociationTests(TestCase):
