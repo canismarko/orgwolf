@@ -220,7 +220,24 @@ angular.module(
 	    // Retrieve object from API
 	    scope.fields = Heading.get({id: scope.heading.id});
 	    scope.fields.$promise.then(function() {
+		var field, dateFields, i;
 		owWaitIndicator.end_wait('editable');
+		dateFields = ['scheduled_date', 'deadline_date', 'end_date']
+		// Convert date fields to Date objects
+		function getDate(str) {
+		    var milliseconds, tzOffset, d;
+		    if( typeof str === 'string') {
+			milliseconds = Date.parse(str)
+			tzOffset = new Date().getTimezoneOffset() * 60000;
+			d = new Date(milliseconds + tzOffset);
+			return d;
+		    }
+		}
+		// Cycle through each field and convert the date
+		for (i=0; i<dateFields.length; i+=1) {
+		    field = dateFields[i];
+		    scope.fields[field] = getDate(scope.fields[field]);
+		}
 	    });
 	} else if ( scope.parent ) {
 	    // Else inherit some attributes from parent...

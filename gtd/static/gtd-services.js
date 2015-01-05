@@ -111,8 +111,9 @@ angular.module(
 //     };
 // }])
 .factory('Heading', ['$http', '$resource', 'toaster', function($http, $resource, toaster) {
-    var interceptor, res;
-    interceptor = {
+    var toastOnly, res;
+    // Interceptors for manipulating the responses
+    toastOnly = {
 	'response': function(response) {
 	    toaster.pop('success', 'Saved');
 	    return response;
@@ -124,13 +125,14 @@ angular.module(
 	    console.log(reason);
 	},
     };
+    // Create the actual resource here
     res = $resource(
 	'/gtd/nodes/:id/',
 	{id: '@id',
 	 field_group: '@field_group'},
 	{
-	    'update': {method: 'PUT', interceptor: interceptor},
-	    'create': {method: 'POST', interceptor: interceptor},
+	    'update': {method: 'PUT', interceptor: toastOnly},
+	    'create': {method: 'POST', interceptor: toastOnly},
 	}
     );
     return res;
