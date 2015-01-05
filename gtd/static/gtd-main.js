@@ -124,7 +124,7 @@ angular.module(
 }])
 
 /*************************************************
-* Angular project outline appliance controller
+* Angular project ouline appliance controller
 *
 **************************************************/
 .controller('nodeOutline', ['$scope', '$rootScope', '$http', '$resource', '$filter', 'Heading', '$location', '$anchorScroll', 'owWaitIndicator', 'activeHeading', function outlineCtrl($scope, $rootScope, $http, $resource, $filter, Heading, $location, $anchorScroll, owWaitIndicator, activeHeading) {
@@ -227,6 +227,7 @@ angular.module(
 	$scope.activeFocusArea = newFocusArea;
     });
 }])
+
 
 /*************************************************
 * Angular actions list controller

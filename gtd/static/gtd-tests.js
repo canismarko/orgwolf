@@ -123,8 +123,8 @@ describe('filters in gtd-filters.js', function() {
 				 {'deadline_date': '2014-01-02'}];
 		sorted_data = [{'deadline_date': '2013-12-26'},
 			       {'deadline_date': '2014-01-02'},
-			       {'deadline_date': future_str},
-			       {'deadline_date': null}];
+			       {'deadline_date': null},
+			       {'deadline_date': future_str}];
 		expect(orderFilter(unsorted_data, 'list')).toEqual(sorted_data);
 	    });
 	});
@@ -293,7 +293,7 @@ describe('filters in gtd-filters.js', function() {
 	beforeEach(inject(function($injector) {
 	    listFocusAreasFilter = $injector.get('listFocusAreasFilter');
 	    $httpBackend = $injector.get('$httpBackend');
-	    $httpBackend.whenGET('/gtd/focusareas?is_visible=true')
+	    $httpBackend.whenGET('/gtd/focusareas')
 		.respond(200, [
 		    {id: 1,
 		     display: 'Work'},
@@ -394,7 +394,7 @@ describe('directives in gtd-directives.js', function() {
 	];
 	$httpBackend = $injector.get('$httpBackend');
 	$httpBackend.whenGET('/gtd/todostates').respond(201, dummyStates);
-	$httpBackend.whenGET('/gtd/focusareas?is_visible=true').respond(200, [
+	$httpBackend.whenGET('/gtd/focusareas').respond(200, [
 	    {id: 1, display: 'Work'},
 	    {id: 2, display: 'Home'}
 	]);

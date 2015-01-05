@@ -165,22 +165,6 @@ angular.module(
     return HeadingObj;
 }])
 
-/************************************************
-* Object that holds the state of the current
-* drag/drop operation.
-*
-**************************************************/
-.value('activeDragDrop', {
-    draggable: null,
-    droppable: null,
-    currentList: null,
-    clear: function() {
-	this.draggable = null;
-	this.droppable = null;
-	this.currentList = null;
-    }
-})
-
 /*************************************************
 * Default todo states. Override in template from
 * server.

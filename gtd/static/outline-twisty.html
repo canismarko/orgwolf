@@ -4,11 +4,10 @@
      ng-show="!isEditing"
      ng-click="toggleHeading($event)"
      style="{{ heading | headingStyle }}"
-     archived="{{ heading.archived }}"
-     >
-  <span class="twisty drag-handle"></span>
+     archived="{{ heading.archived }}">
+  <span class="twisty"></span>
   <span ow-todo ow-heading="heading"></span>
-  <div class="ow-title drag-handle">
+  <div class="ow-title">
     {{heading.title}}
     <span ng-show="heading.has_text && state < 2">&hellip;</span>
   </div>
