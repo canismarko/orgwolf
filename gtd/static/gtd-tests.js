@@ -112,7 +112,7 @@ describe('filters in gtd-filters.js', function() {
 		d = new Date();
 		// Set new future date within seven days
 		// (slicing ensures leading zeroes)
-		d.setDate(d.getDate() + 7);
+		d.setDate(d.getDate() + 8);
 		var futrYear = d.getFullYear();
 		var futrMonth = ("0" + (d.getMonth() + 1)).slice (-2);
 		var futrDay = ("0" + d.getDate()).slice(-2);
@@ -293,7 +293,7 @@ describe('filters in gtd-filters.js', function() {
 	beforeEach(inject(function($injector) {
 	    listFocusAreasFilter = $injector.get('listFocusAreasFilter');
 	    $httpBackend = $injector.get('$httpBackend');
-	    $httpBackend.whenGET('/gtd/focusareas')
+	    $httpBackend.whenGET('/gtd/focusareas?is_visible=true')
 		.respond(200, [
 		    {id: 1,
 		     display: 'Work'},
@@ -394,7 +394,7 @@ describe('directives in gtd-directives.js', function() {
 	];
 	$httpBackend = $injector.get('$httpBackend');
 	$httpBackend.whenGET('/gtd/todostates').respond(201, dummyStates);
-	$httpBackend.whenGET('/gtd/focusareas').respond(200, [
+	$httpBackend.whenGET('/gtd/focusareas?is_visible=true').respond(200, [
 	    {id: 1, display: 'Work'},
 	    {id: 2, display: 'Home'}
 	]);
@@ -889,6 +889,7 @@ describe('services in gtd-services.js', function() {
 		.respond(201, {});
 	    heading.$update();
 	    $httpBackend.flush();
+	    expect(true).toBeTruthy();
 	});
 
 	it('uses the POST method to update', function() {
@@ -896,6 +897,7 @@ describe('services in gtd-services.js', function() {
 		.respond(201, {});
 	    Heading.create({title: 'hello'});
 	    $httpBackend.flush();
+	    expect(true).toBeTruthy();
 	});
     });
 
@@ -1033,6 +1035,7 @@ describe('controllers in gtd-main.js', function() {
 		$httpBackend.whenGET(/\/gtd\/nodes\?context=0&field_group=actions_list&todo_state=2&upcoming=[0-9-]+/)
 		    .respond(200, {});
 		$scope.changeContext()
+		expect(true).toBeTruthy();
 	    });
 	});
 	describe('project filtering', function() {
@@ -1049,6 +1052,7 @@ describe('controllers in gtd-main.js', function() {
 		$scope.$digest();
 		$httpBackend.flush();
 		$scope.activeParent.id = 1;
+		expect(true).toBeTruthy();
 	    });
 	});
     });
@@ -1083,6 +1087,7 @@ describe('controllers in gtd-main.js', function() {
 		});
 	    $controller('nodeOutline', {$scope: $scope});
 	    $httpBackend.flush();
+	    expect(true).toBeTruthy();
 	});
     });
 
@@ -1145,6 +1150,7 @@ describe('controllers in gtd-main.js', function() {
 		.respond(200, []);
 	    $controller('search', {$scope: $scope});
 	    $httpBackend.flush();
+	    expect(true).toBeTruthy();
 	});
 	it('removes duplicate entries', function() {
 	    $location.search('q', 'hello+world');
@@ -1207,6 +1213,7 @@ describe('controllers in gtd-main.js', function() {
 			      start: newDate,
 			      allDay: true,
 			     });
+	    expect(true).toBeTruthy();
 	});
 	it('reschedules a time-specific node', function() {
 	    var newDate = new Date("2014-06-17T03:17:05.746Z");
@@ -1221,6 +1228,7 @@ describe('controllers in gtd-main.js', function() {
 			      start: newDate,
 			      allDay: false,
 			     });
+	    expect(true).toBeTruthy();
 	});
 	it('reschedules a deadline node', function() {
 	    var newDate = new Date("2014-06-16T12:00:00.000Z");
@@ -1231,6 +1239,7 @@ describe('controllers in gtd-main.js', function() {
 			      start: newDate,
 			      allDay: true,
 			      field_group: 'calendar_deadlines'});
+	    expect(true).toBeTruthy();
 	});
 	it('resizes a scheduled node with date only', function() {
 	    var newDate = new Date("2014-06-16T12:00:00.000Z");
@@ -1241,6 +1250,7 @@ describe('controllers in gtd-main.js', function() {
 				end: newDate,
 				allDay: true,
 				field_group: 'calendar'});
+	    expect(true).toBeTruthy();
 	});
 	it('resizes a scheduled node with date and time', function() {
 	    var newDate, expectedDate, expectedTime, expectedString;
@@ -1257,12 +1267,14 @@ describe('controllers in gtd-main.js', function() {
 				end: newDate,
 				allDay: false,
 				field_group: 'calendar'});
+	    expect(true).toBeTruthy();
 	});
 	it('doesn\'t resize a deadline node', function() {
 	    // This test is valid since no $httpBackend call is expected
 	    $scope.resizeEvent({id: 1,
 				end: new Date(),
 				field_group: 'calendar_deadlines'});
+	    expect(true).toBeTruthy();
 	});
     });
 }); // End of gtd-main.js tests
