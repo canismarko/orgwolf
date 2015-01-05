@@ -64,7 +64,7 @@ class MessageView(APIView):
         else:
             qs = Message.objects.filter(owner=request.user)
         # Filter by get params
-        qs = qs.filter(**data.dict())
+        qs = qs.filter(**data.dict()).select_related('source_node')
         return qs
 
     def get(self, request, pk=None):

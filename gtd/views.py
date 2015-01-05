@@ -109,7 +109,6 @@ class NodeView(APIView):
         # Serialize and return the queryset or object
         is_many = isinstance(nodes, QuerySet)
         serializer = Serializer(nodes, many=is_many, request=request)
-
         return Response(serializer.data)
 
     def get_queryset(self, request, *args, **kwargs):
@@ -141,6 +140,8 @@ class NodeView(APIView):
                 nodes = nodes.filter(**query)
             except FieldError:
                 pass
+        nodes = nodes.select_related('owner')
+        nodes = nodes.prefetch_related('users', 'focus_areas')
         return nodes
 
     def get_actions_list(self, request, *args, **kwargs):
@@ -179,6 +180,9 @@ class NodeView(APIView):
             nodes = context.apply(nodes)
             request.session['context_id'] = context_id
             request.session['context_name'] = context.name
+        # DB optimization
+        nodes = nodes.select_related('owner')
+        nodes = nodes.prefetch_related('users', 'focus_areas')
         return nodes
 
     def get_upcoming(self, request, *args, **kwargs):
@@ -196,6 +200,9 @@ class NodeView(APIView):
         upcoming_deadline_Q = Q(deadline_date__lte = deadline) # TODO: fix this
         deadline_nodes = all_nodes_qs.filter(undone_Q, upcoming_deadline_Q)
         deadline_nodes = deadline_nodes.order_by("deadline_date")
+        # DB optimization
+        deadline_nodes = deadline_nodes.select_related('owner')
+        deadline_nodes = deadline_nodes.prefetch_related('focus_areas')
         return deadline_nodes
 
     def post(self, request, pk=None, *args, **kwargs):

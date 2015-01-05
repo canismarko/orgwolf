@@ -53,12 +53,8 @@ class NodeSerializer(serializers.ModelSerializer):
     read_only = serializers.SerializerMethodField()
     has_text = serializers.SerializerMethodField()
     def __init__(self, qs, *args, **kwargs):
-        # Perform some optimization before hitting the database
+        # Save the http request for later use
         self.request = kwargs.pop('request', None)
-        if kwargs.get('many', False):
-            # Prefetch related fields only if passing a queryset
-            qs = qs.select_related('owner')
-            qs = qs.prefetch_related('focus_areas', 'users')
         return super(NodeSerializer, self).__init__(qs, *args, **kwargs)
 
     def get_read_only(self, obj):
@@ -91,12 +87,19 @@ class NodeListSerializer(NodeSerializer):
                   'tree_id', 'lft', 'rght',
                   'repeats', 'read_only', 'has_text']
 
+    def to_representation(self, obj):
+        """
+        Prefetch the root node to avoid multiple DB hits
+        """
+        obj.current_root = obj.get_root()
+        return super(NodeListSerializer, self).to_representation(obj)
+
     def get_root_id(self, obj):
-        root = obj.get_root()
+        root = obj.current_root
         return root.pk
 
     def get_root_name(self, obj):
-        root = obj.get_root()
+        root = obj.current_root
         return root.title
 
 

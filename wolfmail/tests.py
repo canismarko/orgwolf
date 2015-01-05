@@ -357,16 +357,6 @@ class InboxSerializerTest(TestCase):
     fixtures = ['test-users.json', 'messages-test.json',
                 'gtd-env.json', 'gtd-test.json']
 
-    def test_db_optimization(self):
-        messages = Message.objects.all()
-        serializer = InboxSerializer(messages, many=True)
-        def eval_queryset():
-            list(serializer.data)
-        self.assertNumQueries(
-            1,
-            eval_queryset
-        )
-
     def test_source_node(self):
         message = Message.objects.get(pk=1)
         node = message.source_node
