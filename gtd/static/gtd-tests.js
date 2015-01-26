@@ -99,33 +99,31 @@ describe('filters in gtd-filters.js', function() {
 	    expect(orderFilter(unsorted_data, 'key')).toEqual(sorted_data);
 	});
 	describe('when passed the \'list\' option', function() {
-	    it('puts nodes in deadline order', function() {
-		unsorted_data = [{'deadline_date': '2014-01-02'},
-				 {'deadline_date': '2013-12-20'},
-				 {'deadline_date': '2013-12-26'}];
-		sorted_data = [{'deadline_date': '2013-12-20'},
-			       {'deadline_date': '2013-12-26'},
-			       {'deadline_date': '2014-01-02'}];
-		expect(orderFilter(unsorted_data, 'list')).toEqual(sorted_data);
-	    });
-	    it('puts nodes without an upcoming deadline at the end', function() {
+	    it('puts nodes with an upcoming deadline at the top', function() {
 		d = new Date();
 		// Set new future date within seven days
 		// (slicing ensures leading zeroes)
-		d.setDate(d.getDate() + 8);
+		d.setDate(d.getDate() + 5);
 		var futrYear = d.getFullYear();
 		var futrMonth = ("0" + (d.getMonth() + 1)).slice (-2);
 		var futrDay = ("0" + d.getDate()).slice(-2);
 		future_str = futrYear + '-' + futrMonth + '-' + futrDay;
 		unsorted_data = [{'deadline_date': null},
-				 {'deadline_date': future_str},
-				 {'deadline_date': '2013-12-26'},
-				 {'deadline_date': '2014-01-02'}];
-		sorted_data = [{'deadline_date': '2013-12-26'},
-			       {'deadline_date': '2014-01-02'},
-			       {'deadline_date': null},
-			       {'deadline_date': future_str}];
+				 {'deadline_date': future_str}];
+		sorted_data = [{'deadline_date': future_str},
+			       {'deadline_date': null}];
 		expect(orderFilter(unsorted_data, 'list')).toEqual(sorted_data);
+	    });
+	    it('puts nodes with higher priority at the top', function() {
+		unsorted_data = [{'priority': 'C'},
+				 {'priority': 'B'},
+				 {'priority': 'A'}];
+		sorted_data = [{'priority': 'A'},
+			       {'priority': 'B'},
+			       {'priority': 'C'}];
+		console.log('===');
+		expect(orderFilter(unsorted_data, 'list')).toEqual(sorted_data);
+		console.log('---');
 	    });
 	});
 	it('puts relatives of activeHeading to the top', function() {

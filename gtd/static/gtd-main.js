@@ -233,7 +233,7 @@ angular.module(
 * Angular actions list controller
 *
 **************************************************/
-.controller('nextActionsList', ['$sce', '$scope', '$resource', '$location', '$routeParams', '$filter', 'contexts', 'Heading', 'todoStates', 'owWaitIndicator', '$cookies',function listCtrl($sce, $scope, $resource, $location, $routeParams, $filter, contexts, Heading, todoStates, owWaitIndicator, $cookies) {
+    .controller('nextActionsList', ['$sce', '$scope', '$resource', '$location', '$routeParams', '$filter', 'contexts', 'Heading', 'todoStates', 'activeState', 'owWaitIndicator', '$cookies',function listCtrl($sce, $scope, $resource, $location, $routeParams, $filter, contexts, Heading, todoStates, activeState, owWaitIndicator, $cookies) {
     var i, TodoState, Context, today, update_url, get_list, parent_id, todo_states;
     $scope.list_params = {field_group: 'actions_list'};
     $scope.showArchived = true;
@@ -245,6 +245,11 @@ angular.module(
 	$scope.activeContext = parseInt($routeParams.context_id, 10);
 	$scope.contextName = $routeParams.context_slug;
 	$scope.list_params.context = $scope.activeContext;
+	contexts.$promise.then(function(contexts) {
+	    activeState.context = contexts.filter(function(context) {
+		return context.id === $scope.activeContext;
+	    })[0];
+	});
     } else {
 	$scope.activeContext = null;
     }
@@ -425,6 +430,7 @@ angular.module(
 	});
 	if (newContext.length === 1) {
 	    $navText.text(newContext[0].name + ' Actions');
+	    activeState.context = newContext[0];
 	} else {
 	    $navText.text('Next Actions');
 	}
