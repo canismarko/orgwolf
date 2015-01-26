@@ -113,6 +113,7 @@ angular.module(
 	function set_strings(newDate) {
 	    $scope.dateString = newDate.toDateString();
 	    $scope.dateModel = newDate.ow_date();
+	    $scope.dateModel = newDate;
 	    return newDate;
 	}
 	// Setup the widget based on parent scope's current_date
@@ -204,7 +205,7 @@ angular.module(
 * is a new child.
 *
 **************************************************/
-.directive('owEditable', ['$resource', '$rootScope', '$timeout', 'owWaitIndicator', 'Heading', 'todoStates', 'focusAreas', 'toaster', function($resource, $rootScope, $timeout, owWaitIndicator, Heading, todoStates, focusAreas, toaster) {
+.directive('owEditable', ['$resource', '$rootScope', '$timeout', 'owWaitIndicator', 'Heading', 'todoStates', 'focusAreas', 'toaster', 'toDateObjFilter', function($resource, $rootScope, $timeout, owWaitIndicator, Heading, todoStates, focusAreas, toaster, toDateObjFilter) {
     // Directive creates the pieces that allow the user to edit a heading
     function link(scope, element, attrs) {
 	var defaultParent, $text, heading, $save, heading_id, parent, editorId;
@@ -223,20 +224,10 @@ angular.module(
 		var field, dateFields, i;
 		owWaitIndicator.end_wait('editable');
 		dateFields = ['scheduled_date', 'deadline_date', 'end_date']
-		// Convert date fields to Date objects
-		function getDate(str) {
-		    var milliseconds, tzOffset, d;
-		    if( typeof str === 'string') {
-			milliseconds = Date.parse(str)
-			tzOffset = new Date().getTimezoneOffset() * 60000;
-			d = new Date(milliseconds + tzOffset);
-			return d;
-		    }
-		}
 		// Cycle through each field and convert the date
 		for (i=0; i<dateFields.length; i+=1) {
 		    field = dateFields[i];
-		    scope.fields[field] = getDate(scope.fields[field]);
+		    scope.fields[field] = toDateObjFilter(scope.fields[field]);
 		}
 	    });
 	} else if ( scope.parent ) {
@@ -247,18 +238,18 @@ angular.module(
 	} else {
 	    // ...or use defaults if no parent
 	    scope.fields.focus_areas = [];
-	    scope.fields.priority = 'B';
+	    scope.fields.priority = 'C';
 	    // Set Scope if a tab is active
 	    if ($rootScope.activeFocusArea && $rootScope.activeFocusArea.id > 0) {
 		scope.fields.focus_areas.push($rootScope.activeFocusArea.id);
 	    }
 	}
 	scope.priorities = [{sym: 'A',
-			     display: 'A - high'},
+			     display: 'A - Critical'},
 			    {sym: 'B',
-			     display: 'B - medium (default)' },
+			     display: 'B - High' },
 			    {sym: 'C',
-			     display: 'C - low'}];
+			     display: 'C - Default'}];
 	scope.time_units = [
 	    {value: 'd', label: 'Days'},
 	    {value: 'w', label: 'Weeks'},
@@ -434,13 +425,17 @@ angular.module(
 .directive('owFocusAreaTabs', ['$resource', '$rootScope', '$timeout', 'focusAreas', function($resource, $rootScope, $timeout, focusAreas) {
     // Directive creates tabs that allow a user to filter by focus area
     function link(scope, element, attrs) {
-	scope.nullFocusArea = {
+	scope.allFocusArea = {
 	    id: 0,
 	    display: 'All'
 	};
+	scope.noneFocusArea = {
+	    id: -1,
+	    display: 'None'
+	};
 	scope.focusAreas = focusAreas;
-	scope.activeFocusArea = scope.nullFocusArea;
-	$rootScope.activeFocusArea = scope.nullFocusArea;
+	scope.activeFocusArea = scope.allFocusArea;
+	$rootScope.activeFocusArea = scope.allFocusArea;
 	$timeout(function() {
 	    element.find('#fa-tab-0').addClass('active');
 	});

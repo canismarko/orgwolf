@@ -191,6 +191,25 @@ owFilters.filter('currentList', function() {
 
 
 /*************************************************
+* Filter that converts an ISO date string to a
+* date object.
+*
+**************************************************/
+owFilters.filter('toDateObj', ['$sce', function($sce) {
+    return function(str) {
+	var milliseconds, tzOffset, d;
+	if( typeof str === 'string') {
+	    milliseconds = Date.parse(str)
+	    tzOffset = new Date().getTimezoneOffset() * 60000;
+	    d = new Date(milliseconds + tzOffset);
+	} else {
+	    d = str;
+	}
+	return d;
+    };
+}]);
+
+/*************************************************
 * Filter that displays the deadline for a heading
 *
 **************************************************/
@@ -298,11 +317,21 @@ owFilters.filter('currentFocusArea', ['$rootScope', function($rootScope) {
 	} else {
 	    activeId = 0;
 	}
+	newList = [];
 	// Now do the actual filtering
-	if (activeId) {
-	    newList = [];
+	if (activeId === -1) {
+	    // id of -1 mean only include headings that have no focus area
+	    for (i=0; i<oldList.length; i+=1) {
+		if( oldList[i].focus_areas.length === 0) {
+		    // Allow only headings with no focus areas
+		    newList.push(oldList.slice(i, i+1)[0]);
+		}
+	    }
+	} else if (activeId) {
+	    // Filter by an actual focus area from the database
 	    for (i=0; i<oldList.length; i+=1) {
 		if( oldList[i].focus_areas.indexOf(activeId) > -1 ) {
+		    // Filter against an actual focus area
 		    newList.push(oldList.slice(i, i+1)[0]);
 		}
 	    }

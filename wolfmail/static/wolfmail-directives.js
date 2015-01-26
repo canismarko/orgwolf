@@ -73,7 +73,7 @@ angular.module('owDirectives')
 * Directive that handles actions on messages
 *
 **************************************************/
-.directive('owMsgActions', ['Heading', function(Heading) {
+.directive('owMsgActions', ['Heading', 'dateFilter', 'toaster', function(Heading, dateFilter, toaster) {
     // Directive handles actions modal on message object
     function link(scope, element, attrs) {
 	var $element, MessageApi;
@@ -153,7 +153,15 @@ angular.module('owDirectives')
 	    // Reschedule this message to appear in the future
 	    scope.new_node.target_date = scope.$defer_modal.find('#target-date').val();
 	    scope.$defer_modal.modal('hide').one('hidden.bs.modal', function() {
-		scope.active_msg.$defer({target_date: scope.newDate});
+		var newDate = dateFilter(scope.newDate, 'yyyy-MM-dd');
+		scope.active_msg.$defer({target_date: newDate})
+		    .then(function(message) {
+			var s = 'Deferred until ';
+			s += dateFilter(message.rcvd_date, 'yyyy-MM-dd');
+			toaster.pop('info', null, s);
+			console.log('rescheduled');
+			console.log(message);
+		    });
 	    });
 	};
 	scope.delete_node = function() {

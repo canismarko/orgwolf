@@ -286,6 +286,14 @@ describe('filters in gtd-filters.js', function() {
 	    var filteredList = focusAreaFilter(dummyHeadings, {id: 0});
 	    expect(filteredList).toEqual(dummyHeadings);
 	});
+
+	it('identifies nodes with no focus area', function() {
+	    var headings = [{id: 1, focus_areas: []},
+			    {id: 2, focus_areas: [1]}];
+	    var filteredList = focusAreaFilter(headings, {id: -1});
+	    expect(filteredList.length).toEqual(1);
+	    expect(filteredList[0].id).toEqual(1);
+	});
     });
 
     describe('the listFocusAreas filter', function() {
@@ -519,7 +527,7 @@ describe('directives in gtd-directives.js', function() {
 		// Simulate the $scope that is return from get_parent() for a top-level node
 		$rootScope.$digest();
 		expect(element.isolateScope().fields.focus_areas).toEqual([]);
-		expect(element.isolateScope().fields.priority).toEqual('B');
+		expect(element.isolateScope().fields.priority).toEqual('C');
 	    });
 
 	    it('adds the ow-editable class (for animations)', function() {

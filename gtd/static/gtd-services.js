@@ -1,6 +1,5 @@
 /*globals angular, GtdHeading, jQuery, navigator, window, alert*/
 "use strict";
-var HeadingFactory;
 
 angular.module(
     'owServices',
