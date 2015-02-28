@@ -72,7 +72,6 @@
     {% endif %}
 
     {% if local_net %}
-    <!-- <script src="{{ STATIC_URL }}modernizr.min.js"></script> -->
     <script src="{{ STATIC_URL }}bower/requirejs/require.js"></script>
     <script src="{{ STATIC_URL }}bower/jquery/dist/jquery.js"></script>
     <script src="{{ STATIC_URL }}bower/bootstrap/dist/js/bootstrap.js"></script>
@@ -111,24 +110,37 @@
     <script src="https://login.persona.org/include.js"></script>
     {% endif %}
 
+    <!-- Shiv for HTML5 date input form -->
+    <script src="{{ STATIC_URL }}modernizr-2.8.3.js"></script>
+    <script>
+      Modernizr.load({
+	  test: Modernizr.inputtypes.date,
+	  nope: [
+	      '{{ STATIC_URL }}bower/better-dom/dist/better-dom.js',
+	      '{{ STATIC_URL }}bower/better-i18n-plugin/dist/better-i18n-plugin.js',
+	      '{{ STATIC_URL }}bower/better-dateinput-polyfill/dist/better-dateinput-polyfill.js',
+	  ]
+      });
+    </script>
     {% if debug %}
-      <script src="{{ STATIC_URL }}jquery.cookie.js"></script>
-      <script src="{{ STATIC_URL }}gtd-models.js"></script>
-      <script src="{{ STATIC_URL }}gtd-services.js"></script>
-      <script src="{{ STATIC_URL }}gtd-directives.js"></script>
-      <script src="{{ STATIC_URL }}gtd-filters.js"></script>
-      <script src="{{ STATIC_URL }}gtd-main.js"></script>
-      <script src="{{ STATIC_URL }}wolfmail-models.js"></script>
-      <script src="{{ STATIC_URL }}wolfmail-services.js"></script>
-      <script src="{{ STATIC_URL }}wolfmail-directives.js"></script>
-      <script src="{{ STATIC_URL }}wolfmail-filters.js"></script>
-      <script src="{{ STATIC_URL }}wolfmail-ctrl.js"></script>
-      <script src="{{ STATIC_URL }}orgwolf-services.js"></script>
-      <script src="{{ STATIC_URL }}orgwolf-filters.js"></script>
-      <script src="{{ STATIC_URL }}orgwolf-directives.js"></script>
-      <script src="{{ STATIC_URL }}orgwolf-controllers.js"></script>
+
+    <script src="{{ STATIC_URL }}jquery.cookie.js"></script>
+    <script src="{{ STATIC_URL }}gtd-models.js"></script>
+    <script src="{{ STATIC_URL }}gtd-services.js"></script>
+    <script src="{{ STATIC_URL }}gtd-directives.js"></script>
+    <script src="{{ STATIC_URL }}gtd-filters.js"></script>
+    <script src="{{ STATIC_URL }}gtd-main.js"></script>
+    <script src="{{ STATIC_URL }}wolfmail-models.js"></script>
+    <script src="{{ STATIC_URL }}wolfmail-services.js"></script>
+    <script src="{{ STATIC_URL }}wolfmail-directives.js"></script>
+    <script src="{{ STATIC_URL }}wolfmail-filters.js"></script>
+    <script src="{{ STATIC_URL }}wolfmail-ctrl.js"></script>
+    <script src="{{ STATIC_URL }}orgwolf-services.js"></script>
+    <script src="{{ STATIC_URL }}orgwolf-filters.js"></script>
+    <script src="{{ STATIC_URL }}orgwolf-directives.js"></script>
+    <script src="{{ STATIC_URL }}orgwolf-controllers.js"></script>
     {% else %}
-      <script src="{{ STATIC_URL }}orgwolf-min.js"></script>
+    <script src="{{ STATIC_URL }}orgwolf-min.js"></script>
     {% endif %}
     {% block script %}
     <script type="text/javascript">
