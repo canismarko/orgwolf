@@ -233,7 +233,7 @@ angular.module(
 * Angular actions list controller
 *
 **************************************************/
-    .controller('nextActionsList', ['$sce', '$scope', '$resource', '$location', '$routeParams', '$filter', 'contexts', 'Heading', 'todoStates', 'activeState', 'owWaitIndicator', '$cookies',function listCtrl($sce, $scope, $resource, $location, $routeParams, $filter, contexts, Heading, todoStates, activeState, owWaitIndicator, $cookies) {
+.controller('nextActionsList', ['$sce', '$scope', '$resource', '$location', '$routeParams', '$filter', 'contexts', 'Heading', 'todoStates', 'activeState', 'owWaitIndicator', '$cookies',function listCtrl($sce, $scope, $resource, $location, $routeParams, $filter, contexts, Heading, todoStates, activeState, owWaitIndicator, $cookies) {
     var i, TodoState, Context, today, update_url, get_list, parent_id, todo_states;
     $scope.list_params = {field_group: 'actions_list'};
     $scope.showArchived = true;

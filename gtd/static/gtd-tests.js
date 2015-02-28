@@ -86,6 +86,58 @@ describe('filters in gtd-filters.js', function() {
 	});
     });
 
+    describe('the sortActions filter', function() {
+	var listFilter, activeState, $httpBackend;
+	beforeEach(inject(function($injector) {
+	    listFilter = $injector.get('sortActionsFilter');
+	    activeState = $injector.get('activeState');
+	    $httpBackend = $injector.get('$httpBackend');
+	    $httpBackend.whenGET('/gtd/locations').respond(200, [
+		{id: 1,
+		 tag_string: 'home'},
+		{id: 2,
+		 tag_string: 'work'},
+	    ]);
+	    $httpBackend.flush();
+	}));
+	afterEach(function() {
+	    $httpBackend.verifyNoOutstandingExpectation();
+	});
+	it('puts nodes with an upcoming deadline at the top', function() {
+	    d = new Date();
+	    // Set new future date within seven days
+	    // (slicing ensures leading zeroes)
+	    d.setDate(d.getDate() + 5);
+	    var futrYear = d.getFullYear();
+	    var futrMonth = ("0" + (d.getMonth() + 1)).slice (-2);
+	    var futrDay = ("0" + d.getDate()).slice(-2);
+	    future_str = futrYear + '-' + futrMonth + '-' + futrDay;
+	    unsorted_data = [{'deadline_date': null},
+			     {'deadline_date': future_str}];
+	    sorted_data = [{'deadline_date': future_str},
+			   {'deadline_date': null}];
+	    expect(listFilter(unsorted_data)).toEqual(sorted_data);
+	});
+	it('puts nodes with higher priority at the top', function() {
+	    unsorted_data = [{'priority': 'C'},
+			     {'priority': 'B'},
+			     {'priority': 'A'}];
+	    sorted_data = [{'priority': 'A'},
+			   {'priority': 'B'},
+			   {'priority': 'C'}];
+	    expect(listFilter(unsorted_data)).toEqual(sorted_data);
+	});
+	it('puts location-specific tasks at the top', function() {
+	    var unsortedList, sortedList, homeHeading, otherHeading;
+	    activeState.context = {'locations_available': [1, 2]};
+	    homeHeading = {'tag_string': ':home:'};
+	    otherHeading = {'tag_string': ''};
+	    unsortedList = [otherHeading, homeHeading];
+	    sortedList = [homeHeading, otherHeading];
+	    expect(listFilter(unsortedList)).toEqual(sortedList);
+	})
+    });
+
     describe('the "order" filter', function() {
 	var orderFilter;
 	beforeEach(inject(function(_orderFilter_) {
@@ -97,34 +149,6 @@ describe('filters in gtd-filters.js', function() {
 	    sorted_data = [{'key': 'alpha'}, {'key': 'bravo'},
 			     {'key': 'charlie'}, {'key': 'delta'}];
 	    expect(orderFilter(unsorted_data, 'key')).toEqual(sorted_data);
-	});
-	describe('when passed the \'list\' option', function() {
-	    it('puts nodes with an upcoming deadline at the top', function() {
-		d = new Date();
-		// Set new future date within seven days
-		// (slicing ensures leading zeroes)
-		d.setDate(d.getDate() + 5);
-		var futrYear = d.getFullYear();
-		var futrMonth = ("0" + (d.getMonth() + 1)).slice (-2);
-		var futrDay = ("0" + d.getDate()).slice(-2);
-		future_str = futrYear + '-' + futrMonth + '-' + futrDay;
-		unsorted_data = [{'deadline_date': null},
-				 {'deadline_date': future_str}];
-		sorted_data = [{'deadline_date': future_str},
-			       {'deadline_date': null}];
-		expect(orderFilter(unsorted_data, 'list')).toEqual(sorted_data);
-	    });
-	    it('puts nodes with higher priority at the top', function() {
-		unsorted_data = [{'priority': 'C'},
-				 {'priority': 'B'},
-				 {'priority': 'A'}];
-		sorted_data = [{'priority': 'A'},
-			       {'priority': 'B'},
-			       {'priority': 'C'}];
-		console.log('===');
-		expect(orderFilter(unsorted_data, 'list')).toEqual(sorted_data);
-		console.log('---');
-	    });
 	});
 	it('puts relatives of activeHeading to the top', function() {
 	    unsorted = [{title: 'last', tree_id: 1},

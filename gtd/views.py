@@ -43,9 +43,10 @@ from rest_framework.response import Response
 from rest_framework import mixins, generics
 
 from gtd.forms import NodeForm
-from gtd.models import TodoState, Node, Context, FocusArea
+from gtd.models import TodoState, Node, Context, FocusArea, Location
 from gtd.shortcuts import get_todo_abbrevs, order_nodes
 from gtd.serializers import (ContextSerializer, FocusAreaSerializer,
+                             TagSerializer,
                              TodoStateSerializer, NodeSerializer,
                              NodeListSerializer, NodeOutlineSerializer,
                              CalendarSerializer, CalendarDeadlineSerializer)
@@ -319,3 +320,14 @@ class ContextView(APIView):
         contexts = Context.get_visible(request.user)
         serializer = ContextSerializer(contexts, many=True)
         return Response(serializer.data)
+
+
+class LocationView(generics.ListAPIView):
+    """RESTful interaction with the gtd.models.Location object"""
+    serializer_class = TagSerializer
+
+    def get_queryset(self):
+        by_user = Q(owner=self.request.user)
+        is_public = Q(public=True)
+        qs = Location.objects.filter(by_user | is_public)
+        return qs

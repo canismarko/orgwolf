@@ -263,4 +263,13 @@ angular.module(
 **************************************************/
 .factory('contexts', ['GtdObject', function(GtdObject) {
     return GtdObject('/gtd/contexts', {});
+}])
+
+/*************************************************
+* Factory returns all the available
+* Tag objects
+*
+**************************************************/
+.factory('locations', ['GtdObject', function(GtdObject) {
+    return GtdObject('/gtd/locations', {});
 }]);

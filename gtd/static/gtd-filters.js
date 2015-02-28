@@ -95,14 +95,14 @@ owFilters.filter('asHtml', ['$sce', function($sce) {
 }]);
 
 /*************************************************
-* Filter that orders top level headings
+* Filter that sorts the action list
 *
 **************************************************/
-owFilters.filter('order', ['$sce', 'activeState', function($sce, activeState) {
-    return function(obj, criterion, activeHeading) {
-	var ordered, deadline, other, i, today;
+owFilters.filter('sortActions', ['$sce', 'activeState', 'locations', function($sce, activeState, locations) {
+    return function(unoderedList) {
+	var ordered, deadline, other, i, today, activeLocations, locationIDs, activeLocation;
 	function importance(heading) {
-	    // Assign a weight to a given heading for later sorting
+	    // Assign a weight to a given heading for sorting
 	    var weight, today, delta;
 	    weight = 0;
 	    // Check for upcoming deadlines
@@ -120,13 +120,47 @@ owFilters.filter('order', ['$sce', 'activeState', function($sce, activeState) {
 			      'C': 1,
 			      undefined: 0};
 	    weight += priorities[heading.priority];
+	    // Put location-specific things higher up the list
+	    for (i=0; i<activeLocations.length; i+=1) {
+		activeLocation = activeLocations[i];
+		if (heading.tag_string.indexOf(activeLocation.tag_string) > -1) {
+		    // This heading requires the current location tag
+		    weight += 1;
+		    break;
+		}
+	    }
 	    return weight;
 	};
-	if ( criterion === 'list' ) {
-	    ordered = obj.sort(function(a, b) {
-		return importance(b) - importance(a);
-	    });
-	} else if ( criterion === 'none' ) {
+	// Get active locations for sorting based on active context
+	activeLocations = [];
+	if (activeState.context) {
+	    locationIDs = activeState.context.locations_available;
+	    for (i=0; i<locationIDs.length; i+=1) {
+		// Find and check each location object
+		activeLocation = locations.filter(function(loc) {
+		    return loc.id == locationIDs[i];
+		})[0];
+		activeLocations.push(activeLocation)
+	    }
+	}
+	// Sort by "importance value" of each heading
+	ordered = unoderedList.sort(function(a, b) {
+	    return importance(b) - importance(a);
+	});
+	return ordered;
+    };
+}]);
+
+/*************************************************
+* Filter that sorts top level headings in the
+* project view. (Actions list view is sorted by
+* a different filter).
+*
+**************************************************/
+owFilters.filter('order', ['$sce', 'activeState', function($sce, activeState) {
+    return function(obj, criterion, activeHeading) {
+	var ordered, i;
+	if ( criterion === 'none' ) {
 	    ordered = obj;
 	} else {
 	    ordered = obj.order_by(criterion);
@@ -143,13 +177,6 @@ owFilters.filter('order', ['$sce', 'activeState', function($sce, activeState) {
 	return ordered;
     };
 }]);
-
-/*************************************************
-* Filter that sorts the activeHeading to the top
-* of the given list
-*
-**************************************************/
-
 
 /*************************************************
 * Filter that only shows headings that are visible

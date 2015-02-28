@@ -22,7 +22,7 @@ import datetime as dt
 
 from rest_framework import serializers
 
-from gtd.models import Context, FocusArea, Node, TodoState
+from gtd.models import Context, FocusArea, Node, TodoState, Tag
 
 
 class FocusAreaSerializer(serializers.ModelSerializer):
@@ -43,10 +43,15 @@ class TodoStateSerializer(serializers.ModelSerializer):
                   'closed', 'display_text']
 
 
+class TagSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Tag
+
+
 class ContextSerializer(serializers.ModelSerializer):
     class Meta:
         model = Context
-        fields = ('id', 'name')
+        fields = ('id', 'name', 'locations_available')
 
 
 class NodeSerializer(serializers.ModelSerializer):
