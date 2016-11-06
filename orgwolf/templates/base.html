@@ -110,7 +110,6 @@
     <script src="//cdnjs.cloudflare.com/ajax/libs/angular-ui-bootstrap/0.10.0/ui-bootstrap-tpls.min.js"></script>
     <script src="//cdnjs.cloudflare.com/ajax/libs/angular-ui-calendar/0.8.0/calendar.js"></script>
     <script src="//cdnjs.cloudflare.com/ajax/libs/fullcalendar/1.6.4/fullcalendar.min.js"></script>
-    <script src="https://login.persona.org/include.js"></script>
     {% endif %}
 
     {% if debug %}
@@ -138,7 +137,7 @@
 angular.module('owServices')
       {% if request.user.is_authenticated %}
 // Page specific persona setup
-.value('personaUser', "{{ request.user.username }}")
+// .value('personaUser', "{{ request.user.username }}")
 .run(function(activeState) {
     activeState.user = {{ request.user.id }};
 })

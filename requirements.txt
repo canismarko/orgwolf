@@ -1,7 +1,7 @@
-django>=1.6
+django==1.8
+python-social-auth
 django-mptt
 oauth2client
-south
 python-dateutil
 pytz
 djangorestframework

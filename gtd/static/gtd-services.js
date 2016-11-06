@@ -12,48 +12,48 @@ angular.module(
 * login/logout functions.
 *
 **************************************************/
-.value('personaUser', null) // Default value, override in django
+// .value('personaUser', null) // Default value, override in django
 
-.factory('personaNavigator', ['personaUser', '$rootScope', '$http', 'owWaitIndicator', 'activeState', function(personaUser, $rootScope, $http, owWaitIndicator, activeState) {
-    if ( typeof navigator.id !== 'undefined' ) {
-	// Setup the persona navigator before linking the directive
-	navigator.id.watch({
-	    loggedInUser: personaUser,
-	    onlogin: function(assertion) {
-		// A user has logged in! Here you need to:
-		// 1. Send the assertion to your backend for verification and to create a session.
-		// 2. Update your UI.
-		owWaitIndicator.start_wait('medium', 'persona');
-		$http.post('/accounts/login/persona/', {assertion: assertion})
-		    .success(function(res, status, headers, config) {
-			owWaitIndicator.end_wait('medium', 'persona');
-			activeState.user = res.user_id;
-			$rootScope.$broadcast('refresh-data');
-		    })
-		    .error(function(xhr, status, err) {
-			navigator.id.logout();
-			alert("Login failure: " + err);
-		    });
-	    },
-	    onlogout: function() {
-		// A user has logged out! Here you need to:
-		// Tear down the user's session by redirecting the user or making a call to your backend.
-		// Also, make sure loggedInUser will get set to null on the next page load.
-		// (That's a literal JavaScript null. Not false, 0, or undefined. null.)
-		// ow_waiting('spinner');
-		owWaitIndicator.start_wait('medium', 'persona');
-		$http.post('/accounts/logout/persona/', {logout: true})
-		    .success(function() {
-			window.location.reload();
-		    })
-		    .error(function(data, status, headers, config) {
-			alert("Logout failure: ");
-		    });
-	    }
-	});
-    }
-    return navigator;
-}])
+// .factory('personaNavigator', ['personaUser', '$rootScope', '$http', 'owWaitIndicator', 'activeState', function(personaUser, $rootScope, $http, owWaitIndicator, activeState) {
+//     if ( typeof navigator.id !== 'undefined' ) {
+// 	// Setup the persona navigator before linking the directive
+// 	navigator.id.watch({
+// 	    loggedInUser: personaUser,
+// 	    onlogin: function(assertion) {
+// 		// A user has logged in! Here you need to:
+// 		// 1. Send the assertion to your backend for verification and to create a session.
+// 		// 2. Update your UI.
+// 		owWaitIndicator.start_wait('medium', 'persona');
+// 		$http.post('/accounts/login/persona/', {assertion: assertion})
+// 		    .success(function(res, status, headers, config) {
+// 			owWaitIndicator.end_wait('medium', 'persona');
+// 			activeState.user = res.user_id;
+// 			$rootScope.$broadcast('refresh-data');
+// 		    })
+// 		    .error(function(xhr, status, err) {
+// 			navigator.id.logout();
+// 			alert("Login failure: " + err);
+// 		    });
+// 	    },
+// 	    onlogout: function() {
+// 		// A user has logged out! Here you need to:
+// 		// Tear down the user's session by redirecting the user or making a call to your backend.
+// 		// Also, make sure loggedInUser will get set to null on the next page load.
+// 		// (That's a literal JavaScript null. Not false, 0, or undefined. null.)
+// 		// ow_waiting('spinner');
+// 		owWaitIndicator.start_wait('medium', 'persona');
+// 		$http.post('/accounts/logout/persona/', {logout: true})
+// 		    .success(function() {
+// 			window.location.reload();
+// 		    })
+// 		    .error(function(data, status, headers, config) {
+// 			alert("Logout failure: ");
+// 		    });
+// 	    }
+// 	});
+//     }
+//     return navigator;
+// }])
 
 /*************************************************
 * Factory returns an object for showing feedback

@@ -24,6 +24,7 @@ SECRET_KEY = 'g84!3q$w1i$gydv3lua_tq1q#190h2w_ao07lnbrojczm)el5-'
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
+TEMPLATE_DEBUG = DEBUG
 
 LOCAL_NET = False
 ENABLE_CSS = True
@@ -44,7 +45,6 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'rest_framework',
-    # 'south',
     'mptt',
     'orgwolf',
     'gtd',
@@ -89,7 +89,7 @@ WSGI_APPLICATION = 'orgwolf.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
+        'NAME': os.path.join(BASE_DIR, 'orgwolf-temp.db'),
     }
 }
 
@@ -155,6 +155,7 @@ STATIC_URL = '/static/'
 # TEMPLATE_DIRS = [
 #     os.path.join(BASE_DIR, "templates"),
 # ]
+
 
 # Import any local settings
 try:
