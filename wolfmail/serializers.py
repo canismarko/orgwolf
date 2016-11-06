@@ -29,6 +29,7 @@ class MessageSerializer(serializers.ModelSerializer):
     """
     class Meta:
         model = Message
+        fields = "__all__"
 
 
 class InboxSerializer(serializers.ModelSerializer):
@@ -44,8 +45,8 @@ class InboxSerializer(serializers.ModelSerializer):
 
     # Custom fields
     source_node = serializers.SerializerMethodField('get_node_id')
-    node_slug = serializers.SerializerMethodField('get_node_slug')
-    repeats = serializers.SerializerMethodField('get_repeats')
+    node_slug = serializers.SerializerMethodField()
+    repeats = serializers.SerializerMethodField()
 
     class Meta:
         model = Message

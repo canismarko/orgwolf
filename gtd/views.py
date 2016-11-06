@@ -108,7 +108,7 @@ class NodeView(APIView):
         Serializer = SERIALIZERS[field_group]
         # Serialize and return the queryset or object
         is_many = isinstance(nodes, QuerySet)
-        serializer = Serializer(nodes, request, many=is_many)
+        serializer = Serializer(nodes, request=request, many=is_many)
         return Response(serializer.data)
 
     def get_queryset(self, request, *args, **kwargs):
@@ -155,9 +155,7 @@ class NodeView(APIView):
             nodes = parent.get_descendants(include_self=True)
         else:
             nodes = Node.objects.all()
-        nodes = nodes.assigned(request.user).select_related(
-            'context', 'todo_state', 'root'
-        )
+        nodes = nodes.assigned(request.user).select_related('todo_state')
         # Filter by todo state
         final_Q = Q()
         todo_states_params = request.GET.getlist('todo_state')
@@ -212,7 +210,7 @@ class NodeView(APIView):
 
         Returns: JSON object of all node fields, with changes.
         """
-        data = request.DATA.copy()
+        data = request.data.copy()
         if pk is not None:
             # Cannot POST if a node is specified by primary key
             return HttpResponseNotAllowed(['GET', 'PUT'])
@@ -252,7 +250,7 @@ class NodeView(APIView):
             # Throw error response if user is trying to
             # PUT without specifying a pk
             return HttpResponseNotAllowed(['GET', 'POST'])
-        data = request.DATA.copy()
+        data = request.data.copy()
         # Remove tree metadata from the request
         TREE_FIELDS = ('lft', 'rght', 'level', 'tree_id')
         for key in TREE_FIELDS:

@@ -26,7 +26,7 @@ class MessageAPI(TestCase):
 
     def test_get_all_messages(self):
         response = self.client.get(self.url)
-        r = json.loads(response.content)
+        r = json.loads(response.content.decode())
         expected = Message.objects.filter(owner=self.user)
         self.assertQuerysetEqual(
             expected,
@@ -37,7 +37,7 @@ class MessageAPI(TestCase):
 
     def test_get_inbox(self):
         response = self.client.get(self.url, {'in_inbox': True})
-        r = json.loads(response.content)
+        r = json.loads(response.content.decode())
         expected = Message.objects.filter(owner=self.user, in_inbox=True)
         self.assertQuerysetEqual(
             expected,
@@ -53,7 +53,7 @@ class MessageAPI(TestCase):
             response.status_code,
             200
         )
-        r = json.loads(response.content)
+        r = json.loads(response.content.decode())
         self.assertEqual(
             len(r),
             0
@@ -64,7 +64,7 @@ class MessageAPI(TestCase):
         response = self.client.get(
             reverse('messages', kwargs={'pk': msg.pk}),
         )
-        r = json.loads(response.content)
+        r = json.loads(response.content.decode())
         self.assertEqual(
             r['subject'],
             msg.subject
@@ -98,7 +98,7 @@ class MessageAPI(TestCase):
                  'close': 'false'}),
             content_type='application/json'
         )
-        r = json.loads(response.content)
+        r = json.loads(response.content.decode())
         self.assertEqual(
             r['status'],
             'success',
@@ -145,7 +145,7 @@ class MessageAPI(TestCase):
                         'close': 'false'}),
             content_type='application/json'
         )
-        r = json.loads(response.content)
+        r = json.loads(response.content.decode())
         self.assertEqual(
             Message.objects.filter(pk=message.pk).count(),
             1,
@@ -170,7 +170,7 @@ class MessageAPI(TestCase):
                         'action': 'create_heading'}),
             content_type='application/json'
         )
-        r = json.loads(response.content)
+        r = json.loads(response.content.decode())
         node = Node.objects.get(pk=node.pk)
         self.assertEqual(
             node.todo_state.abbreviation,
@@ -227,7 +227,7 @@ class MessageAPI(TestCase):
         msg.save()
         response = self.client.get(self.url, {'in_inbox': True,
                                               'rcvd_date__lte': '2014-02-22'})
-        r = json.loads(response.content)
+        r = json.loads(response.content.decode())
         self.assertIn(
             msg.pk,
             [x['id'] for x in r]
@@ -244,7 +244,7 @@ class MessageAPI(TestCase):
         tz_str = curr_dt.astimezone(get_current_timezone()).isoformat()
         qs = Message.objects.filter(owner=self.user, rcvd_date__lte=curr_dt)
         response = self.client.get(self.url, {'rcvd_date__lte': tz_str})
-        r = json.loads(response.content)
+        r = json.loads(response.content.decode())
         self.assertQuerysetEqual(
             qs,
             [x['subject'] for x in r],
@@ -260,7 +260,7 @@ class MessageAPI(TestCase):
         response = self.client.post(
             self.url, data
         )
-        r = json.loads(response.content)
+        r = json.loads(response.content.decode())
         msg = Message.objects.get(pk=r['id'])
         self.assertEqual(
             msg.subject,
@@ -274,7 +274,7 @@ class MessageAPI(TestCase):
         msg = Message.objects.get(pk=4)
         url = reverse('messages', kwargs={'pk': msg.pk})
         response = self.client.delete(url)
-        r = json.loads(response.content)
+        r = json.loads(response.content.decode())
         self.assertEqual(
             Message.objects.filter(pk=4).count(),
             0,
@@ -313,7 +313,7 @@ class MessageAPI(TestCase):
         response = self.client.put(url,
                         json.dumps({'action': 'archive'}),
                         content_type='application/json')
-        r = json.loads(response.content)
+        r = json.loads(response.content.decode())
         msg = Message.objects.get(pk=msg.pk)
         self.assertFalse(
             msg.in_inbox,
@@ -388,5 +388,5 @@ class InboxSerializerTest(TestCase):
                     'source_node', 'node_slug', 'repeats']
         self.assertEqual(
             included,
-            serializer.data.keys(),
+            list(serializer.data.keys()),
         )

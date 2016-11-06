@@ -114,7 +114,7 @@ class TodoState(models.Model):
             if full:
                 new_dict['display'] += ' - ' + state.display_text
             new_array.append(new_dict)
-        return unicode(json.dumps(new_array))
+        return str(json.dumps(new_array))
 
     def as_html(self):
         """Converts this todostate to an HTML string that can
@@ -593,7 +593,7 @@ class Node(MPTTModel):
         date_fields = ['scheduled_date', 'deadline_date', 'end_date']
         time_fields = ['scheduled_time', 'deadline_time', 'end_time']
         datetime_fields = ['opened', 'closed']
-        for key, value in fields.iteritems():
+        for key, value in fields.items():
             # {datetime_field: ''} -> {datetime_field: None}
             if (key in (datetime_fields + date_fields + time_fields)
                 and value == ''):
@@ -605,15 +605,15 @@ class Node(MPTTModel):
             if key == 'todo_state':
                 if isinstance(value, list):
                     value = value[0]
-                if isinstance(value, (int, long)):
+                if isinstance(value, (int,)):
                     self.todo_state = TodoState.objects.get(pk=value)
                 else:
                     self.todo_state = None
-            elif key == 'owner' and isinstance(value, (int, long)):
+            elif key == 'owner' and isinstance(value, (int,)):
                 self.owner =  User.objects.get(pk=value)
-            elif key == 'parent' and isinstance(value, (int, long)):
+            elif key == 'parent' and isinstance(value, (int,)):
                 self.parent = Node.objects.get(pk=value)
-            elif key == 'assigned' and isinstance(value, (int, long)):
+            elif key == 'assigned' and isinstance(value, (int,)):
                 self.assigned = Contact.objects.get(pk=value)
             # Resolve boolean fields to singletons
             elif key in boolean_fields:
@@ -665,7 +665,7 @@ class Node(MPTTModel):
 
     def __repr__(self):
         s = '<Node: {0}>'.format(self.title)
-        return s.encode('utf8')
+        return str(s.encode('utf8'))
 
 
 # Signal handlers for the Node class

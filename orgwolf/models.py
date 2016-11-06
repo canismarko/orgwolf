@@ -20,7 +20,7 @@
 from django.db import models
 from django.contrib.auth.models import AbstractUser
 from django.utils.html import conditional_escape as escape
-from HTMLParser import HTMLParser
+from html.parser import HTMLParser
 
 class OrgWolfUser(AbstractUser):
     """Holds profile information for users."""
@@ -131,13 +131,16 @@ class HTMLEscaper(HTMLParser):
     def __init__(self, white_tags=None):
         HTMLParser.__init__(self)
         self.found = False
+
     def reset(self):
         HTMLParser.reset(self)
-        self._cleaned = unicode('')
+        self._cleaned = ''
+
     def clean(self, data):
         if data is not None:
             self.feed(data)
         return self._cleaned
+
     def handle_starttag(self, tag, attrs):
         self.found = True
         new_string = '<' + tag
@@ -150,10 +153,12 @@ class HTMLEscaper(HTMLParser):
         if not tag in self.ALLOWED_TAGS:
             new_string = escape(new_string)
         self._cleaned += new_string
+
     def handle_endtag(self, tag):
         new_string = '</' + tag + '>'
         if not tag in self.ALLOWED_TAGS:
             new_string = escape(new_string)
         self._cleaned += new_string
+
     def handle_data(self, data):
         self._cleaned += escape(data)

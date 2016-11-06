@@ -21,6 +21,7 @@ import datetime as dt
 
 from django.db import models
 from django.utils.encoding import python_2_unicode_compatible
+from django.utils.timezone import now
 import pytz
 
 from orgwolf import settings
@@ -41,7 +42,7 @@ class Message(models.Model):
     unread = models.BooleanField(default=True)
     handler_path = models.CharField(max_length=100, blank=True)
     in_inbox = models.BooleanField(default=True)
-    rcvd_date = models.DateTimeField(default=dt.datetime.now(pytz.utc))
+    rcvd_date = models.DateTimeField(default=now)
     message_text = models.TextField(blank=True)
     spawned_nodes = models.ManyToManyField('gtd.Node', blank=True)
     source_node = models.OneToOneField('gtd.Node', null=True, blank=True,

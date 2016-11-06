@@ -475,7 +475,7 @@ class Shortcuts(TestCase):
         node = Node.objects.get(pk=2)
         node.archived = True
         self.assertEqual(
-            'instancemethod',
+            'method',
             node.as_json.__class__.__name__
             )
         response = node.as_json()
@@ -642,7 +642,7 @@ class FocusAreaAPI(TestCase):
         response = self.client.get(self.url)
         expected = self.focus_areas.values()
         self.assertEqual(
-            [x['id'] for x in json.loads(response.content)],
+            [x['id'] for x in json.loads(response.content.decode())],
             [x['id'] for x in expected],
         )
 
@@ -652,7 +652,7 @@ class FocusAreaAPI(TestCase):
         response = self.client.get(self.url)
         expected = FocusArea.objects.filter(owner=None)
         self.assertEqual(
-            [x['id'] for x in json.loads(response.content)],
+            [x['id'] for x in json.loads(response.content.decode())],
             [x.pk for x in expected],
         )
 
@@ -682,7 +682,7 @@ class TodoStateAPI(TestCase):
         todo states.
         """
         response = self.client.get(reverse('todo_state'))
-        r = json.loads(response.content)
+        r = json.loads(response.content.decode())
         self.assertIn(
             'id',
             r[0].keys()
@@ -699,7 +699,7 @@ class TodoStateAPI(TestCase):
         }
         response = self.client.get(
             reverse('todo_state', kwargs={'pk': state.pk}))
-        r = json.loads(response.content)
+        r = json.loads(response.content.decode())
         self.assertIn(
             'color',
             r.keys()
@@ -725,7 +725,7 @@ class ContextAPI(TestCase):
 
     def test_get_context_collection(self):
         response = self.client.get(self.url)
-        r = json.loads(response.content)
+        r = json.loads(response.content.decode())
         expected = [x['name'] for x in r]
         self.assertQuerysetEqual(
             self.contexts,
@@ -750,7 +750,7 @@ class ContextAPI(TestCase):
 class OverdueFilter(TestCase):
     """Tests the `overdue` node method that makes dates into
     prettier "in 1 day" strings, etc."""
-    fixtures = ['gtd-test.json']
+    fixtures = ['gtd-test.json', 'test-users.json', 'gtd-env.json']
 
     def setUp(self):
         self.node = Node.objects.get(pk=1)
@@ -758,11 +758,11 @@ class OverdueFilter(TestCase):
     def test_filter_exists(self):
         self.assertEqual(
             self.node.overdue.__class__.__name__,
-            'instancemethod')
+            'method')
         self.node.test_date = dt.datetime.now().date()
         self.assertEqual(
             self.node.overdue('test_date').__class__.__name__,
-            'unicode')
+            'str')
         # Test behavior if field is None
         self.node.none_field = None
         self.assertEqual(
@@ -806,7 +806,7 @@ class TodoStateRetrieval(TestCase):
             )
         self.assertEqual(
             TodoState.as_json().__class__.__name__,
-            'unicode',
+            'str',
             'TodoState.as_json() method doesn\'t return a unicode string'
             )
         result_str = TodoState.as_json()
@@ -946,7 +946,7 @@ class ListAPI(TestCase):
             HTTP_X_REQUESTED_WITH='XMLHttpRequest',
             HTTP_ACCEPT='application/json',
         )
-        r = json.loads(response.content)
+        r = json.loads(response.content.decode())
         qs = parent.get_descendants(include_self=True).assigned(self.user)
         self.assertQuerysetEqual(
             qs,
@@ -968,7 +968,7 @@ class ListAPI(TestCase):
             {'context': None},
             content_type='application/json'
         )
-        r = json.loads(response.content)[0]
+        r = json.loads(response.content.decode())[0]
         node = Node.objects.get(pk=r['id'])
         for key in excluded:
             self.assertFalse(
@@ -1019,7 +1019,7 @@ class MultiUser(TestCase):
         Node objects that require the current users attention.
         """
         self.assertEqual(
-            'instancemethod',
+            'method',
             Node.objects.mine.__class__.__name__
             )
         results = Node.objects.mine(self.user2)
@@ -1141,7 +1141,7 @@ class NodeAPI(TestCase):
             HTTP_X_REQUESTED_WITH='XMLHttpRequest',
             HTTP_ACCEPT='application/json'
         )
-        r = json.loads(response.content)
+        r = json.loads(response.content.decode())
         self.assertEqual(
             self.node.pk,
             r['id'],
@@ -1157,7 +1157,7 @@ class NodeAPI(TestCase):
             HTTP_X_REQUESTED_WITH='XMLHttpRequest',
             HTTP_ACCEPT='application/json'
         )
-        r = json.loads(response.content)
+        r = json.loads(response.content.decode())
         self.assertQuerysetEqual(
             nodes,
             [node['id'] for node in r],
@@ -1172,7 +1172,7 @@ class NodeAPI(TestCase):
             HTTP_X_REQUESTED_WITH='XMLHttpRequest',
             HTTP_ACCEPT='application/json',
         )
-        r = json.loads(response.content)
+        r = json.loads(response.content.decode())
         self.assertQuerysetEqual(
             nodes,
             [node['id'] for node in r],
@@ -1191,7 +1191,7 @@ class NodeAPI(TestCase):
             HTTP_X_REQUESTED_WITH='XMLHttpRequest',
             HTTP_ACCEPT='application/json',
         )
-        r = json.loads(response.content)
+        r = json.loads(response.content.decode())
         self.assertQuerysetEqual(
             nodes,
             [node['id'] for node in r],
@@ -1213,7 +1213,7 @@ class NodeAPI(TestCase):
             HTTP_X_REQUESTED_WITH='XMLHttpRequest',
             HTTP_ACCEPT='application/json',
         )
-        r = json.loads(response.content)
+        r = json.loads(response.content.decode())
         self.assertQuerysetEqual(
             nodes,
             [node['title'] for node in r],
@@ -1235,7 +1235,7 @@ class NodeAPI(TestCase):
             HTTP_X_REQUESTED_WITH='XMLHttpRequest',
             HTTP_ACCEPT='application/json',
         )
-        r = json.loads(response.content)
+        r = json.loads(response.content.decode())
         self.assertQuerysetEqual(
             nodes,
             [node['title'] for node in r],
@@ -1254,7 +1254,7 @@ class NodeAPI(TestCase):
            reverse('node_object'),
             content_type='application/json'
         )
-        r = json.loads(response.content)
+        r = json.loads(response.content.decode())
         self.assertQuerysetEqual(
             expected,
             [x['title'] for x in r],
@@ -1289,7 +1289,7 @@ class NodeAPI(TestCase):
             HTTP_X_REQUESTED_WITH='XMLHttpRequest',
             HTTP_ACCEPT='application/json'
         )
-        r = json.loads(response.content)[0]
+        r = json.loads(response.content.decode())[0]
         node = Node.objects.get(pk=r['id'])
         self.assertEqual(
             r['root_name'],
@@ -1305,7 +1305,7 @@ class NodeAPI(TestCase):
             url,
             {},
             content_type="application/json")
-        r = json.loads(response.content)
+        r = json.loads(response.content.decode())
         self.assertFalse(r['read_only'])
 
     def test_read_only_anonymous(self):
@@ -1315,7 +1315,7 @@ class NodeAPI(TestCase):
             url,
             content_type='application/json'
         )
-        r = json.loads(response.content)
+        r = json.loads(response.content.decode())
         self.assertTrue(
             r['read_only']
         )
@@ -1330,7 +1330,7 @@ class NodeAPI(TestCase):
             url,
             content_type='application/json'
         )
-        r = json.loads(response.content)
+        r = json.loads(response.content.decode())
         self.assertFalse(
             r['read_only']
         )
@@ -1353,7 +1353,7 @@ class NodeAPI(TestCase):
             get_response
         )
         response = get_response()
-        r = json.loads(response.content)
+        r = json.loads(response.content.decode())
         self.assertTrue(
             r['read_only']
         )
@@ -1377,7 +1377,7 @@ class NodeAPI(TestCase):
             HTTP_X_REQUESTED_WITH='XMLHttpRequest',
             content_type='application/json',
         )
-        json_response = json.loads(response.content)
+        json_response = json.loads(response.content.decode())
         self.assertEqual(
             1,
             json_response['id'],
@@ -1443,7 +1443,7 @@ class NodeAPI(TestCase):
             json.dumps({'title': 'PUT submitted fake title'}),
             content_type='application/json'
         )
-        r = json.loads(response.content)
+        r = json.loads(response.content.decode())
         db_node = Node.objects.get(pk=anon_node.pk)
         self.assertEqual(
             db_node.title,
@@ -1457,7 +1457,7 @@ class NodeAPI(TestCase):
 
     def test_put_clear_date(self):
         node = Node(title='scheduled node',
-                    scheduled_date=dt.date(2014, 01, 01),
+                    scheduled_date=dt.date(2014, 1, 1),
                     owner=self.user)
         node.save()
         response = self.client.put(reverse('node_object', kwargs={'pk': node.pk}),
@@ -1581,7 +1581,7 @@ class NodeAPI(TestCase):
             self.actionable,
             node.todo_state
             )
-        jresponse = json.loads(response.content)
+        jresponse = json.loads(response.content.decode())
         self.assertEqual(
             self.actionable.pk,
             jresponse['todo_state'],
@@ -1612,7 +1612,7 @@ class NodeAPI(TestCase):
         response = self.client.post(
             self.new_url, new_data
         )
-        r = json.loads(response.content)
+        r = json.loads(response.content.decode())
         new_node = Node.objects.get(pk=r['id'])
         self.assertEqual(
             new_node.title,

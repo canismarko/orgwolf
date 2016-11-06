@@ -35,7 +35,7 @@ class HTMLParserTest(TestCase):
     def test_meta(self):
         """Return values and such"""
         self.assertTrue(
-            isinstance(self.parser.clean(''), unicode)
+            isinstance(self.parser.clean(''), str)
             )
         self.parser._cleaned = 'Some stale data'
         self.parser.reset()

@@ -28,7 +28,7 @@ from datetime import datetime
 from django.utils import timezone
 
 from orgwolf.models import OrgWolfUser as User
-from orgwolf.stack import Stack
+# from orgwolf.stack import Stack
 from gtd.models import Node, TodoState, FocusArea
 
 ## Regular expressions used in this module for finding org-mode content
@@ -122,7 +122,7 @@ def import_structure(file=None, string=None, request=None, scope=None):
     # Now go through each line and see if it matches a regex
     current_indent = 0 # counter
     current_order = 0
-    parent_stack = Stack()
+    parent_stack = []
     todo_state_list = TodoState.objects.all() # Todo: filter by current user
     current_text = ''
     for line in data_list:

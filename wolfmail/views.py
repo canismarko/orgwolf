@@ -80,10 +80,10 @@ class MessageView(APIView):
         return Response(serializer.data)
 
     def put(self, request, pk):
-        if request.QUERY_PARAMS:
-            data = request.QUERY_PARAMS
+        if request.query_params:
+            data = request.query_params
         else:
-            data = request.DATA
+            data = request.data
         action = data.get('action', None)
         message = Message.objects.get(pk=pk)
         if action == 'archive':
@@ -105,10 +105,10 @@ class MessageView(APIView):
         return Response(r)
 
     def post(self, request, pk):
-        if request.QUERY_PARAMS:
-            data = request.QUERY_PARAMS
+        if request.query_params:
+            data = request.query_params
         else:
-            data = request.DATA
+            data = request.data
         action = data.get('action', None)
         if action == 'create_heading':
             message = Message.objects.get(pk=pk)

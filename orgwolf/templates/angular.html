@@ -1,9 +1,10 @@
 {% extends 'base.html' %}
+{% load static %}
 
 {% block content %}
 
 <!-- Navigation -->
-<div ng-include="'{{ STATIC_URL }}header.html'"></div>
+<div ng-include="'{% static 'orgwolf/header.html' %}'"></div>
 
 <!-- Form for submitting feedback -->
 <div ow-feedback>
@@ -16,7 +17,7 @@
       You are in <strong>demo mode</strong>; changes will not be
       saved.<br />Please
       <a href="#" persona-button="login">
-	<img src="{{ STATIC_URL}}persona-button-small.png" /></a>
+	<img src="{% static 'orgwolf/persona-button-small.png' %}" /></a>
       to create a new account.
     </div>
   </div>
@@ -27,7 +28,7 @@
   <div class="mask">
     <div id="dark"></div>
     <img id="spinner" alt="loading"
-	 src="{{ STATIC_URL }}ajax-loader.gif"></img>
+	 src="{% static 'orgwolf/ajax-loader.gif' %}"></img>
   </div>
 </div>
 
@@ -41,7 +42,7 @@
   <div class="noscript">
     <div class="row logo">
       <div>
-	<img src="{{ STATIC_URL }}orgwolf-logo-big.jpg" alt="Orgwolf logo" />
+	<img src="{% static 'orgwolf/orgwolf-logo-big.jpg' %}" alt="Orgwolf logo" />
       </div>
     </div>
     <div class="row">
@@ -53,7 +54,7 @@
       </div>
     </div>
     <div class="row">
-      <img src="{{ STATIC_URL }}404.jpg" alt="ripped page graphic" />
+      <img src="{% static 'orgwolf/404.jpg' %}" alt="ripped page graphic" />
     </div>
   </div>
 

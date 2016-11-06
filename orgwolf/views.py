@@ -77,7 +77,7 @@ class FeedbackView(APIView):
     permission_classes = (IsAuthenticated,)
     def post(self, request):
         msg = Message(subject='Site feedback',
-                      message_text=request.DATA['body'],
+                      message_text=request.data['body'],
                       owner=User.objects.get(pk=1),
                       sender=request.user.get_username())
         msg.save()
