@@ -1,5 +1,6 @@
+future
 django==1.8
-python-social-auth
+# python-social-auth
 django-mptt
 oauth2client
 python-dateutil
