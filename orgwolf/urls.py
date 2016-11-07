@@ -48,11 +48,8 @@ urlpatterns = patterns(
     url(r'^accountassociations(?:/(?P<id>\d+))?/?$', AccountAssociationView.as_view()),
 
     # Authentication stuff
-    url('', include('social.apps.django_app.urls', namespace='social')),
     url(r'^accounts/login/$', login, name='login'),
     url(r'^accounts/logout/$', logout),
-    url(r'^accounts/login/persona/', 'orgwolf.views.persona_login'),
-    url(r'^accounts/logout/persona/$', 'orgwolf.views.persona_logout'),
 
     #Uncomment the admin/doc line below to enable admin documentation
     # url(r'^admin/doc/',

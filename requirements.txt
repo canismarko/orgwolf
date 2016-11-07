@@ -1,9 +1,8 @@
-future
+future==0.16
 django==1.8
-# python-social-auth
-django-mptt
-oauth2client
-python-dateutil
+django-mptt==0.8
+httplib2==0.9
+python-dateutil==2.5
 pytz
-djangorestframework
-requests
+djangorestframework==3.5
+requests==2.11
