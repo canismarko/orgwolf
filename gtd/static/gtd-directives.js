@@ -7,26 +7,6 @@ angular.module(
 )
 
 /*************************************************
-* Directive that handles persona buttons for both
-* logging in an logging out
-**************************************************/
-.directive('personaButton', ['personaNavigator', 'personaUser', function(personaNavigator, personaUser) {
-    function link(scope, element, attrs) {
-	element.on('click', function() {
-	    if ( attrs.personaButton === 'login' ) {
-		personaNavigator.id.request();
-	    } else {
-		personaNavigator.id.logout();
-	    }
-	});
-    }
-    return {
-	restrict: 'AC',
-	link: link
-    };
-}])
-
-/*************************************************
 * Directive that turns checkboxes into switches
 *
 **************************************************/

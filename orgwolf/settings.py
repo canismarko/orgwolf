@@ -23,8 +23,8 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SECRET_KEY = 'g84!3q$w1i$gydv3lua_tq1q#190h2w_ao07lnbrojczm)el5-'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
-TEMPLATE_DEBUG = DEBUG
+DEBUG = False
+INTERNAL_IPS = ['127.0.0.1', 'localhost']
 
 LOCAL_NET = False
 ENABLE_CSS = True

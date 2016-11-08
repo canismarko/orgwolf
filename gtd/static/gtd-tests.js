@@ -400,35 +400,6 @@ describe('directives in gtd-directives.js', function() {
 	$httpBackend.verifyNoOutstandingExpectation();
     });
 
-    describe('the owPersona directive', function() {
-	var watchCalled, requestCalled, logoutCalled;
-	angular.module('owServices').factory('personaNavigator', function() {
-	    return {
-		id: {
-		    watch: function() {
-			watchCalled = true;
-		    },
-		    request: function() {
-			requestCalled = true;
-		    },
-		    logout: function() {
-			logoutCalled = true;
-		    }
-		}
-	    };
-	});
-	beforeEach(function() {
-	    // Mock persona navigator
-	    watchCalled = false;
-	    requestCalled = false;
-	    logoutCalled = false;
-	    element = $compile(
-		'<button ow-persona></button>'
-	    )($rootScope);
-	});
-	it('broadcasts the refresh-data signal');
-    });
-
     describe('the owWaitFeedback directive', function() {
     	beforeEach(function() {
     	    element = $compile(
