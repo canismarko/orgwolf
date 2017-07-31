@@ -700,6 +700,8 @@ angular.module(
 	element.addClass('priority' + (scope.heading.priority || 'B'));
 	// Get heading's todoState
 	scope.todoState = todoStates.getState(scope.heading.todo_state);
+	// Process tag_string into tags
+	scope.tags = scope.heading.tag_string.slice(1, -1).split(':');
 	// Determine bootstrap row style based on overdue status
 	scope.$watch(
 	    function() {return scope.heading.deadline_date;},

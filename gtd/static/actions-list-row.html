@@ -15,6 +15,7 @@
 	  class="repeat-icon"></span>
     <span class="read-only-label"
 	  ng-show="heading.read_only"></span>
+    <span ng-repeat="tag in tags" class="tag non-opening">{{ tag }}</span>
   </div>
   <div class="buttons">
     <div class="action-buttons btn-group">
