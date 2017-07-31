@@ -316,6 +316,9 @@ class ContextView(APIView):
     """RESTful interaction with the gtd.context object"""
     def get(self, request, *args, **kwargs):
         contexts = Context.get_visible(request.user)
+        # Get some prefetched values to minimize database workload
+        contexts = contexts.prefetch_related('locations_available')
+        # Turn contexts into a serialized list
         serializer = ContextSerializer(contexts, many=True)
         return Response(serializer.data)
 

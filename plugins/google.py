@@ -63,9 +63,9 @@ class AccountHandler(BaseAccountHandler):
         """Exchange a google-plus authorization code for an access token."""
         # Verify that API credentials are set
         if not settings.GOOGLE_PLUS_KEY:
-            raise AttributeError, "settings.GOOGLE_PLUS_KEY not set"
+            raise AttributeError("settings.GOOGLE_PLUS_KEY not set")
         if not settings.GOOGLE_PLUS_SECRET:
-            raise AttributeError, "settings.GOOGLE_PLUS_SECRET not set"
+            raise AttributeError("settings.GOOGLE_PLUS_SECRET not set")
         code = request_data['code']
         response_data = {}
         # Upgrade the authorization code into a credentials object

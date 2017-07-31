@@ -713,7 +713,7 @@ class TodoStateAPI(TestCase):
 
 class ContextAPI(TestCase):
     fixtures = ['test-users.json', 'gtd-test.json', 'gtd-env.json']
-
+    
     def setUp(self):
         self.url = reverse('context_api');
         self.user = User.objects.get(username='test')
@@ -723,7 +723,7 @@ class ContextAPI(TestCase):
         )
         self.contexts = Context.objects.filter(owner=self.user)
         self.contexts = self.contexts | Context.objects.filter(owner=None)
-
+    
     def test_get_context_collection(self):
         response = self.client.get(self.url)
         r = json.loads(response.content.decode())
@@ -734,7 +734,7 @@ class ContextAPI(TestCase):
             transform=lambda x: x.name,
             ordered=False
         )
-
+    
     def test_context_num_querysets(self):
         """
         Make sure the Context.get_visible() is a minimal number of
@@ -743,7 +743,7 @@ class ContextAPI(TestCase):
         def hit_db():
             self.client.get(self.url)
         self.assertNumQueries(
-            3,
+            4,
             hit_db,
         )
 
