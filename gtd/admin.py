@@ -26,21 +26,12 @@ from mptt.admin import MPTTModelAdmin
 class NodeAdminForm(NodeForm):
     class Meta:
         model = gtd.Node
-        fields = ['title',
-                  'todo_state',
-                  'tag_string',
-                  'scheduled_date',
-                  'scheduled_time',
-                  'deadline_date',
-                  'deadline_time',
-                  'priority',
-                  'focus_areas',
-                  'repeats',
-                  'repeating_number',
-                  'repeating_unit',
-                  'repeats_from_completion',
-                  'archived',
-                  'text']
+        fields = ['title', 'slug', 'todo_state', 'archived', 'text',
+                  'parent', 'scheduled_time', 'scheduled_date',
+                  'end_time', 'end_date', 'deadline_time',
+                  'deadline_date', 'closed', 'repeats',
+                  'repeating_number', 'repeating_unit', 'priority',
+                  'tag_string', 'focus_areas', 'users']
 
 class NodeAdmin(MPTTModelAdmin):
     form = NodeAdminForm

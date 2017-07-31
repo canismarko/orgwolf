@@ -16,15 +16,17 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #######################################################################
+
 from __future__ import unicode_literals
 
 from django.core.urlresolvers import reverse
 from django.test import TestCase
+from django.contrib.auth.models import AnonymousUser
 
-from orgwolf.models import OrgWolfUser as User
-# from orgwolf import wsgi # For unit testing code coverage
-from orgwolf.models import HTMLEscaper
 from orgwolf.forms import RegistrationForm
+from orgwolf.models import OrgWolfUser as User, HTMLEscaper, AccountAssociation, JSONField
+from orgwolf.serializers import UserSerializer
+from plugins import BaseAccountHandler, google
 from wolfmail.models import Message
 
 class HTMLParserTest(TestCase):
@@ -147,6 +149,49 @@ class UserMutators(TestCase):
             username,
             user.get_display()
             )
+
+
+class UserSerializerTest(TestCase):
+    fixtures = ['test-users.json']
+    def test_anonymous_user(self):
+        """Does the serializer respond correctly when not logged in"""
+        anon_user = AnonymousUser()
+        serializer = UserSerializer(anon_user)
+        self.assertEqual(
+            serializer.data['name'],
+            'Guest'
+        )
+
+    def test_user_name(self):
+        """Does the serializer provide the users full name"""
+        user = User.objects.get(pk=3)
+        serializer = UserSerializer(user)
+        self.assertEqual(
+            serializer.data['name'],
+            'Mark Wolf'
+        )
+
+
+class AccountAssociationTests(TestCase):
+    def test_handler_property(self):
+        acc = AccountAssociation()
+        self.assertTrue(isinstance(
+            acc.handler,
+            BaseAccountHandler
+        ))
+        acc.handler.test_string = 'hello'
+        self.assertEqual(
+            acc.handler.test_string,
+            'hello',
+            'AccountAssociation().handler not preserved'
+        )
+
+    def test_overridden_handler(self):
+        acc = AccountAssociation(handler_path="plugins.google")
+        self.assertTrue(isinstance(
+            acc.handler,
+            google.AccountHandler
+        ))
 
 
 class FeedbackAPI(TestCase):

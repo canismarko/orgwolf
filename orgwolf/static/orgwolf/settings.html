@@ -16,7 +16,7 @@
   <h1>Settings</h1>
   <h2>Linked Accounts</h2>
   <ul ng-repeat="account in linkedAccounts">
-    <li>{{ account.handler_path }}
+    <li>{{ account.name }}
       <button class="btn btn-default" ng-click="disconnectAccount(account)">
 	<span class="glyphicon glyphicon-trash"></span>
 	Delete</button>

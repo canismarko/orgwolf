@@ -21,9 +21,33 @@ from __future__ import unicode_literals, absolute_import, print_function
 import datetime as dt
 
 from rest_framework import serializers
+from django.contrib.auth.models import User
 
-from orgwolf.models import AccountAssociation
+from orgwolf.models import AccountAssociation, OrgWolfUser
+
+class UserSerializer(serializers.ModelSerializer):
+
+    name = serializers.SerializerMethodField()
+
+    def get_name(self, user):
+        """Return the users full name (or 'Guest' if anonymous)"""
+        if user.is_anonymous():
+            name = 'Guest'
+        else:
+            name = "{f_name} {l_name}".format(f_name=user.first_name,
+                                              l_name=user.last_name)
+        return name
+
+    class Meta:
+        model = OrgWolfUser
+        fields = ['id', 'name', 'is_staff', 'is_active']
 
 class AccountAssociationSerializer(serializers.ModelSerializer):
+
+    name = serializers.SerializerMethodField('get_plugin_name')
+
+    def get_plugin_name(self, obj):
+        return obj.handler.name
+
     class Meta:
         model = AccountAssociation

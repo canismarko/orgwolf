@@ -33,7 +33,7 @@
   </div>
 
   <h1>{{ msg.subject }}</h1>
-  <p>{{ msg.message_text }}</p>
+  <p ng-bind-html="msg.message_text"></p>
 
   <div ow-msg-actions>
   </div>

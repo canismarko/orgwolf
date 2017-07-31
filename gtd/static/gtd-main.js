@@ -6,7 +6,7 @@ var test_headings, owConfig, HeadingFactory, outlineCtrl, listCtrl;
 * Angular module for all GTD components
 *
 **************************************************/
-var owMain = angular.module(
+angular.module(
     'owMain',
     ['ngAnimate', 'ngResource', 'ngSanitize', 'ngRoute', 'ngCookies',
      'ui.bootstrap', 'ui.calendar', 'toaster',
@@ -18,7 +18,7 @@ var owMain = angular.module(
 *
 **************************************************/
 .config(['$routeProvider', '$locationProvider', function($routeProvider, $locationProvider) {
-    $locationProvider.html5Mode(true);
+    $locationProvider.html5Mode({enabled: true, requireBase: false});
     $routeProvider
 	.when('/gtd/actions/:context_id?/:context_slug?', {
 	    templateUrl: '/static/actions-list.html',
@@ -68,7 +68,7 @@ var owMain = angular.module(
 	return cookieValue;
     }
     var csrftoken = getCookie('csrftoken');
-    $.ajaxSetup({
+    jQuery.ajaxSetup({
 	beforeSend: function(xhr) {
 	    xhr.setRequestHeader('X-CSRFToken', csrftoken);
 	}
@@ -79,65 +79,55 @@ var owMain = angular.module(
 * Handler sends google analytics tracking on
 * angular route change
 **************************************************/
-owMain.run(['$rootScope', '$location', function($rootScope, $location) {
+.run(['$rootScope', '$location', function($rootScope, $location) {
     $rootScope.$on('$routeChangeSuccess', function() {
 	// Only active if django DEBUG == True
 	if ( typeof ga !== 'undefined' ) {
 	    ga('send', 'pageview', {'page': $location.path()});
 	}
     });
-}]);
+}])
 
 /*************************************************
 * Angular controller for capturing quick thoughts
 * to the inbox
 **************************************************/
-owMain.controller(
-    'inboxCapture',
-    ['$scope', '$rootScope', 'owWaitIndicator',
-    function ($scope, $rootScope, owWaitIndicator) {
-	$scope.capture = function(e) {
-	    // Send a captured inbox item to the server for processing
-	    var text, data, $textbox;
-	    data = {handler_path: 'plugins.quickcapture'};
-	    $textbox = $(e.target).find('#new_inbox_item');
-	    data.subject = $textbox.val();
-	    owWaitIndicator.start_wait('medium', 'quickcapture');
-	    $.ajax(
-		'/wolfmail/message/',
-		{type: 'POST',
-		 data: data,
-		 complete: function() {
-		     $scope.$apply( function() {
-			 owWaitIndicator.end_wait('quickcapture');
-		     });
-		 },
-		 success: function() {
-		     $textbox.val('');
-		     $rootScope.$emit('refresh_messages');
-		 },
-		 error: function(jqXHR, status, error) {
-		     alert('Failed!');
-		     console.log(status);
-		     console.log(error);
-		 }
-		}
-	    );
-	};
-    }]
-);
+.controller('inboxCapture', ['$scope', '$rootScope', 'owWaitIndicator', function ($scope, $rootScope, owWaitIndicator) {
+    $scope.capture = function(e) {
+	// Send a captured inbox item to the server for processing
+	var text, data, $textbox;
+	data = {handler_path: 'plugins.quickcapture'};
+	$textbox = $(e.target).find('#new_inbox_item');
+	data.subject = $textbox.val();
+	owWaitIndicator.start_wait('medium', 'quickcapture');
+	jQuery.ajax(
+	    '/wolfmail/message/',
+	    {type: 'POST',
+	     data: data,
+	     complete: function() {
+		 $scope.$apply( function() {
+		     owWaitIndicator.end_wait('quickcapture');
+		 });
+	     },
+	     success: function() {
+		 $textbox.val('');
+		 $rootScope.$emit('refresh_messages');
+	     },
+	     error: function(jqXHR, status, error) {
+		 alert('Failed!');
+		 console.log(status);
+		 console.log(error);
+	     }
+	    }
+	);
+    };
+}])
 
 /*************************************************
 * Angular project ouline appliance controller
 *
 **************************************************/
-owMain.controller(
-    'nodeOutline',
-    ['$scope', '$rootScope', '$http', '$resource', '$filter', 'Heading',
-     '$location', '$anchorScroll', 'owWaitIndicator', 'activeHeading', outlineCtrl]
-);
-function outlineCtrl($scope, $rootScope, $http, $resource, $filter, Heading,
-		     $location, $anchorScroll, owWaitIndicator, activeHeading) {
+.controller('nodeOutline', ['$scope', '$rootScope', '$http', '$resource', '$filter', 'Heading', '$location', '$anchorScroll', 'owWaitIndicator', 'activeHeading', function outlineCtrl($scope, $rootScope, $http, $resource, $filter, Heading, $location, $anchorScroll, owWaitIndicator, activeHeading) {
     var TodoState, Scope, url, get_heading, Parent, Tree, parent_tree_id, parent_level, target_headings, targetId, main_headings, newButton, showAllButton;
     newButton = $('#add-heading');
     showAllButton = $('#show-all');
@@ -145,12 +135,15 @@ function outlineCtrl($scope, $rootScope, $http, $resource, $filter, Heading,
     activeHeading.activate($location.hash().split('-')[0]);
     $scope.activeHeading = activeHeading;
     // Get all the top-level projects
-    function getHeadings() {
+    $scope.getChildren = function() {
 	$scope.children = Heading.query({'parent_id': 0,
 					 'archived': false,
 					 'field_group': 'outline'});
-    }
-    getHeadings();
+    };
+    $scope.getChildren();
+    $scope.toggleHeading = function(state) {
+	// No-op to avoid "function not found" error
+    };
     $scope.activeScope = null;
     $scope.sortField = 'title';
     $scope.sortFields = [
@@ -228,28 +221,35 @@ function outlineCtrl($scope, $rootScope, $http, $resource, $filter, Heading,
 	});
     };
     // Respond to refresh-data signals (logging in, etc)
-    $scope.$on('refresh-data', getHeadings);
+    $scope.$on('refresh-data', $scope.getChildren);
     // Handler for changing the focus area
     $scope.$on('focus-area-changed', function(e, newFocusArea) {
 	$scope.activeFocusArea = newFocusArea;
     });
-}
+}])
+
 
 /*************************************************
 * Angular actions list controller
 *
 **************************************************/
-owMain.controller('nextActionsList', ['$sce', '$scope', '$resource', '$location', '$routeParams', '$filter', 'Heading', 'todoStates', 'contexts', 'owWaitIndicator', '$cookies', function listCtrl($sce, $scope, $resource, $location, $routeParams, $filter, Heading, todoStates, contexts, owWaitIndicator, $cookies) {
+.controller('nextActionsList', ['$sce', '$scope', '$resource', '$location', '$routeParams', '$filter', 'contexts', 'Heading', 'todoStates', 'activeState', 'owWaitIndicator', '$cookies',function listCtrl($sce, $scope, $resource, $location, $routeParams, $filter, contexts, Heading, todoStates, activeState, owWaitIndicator, $cookies) {
     var i, TodoState, Context, today, update_url, get_list, parent_id, todo_states;
     $scope.list_params = {field_group: 'actions_list'};
     $scope.showArchived = true;
     $scope.todoStates = todoStates;
     $scope.contexts = contexts;
+    $scope.activeScope = null;
     // Context filtering
     if (typeof $routeParams.context_id !== 'undefined') {
 	$scope.activeContext = parseInt($routeParams.context_id, 10);
 	$scope.contextName = $routeParams.context_slug;
 	$scope.list_params.context = $scope.activeContext;
+	contexts.$promise.then(function(contexts) {
+	    activeState.context = contexts.filter(function(context) {
+		return context.id === $scope.activeContext;
+	    })[0];
+	});
     } else {
 	$scope.activeContext = null;
     }
@@ -430,6 +430,7 @@ owMain.controller('nextActionsList', ['$sce', '$scope', '$resource', '$location'
 	});
 	if (newContext.length === 1) {
 	    $navText.text(newContext[0].name + ' Actions');
+	    activeState.context = newContext[0];
 	} else {
 	    $navText.text('Next Actions');
 	}
@@ -479,13 +480,13 @@ owMain.controller('search', ['$scope', '$location', 'Heading', function($scope, 
 	reString = reString.slice(1);
     }
     $scope.reString = reString;
-}])
+}]);
 
 /*************************************************
 * Calendar controller
 *
 **************************************************/
-.controller('calendar', ['$scope', 'Heading', '$filter', '$modal', function($scope, Heading, $filter, $modal) {
+owMain.controller('calendar', ['$scope', 'Heading', '$filter', '$modal', function($scope, Heading, $filter, $modal) {
     // Uses angular-ui-calendar from https://github.com/angular-ui/ui-calendar
     var date, d, m, y;
     // List of calendars that are actually shown

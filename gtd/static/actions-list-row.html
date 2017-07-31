@@ -1,4 +1,4 @@
-<div ng-hide="isEditable">
+<div ng-hide="isEditable" ng-class="{completed: completed}">
   <div class="description">
     <span ow-todo ow-heading="heading">
       {{ todoState.abbreviation }}
@@ -7,7 +7,8 @@
       [#{{ heading.priority }}]
     </span>
     <a ng-click="edit(heading)" ng-hide="heading.read_only">
-      {{ heading.title}}</a>
+      {{ heading.title}}
+    <span ng-show="heading.has_text">&hellip;</a>
     <span ng-show="heading.read_only">
       {{ heading.title}}</span>
     <span ng-if="heading.repeats"

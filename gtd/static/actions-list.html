@@ -38,7 +38,8 @@
 	    <option value="">None</option>
     </select>
     <!-- TodoState selection checkboxes -->
-    <label class="checkbox-inline" ng-repeat="state in todoStates" style="{{ state | todoStateStyle }}">
+    <label class="checkbox-inline" ng-repeat="state in todoStates"
+	   style="{{ state | todoStateStyle }}">
       <input type="checkbox" ow-state="{{ state.id }}"
 	     ng-click="toggleTodoState(state)"
 	     ng-checked="activeStates.indexOf(state.id) > -1"></input>
@@ -68,7 +69,7 @@
   </div>
 
   <div ow-list-row
-       ng-repeat="heading in visibleHeadings | currentFocusArea:activeFocusArea | order:'list'"
+       ng-repeat="heading in visibleHeadings | currentFocusArea:activeFocusArea | sortActions"
        ow-heading="heading" ow-date="{{ heading.deadline_date | deadline_str }}">
   </div>
 

@@ -86,6 +86,58 @@ describe('filters in gtd-filters.js', function() {
 	});
     });
 
+    describe('the sortActions filter', function() {
+	var listFilter, activeState, $httpBackend;
+	beforeEach(inject(function($injector) {
+	    listFilter = $injector.get('sortActionsFilter');
+	    activeState = $injector.get('activeState');
+	    $httpBackend = $injector.get('$httpBackend');
+	    $httpBackend.whenGET('/gtd/locations').respond(200, [
+		{id: 1,
+		 tag_string: 'home'},
+		{id: 2,
+		 tag_string: 'work'},
+	    ]);
+	    $httpBackend.flush();
+	}));
+	afterEach(function() {
+	    $httpBackend.verifyNoOutstandingExpectation();
+	});
+	it('puts nodes with an upcoming deadline at the top', function() {
+	    d = new Date();
+	    // Set new future date within seven days
+	    // (slicing ensures leading zeroes)
+	    d.setDate(d.getDate() + 5);
+	    var futrYear = d.getFullYear();
+	    var futrMonth = ("0" + (d.getMonth() + 1)).slice (-2);
+	    var futrDay = ("0" + d.getDate()).slice(-2);
+	    future_str = futrYear + '-' + futrMonth + '-' + futrDay;
+	    unsorted_data = [{'deadline_date': null},
+			     {'deadline_date': future_str}];
+	    sorted_data = [{'deadline_date': future_str},
+			   {'deadline_date': null}];
+	    expect(listFilter(unsorted_data)).toEqual(sorted_data);
+	});
+	it('puts nodes with higher priority at the top', function() {
+	    unsorted_data = [{'priority': 'C'},
+			     {'priority': 'B'},
+			     {'priority': 'A'}];
+	    sorted_data = [{'priority': 'A'},
+			   {'priority': 'B'},
+			   {'priority': 'C'}];
+	    expect(listFilter(unsorted_data)).toEqual(sorted_data);
+	});
+	it('puts location-specific tasks at the top', function() {
+	    var unsortedList, sortedList, homeHeading, otherHeading;
+	    activeState.context = {'locations_available': [1, 2]};
+	    homeHeading = {'tag_string': ':home:'};
+	    otherHeading = {'tag_string': ''};
+	    unsortedList = [otherHeading, homeHeading];
+	    sortedList = [homeHeading, otherHeading];
+	    expect(listFilter(unsortedList)).toEqual(sortedList);
+	})
+    });
+
     describe('the "order" filter', function() {
 	var orderFilter;
 	beforeEach(inject(function(_orderFilter_) {
@@ -97,31 +149,6 @@ describe('filters in gtd-filters.js', function() {
 	    sorted_data = [{'key': 'alpha'}, {'key': 'bravo'},
 			     {'key': 'charlie'}, {'key': 'delta'}];
 	    expect(orderFilter(unsorted_data, 'key')).toEqual(sorted_data);
-	});
-	describe('when passed the \'list\' option', function() {
-	    it('puts nodes in deadline order', function() {
-		unsorted_data = [{'deadline_date': '2014-01-02'},
-				 {'deadline_date': '2013-12-20'},
-				 {'deadline_date': '2013-12-26'}];
-		sorted_data = [{'deadline_date': '2013-12-20'},
-			       {'deadline_date': '2013-12-26'},
-			       {'deadline_date': '2014-01-02'}];
-		expect(orderFilter(unsorted_data, 'list')).toEqual(sorted_data);
-	    });
-	    it('puts nodes without an upcoming deadline at the end', function() {
-		d = new Date();
-		d.setDate(d.getDate() + 8);
-		future_str = d.getFullYear() + '-' + (d.getMonth()+1) + '-' + d.getDate();
-		unsorted_data = [{'deadline_date': null},
-				 {'deadline_date': future_str},
-				 {'deadline_date': '2013-12-26'},
-				 {'deadline_date': '2014-01-02'}];
-		sorted_data = [{'deadline_date': '2013-12-26'},
-			       {'deadline_date': '2014-01-02'},
-			       {'deadline_date': null},
-			       {'deadline_date': future_str}];
-		expect(orderFilter(unsorted_data, 'list')).toEqual(sorted_data);
-	    });
 	});
 	it('puts relatives of activeHeading to the top', function() {
 	    unsorted = [{title: 'last', tree_id: 1},
@@ -281,6 +308,14 @@ describe('filters in gtd-filters.js', function() {
 	    var filteredList = focusAreaFilter(dummyHeadings, {id: 0});
 	    expect(filteredList).toEqual(dummyHeadings);
 	});
+
+	it('identifies nodes with no focus area', function() {
+	    var headings = [{id: 1, focus_areas: []},
+			    {id: 2, focus_areas: [1]}];
+	    var filteredList = focusAreaFilter(headings, {id: -1});
+	    expect(filteredList.length).toEqual(1);
+	    expect(filteredList[0].id).toEqual(1);
+	});
     });
 
     describe('the listFocusAreas filter', function() {
@@ -288,7 +323,7 @@ describe('filters in gtd-filters.js', function() {
 	beforeEach(inject(function($injector) {
 	    listFocusAreasFilter = $injector.get('listFocusAreasFilter');
 	    $httpBackend = $injector.get('$httpBackend');
-	    $httpBackend.whenGET('/gtd/focusareas')
+	    $httpBackend.whenGET('/gtd/focusareas?is_visible=true')
 		.respond(200, [
 		    {id: 1,
 		     display: 'Work'},
@@ -389,7 +424,7 @@ describe('directives in gtd-directives.js', function() {
 	];
 	$httpBackend = $injector.get('$httpBackend');
 	$httpBackend.whenGET('/gtd/todostates').respond(201, dummyStates);
-	$httpBackend.whenGET('/gtd/focusareas').respond(200, [
+	$httpBackend.whenGET('/gtd/focusareas?is_visible=true').respond(200, [
 	    {id: 1, display: 'Work'},
 	    {id: 2, display: 'Home'}
 	]);
@@ -435,7 +470,7 @@ describe('directives in gtd-directives.js', function() {
 		focus_areas: [1, 2]
     	    };
 	    $httpBackend.whenGET('/gtd/nodes/2?').respond(200, heading);
-	    $httpBackend.whenGET('/gtd/focusareas').respond(200, [
+	    $httpBackend.whenGET('/gtd/focusareas?is_visible=true').respond(200, [
 		{id: 1, display: 'Work'},
 		{id: 2, display: 'Home'}
 	    ]);
@@ -485,7 +520,7 @@ describe('directives in gtd-directives.js', function() {
 		// Simulate the $scope that is return from get_parent() for a top-level node
 		$rootScope.$digest();
 		expect(element.isolateScope().fields.focus_areas).toEqual([]);
-		expect(element.isolateScope().fields.priority).toEqual('B');
+		expect(element.isolateScope().fields.priority).toEqual('C');
 	    });
 
 	    it('adds the ow-editable class (for animations)', function() {
@@ -635,6 +670,17 @@ describe('directives in gtd-directives.js', function() {
 	    childScope = parentScope.$new();
 	    childScope.$emit('finishEdit');
 	    expect(parentScope.isEditable).toBeFalsy();
+	});
+
+	it('responds when a node has just been closed', function() {
+	    var parentScope, childScope;
+	    $rootScope.$digest();
+	    parentScope = element.isolateScope();
+	    childScope = parentScope.$new();
+	    childScope.$emit('finishEdit', {}, true);
+	    expect(parentScope.completed).toBeTruthy();
+	    childScope.$emit('finishEdit', {}, false);
+	    expect(parentScope.completed).toBeFalsy();
 	});
     });
 
@@ -825,7 +871,7 @@ describe('services in gtd-services.js', function() {
 	beforeEach(inject(function($injector) {
 	    $httpBackend = $injector.get('$httpBackend');
 	    // Create a mocked Heading object
-	    $httpBackend.when('GET', '/gtd/nodes/1?')
+	    $httpBackend.when('GET', '/gtd/nodes/1')
 	    	.respond(201, {
 		    id: 1,
 		    title: 'test heading 1'
@@ -840,17 +886,19 @@ describe('services in gtd-services.js', function() {
 	});
 
 	it('uses the PUT method to update', function() {
-	    $httpBackend.expect('PUT', '/gtd/nodes/1?')
+	    $httpBackend.expect('PUT', '/gtd/nodes/1')
 		.respond(201, {});
 	    heading.$update();
 	    $httpBackend.flush();
+	    expect(true).toBeTruthy();
 	});
 
 	it('uses the POST method to update', function() {
-	    $httpBackend.expect('POST', '/gtd/nodes?')
+	    $httpBackend.expect('POST', '/gtd/nodes')
 		.respond(201, {});
 	    Heading.create({title: 'hello'});
 	    $httpBackend.flush();
+	    expect(true).toBeTruthy();
 	});
     });
 
@@ -882,7 +930,7 @@ describe('services in gtd-services.js', function() {
 	});
 	it('retrieves the heading from the server', function() {
 	    activeHeading.activate(1);
-	    $httpBackend.expectGET('/gtd/nodes/1?').respond(200, {
+	    $httpBackend.expectGET('/gtd/nodes/1').respond(200, {
 		id: 1,
 		tree_id: 1,
 	    });
@@ -928,7 +976,7 @@ describe('controllers in gtd-main.js', function() {
 		 scope: []},
 	    ];
 	    $httpBackend.whenGET('/gtd/todostates').respond(200, dummyStates);
-	    $httpBackend.whenGET('/gtd/focusareas').respond(200, [
+	    $httpBackend.whenGET('/gtd/focusareas?is_visible=true').respond(200, [
 		{id: 1, display: 'Work'},
 		{id: 2, display: 'Home'}
 	    ]);
@@ -988,11 +1036,12 @@ describe('controllers in gtd-main.js', function() {
 		$httpBackend.whenGET(/\/gtd\/nodes\?context=0&field_group=actions_list&todo_state=2&upcoming=[0-9-]+/)
 		    .respond(200, {});
 		$scope.changeContext()
+		expect(true).toBeTruthy();
 	    });
 	});
 	describe('project filtering', function() {
 	    beforeEach(function() {
-		$httpBackend.expectGET('/gtd/nodes/1?')
+		$httpBackend.expectGET('/gtd/nodes/1')
 		    .respond(200, {id: 1});
 	    });
 	    it('responds to filter-parent signals', function() {
@@ -1004,6 +1053,7 @@ describe('controllers in gtd-main.js', function() {
 		$scope.$digest();
 		$httpBackend.flush();
 		$scope.activeParent.id = 1;
+		expect(true).toBeTruthy();
 	    });
 	});
     });
@@ -1031,13 +1081,14 @@ describe('controllers in gtd-main.js', function() {
 	});
 	it('activates the activeNode if given in location string', function() {
 	    $location.hash('1-test-title');
-	    $httpBackend.expectGET('/gtd/nodes/1?')
+	    $httpBackend.expectGET('/gtd/nodes/1')
 		.respond(200, {
 		    id: 1,
 		    tree_id: 1
 		});
 	    $controller('nodeOutline', {$scope: $scope});
 	    $httpBackend.flush();
+	    expect(true).toBeTruthy();
 	});
     });
 
@@ -1100,6 +1151,7 @@ describe('controllers in gtd-main.js', function() {
 		.respond(200, []);
 	    $controller('search', {$scope: $scope});
 	    $httpBackend.flush();
+	    expect(true).toBeTruthy();
 	});
 	it('removes duplicate entries', function() {
 	    $location.search('q', 'hello+world');
@@ -1127,7 +1179,7 @@ describe('controllers in gtd-main.js', function() {
 	    $controller('calendar', {$scope: $scope});
 	    $httpBackend = _$httpBackend_;
 	    $httpBackend.whenGET('/gtd/contexts').respond(200);
-	    $httpBackend.whenGET('/gtd/focusareas').respond(200, [
+	    $httpBackend.whenGET('/gtd/focusareas?is_visible=true').respond(200, [
 		{id: 1, display: 'Work'},
 		{id: 2, display: 'Home'}
 	    ]);
@@ -1155,13 +1207,14 @@ describe('controllers in gtd-main.js', function() {
 	});
 	it('reschedules a day-specific node', function() {
 	    var newDate = new Date('2014-06-16T12:00:00.000Z');
-	    $httpBackend.expectPUT('/gtd/nodes/1?',
+	    $httpBackend.expectPUT('/gtd/nodes/1',
 				   '{"id":1,"scheduled_date":"2014-6-16"}')
 		.respond(200, {});
 	    $scope.moveEvent({id: 1,
 			      start: newDate,
 			      allDay: true,
 			     });
+	    expect(true).toBeTruthy();
 	});
 	it('reschedules a time-specific node', function() {
 	    var newDate = new Date("2014-06-17T03:17:05.746Z");
@@ -1170,32 +1223,35 @@ describe('controllers in gtd-main.js', function() {
 	    expectedTime = '' + newDate.getHours() + ':' + newDate.getMinutes();
 	    expectedString = '{"id":1,"scheduled_date":"' + expectedDate +
 		'","scheduled_time":"' + expectedTime + '"}';
-	    $httpBackend.expectPUT('/gtd/nodes/1?', expectedString)
+	    $httpBackend.expectPUT('/gtd/nodes/1', expectedString)
 		.respond(200, {});
 	    $scope.moveEvent({id: 1,
 			      start: newDate,
 			      allDay: false,
 			     });
+	    expect(true).toBeTruthy();
 	});
 	it('reschedules a deadline node', function() {
 	    var newDate = new Date("2014-06-16T12:00:00.000Z");
-	    $httpBackend.expectPUT('/gtd/nodes/1?',
+	    $httpBackend.expectPUT('/gtd/nodes/1',
 				   '{"id":1,"deadline_date":"2014-6-16"}')
 		.respond(200, {});
 	    $scope.moveEvent({id: 1,
 			      start: newDate,
 			      allDay: true,
 			      field_group: 'calendar_deadlines'});
+	    expect(true).toBeTruthy();
 	});
 	it('resizes a scheduled node with date only', function() {
 	    var newDate = new Date("2014-06-16T12:00:00.000Z");
-	    $httpBackend.expectPUT('/gtd/nodes/1?',
+	    $httpBackend.expectPUT('/gtd/nodes/1',
 				   '{"id":1,"end_date":"2014-6-16"}')
 		.respond(200, {});
 	    $scope.resizeEvent({id: 1,
 				end: newDate,
 				allDay: true,
 				field_group: 'calendar'});
+	    expect(true).toBeTruthy();
 	});
 	it('resizes a scheduled node with date and time', function() {
 	    var newDate, expectedDate, expectedTime, expectedString;
@@ -1206,18 +1262,20 @@ describe('controllers in gtd-main.js', function() {
 	    expectedTime = '' + newDate.getHours() + ':' + newDate.getMinutes();
 	    expectedString = '{"id":1,"end_date":"' + expectedDate +
 		'","end_time":"' + expectedTime + '"}';
-	    $httpBackend.expectPUT('/gtd/nodes/1?', expectedString)
+	    $httpBackend.expectPUT('/gtd/nodes/1', expectedString)
 		.respond(200, {});
 	    $scope.resizeEvent({id: 1,
 				end: newDate,
 				allDay: false,
 				field_group: 'calendar'});
+	    expect(true).toBeTruthy();
 	});
 	it('doesn\'t resize a deadline node', function() {
 	    // This test is valid since no $httpBackend call is expected
 	    $scope.resizeEvent({id: 1,
 				end: new Date(),
 				field_group: 'calendar_deadlines'});
+	    expect(true).toBeTruthy();
 	});
     });
 }); // End of gtd-main.js tests

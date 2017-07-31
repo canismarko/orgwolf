@@ -22,7 +22,8 @@ from django.conf.urls import patterns, include, url
 from django.contrib.auth.views import login, logout
 from django.views.generic import TemplateView
 
-from orgwolf.views import FeedbackView, AngularView, AccountAssociationView
+from orgwolf.views import (FeedbackView, AngularView, AccountAssociationView,
+                           UserView)
 
 # Uncomment the next two lines to enable the admin:
 from django.contrib import admin
@@ -44,8 +45,8 @@ urlpatterns = patterns(
     # API entry points
     url(r'^feedback/?$', FeedbackView.as_view(), name='feedback'),
     url(r'^providers/?$', 'orgwolf.views.socialauth_providers'),
-    url(r'^providers/gmail/?$', 'orgwolf.views.google_auth'),
     url(r'^accountassociations(?:/(?P<id>\d+))?/?$', AccountAssociationView.as_view()),
+    url(r'^user/current/?$', UserView.as_view(), name='current_user'),
 
     # Authentication stuff
     url(r'^accounts/login/$', login, name='login'),

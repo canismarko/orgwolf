@@ -1,4 +1,4 @@
-/*globals jQuery, angular */
+/*globals angular */
 "use strict";
 var MessageFactory, owinbox, owmessage;
 
@@ -11,7 +11,7 @@ angular.module('owMain')
 .config(
     ['$routeProvider', '$locationProvider',
      function($routeProvider, $locationProvider) {
-	 $locationProvider.html5Mode(true);
+	 $locationProvider.html5Mode({enabled: true, requireBase: false});
 	 $routeProvider.
 	     when('/wolfmail/inbox/', {
 		 templateUrl: '/static/inbox.html',
@@ -27,7 +27,7 @@ angular.module('owMain')
 * Angular inbox controller
 *
 **************************************************/
-.controller('owInbox', ['$scope', '$rootScope', '$resource', 'Message', 'Heading', 'owWaitIndicator', 'toaster', function($scope, $rootScope, $resource, Message, Heading, owWaitIndicator, toaster) {
+.controller('owInbox', ['$scope', '$rootScope', '$resource', 'Message', 'Heading', 'owWaitIndicator', 'toaster', 'toDateObjFilter', function($scope, $rootScope, $resource, Message, Heading, owWaitIndicator, toaster, toDateObjFilter) {
     var ds, today, get_messages;
     // Date for this inbox allows user to see future dfrd msgs
     $scope.currentDate = new Date();
@@ -43,6 +43,14 @@ angular.module('owMain')
 	    }
 	);
 	// Callbacks after resolving message API
+	$scope.messages.$promise['then'](function(messages) {
+	    var message, i;
+	    // Convert the received date and a Date() object
+	    for (i=0; i<$scope.messages.length; i+=1) {
+		message = $scope.messages[i];
+		message.rcvd_date = toDateObjFilter(message.rcvd_date);
+	    }
+	});
 	$scope.messages.$promise['finally'](function() {
 	    owWaitIndicator.end_wait('get-messages');
 	});

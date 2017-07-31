@@ -21,6 +21,7 @@ from __future__ import unicode_literals, absolute_import, print_function
 
 import datetime as dt
 
+from django.conf import settings
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponseForbidden, HttpResponseNotAllowed
 from django.shortcuts import render_to_response
@@ -32,6 +33,7 @@ from rest_framework.views import APIView
 
 from gtd.models import Node, TodoState
 from gtd.serializers import NodeSerializer
+from orgwolf.models import AccountAssociation
 from wolfmail.models import Message
 from wolfmail.serializers import InboxSerializer, MessageSerializer
 
@@ -62,7 +64,7 @@ class MessageView(APIView):
         else:
             qs = Message.objects.filter(owner=request.user)
         # Filter by get params
-        qs = qs.filter(**data.dict())
+        qs = qs.filter(**data.dict()).select_related('source_node')
         return qs
 
     def get(self, request, pk=None):
@@ -132,7 +134,7 @@ class MessageView(APIView):
             else:
                 message = Message.objects.filter(pk=pk).first()
                 message_data = MessageSerializer(message).data
-            heading_serializer = NodeSerializer(node, request)
+            heading_serializer = NodeSerializer(node, request=request)
             r = {'status': 'success',
                  'heading': heading_serializer.data}
             r['message'] = message_data

@@ -93,6 +93,7 @@ angular.module(
 	function set_strings(newDate) {
 	    $scope.dateString = newDate.toDateString();
 	    $scope.dateModel = newDate.ow_date();
+	    $scope.dateModel = newDate;
 	    return newDate;
 	}
 	// Setup the widget based on parent scope's current_date
@@ -125,10 +126,7 @@ angular.module(
 })
 
 /*************************************************
-* Directive that lets a user edit a node.
-* The ow-heading attr indicates that heading is
-* being edited. The ow-parent attr indicates this
-* is a new child.
+* Directive that shows the details of a node
 *
 **************************************************/
 .directive('owDetails', ['$timeout', function($timeout) {
@@ -187,7 +185,7 @@ angular.module(
 * is a new child.
 *
 **************************************************/
-.directive('owEditable', ['$resource', '$rootScope', '$timeout', 'owWaitIndicator', 'Heading', 'todoStates', 'focusAreas', 'toaster', function($resource, $rootScope, $timeout, owWaitIndicator, Heading, todoStates, focusAreas, toaster) {
+.directive('owEditable', ['$resource', '$rootScope', '$timeout', 'owWaitIndicator', 'Heading', 'todoStates', 'focusAreas', 'toaster', 'toDateObjFilter', function($resource, $rootScope, $timeout, owWaitIndicator, Heading, todoStates, focusAreas, toaster, toDateObjFilter) {
     // Directive creates the pieces that allow the user to edit a heading
     function link(scope, element, attrs) {
 	var defaultParent, $text, heading, $save, heading_id, parent, editorId;
@@ -203,7 +201,14 @@ angular.module(
 	    // Retrieve object from API
 	    scope.fields = Heading.get({id: scope.heading.id});
 	    scope.fields.$promise.then(function() {
+		var field, dateFields, i;
 		owWaitIndicator.end_wait('editable');
+		dateFields = ['scheduled_date', 'deadline_date', 'end_date']
+		// Cycle through each field and convert the date
+		for (i=0; i<dateFields.length; i+=1) {
+		    field = dateFields[i];
+		    scope.fields[field] = toDateObjFilter(scope.fields[field]);
+		}
 	    });
 	} else if ( scope.parent ) {
 	    // Else inherit some attributes from parent...
@@ -213,18 +218,18 @@ angular.module(
 	} else {
 	    // ...or use defaults if no parent
 	    scope.fields.focus_areas = [];
-	    scope.fields.priority = 'B';
+	    scope.fields.priority = 'C';
 	    // Set Scope if a tab is active
 	    if ($rootScope.activeFocusArea && $rootScope.activeFocusArea.id > 0) {
 		scope.fields.focus_areas.push($rootScope.activeFocusArea.id);
 	    }
 	}
 	scope.priorities = [{sym: 'A',
-			     display: 'A - high'},
+			     display: 'A - Critical'},
 			    {sym: 'B',
-			     display: 'B - medium (default)' },
+			     display: 'B - High' },
 			    {sym: 'C',
-			     display: 'C - low'}];
+			     display: 'C - Default'}];
 	scope.time_units = [
 	    {value: 'd', label: 'Days'},
 	    {value: 'w', label: 'Weeks'},
@@ -251,12 +256,7 @@ angular.module(
 		newHeading = Heading.create(scope.fields);
 	    }
 	    newHeading.$promise.then(function(data) {
-		toaster.pop('success', "Saved");
 		scope.endEdit(newHeading);
-	    })['catch'](function(e) {
-		toaster.pop('error', "Error, not saved!", "Check your internet connection and try again.");
-		console.log('Save failed:');
-		console.log(e);
 	    });
 	};
 	// TinyMCE text editor
@@ -305,6 +305,97 @@ angular.module(
 }])
 
 /*************************************************
+* Directive that a heading drag-n-drop draggable
+* (uses jQuery ui)
+**************************************************/
+.directive('owDraggable', [function() {
+    function link(scope, element, attrs) {
+	var options, dragDropData;
+	dragDropData = {};
+	options = {
+	    handle: '> .ow-hoverable',
+	    // containment: '.outline',
+	    zIndex: 9999,
+	    helper: 'clone',
+	    revert: 'invalid',
+	    start: function(event, ui) {
+		// Save some context data about the draggable
+		dragDropData.list = scope.children;
+		dragDropData.heading = scope.heading;
+		$(element).data('dragDrop', dragDropData);
+	    },
+	};
+	jQuery(element).draggable(options);
+    }
+    return {
+	link: link,
+	scope: false,
+    };
+}])
+
+/*************************************************
+* Directive that a heading drag-n-drop droppable
+* for ow-draggable elements
+* (uses jQuery ui)
+**************************************************/
+.directive('owDroppable', [function() {
+    function link(scope, element, attrs) {
+	var openTwisty, options;
+	options = {
+	    drop: function(event, ui) {
+		var data, oldIdx, heading, oldList, newList;
+		// Get context data from the draggable
+		data = $(ui.draggable).data('dragDrop');
+		heading = data.heading;
+		oldList = data.list;
+		oldIdx = oldList.indexOf(heading);
+		// Set the new parent
+		var newParent = scope.heading;
+		heading.parent = newParent ? newParent.id : null;
+		heading.$update()
+		    .then(function() {
+			// Remove from old list and refresh the new list
+			oldList.splice(oldIdx, 1);
+			scope.loadedChildren = false;
+			scope.getChildren();
+		    });
+	    },
+	    /* Visual feedback for droppability */
+	    over: function(event, ui) {
+		element.addClass('droppable-over');
+		// Open the tab if the user hovers for a short period
+		var interval = 1000 // in milliseconds
+		openTwisty = setTimeout(function() {
+		    scope.$apply(function() {
+			scope.toggleHeading(1);
+		    });
+		}, interval);
+	    },
+	    out: function(event, ui) {
+		element.removeClass('droppable-over');
+		clearTimeout(openTwisty);
+	    },
+	    activate: function(event, ui) {
+		element.addClass('droppable-active');
+	    },
+	    deactivate: function(event, ui) {
+		element.removeClass('droppable-active');
+		element.removeClass('droppable-over');
+	    },
+	};
+	// Function to identify ridiculous moves, like making a
+	// heading its own parent
+	scope.isValidMove = function() {
+	};
+	jQuery(element).droppable(options);
+    }
+    return {
+	link: link,
+	scope: false,
+    };
+}])
+
+/*************************************************
 * Directive that shows a list of FocusArea tabs.
 * When a tab is clicked, this directive emits the
 * 'focus-area-changed' signal via the scope's $emit()
@@ -314,17 +405,17 @@ angular.module(
 .directive('owFocusAreaTabs', ['$resource', '$rootScope', '$timeout', 'focusAreas', function($resource, $rootScope, $timeout, focusAreas) {
     // Directive creates tabs that allow a user to filter by focus area
     function link(scope, element, attrs) {
-	var nullFocusArea = {
+	scope.allFocusArea = {
 	    id: 0,
 	    display: 'All'
 	};
-	scope.focusAreas = [nullFocusArea];
-	focusAreas.$promise.then(function(apiData) {
-	    // Add "All" focus area to the list
-	    scope.focusAreas = scope.focusAreas.concat(apiData);
-	});
-	scope.activeFocusArea = nullFocusArea;
-	$rootScope.activeFocusArea = nullFocusArea;
+	scope.noneFocusArea = {
+	    id: -1,
+	    display: 'None'
+	};
+	scope.focusAreas = focusAreas;
+	scope.activeFocusArea = scope.allFocusArea;
+	$rootScope.activeFocusArea = scope.allFocusArea;
 	$timeout(function() {
 	    element.find('#fa-tab-0').addClass('active');
 	});
@@ -366,18 +457,15 @@ angular.module(
 		scope.heading.auto_update = true;
 		oldDate = scope.heading.scheduled_date;
 		scope.heading.$update()
-		    .then(function(data) {
-			if (data.scheduled_date !== oldDate) {
+		    .then(function(response) {
+			scope.$emit('finishEdit', response.data,
+				    scope.todoState.closed);
+			if (response.data.scheduled_date !== oldDate) {
 			    // Notify the user that the heading is rescheduled
 			    var s = 'Rescheduled for ';
-			    s += data.scheduled_date;
+			    s += response.data.scheduled_date;
 			    toaster.pop('info', null, s);
 			}
-		    })['catch'](function(e) {
-			toaster.pop('error', "Error, not saved!",
-				    "Check your internet connection and try again.");
-			console.log('Save failed:');
-			console.log(e);
 		    });
 	    }
 	});
@@ -669,9 +757,10 @@ angular.module(
 	    });
 	};
 	// Response when user edits the heading
-	scope.$on('finishEdit', function(e, newHeading) {
+	scope.$on('finishEdit', function(e, newHeading, completed) {
 	    e.stopPropagation();
 	    angular.extend(scope.heading, newHeading);
+	    scope.completed = completed;
 	});
     }
     return {

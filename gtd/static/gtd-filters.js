@@ -1,7 +1,6 @@
 /*globals angular, $*/
 "use strict";
 
-
 var owFilters = angular.module(
     'owFilters',
     ['ngSanitize', 'owServices']
@@ -96,34 +95,72 @@ owFilters.filter('asHtml', ['$sce', function($sce) {
 }]);
 
 /*************************************************
-* Filter that orders top level headings
+* Filter that sorts the action list
 *
 **************************************************/
-owFilters.filter('order', ['$sce', function($sce) {
-    return function(obj, criterion, activeHeading) {
-	var ordered, deadline, other, i;
-	if ( criterion === 'list' ) {
-	    other = obj.filter(function(currHeading) {
-		var today, deadline, isOther, delta;
-		isOther = false; // Default value
-		if (currHeading.deadline_date === null) {
-		    // Check for unscheduled heading
-		    isOther = true;
-		} else {
-		    // Check for heading deadline > 7 days in the future
-		    today = new Date();
-		    deadline = new Date(currHeading.deadline_date);
-		    delta = deadline - today;
-		    if (delta > (7 * 24 * 3600 * 1000)) {
-			isOther = true;
-		    }
+owFilters.filter('sortActions', ['$sce', 'activeState', 'locations', function($sce, activeState, locations) {
+    return function(unoderedList) {
+	var ordered, deadline, other, i, today, activeLocations, locationIDs, activeLocation;
+	function importance(heading) {
+	    // Assign a weight to a given heading for sorting
+	    var weight, today, delta;
+	    weight = 0;
+	    // Check for upcoming deadlines
+	    if (heading.deadline_date) {
+		today = new Date();
+		deadline = new Date(heading.deadline_date);
+		delta = deadline - today;
+		if (delta < (7 * 24 * 3600 * 1000)) {
+		    weight += 3;
 		}
-		return isOther;
-	    });
-	    deadline = $(obj).not(other).get().order_by('deadline_date');
-	    ordered = deadline;
-	    ordered = ordered.concat(other.order_by('priority'));
-	} else if ( criterion === 'none' ) {
+	    }
+	    // Sort by priority
+	    var priorities = {'A': 3,
+			      'B': 2,
+			      'C': 1,
+			      undefined: 0};
+	    weight += priorities[heading.priority];
+	    // Put location-specific things higher up the list
+	    for (i=0; i<activeLocations.length; i+=1) {
+		activeLocation = activeLocations[i];
+		if (heading.tag_string.indexOf(activeLocation.tag_string) > -1) {
+		    // This heading requires the current location tag
+		    weight += 1;
+		    break;
+		}
+	    }
+	    return weight;
+	};
+	// Get active locations for sorting based on active context
+	activeLocations = [];
+	if (activeState.context) {
+	    locationIDs = activeState.context.locations_available;
+	    for (i=0; i<locationIDs.length; i+=1) {
+		// Find and check each location object
+		activeLocation = locations.filter(function(loc) {
+		    return loc.id == locationIDs[i];
+		})[0];
+		activeLocations.push(activeLocation)
+	    }
+	}
+	// Sort by "importance value" of each heading
+	ordered = unoderedList.sort(function(a, b) {
+	    return importance(b) - importance(a);
+	});
+	return ordered;
+    };
+}]);
+
+/*************************************************
+* Filter that sorts top level headings in the
+* project view. (Actions list view is sorted by
+* a different filter).
+*
+**************************************************/
+owFilters.filter('order', ['$sce', 'activeState', function($sce, activeState) {
+    return function(obj, criterion, activeHeading) {
+	var ordered, i;
+	if ( criterion === 'none' ) {
 	    ordered = obj;
 	} else {
 	    ordered = obj.order_by(criterion);
@@ -140,13 +177,6 @@ owFilters.filter('order', ['$sce', function($sce) {
 	return ordered;
     };
 }]);
-
-/*************************************************
-* Filter that sorts the activeHeading to the top
-* of the given list
-*
-**************************************************/
-
 
 /*************************************************
 * Filter that only shows headings that are visible
@@ -190,6 +220,25 @@ owFilters.filter('currentList', function() {
     };
 });
 
+
+/*************************************************
+* Filter that converts an ISO date string to a
+* date object.
+*
+**************************************************/
+owFilters.filter('toDateObj', ['$sce', function($sce) {
+    return function(str) {
+	var milliseconds, tzOffset, d;
+	if( typeof str === 'string') {
+	    milliseconds = Date.parse(str)
+	    tzOffset = new Date().getTimezoneOffset() * 60000;
+	    d = new Date(milliseconds + tzOffset);
+	} else {
+	    d = str;
+	}
+	return d;
+    };
+}]);
 
 /*************************************************
 * Filter that displays the deadline for a heading
@@ -299,11 +348,21 @@ owFilters.filter('currentFocusArea', ['$rootScope', function($rootScope) {
 	} else {
 	    activeId = 0;
 	}
+	newList = [];
 	// Now do the actual filtering
-	if (activeId) {
-	    newList = [];
+	if (activeId === -1) {
+	    // id of -1 mean only include headings that have no focus area
+	    for (i=0; i<oldList.length; i+=1) {
+		if( oldList[i].focus_areas.length === 0) {
+		    // Allow only headings with no focus areas
+		    newList.push(oldList.slice(i, i+1)[0]);
+		}
+	    }
+	} else if (activeId) {
+	    // Filter by an actual focus area from the database
 	    for (i=0; i<oldList.length; i+=1) {
 		if( oldList[i].focus_areas.indexOf(activeId) > -1 ) {
+		    // Filter against an actual focus area
 		    newList.push(oldList.slice(i, i+1)[0]);
 		}
 	    }

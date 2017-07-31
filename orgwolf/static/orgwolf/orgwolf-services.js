@@ -17,4 +17,15 @@ angular.module('owServices')
 	}
     });
     return activeState;
+}])
+
+.factory('currentUser', ['$resource', '$rootScope', function($resource, $rootScope) {
+    var user = $resource('/user/current/').get();
+    $rootScope.$on('refresh-data', function() {
+	// Retrieve the new user info and update the DOM
+	$resource('/user/current/').get().$promise.then(function(newUser) {
+	    angular.extend(user, newUser);
+	});
+    });
+    return user;
 }]);

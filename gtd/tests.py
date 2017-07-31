@@ -44,8 +44,8 @@ from rest_framework.renderers import JSONRenderer
 
 from gtd.models import Node, TodoState
 from gtd.models import Context, FocusArea
-from gtd.serializers import (NodeSerializer, CalendarSerializer,
-                             CalendarDeadlineSerializer)
+from gtd.serializers import (NodeSerializer, NodeListSerializer,
+                             CalendarSerializer, CalendarDeadlineSerializer)
 from gtd.shortcuts import order_nodes, load_fixture
 from gtd.templatetags.gtd_extras import escape_html
 from gtd.templatetags.gtd_extras import breadcrumbs
@@ -886,6 +886,23 @@ class ListViewQueryset(TestCase):
             ordered=False,
         )
 
+    def test_db_optimization(self):
+        """
+        Make sure that the method uses the database efficiently when
+        passing to a Serializer. Fundamentally, the database usage
+        should be independent of the queryset length. Changes of a few
+        queries could reflect changes in the serializer, changes of an
+        order of magnititude probably mean broken DB optimization.
+        """
+        qs = self.view.get_actions_list(self.request)
+        def hit_db():
+            serializer = NodeSerializer(qs, many=True, request=self.request)
+            serializer.data
+        self.assertNumQueries(
+            3,
+            hit_db
+        )
+
 
 class ListAPI(TestCase):
     """
@@ -1195,6 +1212,18 @@ class NodeAPI(TestCase):
             ordered=False,
         )
 
+    def test_many_db_optimization(self):
+        """Does a normal collection get query process Nodes efficiently?"""
+        user = User.objects.get(pk=1)
+        url = reverse('node_object')
+        factory = RequestFactory()
+        request = factory.get(url)
+        request.user = self.user
+        qs = NodeView().get_queryset(request)
+        with self.assertNumQueries(3):
+            serializer = NodeSerializer(qs, many=True, request=request)
+            serializer.data
+
     def test_node_get_collection_multiple_states(self):
         """
         Test that passing more than one todo state for filtering
@@ -1255,24 +1284,6 @@ class NodeAPI(TestCase):
             expected,
             [x['title'] for x in r],
             transform=lambda x: x.title
-        )
-
-    def test_node_serializer(self):
-        """Make sure that getting nodes by AJAX is database efficient"""
-        nodes = Node.objects.all()
-        def hit_db():
-            serializer = NodeSerializer(nodes, many=True)
-            serializer.data
-        self.assertNumQueries(
-            3,
-            hit_db
-        )
-        # Make sure works with single node
-        node = Node.objects.first()
-        serializer = NodeSerializer(node)
-        self.assertEqual(
-            serializer.data['id'],
-            node.pk
         )
 
     def test_node_list_serializer(self):
@@ -1561,7 +1572,7 @@ class NodeAPI(TestCase):
         self.repeating_node.todo_state = self.closed
         data = self.repeating_node.as_json()
         # Add the auto-repeat field
-        data = '{0}, "auto_update": true{1}'.format(data[:-2], data[-2:])
+        data = '{0}, "auto_update": true{1}'.format(data[:-1], data[-1:])
         response = self.client.put(
             self.repeating_url, data,
             HTTP_X_REQUESTED_WITH='XMLHttpRequest',
@@ -1783,6 +1794,28 @@ class UpcomingAPI(TestCase):
             response,
             'PetSmart'
             )
+
+    def test_db_optimization(self):
+        """
+        Make sure that the method uses the database efficiently when
+        passing to a Serializer. Fundamentally, the database usage
+        should be independent of the queryset length. Changes of a few
+        queries could reflect changes in the serializer, changes of an
+        order of magnititude probably mean broken DB optimization.
+        """
+        user = User.objects.get(pk=1)
+        url = reverse('node_object')
+        factory = RequestFactory()
+        request = factory.get(url, {'upcoming': '2014-03-02'})
+        request.user = self.user
+        qs = NodeView().get_upcoming(request)
+        def hit_db():
+            serializer = NodeListSerializer(qs, many=True, request=request)
+            serializer.data
+        self.assertNumQueries(
+            5,
+            hit_db
+        )
 
 
 class MessageIntegration(TestCase):

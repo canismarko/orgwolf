@@ -44,4 +44,5 @@ urlpatterns = patterns(
         gtd_views.TodoStateView.as_view(), name='todo_state'),
     url(r'^focusareas/?$', gtd_views.FocusAreaView.as_view(), name='focus_area_api'),
     url(r'^contexts/?$', gtd_views.ContextView.as_view(), name='context_api',),
+    url(r'^locations/?$', gtd_views.LocationView.as_view(), name='location_api',),
 )

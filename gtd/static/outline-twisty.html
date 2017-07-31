@@ -1,5 +1,6 @@
 <!-- Recursive template for tree of Tasks -->
 <div class="ow-hoverable"
+     ow-droppable
      ng-show="!isEditing"
      ng-click="toggleHeading($event)"
      style="{{ heading | headingStyle }}"
@@ -8,6 +9,7 @@
   <span ow-todo ow-heading="heading"></span>
   <div class="ow-title">
     {{heading.title}}
+    <span ng-show="heading.has_text && state < 2">&hellip;</span>
   </div>
   <span ng-if="heading.repeats"
 	class="repeat-icon non-opening"></span>
@@ -52,6 +54,7 @@
     Loading...
   </div>
   <div ow-twisty ng-repeat="heading in children" ow-heading="heading"
+       ow-draggable
        ng-if="!heading.archived || showArchived"></div>
   <div class="archived-indicator"
        ng-show="numArchived && !showArchived && !showGlobalArchived"

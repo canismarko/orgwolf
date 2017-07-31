@@ -22,7 +22,7 @@ import datetime as dt
 
 from rest_framework import serializers
 
-from gtd.models import Context, FocusArea, Node, TodoState
+from gtd.models import Context, FocusArea, Node, TodoState, Tag
 
 
 class FocusAreaSerializer(serializers.ModelSerializer):
@@ -44,14 +44,20 @@ class TodoStateSerializer(serializers.ModelSerializer):
                   'closed', 'display_text']
 
 
+class TagSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Tag
+
+
 class ContextSerializer(serializers.ModelSerializer):
     class Meta:
         model = Context
-        fields = ('id', 'name')
+        fields = ('id', 'name', 'locations_available')
 
 
 class NodeSerializer(serializers.ModelSerializer):
     read_only = serializers.SerializerMethodField()
+    has_text = serializers.SerializerMethodField()
     def __init__(self, qs, request=None, *args, **kwargs):
         # Perform some optimization before hitting the database
         self.request = request
@@ -60,7 +66,7 @@ class NodeSerializer(serializers.ModelSerializer):
             qs = qs.select_related('owner')
             qs = qs.prefetch_related('focus_areas', 'users')
         return super(NodeSerializer, self).__init__(qs, *args, **kwargs)
-
+    
     def get_read_only(self, obj):
         """Determine if the request.user can edit this Node."""
         user = getattr(self.request, 'user', None)
@@ -68,6 +74,12 @@ class NodeSerializer(serializers.ModelSerializer):
         if obj.owner == user and obj.owner is not None:
             status = False
         return status
+    
+    def get_has_text(self, obj):
+        has_text = False
+        if obj.text:
+            has_text = True
+        return has_text
 
     class Meta:
         model = Node
@@ -84,14 +96,21 @@ class NodeListSerializer(NodeSerializer):
                   'deadline_date', 'deadline_time',
                   'scheduled_date', 'scheduled_time',
                   'tree_id', 'lft', 'rght',
-                  'repeats', 'read_only']
+                  'repeats', 'read_only', 'has_text']
+
+    def to_representation(self, obj):
+        """
+        Prefetch the root node to avoid multiple DB hits
+        """
+        obj.current_root = obj.get_root()
+        return super(NodeListSerializer, self).to_representation(obj)
 
     def get_root_id(self, obj):
-        root = obj.get_root()
+        root = obj.current_root
         return root.pk
 
     def get_root_name(self, obj):
-        root = obj.get_root()
+        root = obj.current_root
         return root.title
 
 
@@ -101,7 +120,8 @@ class NodeOutlineSerializer(NodeSerializer):
         model = Node
         fields = ['title', 'tag_string', 'lft', 'rght', 'tree_id', 'id',
                   'priority', 'focus_areas', 'level', 'archived',
-                  'todo_state', 'repeats', 'scheduled_date', 'read_only']
+                  'todo_state', 'repeats', 'scheduled_date',
+                  'read_only', 'has_text']
 
 
 class CalendarSerializer(NodeSerializer):
@@ -156,7 +176,7 @@ class CalendarSerializer(NodeSerializer):
     class Meta:
         model = Node
         fields = ['title', 'id', 'start', 'end', 'allDay',
-                  'repeats', 'focus_areas']
+                  'repeats', 'focus_areas', 'read_only', 'has_text']
 
 
 class CalendarDeadlineSerializer(CalendarSerializer):

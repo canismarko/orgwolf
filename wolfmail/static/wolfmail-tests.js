@@ -202,10 +202,12 @@ describe('services in wolfmail-services.js', function() {
 	it('retrieves message list', function() {
 	    $httpBackend.expectGET('/wolfmail/message').respond(200, []);
 	    Message.query();
+	    expect(true).toBeTruthy();
 	});
 	it('retrieves individual message', function() {
 	    $httpBackend.expectGET('/wolfmail/message/1').respond(200, {});
 	    Message.get({id: 1});
+	    expect(true).toBeTruthy();
 	});
 	it('archives a retrieved message', function() {
 	    var emitMessage, $scope;
@@ -253,7 +255,7 @@ describe('wolfmail-ctrl.js', function() {
 	dummyMessages = [{id: 1}];
 	$httpBackend = $injector.get('$httpBackend');
 	$httpBackend.whenGET('/gtd/contexts').respond(200, []);
-	$httpBackend.whenGET('/gtd/focusareas').respond(200, []);
+	$httpBackend.whenGET('/gtd/focusareas?is_visible=true').respond(200, []);
 	$httpBackend.whenGET(/\/wolfmail\/message\?.*/).respond(200, dummyMessages);
 	$httpBackend.whenGET(/\/gtd\/nodes.*/).respond(200, []);
     }));

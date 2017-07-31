@@ -61,11 +61,35 @@ class BaseMessageHandler():
         self._msg.rcvd_date = new_date
         self._msg.save()
 
+
 @receiver(models.signals.post_init, sender=Message)
 def add_handler(sender, instance, **kwargs):
     """Add the appropriate Handler() object as an attribute"""
     if instance.handler_path == '':
         instance.handler = BaseMessageHandler(instance)
     else:
-        module = importlib.import_module(instance.handler_path)
-        instance.handler = module.MessageHandler(instance)
+        try:
+            module = importlib.import_module(instance.handler_path)
+            instance.handler = module.MessageHandler(instance)
+        except AttributeError:
+            instance.handler = BaseMessageHandler(instance)
+
+
+class BaseAccountHandler():
+    """
+    Contains plugin specific extensions to the AccountAssociation
+    model. Each plugin can define 1 AccountHandler() class that
+    subclasses BaseAccountHandler.
+    """
+    def __init__(self, instance):
+        _account = instance
+
+    def get_messages(self):
+        raise NotImplementedError
+
+    def authorize_account(self, request_data):
+        """To be overridden by plugin. Creates a new account association using
+        the given request POST data. Should return a new AccountAssociation, a
+        response dictionary and a response status (from rest_framework.status).
+        """
+        raise NotImplementedError

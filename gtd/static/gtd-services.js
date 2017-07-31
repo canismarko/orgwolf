@@ -1,6 +1,5 @@
 /*globals angular, GtdHeading, jQuery, navigator, window, alert*/
 "use strict";
-var HeadingFactory;
 
 angular.module(
     'owServices',
@@ -62,14 +61,29 @@ angular.module(
 //         return new GtdHeading(data);
 //     };
 // }])
-.factory('Heading', ['$resource', function($resource) {
-    var res = $resource(
+.factory('Heading', ['$http', '$resource', 'toaster', function($http, $resource, toaster) {
+    var toastOnly, res;
+    // Interceptors for manipulating the responses
+    toastOnly = {
+	'response': function(response) {
+	    toaster.pop('success', 'Saved');
+	    return response;
+	},
+	'responseError': function(reason) {
+	    toaster.pop('error', "Error, not saved!",
+			"Check your internet connection and try again");
+	    console.log('Save failed:');
+	    console.log(reason);
+	},
+    };
+    // Create the actual resource here
+    res = $resource(
 	'/gtd/nodes/:id/',
 	{id: '@id',
 	 field_group: '@field_group'},
 	{
-	    'update': {method: 'PUT'},
-	    'create': {method: 'POST'},
+	    'update': {method: 'PUT', interceptor: toastOnly},
+	    'create': {method: 'POST', interceptor: toastOnly},
 	}
     );
     return res;
@@ -160,14 +174,55 @@ angular.module(
 * Factory returns all the available focus areas
 *
 **************************************************/
-.factory('focusAreas', ['$resource', function($resource) {
-    return $resource('/gtd/focusareas/').query();
+.factory('focusAreas', ['$resource', '$rootScope', function($resource, $rootScope) {
+    var url, params, focusAreas, i;
+    url = '/gtd/focusareas/';
+    params = {is_visible: true};
+    focusAreas = $resource(url).query(params);
+    $rootScope.$on('refresh-data', function() {
+	// Remove old focus areas and replace with new ones
+	focusAreas.splice(0, focusAreas.length);
+	$resource(url).query(params).$promise.then(function(newFocusAreas) {
+	    for(i=0; i<newFocusAreas.length; i+=1) {
+		focusAreas.push(newFocusAreas[i]);
+	    }
+	});
+    });
+    return focusAreas;
+}])
+
+.factory('GtdObject', ['$resource', '$rootScope', function($resource, $rootScope) {
+    return function(url, params) {
+	var objs
+	objs = $resource(url).query(params);
+	$rootScope.$on('refresh-data', function() {
+	    // Remove old objects and replace with new ones
+	    contexts.splice(0, objs.length);
+	    $resource(url).query(params).$promise.then(function(newObjs) {
+		for(i=0; i<newObjs.length; i+=1) {
+		    objs.push(newObjs[i]);
+		}
+	    });
+	});
+	return objs;
+    };
 }])
 
 /*************************************************
-* Factory returns all the available contexts
+* Factory returns all the available
+* Context objects
 *
 **************************************************/
-.factory('contexts', ['$resource', function($resource) {
-    return $resource('/gtd/contexts/').query();
+.factory('contexts', ['GtdObject', function(GtdObject) {
+    return GtdObject('/gtd/contexts', {});
+}])
+
+/*************************************************
+* Factory returns all the available
+* Tag objects
+*
+**************************************************/
+.factory('locations', ['GtdObject', function(GtdObject) {
+    return GtdObject('/gtd/locations', {});
+>>>>>>> gmail
 }]);

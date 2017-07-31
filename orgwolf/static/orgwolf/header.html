@@ -1,5 +1,6 @@
 <!-- Navigation bar -->
-<nav class="navbar navbar-default" role="navigation" ow-navbar>
+<nav class="navbar navbar-default" role="navigation" ow-navbar
+     ng-class="{'ow-logged-in': user.is_active, 'ow-is-staff': user.is_staff, 'ow-logged-out': !user.is_active, 'ow-not-staff': !user.is_staff}">
   <div class="navbar-header">
     <button type="button" class="navbar-toggle"
 	    data-toggle="collapse" data-target=".navbar-ex1-collapse">
@@ -77,7 +78,9 @@
       	</a>
       	<ul class="dropdown-menu">
       	  <li class="ow-staff-show">
-      	    <a href="/admin/" target="_self">Admin</a>
+      	    <a href="/admin/" target="_self">
+	      <span class="glyphicon glyphicon-wrench"></span>
+	      Admin</a>
       	  </li>
       	  <li>
       	    <a href="/accounts/settings/">
