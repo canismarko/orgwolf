@@ -275,7 +275,8 @@
     "fields": {
         "owner": null, 
         "name": "Personal", 
-        "display": "Personal"
+        "display": "Personal",
+	"is_visible": true
     }
 },
 {
@@ -284,7 +285,8 @@
     "fields": {
         "owner": null, 
         "name": "Work", 
-        "display": "Work"
+        "display": "Work",
+	"is_visible": true
     }
 }
 ]

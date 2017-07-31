@@ -106,14 +106,14 @@
     {% endif %}
 
     <!-- Shiv for HTML5 date input form -->
-    <script src="{{ STATIC_URL }}modernizr-2.8.3.js"></script>
+    <script src="{% static 'modernizr-2.8.3.js' %}"></script>
     <script>
       Modernizr.load({
 	  test: Modernizr.inputtypes.date,
 	  nope: [
-	      '{{ STATIC_URL }}bower/better-dom/dist/better-dom.js',
-	      '{{ STATIC_URL }}bower/better-i18n-plugin/dist/better-i18n-plugin.js',
-	      '{{ STATIC_URL }}bower/better-dateinput-polyfill/dist/better-dateinput-polyfill.js',
+	      '{% static 'bower/better-dom/dist/better-dom.js' %}',
+	      '{% static 'bower/better-i18n-plugin/dist/better-i18n-plugin.js' %}',
+	      '{% static 'bower/better-dateinput-polyfill/dist/better-dateinput-polyfill.js' %}',
 	  ]
       });
     </script>

@@ -47,6 +47,7 @@ class TodoStateSerializer(serializers.ModelSerializer):
 class TagSerializer(serializers.ModelSerializer):
     class Meta:
         model = Tag
+        fields = ['id', 'display', 'tag_string', 'owner', 'public']
 
 
 class ContextSerializer(serializers.ModelSerializer):
@@ -172,7 +173,7 @@ class CalendarSerializer(NodeSerializer):
         else:
             all_day = False
         return all_day
-
+    
     class Meta:
         model = Node
         fields = ['title', 'id', 'start', 'end', 'allDay',

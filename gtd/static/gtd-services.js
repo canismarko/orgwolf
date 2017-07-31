@@ -224,5 +224,4 @@ angular.module(
 **************************************************/
 .factory('locations', ['GtdObject', function(GtdObject) {
     return GtdObject('/gtd/locations', {});
->>>>>>> gmail
 }]);

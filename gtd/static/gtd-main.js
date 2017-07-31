@@ -6,18 +6,18 @@ var test_headings, owConfig, HeadingFactory, outlineCtrl, listCtrl;
 * Angular module for all GTD components
 *
 **************************************************/
-angular.module(
+var owMain = angular.module(
     'owMain',
     ['ngAnimate', 'ngResource', 'ngSanitize', 'ngRoute', 'ngCookies',
      'ui.bootstrap', 'ui.calendar', 'toaster',
      'owServices', 'owDirectives', 'owFilters']
-)
+);
 
 /*************************************************
 * Angular routing
 *
 **************************************************/
-.config(['$routeProvider', '$locationProvider', function($routeProvider, $locationProvider) {
+owMain.config(['$routeProvider', '$locationProvider', function($routeProvider, $locationProvider) {
     $locationProvider.html5Mode({enabled: true, requireBase: false});
     $routeProvider
 	.when('/gtd/actions/:context_id?/:context_slug?', {
@@ -40,9 +40,9 @@ angular.module(
 	.when('/', {
 	    redirectTo: '/gtd/projects/'
 	});
-}])
+}]);
 
-.config(['$httpProvider', '$locationProvider', function ($httpProvider, $locationProvider) {
+owMain.config(['$httpProvider', '$locationProvider', function ($httpProvider, $locationProvider) {
     // Add custom headers to $http objects
     $httpProvider.defaults.headers.common['X-Request-With'] = 'XMLHttpRequest';
     // Add django CSRF token to all $http objects
@@ -73,26 +73,26 @@ angular.module(
 	    xhr.setRequestHeader('X-CSRFToken', csrftoken);
 	}
     });
-}])
+}]);
 
 /*************************************************
 * Handler sends google analytics tracking on
 * angular route change
 **************************************************/
-.run(['$rootScope', '$location', function($rootScope, $location) {
+owMain.run(['$rootScope', '$location', function($rootScope, $location) {
     $rootScope.$on('$routeChangeSuccess', function() {
 	// Only active if django DEBUG == True
 	if ( typeof ga !== 'undefined' ) {
 	    ga('send', 'pageview', {'page': $location.path()});
 	}
     });
-}])
+}]);
 
 /*************************************************
 * Angular controller for capturing quick thoughts
 * to the inbox
 **************************************************/
-.controller('inboxCapture', ['$scope', '$rootScope', 'owWaitIndicator', function ($scope, $rootScope, owWaitIndicator) {
+owMain.controller('inboxCapture', ['$scope', '$rootScope', 'owWaitIndicator', function ($scope, $rootScope, owWaitIndicator) {
     $scope.capture = function(e) {
 	// Send a captured inbox item to the server for processing
 	var text, data, $textbox;
@@ -121,13 +121,13 @@ angular.module(
 	    }
 	);
     };
-}])
+}]);
 
 /*************************************************
 * Angular project ouline appliance controller
 *
 **************************************************/
-.controller('nodeOutline', ['$scope', '$rootScope', '$http', '$resource', '$filter', 'Heading', '$location', '$anchorScroll', 'owWaitIndicator', 'activeHeading', function outlineCtrl($scope, $rootScope, $http, $resource, $filter, Heading, $location, $anchorScroll, owWaitIndicator, activeHeading) {
+owMain.controller('nodeOutline', ['$scope', '$rootScope', '$http', '$resource', '$filter', 'Heading', '$location', '$anchorScroll', 'owWaitIndicator', 'activeHeading', function outlineCtrl($scope, $rootScope, $http, $resource, $filter, Heading, $location, $anchorScroll, owWaitIndicator, activeHeading) {
     var TodoState, Scope, url, get_heading, Parent, Tree, parent_tree_id, parent_level, target_headings, targetId, main_headings, newButton, showAllButton;
     newButton = $('#add-heading');
     showAllButton = $('#show-all');
@@ -226,14 +226,13 @@ angular.module(
     $scope.$on('focus-area-changed', function(e, newFocusArea) {
 	$scope.activeFocusArea = newFocusArea;
     });
-}])
-
+}]);
 
 /*************************************************
 * Angular actions list controller
 *
 **************************************************/
-.controller('nextActionsList', ['$sce', '$scope', '$resource', '$location', '$routeParams', '$filter', 'contexts', 'Heading', 'todoStates', 'activeState', 'owWaitIndicator', '$cookies',function listCtrl($sce, $scope, $resource, $location, $routeParams, $filter, contexts, Heading, todoStates, activeState, owWaitIndicator, $cookies) {
+owMain.controller('nextActionsList', ['$sce', '$scope', '$resource', '$location', '$routeParams', '$filter', 'contexts', 'Heading', 'todoStates', 'activeState', 'owWaitIndicator', '$cookies',function listCtrl($sce, $scope, $resource, $location, $routeParams, $filter, contexts, Heading, todoStates, activeState, owWaitIndicator, $cookies) {
     var i, TodoState, Context, today, update_url, get_list, parent_id, todo_states;
     $scope.list_params = {field_group: 'actions_list'};
     $scope.showArchived = true;

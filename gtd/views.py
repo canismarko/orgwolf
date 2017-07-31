@@ -213,10 +213,10 @@ class NodeView(APIView):
           todo_state: 2,
           etc...
         }
-
+        
         Ignores fields related to MPTT for new nodes as these get
         set automatically based on the 'parent' attribute.
-
+        
         Returns: JSON object of all node fields, with changes.
         """
         data = request.data.copy()
@@ -307,7 +307,7 @@ class FocusAreaView(APIView):
     def get(self, request, *args, **kwargs):
         import time
         focus_areas = FocusArea.get_visible(request.user)
-        focus_areas = focus_areas.filter(**request.QUERY_PARAMS)
+        focus_areas = focus_areas.filter(**request.query_params)
         serializer = FocusAreaSerializer(focus_areas, many=True)
         return Response(serializer.data)
 
@@ -325,7 +325,11 @@ class LocationView(generics.ListAPIView):
     serializer_class = TagSerializer
 
     def get_queryset(self):
-        by_user = Q(owner=self.request.user)
+        print(self.request.user.is_authenticated())
+        if self.request.user.is_authenticated():
+            by_user = Q(owner=self.request.user)
+        else:
+            by_user = Q(owner=None)
         is_public = Q(public=True)
         qs = Location.objects.filter(by_user | is_public)
         return qs
