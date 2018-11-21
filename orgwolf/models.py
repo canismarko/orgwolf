@@ -26,14 +26,16 @@ from django.utils.html import conditional_escape as escape
 from html.parser import HTMLParser
 
 
+def empty_dictionary():
+    return {}
+
+
 class JSONField(models.TextField):
     """
     Serializes and deserializes arbitrary JSON data from the model.
     """
-
+    
     def __init__(self, *args, **kwargs):
-        def empty_dictionary():
-            return {}
         kwargs['default'] = empty_dictionary
         super(JSONField, self).__init__(*args, **kwargs)
 

@@ -41,7 +41,7 @@ register = template.Library()
 def todo_states_json(context):
     states = TodoState.get_visible(user=context['request'].user)
     serializer = TodoStateSerializer(states, many=True)
-    return json.dumps(serializer.data)
+    return mark_safe(json.dumps(serializer.data))
 
 @register.filter
 def repeat_icon(value):

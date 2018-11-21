@@ -9,3 +9,4 @@ gtd/fixtures/production-data.json
 orgwolf/static/aloha/
 orgwolf/static/bower/
 venv/
+htmlcov/
