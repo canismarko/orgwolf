@@ -130,8 +130,8 @@ if DEBUG == True:
 
 # Enforce HTTPS
 if DEBUG == False:
-    CSRF_COOKIE_SECURE = True
     SESSION_COOKIE_SECURE = True
+    SESSION_COOKIE_SECURE = False
 
 LOGGING = {
     'version': 1,
