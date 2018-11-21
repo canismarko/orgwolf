@@ -55,7 +55,7 @@ class TodoState(models.Model):
     # No owner means system default
     owner = models.ForeignKey(
         settings.AUTH_USER_MODEL,
-        blank=True, null=True)
+        blank=True, null=True, on_delete=models.SET_NULL)
     order = models.IntegerField(default=50)
     _color_rgb = models.IntegerField(default=0x000000)
     _color_alpha = models.FloatField(default=0)
@@ -132,7 +132,8 @@ class Tag(models.Model):
     display = models.CharField(max_length=100)
     tag_string = models.CharField(max_length=10, unique=True)
     # user that created this tag (no owner means built-in tag)
-    owner = models.ForeignKey(settings.AUTH_USER_MODEL, blank=True, null=True)
+    owner = models.ForeignKey(settings.AUTH_USER_MODEL, blank=True, null=True,
+                              on_delete=models.SET_NULL)
     public = models.BooleanField(default=True)
     def __str__(self):
         return self.display
@@ -153,7 +154,8 @@ class Location(Tag):
 class Contact(Tag):
     f_name = models.CharField(max_length = 50)
     l_name = models.CharField(max_length = 50)
-    user = models.ForeignKey(settings.AUTH_USER_MODEL, blank=True, null=True)
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, blank=True,
+                             null=True, on_delete=models.SET_NULL)
     # message_contact = models.ForeignKey('messaging.contact', blank=True, null=True) # TODO: uncomment this once messaging is implemented
     def __str__(self):
         if self.f_name or self.l_name:
@@ -190,7 +192,7 @@ class Context(models.Model):
     name = models.CharField(max_length=100)
     owner = models.ForeignKey(
         settings.AUTH_USER_MODEL,
-        blank=True, null=True)
+        blank=True, null=True, on_delete=models.SET_NULL)
     tools_available = models.ManyToManyField(
         'Tool',
         blank=True,
@@ -258,9 +260,10 @@ class Context(models.Model):
         return qs
 
 
+# TODO: Can this be deleted??
 class Priority(models.Model):
     priority_value = models.IntegerField(default=50)
-    owner = models.ForeignKey(settings.AUTH_USER_MODEL)
+    owner = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
 
 
 @python_2_unicode_compatible
@@ -270,7 +273,8 @@ class FocusArea(models.Model):
     """
     # (no owner means built-in tag)
     owner = models.ForeignKey(
-        settings.AUTH_USER_MODEL, blank=True, null=True)
+        settings.AUTH_USER_MODEL, blank=True, null=True,
+        on_delete=models.CASCADE)
     public = models.BooleanField(default=False)
     display = models.CharField(max_length=50)
     name = models.CharField(max_length=50)
@@ -361,23 +365,25 @@ class Node(MPTTModel):
     owner = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         related_name="owned_node_set",
-        null=True, blank=True)
+        null=True, blank=True, on_delete=models.SET_NULL)
     users = models.ManyToManyField(settings.AUTH_USER_MODEL, blank=True)
     assigned = models.ForeignKey(
         'Contact',
         blank=True, null=True,
-        related_name="assigned_node_set")
+        related_name="assigned_node_set",
+        on_delete=models.SET_NULL)
     title = models.TextField(blank=True)
     slug = models.SlugField()
     todo_state = models.ForeignKey(
         'TodoState',
-        blank=True, null=True)
+        blank=True, null=True, on_delete=models.SET_NULL)
     archived = models.BooleanField(default=False)
     text = models.TextField(blank=True)
-    parent = TreeForeignKey(
+    parent = models.ForeignKey(
         'self',
         blank=True, null=True,
-        related_name='children')
+        related_name='children',
+        on_delete=models.SET_NULL)
     # Scheduling details
     scheduled_time = models.TimeField(blank=True, null=True)
     scheduled_date = models.DateField(blank=True, null=True)

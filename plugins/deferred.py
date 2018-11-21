@@ -22,7 +22,7 @@ import datetime as dt
 from django.utils.timezone import get_current_timezone
 
 from gtd.models import Node, TodoState
-from plugins import BaseMessageHandler
+from plugins.handler import BaseMessageHandler
 
 class MessageHandler(BaseMessageHandler):
     """

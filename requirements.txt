@@ -1,8 +1,7 @@
-future==0.16
-django==1.8
-django-mptt==0.8
-httplib2==0.9
-python-dateutil==2.5
+django==2.0
+django-mptt
+httplib2
+python-dateutil
 pytz
-djangorestframework==3.5
-requests==2.11
+djangorestframework==3.8.2
+requests

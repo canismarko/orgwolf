@@ -82,7 +82,7 @@ class AccountAssociation(models.Model):
         if handler is None:
             # Handler does not yet exist so create one on demand
             if self.handler_path == '':
-                from plugins import BaseAccountHandler
+                from plugins.handler import BaseAccountHandler
                 handler = BaseAccountHandler(self)
             else:
                 module = importlib.import_module(self.handler_path)

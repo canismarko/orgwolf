@@ -38,7 +38,7 @@ class Message(models.Model):
     subject = models.TextField()
     sender = models.TextField(blank=True)
     recipient = models.TextField(blank=True)
-    owner = models.ForeignKey(settings.AUTH_USER_MODEL)
+    owner = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     unread = models.BooleanField(default=True)
     handler_path = models.CharField(max_length=100, blank=True)
     in_inbox = models.BooleanField(default=True)
@@ -46,7 +46,8 @@ class Message(models.Model):
     message_text = models.TextField(blank=True)
     spawned_nodes = models.ManyToManyField('gtd.Node', blank=True)
     source_node = models.OneToOneField('gtd.Node', null=True, blank=True,
-                                       related_name='deferred_message')
-
+                                       related_name='deferred_message',
+                                       on_delete=models.CASCADE)
+    
     def __str__(self):
         return self.subject

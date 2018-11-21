@@ -29,7 +29,8 @@ import pytz
 
 from gtd.models import Node, TodoState
 from orgwolf.models import OrgWolfUser as User
-from plugins import orgmode, deferred, BaseMessageHandler
+from plugins import orgmode, deferred
+from plugins.handler import BaseMessageHandler
 from wolfmail.models import Message
 
 class RegexTest(TestCase):
