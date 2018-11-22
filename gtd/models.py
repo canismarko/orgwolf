@@ -44,7 +44,6 @@ from orgwolf import settings
 from orgwolf.models import Color, HTMLEscaper, OrgWolfUser as User
 from wolfmail.models import Message
 
-
 @python_2_unicode_compatible
 class TodoState(models.Model):
     class_size = models.IntegerField(default=0)
@@ -54,7 +53,7 @@ class TodoState(models.Model):
     closed = models.BooleanField(default=False)
     # No owner means system default
     owner = models.ForeignKey(
-        settings.AUTH_USER_MODEL,
+        User,
         blank=True, null=True, on_delete=models.SET_NULL)
     order = models.IntegerField(default=50)
     _color_rgb = models.IntegerField(default=0x000000)
@@ -132,7 +131,7 @@ class Tag(models.Model):
     display = models.CharField(max_length=100)
     tag_string = models.CharField(max_length=10, unique=True)
     # user that created this tag (no owner means built-in tag)
-    owner = models.ForeignKey(settings.AUTH_USER_MODEL, blank=True, null=True,
+    owner = models.ForeignKey(User, blank=True, null=True,
                               on_delete=models.SET_NULL)
     public = models.BooleanField(default=True)
     def __str__(self):
@@ -154,7 +153,7 @@ class Location(Tag):
 class Contact(Tag):
     f_name = models.CharField(max_length = 50)
     l_name = models.CharField(max_length = 50)
-    user = models.ForeignKey(settings.AUTH_USER_MODEL, blank=True,
+    user = models.ForeignKey(User, blank=True,
                              null=True, on_delete=models.SET_NULL)
     # message_contact = models.ForeignKey('messaging.contact', blank=True, null=True) # TODO: uncomment this once messaging is implemented
     def __str__(self):
@@ -191,7 +190,7 @@ class Context(models.Model):
     """A context is a [Location], with [Tool]s and/or [Contact]s available"""
     name = models.CharField(max_length=100)
     owner = models.ForeignKey(
-        settings.AUTH_USER_MODEL,
+        User,
         blank=True, null=True, on_delete=models.SET_NULL)
     tools_available = models.ManyToManyField(
         'Tool',
@@ -263,7 +262,7 @@ class Context(models.Model):
 # TODO: Can this be deleted??
 class Priority(models.Model):
     priority_value = models.IntegerField(default=50)
-    owner = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    owner = models.ForeignKey(User, on_delete=models.CASCADE)
 
 
 @python_2_unicode_compatible
@@ -273,7 +272,7 @@ class FocusArea(models.Model):
     """
     # (no owner means built-in tag)
     owner = models.ForeignKey(
-        settings.AUTH_USER_MODEL, blank=True, null=True,
+        User, blank=True, null=True,
         on_delete=models.CASCADE)
     public = models.BooleanField(default=False)
     display = models.CharField(max_length=50)
@@ -363,12 +362,12 @@ class Node(MPTTModel):
     objects = NodeManager()
     # Database fields
     owner = models.ForeignKey(
-        settings.AUTH_USER_MODEL,
+        User,
         related_name="owned_node_set",
         null=True, blank=True, on_delete=models.SET_NULL)
-    users = models.ManyToManyField(settings.AUTH_USER_MODEL, blank=True)
+    users = models.ManyToManyField(User, blank=True)
     assigned = models.ForeignKey(
-        'Contact',
+        Contact,
         blank=True, null=True,
         related_name="assigned_node_set",
         on_delete=models.SET_NULL)

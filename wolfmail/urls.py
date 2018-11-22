@@ -26,8 +26,7 @@ from wolfmail.views import MessageView
 from django.contrib import admin
 admin.autodiscover()
 
-urlpatterns = patterns(
-    'wolfmail.views',
+urlpatterns = [
     url(r'^inbox/(?:\d+)?/?$', AngularView.as_view()),
-    url(r'^message(?:/(?P<pk>\d+))?/?$', MessageView.as_view(), name='messages')
-)
+    url(r'^message(?:/(?P<pk>\d+))?/?$', MessageView.as_view(), name='messages'),
+]

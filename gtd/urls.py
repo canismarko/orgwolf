@@ -29,14 +29,13 @@ admin.autodiscover()
 
 # from gtd.views import NodeView, TodoStateView, FocusAreaView, ContextView
 
-urlpatterns = patterns(
-    'gtd.views',
+urlpatterns = [
 
     # urls for angular pages
     url(r'^projects/?$', AngularView.as_view(), name='projects'),
     url(r'^actions(?:/\d+/[-A-Za-z0-9_]+)?/?$',
         AngularView.as_view(), name='list_display'),
-
+    
     # Urls for api entry points
     url(r'^nodes(?:/(?P<pk>\d+))?/?$',
         gtd_views.NodeView.as_view(), name='node_object'),
@@ -45,4 +44,4 @@ urlpatterns = patterns(
     url(r'^focusareas/?$', gtd_views.FocusAreaView.as_view(), name='focus_area_api'),
     url(r'^contexts/?$', gtd_views.ContextView.as_view(), name='context_api',),
     url(r'^locations/?$', gtd_views.LocationView.as_view(), name='location_api',),
-)
+]

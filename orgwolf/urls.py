@@ -23,29 +23,28 @@ from django.contrib.auth.views import login, logout
 from django.views.generic import TemplateView
 
 from orgwolf.views import (FeedbackView, AngularView, AccountAssociationView,
-                           UserView)
+                           UserView, home)
 
 # Uncomment the next two lines to enable the admin:
 from django.contrib import admin
 admin.autodiscover()
 
-urlpatterns = patterns(
-    '',
-
+urlpatterns = [
+    
     # Redirect to other apps
     url(r'^gtd/', include('gtd.urls')),
     url(r'^wolfmail/', include('wolfmail.urls')),
-
+    
     # Angular entry points
-    url(r'^$', 'orgwolf.views.home', name='home'),
+    url(r'^$', home, name='home'),
     url(r'^search/?', AngularView.as_view(), name="search"),
     url(r'^calendar/?', AngularView.as_view()),
     url(r'^accounts/settings/?$', AngularView.as_view()),
-
+    
     # API entry points
     url(r'^feedback/?$', FeedbackView.as_view(), name='feedback'),
-    url(r'^providers/?$', 'orgwolf.views.socialauth_providers'),
-    url(r'^accountassociations(?:/(?P<id>\d+))?/?$', AccountAssociationView.as_view()),
+    # url(r'^providers/?$', orgwolf.views.socialauth_providers),
+    # url(r'^accountassociations(?:/(?P<id>\d+))?/?$', AccountAssociationView.as_view()),
     url(r'^user/current/?$', UserView.as_view(), name='current_user'),
 
     # Authentication stuff
@@ -59,6 +58,6 @@ urlpatterns = patterns(
     url(r'^admin/', include(admin.site.urls)),
 
     # Javascript unit tests
-    url(r'^test/jasmine/$', TemplateView.as_view(template_name='jasmine.html'))
+    url(r'^test/jasmine/$', TemplateView.as_view(template_name='jasmine.html')),
 
-)
+]

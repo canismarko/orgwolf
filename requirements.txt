@@ -1,5 +1,5 @@
-django==1.9
-django-mptt
+django==1.10
+django-mptt==0.9.0
 httplib2
 python-dateutil
 pytz

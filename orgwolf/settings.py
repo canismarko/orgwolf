@@ -30,7 +30,6 @@ https://docs.djangoproject.com/en/1.10/ref/settings/
 """
 
 import os
-from django.core.exceptions import ImproperlyConfigured
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -43,7 +42,6 @@ SECRET_KEY = 'g84!3q$w1i$gydv3lua_tq1q#190h2w_ao07lnbrojczm)el5-'
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
-TEMPLATE_DEBUG = DEBUG
 INTERNAL_IPS = ['127.0.0.1', 'localhost']
 
 LOCAL_NET = False
@@ -96,6 +94,7 @@ TEMPLATES = [
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
             ],
+            'debug': DEBUG,
         },
     },
 ]
@@ -193,24 +192,6 @@ MIDDLEWARE = [
 # https://docs.djangoproject.com/en/1.10/howto/static-files/
 
 STATIC_URL = '/static/'
-
-# # List of callables that know how to import templates from various sources.
-# LOADERS_TEMP = (
-#         'django.template.loaders.filesystem.Loader',
-#         'django.template.loaders.app_directories.Loader',
-#         'django.template.loaders.eggs.Loader',
-# )
-# if DEBUG:
-#     TEMPLATE_LOADERS = LOADERS_TEMP
-# else:
-#     TEMPLATE_LOADERS = (
-#         ('django.template.loaders.cached.Loader', LOADERS_TEMP),
-#     )
-
-# TEMPLATE_DIRS = [
-#     os.path.join(BASE_DIR, "templates"),
-# ]
-
 
 # Import any local settings
 try:
