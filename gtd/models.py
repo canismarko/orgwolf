@@ -378,7 +378,7 @@ class Node(MPTTModel):
         blank=True, null=True, on_delete=models.SET_NULL)
     archived = models.BooleanField(default=False)
     text = models.TextField(blank=True)
-    parent = models.ForeignKey(
+    parent = TreeForeignKey(
         'self',
         blank=True, null=True,
         related_name='children',

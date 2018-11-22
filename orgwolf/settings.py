@@ -55,6 +55,10 @@ AUTH_USER_MODEL = 'orgwolf.OrgWolfUser'
 # Application definition
 
 INSTALLED_APPS = [
+    'gtd.apps.GTDConfig',
+    'orgwolf.apps.OrgwolfConfig',
+    'wolfmail.apps.WolfmailConfig',
+    'plugins.apps.PluginsConfig',
     'django.contrib.admin',
     'django.contrib.admindocs',
     'django.contrib.auth',
@@ -64,13 +68,9 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'rest_framework',
     'mptt',
-    'orgwolf',
-    'gtd',
-    'plugins',
-    'wolfmail',
 ]
 
-MIDDLEWARE_CLASSES = [
+MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
