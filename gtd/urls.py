@@ -18,7 +18,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #######################################################################
 
-from django.conf.urls import patterns, url
+from django.conf.urls import url
 
 from gtd import views as gtd_views
 from orgwolf.views import AngularView

@@ -17,7 +17,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #######################################################################
 
-from django.conf.urls import patterns, url
+from django.conf.urls import url
 
 from orgwolf.views import AngularView
 from wolfmail.views import MessageView

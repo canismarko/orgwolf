@@ -666,6 +666,8 @@ class FocusAreaAPI(TestCase):
             expected,
             ordered=False,
         )
+        # Test through a request object
+        self.client.get('/gtd/focusareas?is_visible=True')
 
 
 class TodoStateAPI(TestCase):

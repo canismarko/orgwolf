@@ -87,7 +87,7 @@ class TodoState(models.Model):
         )
     class Meta():
         ordering = ['order']
-
+    
     @staticmethod
     def get_visible(user=AnonymousUser()):
         """Returns a queryset containing all the TodoState objects
@@ -155,12 +155,13 @@ class Contact(Tag):
     l_name = models.CharField(max_length = 50)
     user = models.ForeignKey(User, blank=True,
                              null=True, on_delete=models.SET_NULL)
-    # message_contact = models.ForeignKey('messaging.contact', blank=True, null=True) # TODO: uncomment this once messaging is implemented
+    
     def __str__(self):
         if self.f_name or self.l_name:
             return '{0} {1}'.format(self.f_name, self.l_name)
         else:
             return self.user.__str__()
+    
     def __repr__(self):
         return '<Contact: {0}>'.format(self.__str__())
 
@@ -204,10 +205,10 @@ class Context(models.Model):
         'Contact',
         blank=True,
         related_name='including_contexts_set')
-
+    
     def __str__(self):
         return self.name
-
+    
     def apply(self, queryset="blank"):
         """
         Filter a query set for this context.
@@ -292,10 +293,8 @@ class FocusArea(models.Model):
 
 
 class NodeQuerySet(query.QuerySet):
-
     def assigned(self, user, get_archived=False):
-        """Get all the objects that `user` is responsible for
-        """
+        """Get all the objects that `user` is responsible for."""
         if user.is_authenticated():
             qs = self
             if not get_archived:
@@ -307,11 +306,11 @@ class NodeQuerySet(query.QuerySet):
             return assigned | owned
         else:
             return Node.objects.filter(owner=None)
-
+    
     def mine(self, user, get_archived=False):
-        """
-        Get all the objects that have `user` as the owner or assigned,
-        or have `user` in the related_users relationship.
+        """Get all the objects that have `user` as the owner or assigned, or
+        have `user` in the related_users relationship.
+        
         """
         qs = self
         if user.is_anonymous():
@@ -326,10 +325,12 @@ class NodeQuerySet(query.QuerySet):
         if not get_archived:
             qs = qs.filter(archived=False)
         return qs
-
+    
     def owned(self, user, get_archived=False):
-        """Get all the objects owned by the user with some optional
-        filters applied"""
+        """Get all the objects owned by the user with some optional filters
+        applied
+        
+        """
         qs = self
         if not get_archived:
             qs = qs.filter(archived=False)
@@ -344,10 +345,25 @@ class NodeManager(TreeManager):
     """Object manager for for retrieving nodes."""
     def get_queryset(self):
         return NodeQuerySet(self.model)
+    
+    def assigned(self, *args, **kwargs):
+        return self.all().assigned(*args, **kwargs)
+    
+    def mine(self, *args, **kwargs):
+        return self.all().mine(*args, **kwargs)
+    
+    def owned(self, *args, **kwargs):
+        return self.all().owned(*args, **kwargs)
 
-    def __getattr__(self, name):
-        """Ensure that methods of the queryset are callable by the manager"""
-        return getattr(self.get_queryset(), name)
+
+# class NodeManager(TreeManager):
+#     """Object manager for for retrieving nodes."""
+#     def get_queryset(self):
+#         return NodeQuerySet(self.model)
+
+#     def __getattr__(self, name):
+#         """Ensure that methods of the queryset are callable by the manager"""
+#         return getattr(self.get_queryset(), name)
 
 
 @python_2_unicode_compatible
@@ -360,6 +376,8 @@ class Node(MPTTModel):
     auto_update = False
     auto_close = True
     objects = NodeManager()
+    # objects = TreeManager.from_queryset(NodeQuerySet)
+    # objects = NodeManager()
     # Database fields
     owner = models.ForeignKey(
         User,
@@ -555,7 +573,7 @@ class Node(MPTTModel):
             tag_Q = tag_Q | Q(tag_string = tag_string)
         tags_qs = tags_qs.filter(tag_Q)
         return tags_qs
-
+    
     # Methods return miscellaneous information
     @staticmethod
     def search(query, user, page=0, count=None):
