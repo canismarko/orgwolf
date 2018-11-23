@@ -49,7 +49,7 @@ class MessageView(APIView):
     RESTFUL API for interacting with wolfmail.models.Message objects.
     """
     def get_queryset(self, request):
-        data = request.GET.copy()
+        data = dict(request.GET)
         # convert filter by rcvd_date__lte to proper datetime object
         rcvd_date = False
         if data.get('rcvd_date__lte', False):
@@ -64,7 +64,11 @@ class MessageView(APIView):
         else:
             qs = Message.objects.filter(owner=request.user)
         # Filter by get params
-        qs = qs.filter(**data.dict()).select_related('source_node')
+        if 'in_inbox' in data:
+            data['in_inbox'] = bool(data['in_inbox'][0])
+        # if 'rcvd_date__lte' in params:
+        #     params['in_inbox'] = bool(params['in_inbox'][0])
+        qs = qs.filter(**data).select_related('source_node')
         return qs
 
     def get(self, request, pk=None):

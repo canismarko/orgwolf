@@ -45,7 +45,9 @@ class MessageAPI(TestCase):
             transform=lambda x: x.subject,
             ordered=False,
         )
-
+        # Test with client
+        self.client.get('/wolfmail/message?in_inbox=true&rcvd_date__lte=2018-11-23')
+    
     def test_get_inbox_anonymous(self):
         self.client.logout()
         response = self.client.get(self.url, {'in_inbox': True})
