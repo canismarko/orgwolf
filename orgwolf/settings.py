@@ -34,15 +34,15 @@ import os
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
-# Quick-start development settings - unsuitable for production
-# See https://docs.djangoproject.com/en/1.10/howto/deployment/checklist/
-
-# SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'g84!3q$w1i$gydv3lua_tq1q#190h2w_ao07lnbrojczm)el5-'
-
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 INTERNAL_IPS = ['127.0.0.1', 'localhost']
+
+# SECURITY WARNING: keep the secret key used in production secret!
+# Make this long and unique, and don't share it with anybody.
+# This should be set in local_settings.py for deployment
+if DEBUG == True:
+    SECRET_KEY = '(uo8+av7_)vmmd9hb^nd4(=3&amp;qh97!zn+vffxa@8pd+jti!slq'
 
 LOCAL_NET = False
 ENABLE_CSS = True
@@ -111,21 +111,7 @@ DATABASES = {
     }
 }
 
-# Password validation
-# https://docs.djangoproject.com/en/1.10/ref/settings/#auth-password-validators
-
 TEST_RUNNER = 'django.test.runner.DiscoverRunner'
-
-try:
-    from local_settings import *
-except ImportError:
-    pass
-
-
-# Make this long and unique, and don't share it with anybody.
-# This should be set in local_settings.py for deployment
-if DEBUG == True:
-    SECRET_KEY = '(uo8+av7_)vmmd9hb^nd4(=3&amp;qh97!zn+vffxa@8pd+jti!slq'
 
 # Enforce HTTPS
 if DEBUG == False:
@@ -142,6 +128,8 @@ LOGGING = {
     }
 }
 
+# Password validation
+# https://docs.djangoproject.com/en/1.11/ref/settings/#auth-password-validators
 AUTH_PASSWORD_VALIDATORS = [
     {
         'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
@@ -169,24 +157,6 @@ USE_I18N = True
 USE_L10N = True
 
 USE_TZ = True
-
-MIDDLEWARE = [
-    'django.middleware.security.SecurityMiddleware',
-    'django.contrib.sessions.middleware.SessionMiddleware',
-    'django.middleware.common.CommonMiddleware',
-    'django.middleware.csrf.CsrfViewMiddleware',
-    'django.contrib.auth.middleware.AuthenticationMiddleware',
-    'django.contrib.messages.middleware.MessageMiddleware',
-    'django.middleware.clickjacking.XFrameOptionsMiddleware',
-]
-
-# MIDDLEWARE_CLASSES = [
-#     'django.middleware.common.CommonMiddleware',
-#     'django.contrib.sessions.middleware.SessionMiddleware',
-#     'django.middleware.csrf.CsrfViewMiddleware',
-#     'django.contrib.auth.middleware.AuthenticationMiddleware',
-#     'django.contrib.messages.middleware.MessageMiddleware',
-#     ]
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/1.10/howto/static-files/
