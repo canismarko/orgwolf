@@ -93,7 +93,7 @@ class TodoState(models.Model):
         """Returns a queryset containing all the TodoState objects
         that are currently in play."""
         query = Q(owner=None)
-        if not user.is_anonymous():
+        if not user.is_anonymous:
             query = query | Q(owner=user)
         return TodoState.objects.filter(query)
 
@@ -253,7 +253,7 @@ class Context(models.Model):
     @staticmethod
     def get_visible(user, related=[]):
         """Return all the Context objects visible to this user"""
-        if user.is_authenticated():
+        if user.is_authenticated:
             qs = Context.objects.filter(Q(owner=user)|Q(owner=None))
         else:
             qs = Context.objects.filter(Q(owner=None))
@@ -284,7 +284,7 @@ class FocusArea(models.Model):
     def get_visible(user=AnonymousUser()):
         """Return a queryset of focusareas that the user can subscribe to"""
         query = Q(owner=None)
-        if not user.is_anonymous():
+        if not user.is_anonymous:
             query = query | Q(owner=user)
         return FocusArea.objects.filter(query)
 
@@ -295,7 +295,7 @@ class FocusArea(models.Model):
 class NodeQuerySet(query.QuerySet):
     def assigned(self, user, get_archived=False):
         """Get all the objects that `user` is responsible for."""
-        if user.is_authenticated():
+        if user.is_authenticated:
             qs = self
             if not get_archived:
                 qs = qs.filter(archived=False)
@@ -313,7 +313,7 @@ class NodeQuerySet(query.QuerySet):
         
         """
         qs = self
-        if user.is_anonymous():
+        if user.is_anonymous:
             qs = qs.filter(owner=None)
         else:
             owned = Q(owner=user)
@@ -334,7 +334,7 @@ class NodeQuerySet(query.QuerySet):
         qs = self
         if not get_archived:
             qs = qs.filter(archived=False)
-        if user.is_authenticated():
+        if user.is_authenticated:
             qs = qs.filter(owner=user)
         else:
             qs = Node.objects.none()
@@ -666,8 +666,11 @@ class Node(MPTTModel):
                 focus_areas_to_add = list(new_focus_areas-curr_focus_areas)
                 self.focus_areas.add(*focus_areas_to_add)
                 self.focus_areas.remove(*focus_areas_to_rm)
-            # Set other things
+            elif key in ('focus_areas', 'users'):
+                # Set many-to-many sets
+                getattr(self, key).set(value)
             else:
+                # Set other things
                 setattr(self, key, value)
 
     # Override superclass save methods
@@ -879,15 +882,17 @@ class NodeRepetition(models.Model):
     The handlers for the Node class will create instances of
     this class when their state is changed.
     """
-    node = models.ForeignKey('Node')
+    node = models.ForeignKey('Node', on_delete=models.CASCADE)
     original_todo_state = models.ForeignKey(
         'TodoState',
         related_name='repetitions_original_set',
-        blank=True,
-        null=True)
+        blank=True, null=True,
+        on_delete=models.SET_NULL,
+    )
     new_todo_state = models.ForeignKey(
         'TodoState', related_name='repetitions_new_set',
-        blank=True, null=True)
+        blank=True, null=True,
+        on_delete=models.SET_NULL)
     timestamp = models.DateTimeField()
     def __str__(self):
         string = ''

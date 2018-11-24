@@ -22,7 +22,7 @@ import datetime as dt
 import json
 import requests
 
-from django.core.urlresolvers import reverse
+from django.urls import reverse
 from django.db import IntegrityError
 from django.shortcuts import render_to_response, redirect
 from django.template import RequestContext

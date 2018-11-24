@@ -59,7 +59,7 @@ class MessageView(APIView):
                 dt.time(23, 59, 59, tzinfo=get_current_timezone())
             )
         # Check for user authentication status
-        if request.user.is_anonymous():
+        if request.user.is_anonymous:
             qs = Message.objects.none()
         else:
             qs = Message.objects.filter(owner=request.user)

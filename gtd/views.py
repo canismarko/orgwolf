@@ -28,7 +28,7 @@ import re
 from django.contrib.auth.decorators import login_required
 from django.core import serializers
 from django.core.exceptions import FieldError
-from django.core.urlresolvers import reverse
+from django.urls import reverse
 from django.db.models import Q
 from django.db.models.query import QuerySet
 from django.http import (HttpResponse, Http404,
@@ -111,7 +111,7 @@ class NodeView(APIView):
         is_many = isinstance(nodes, QuerySet)
         serializer = Serializer(nodes, many=is_many, request=request)
         return Response(serializer.data)
-
+    
     def get_queryset(self, request, *args, **kwargs):
         """
         Return a queryset for regular GET queries. If a context
@@ -122,14 +122,15 @@ class NodeView(APIView):
         M2M = ['todo_state'] # For filtering on arrays
         nodes = Node.objects.mine(request.user, get_archived=True)
         get_dict = request.GET.copy()
+        # get_dict = dict(request.GET)
         parent_id = get_dict.get('parent_id', None)
         if parent_id == '0':
             nodes = nodes.filter(parent=None)
             get_dict.pop('parent_id')
         # Apply each criterion to the queryset
         for key in get_dict.keys():
-            if key in BOOLS and get_dict[key] == 'false':
-                query = {key: False}
+            if key in BOOLS:
+                query = {key: False if get_dict[key] == 'false' else True}
             elif key in M2M:
             # Convert to (param__in=[]) style list filtering
                 value_list = get_dict.getlist(key)
@@ -225,7 +226,7 @@ class NodeView(APIView):
             return HttpResponseNotAllowed(['GET', 'PUT'])
         # Create new node
         self.node = Node()
-        if not request.user.is_anonymous():
+        if not request.user.is_anonymous:
             self.node.owner = request.user
         self.node.save()
         # Set fields (ignore mptt fields for new nodes)
@@ -241,7 +242,7 @@ class NodeView(APIView):
         serializer = NodeSerializer(self.node, request=request)
         data = serializer.data
         # Don't keep nodes sent via the public interface
-        if request.user.is_anonymous():
+        if request.user.is_anonymous:
             self.node.delete()
         return Response(data)
 
@@ -270,8 +271,8 @@ class NodeView(APIView):
         # Check the permissions of the Node
         node = get_object_or_404(Node, pk=pk)
         access = node.access_level(request.user)
-        if ((request.user.is_anonymous() and node.owner is not None) or
-            (not request.user.is_anonymous() and access != 'write')):
+        if ((request.user.is_anonymous and node.owner is not None) or
+            (not request.user.is_anonymous and access != 'write')):
             # Not authorized
             return HttpResponse(
                 json.dumps({'status': 'failure',
@@ -279,7 +280,7 @@ class NodeView(APIView):
                 status=401)
         # Update and return the Node
         node.set_fields(data)
-        if not request.user.is_anonymous():
+        if not request.user.is_anonymous:
             node.save()
             node = Node.objects.get(pk=node.pk)
         serializer = NodeSerializer(node, request=request)

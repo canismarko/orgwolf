@@ -30,7 +30,7 @@ import json
 from django.contrib.auth.models import AnonymousUser
 from django.core import serializers
 from django.core.exceptions import ValidationError
-from django.core.urlresolvers import reverse
+from django.urls import reverse
 from django.db.models import Q
 from django.db.models.query import QuerySet
 from django.http import Http404
@@ -1366,6 +1366,11 @@ class NodeAPI(TestCase):
         self.assertTrue(
             r['read_only']
         )
+    
+    def test_get_archived_nodes(self):
+        """Passing archived='true, doesn't parse the JSON properly."""
+        response = self.client.get('/gtd/nodes?archived=true')
+        self.assertEqual(response.status_code, 200)
 
     def test_json_put(self):
         """Check if setting attributes by ajax works as expected"""

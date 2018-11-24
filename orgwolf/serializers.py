@@ -31,7 +31,7 @@ class UserSerializer(serializers.ModelSerializer):
 
     def get_name(self, user):
         """Return the users full name (or 'Guest' if anonymous)"""
-        if user.is_anonymous():
+        if user.is_anonymous:
             name = 'Guest'
         else:
             name = "{f_name} {l_name}".format(f_name=user.first_name,

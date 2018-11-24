@@ -66,7 +66,7 @@ class AccountAssociation(models.Model):
     """
     Hold a relationship between a social account (eg Google) and a User.
     """
-    ow_user = models.ForeignKey(OrgWolfUser)
+    ow_user = models.ForeignKey(OrgWolfUser, on_delete=models.CASCADE)
     access_token = models.TextField(blank=True)
     handler_path = models.CharField(max_length=100)
     remote_id = models.CharField(max_length=100)
