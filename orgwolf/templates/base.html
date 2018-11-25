@@ -57,6 +57,7 @@
 
     <link rel="stylesheet" type="text/css"
 	  href="{% static 'orgwolf/social/auth-buttons.css' %}" />
+    {% if debug %}
     <link rel="stylesheet/less" type="text/css"
 	  href="{% static 'orgwolf/orgwolf.less' %}" />
     <link rel="stylesheet/less" type="text/css"
@@ -65,6 +66,10 @@
       less = { logLevel: 1 }
     </script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/less.js/1.7.0/less.min.js" />
+    {% else %}
+    <link rel="stylesheet" type="text/css"
+          href="{% static 'orgwolf/orgwolf.css' %}" />
+    {% endif %}
 
     {% if local_net %}
     <!-- <script src="{% static 'modernizr.min.js"></script> -->

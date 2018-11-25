@@ -35,20 +35,26 @@ import os
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+if os.environ['ORGWOLF_DEBUG'] in ('False', 'false', False):
+    DEBUG = False
+else:
+    DEBUG = True
+
 INTERNAL_IPS = ['127.0.0.1', 'localhost']
 
 # SECURITY WARNING: keep the secret key used in production secret!
 # Make this long and unique, and don't share it with anybody.
 # This should be set in local_settings.py for deployment
-if DEBUG == True:
+if DEBUG:
     SECRET_KEY = '(uo8+av7_)vmmd9hb^nd4(=3&amp;qh97!zn+vffxa@8pd+jti!slq'
+else:
+    SECRET_KEY = os.environ['ORGWOLF_SECRET_KEY']
 
 LOCAL_NET = False
 ENABLE_CSS = True
 ENABLE_JS = True
 
-ALLOWED_HOSTS = ['localhost', '127.0.0.1']
+ALLOWED_HOSTS = ['localhost', '127.0.0.1', 'testing.ekjye5hmvq.us-east-2.elasticbeanstalk.com']
 
 AUTH_USER_MODEL = 'orgwolf.OrgWolfUser'
 
@@ -162,6 +168,7 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/1.10/howto/static-files/
 
 STATIC_URL = '/static/'
+STATIC_ROOT = os.path.join(BASE_DIR, "static")
 
 # Import any local settings
 try:
