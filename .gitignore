@@ -12,7 +12,7 @@ venv/
 htmlcov/
 
 # Collected static files
-www/*
+static/
 
 # Elastic Beanstalk Files
 .elasticbeanstalk/*

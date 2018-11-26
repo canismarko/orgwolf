@@ -34,6 +34,21 @@ Proper git usage is outside the scope of this document. In the interest of helpi
 + `git commit -a` - create a new commit to "save" your changes
 + `git push` - upload your committed changes to origin. Note you need github write access to modify that repo.
 
-Installation
-------------
+Deployment
+----------
 
+The following environmental variables will be useful for preparing a deployment.
+
+```bash
+ORGWOLF_DEBUG=False
+ORGWOLF_SECRET_KEY=dw$ts6i^58#mb9p # Make it much longer
+ORGWOLF_DB_ENGINE=django.db.backends.mysql
+ORGWOLF_DB_NAME=orgwolf
+ORGWOLF_DB_USER=my_username
+ORGWOLF_DB_PASSWORD=correcthorsebatterystaple
+ORGWOLF_DB_HOST=127.0.0.1
+ORGWOLF_DB_PORT=1433
+ORGWOLF_DB_CONN_MAX_AGE=0
+ORGWOLF_LOGFILE=/var/log/orgwolf.log
+ORGWOLF_STATIC_ROOT=/usr/local/orgwolf-static/
+```

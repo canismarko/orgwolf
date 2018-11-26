@@ -2,7 +2,7 @@
 Django settings for orgwolf project.
 
 #######################################################################
-# Copyright 2012 Mark Wolf
+# Copyright 2012 Mark Wolfman
 #
 # This file is part of OrgWolf.
 #
@@ -31,11 +31,13 @@ https://docs.djangoproject.com/en/1.10/ref/settings/
 
 import os
 
+from django.core.exceptions import ImproperlyConfigured
+
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 # SECURITY WARNING: don't run with debug turned on in production!
-if os.environ['ORGWOLF_DEBUG'] in ('False', 'false', False):
+if os.environ.get('ORGWOLF_DEBUG', True) in ('False', 'false', False):
     DEBUG = False
 else:
     DEBUG = True
@@ -48,18 +50,22 @@ INTERNAL_IPS = ['127.0.0.1', 'localhost']
 if DEBUG:
     SECRET_KEY = '(uo8+av7_)vmmd9hb^nd4(=3&amp;qh97!zn+vffxa@8pd+jti!slq'
 else:
-    SECRET_KEY = os.environ['ORGWOLF_SECRET_KEY']
+    try:
+        SECRET_KEY = os.environ['ORGWOLF_SECRET_KEY']
+    except KeyError:
+        raise ImproperlyConfigured("Set environment variable ``ORGWOLF_SECRET_KEY`` "
+                                   "to a random string.")
+
 
 LOCAL_NET = False
 ENABLE_CSS = True
 ENABLE_JS = True
 
-ALLOWED_HOSTS = ['localhost', '127.0.0.1', 'testing.ekjye5hmvq.us-east-2.elasticbeanstalk.com']
+ALLOWED_HOSTS = ['localhost', '127.0.0.1', 'orgwolf.com', 'www.orgwolf.com']
 
 AUTH_USER_MODEL = 'orgwolf.OrgWolfUser'
 
 # Application definition
-
 INSTALLED_APPS = [
     'gtd.apps.GTDConfig',
     'orgwolf.apps.OrgwolfConfig',
@@ -110,29 +116,60 @@ WSGI_APPLICATION = 'orgwolf.wsgi.application'
 
 # Database
 # https://docs.djangoproject.com/en/1.10/ref/settings/#databases
+db_engine = os.environ.get('ORGWOLF_DB_ENGINE', 'django.db.backends.sqlite3')
+db_name = os.environ.get('ORGWOLF_DB_NAME', os.path.join(BASE_DIR, 'orgwolf-dev.db'))
+db_user = os.environ.get('ORGWOLF_DB_USER', '')
+db_password = os.environ.get('ORGWOLF_DB_PASSWORD', '')
+db_host = os.environ.get('ORGWOLF_DB_HOST', '')
+db_port = os.environ.get('ORGWOLF_DB_PORT', '')
+db_conn_max_age = os.environ.get('ORGWOLF_DB_CONN_MAX_AGE', '')
+
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': os.path.join(BASE_DIR, 'orgwolf-dev.db'),
+        'ENGINE': db_engine,
+        'NAME': db_name,
+        'USER': db_user,
+        'PASSWORD': db_password,
+        'HOST': db_host,
+        'PORT': db_port,
+        'CONN_MAX_AGE': int(db_conn_max_age),
     }
 }
 
 TEST_RUNNER = 'django.test.runner.DiscoverRunner'
 
 # Enforce HTTPS
-if DEBUG == False:
+if not DEBUG:
     SESSION_COOKIE_SECURE = True
     SESSION_COOKIE_SECURE = False
 
-LOGGING = {
-    'version': 1,
-    'disable_existing_loggers': False,
-    'filters': {
-        'require_debug_false': {
-            '()': 'django.utils.log.RequireDebugFalse'
-        },
-    }
-}
+_log_file = os.environ.get('ORGWOLF_LOGFILE', None)
+if _log_file is not None:
+    LOGGING = {
+        'version': 1,
+        'disable_existing_loggers': False,
+        'filters': {
+            'require_debug_false': {
+                '()': 'django.utils.log.RequireDebugFalse'
+                },
+            },
+        'handlers': {
+            'file': {
+                'level': 'DEBUG',
+                'class': 'logging.handlers.RotatingFileHandler',
+                'maxBytes': 1024*1024*5, # 5 MB
+                'backupCount': 5,
+                'filename': _log_file,
+                },
+            },
+        'loggers': {
+            '': {
+                'handlers': ['file'],
+                'level': 'INFO',
+                'propagate': True,
+                },
+            },
+        }
 
 # Password validation
 # https://docs.djangoproject.com/en/1.11/ref/settings/#auth-password-validators
@@ -166,12 +203,7 @@ USE_TZ = True
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/1.10/howto/static-files/
-
 STATIC_URL = '/static/'
-STATIC_ROOT = os.path.join(BASE_DIR, "static")
-
-# Import any local settings
-try:
-    from local_settings import *
-except ImportError:
-    pass
+_static_root = os.environ.get('ORGWOLF_STATIC_ROOT', None)
+if _static_root is not None:
+    STATIC_ROOT = _static_root
