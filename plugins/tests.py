@@ -239,7 +239,7 @@ class BaseMessageHandlerTest(TestCase):
             node.text,
             message.message_text
         )
-
+    
     def test_defer_message(self):
         """Verify that a message can be rescheduled for the future."""
         msg = Message(

@@ -1,7 +1,4 @@
-import importlib
-
 from django.db import models
-from django.dispatch import receiver
 
 from gtd.models import Node
 from wolfmail.models import Message
@@ -13,11 +10,11 @@ class BaseMessageHandler():
     should define exactly one subclass of BaseMessageHandler
     called 'MessageHandler'.
     """
-
+    
     def __init__(self, msg):
         """Set the msg as an attribute for later analysis"""
         self._msg = msg
-
+    
     def create_node(self):
         """
         Creates and returns a new Node instance. It is not saved
@@ -27,33 +24,20 @@ class BaseMessageHandler():
         new_node.owner = self._msg.owner
         new_node.text = self._msg.message_text
         return new_node
-
+    
     def archive(self):
         """
         Removes the message from the inbox
         """
         self._msg.in_inbox = False
         self._msg.save()
-
+    
     def defer(self, new_date):
         """
         Reschedule the message to appear at a new time (presumably in the future.
         """
         self._msg.rcvd_date = new_date
         self._msg.save()
-
-
-@receiver(models.signals.post_init, sender=Message)
-def add_handler(sender, instance, **kwargs):
-    """Add the appropriate Handler() object as an attribute"""
-    if instance.handler_path == '':
-        instance.handler = BaseMessageHandler(instance)
-    else:
-        try:
-            module = importlib.import_module(instance.handler_path)
-            instance.handler = module.MessageHandler(instance)
-        except AttributeError:
-            instance.handler = BaseMessageHandler(instance)
 
 
 class BaseAccountHandler():

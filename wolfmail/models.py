@@ -29,11 +29,11 @@ from orgwolf import settings
 
 @python_2_unicode_compatible
 class Message(models.Model):
-    """
-    Class for all messages that get passed around, either incoming or
-    outgoing.  Most of the functionality is actually implemented in
-    the self.handler attribute that is created on __init__() from the
+    """Class for all messages that get passed around, either incoming or
+    outgoing. Most of the functionality is actually implemented in the
+    self.handler attribute that is created on __init__() from the
     self.handler_path field.
+    
     """
     subject = models.TextField()
     sender = models.TextField(blank=True)

@@ -91,7 +91,7 @@ class AccountAssociation(models.Model):
                 handler = module.AccountHandler(self)
             self._handler = handler
         return handler
-
+    
     class Meta:
         unique_together = ('ow_user', 'remote_id', 'handler_path')
 

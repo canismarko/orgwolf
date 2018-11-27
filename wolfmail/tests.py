@@ -10,6 +10,7 @@ from gtd.models import Node
 from orgwolf.models import OrgWolfUser as User
 from wolfmail.models import Message
 from wolfmail.serializers import InboxSerializer, MessageSerializer
+from wolfmail.views import MessageView
 
 
 class MessageAPI(TestCase):
@@ -82,7 +83,7 @@ class MessageAPI(TestCase):
             response.status_code,
             403
         )
-
+    
     def test_convert_dfrd_to_node(self):
         message = Message.objects.get(pk=1)
         node = message.source_node
@@ -253,7 +254,7 @@ class MessageAPI(TestCase):
             transform=lambda x: x.subject,
             ordered=False
         )
-
+    
     def test_post_new_message(self):
         data = {
             'subject': 'find a place for dinner',
