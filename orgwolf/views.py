@@ -64,7 +64,7 @@ class AngularView(TemplateView):
 
 
 def home(request):
-    if request.user.is_authenticated():
+    if request.user.is_authenticated:
         url = reverse(request.user.home)
     else:
         url = reverse('projects')

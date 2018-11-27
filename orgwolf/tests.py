@@ -251,3 +251,22 @@ class FeedbackAPI(TestCase):
             msg.message_text,
             data['body']
         )
+
+
+class OrgwolfViewTest(TestCase):
+    fixtures = ['test-users.json']
+    def test_home_view(self):
+        user = User.objects.get(pk=1)
+        home_url = reverse('home')
+        projects_url = reverse('projects')
+        result = self.client.get(home_url)
+        # Check that the view redirects to the default URL
+        self.assertEqual(result.status_code, 302)
+        self.assertEqual(result.url, projects_url)
+        # Check that a logged in user redirects to their preferred url
+        self.client.force_login(user=user)
+        user.home = 'list_display'
+        user.save()
+        result = self.client.get(home_url)
+        actions_url = reverse('list_display')
+        self.assertEqual(result.url, actions_url)
