@@ -329,10 +329,9 @@ class ContextView(APIView):
 class LocationView(generics.ListAPIView):
     """RESTful interaction with the gtd.models.Location object"""
     serializer_class = TagSerializer
-
+    
     def get_queryset(self):
-        print(self.request.user.is_authenticated())
-        if self.request.user.is_authenticated():
+        if self.request.user.is_authenticated:
             by_user = Q(owner=self.request.user)
         else:
             by_user = Q(owner=None)

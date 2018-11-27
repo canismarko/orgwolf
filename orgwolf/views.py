@@ -23,6 +23,7 @@ import json
 import requests
 
 from django.urls import reverse
+from django.urls.exceptions import NoReverseMatch
 from django.db import IntegrityError
 from django.shortcuts import render_to_response, redirect
 from django.template import RequestContext
@@ -64,9 +65,11 @@ class AngularView(TemplateView):
 
 
 def home(request):
-    if request.user.is_authenticated:
+    """Simple view that just points our visitor to the right place."""
+    try:
         url = reverse(request.user.home)
-    else:
+    except (NoReverseMatch, AttributeError):
+        # Fallback to a default view
         url = reverse('projects')
     return redirect(url)
 

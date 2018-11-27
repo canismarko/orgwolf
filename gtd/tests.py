@@ -49,7 +49,7 @@ from gtd.serializers import (NodeSerializer, NodeListSerializer,
 from gtd.shortcuts import order_nodes, load_fixture
 from gtd.templatetags.gtd_extras import escape_html
 from gtd.templatetags.gtd_extras import breadcrumbs
-from gtd.views import NodeView
+from gtd.views import NodeView, LocationView
 from orgwolf.models import OrgWolfUser as User
 from plugins.deferred import MessageHandler as DeferredMessageHandler
 from wolfmail.models import Message
@@ -713,6 +713,17 @@ class TodoStateAPI(TestCase):
         )
 
 
+class LocationAPI(TestCase):
+    def setUp(self):
+        self.factory = RequestFactory()
+        
+    def test_get(self):
+        request = self.factory.get(reverse('location_api'))
+        view = LocationView.as_view()
+        response = view(request)
+        self.assertEqual(response.status_code, 200)
+
+
 class ContextAPI(TestCase):
     fixtures = ['test-users.json', 'gtd-test.json', 'gtd-env.json']
     
@@ -798,7 +809,7 @@ class TodoStateRetrieval(TestCase):
     todo states.
     """
     fixtures = ['test-users.json', 'gtd-test.json', 'gtd-env.json']
-
+    
     def test_as_json(self):
         self.assertEqual(
             TodoState.as_json.__class__.__name__,

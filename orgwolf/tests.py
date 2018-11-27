@@ -20,12 +20,13 @@
 from __future__ import unicode_literals
 
 from django.urls import reverse
-from django.test import TestCase
+from django.test import TestCase, RequestFactory
 from django.contrib.auth.models import AnonymousUser
 
 from orgwolf.forms import RegistrationForm
 from orgwolf.models import OrgWolfUser as User, HTMLEscaper, AccountAssociation, JSONField
 from orgwolf.serializers import UserSerializer
+from orgwolf.views import home
 from plugins.handler import BaseAccountHandler
 from wolfmail.models import Message
 
@@ -255,6 +256,10 @@ class FeedbackAPI(TestCase):
 
 class OrgwolfViewTest(TestCase):
     fixtures = ['test-users.json']
+    
+    def setUp(self):
+        self.factory = RequestFactory()
+    
     def test_home_view(self):
         user = User.objects.get(pk=1)
         home_url = reverse('home')
@@ -270,3 +275,22 @@ class OrgwolfViewTest(TestCase):
         result = self.client.get(home_url)
         actions_url = reverse('list_display')
         self.assertEqual(result.url, actions_url)
+    
+    def test_bad_home_url(self):
+        """Test what happens if the user specifies a home url that doesn't
+        exist."""
+        # Create an authenticated user with a good request url
+        request = self.factory.get('/')
+        user = User(home='list_display')
+        request.user = user
+        # Check that the response redirects properly
+        response = home(request)
+        self.assertEqual(response.url, reverse('list_display'))
+        # Create an anonymous user with and check the default urlpatterns
+        request.user = AnonymousUser()
+        response = home(request)
+        self.assertEqual(response.url, reverse('projects'))
+        # Create an authenticated user with an invalid ``home`` field_group
+        request.user = User(home='nonsense_land!')
+        response = home(request)
+        self.assertEqual(response.url, reverse('projects'))

@@ -133,8 +133,12 @@ DATABASES = {
         'HOST': db_host,
         'PORT': db_port,
         'CONN_MAX_AGE': int(db_conn_max_age),
-    }
+        'OPTIONS': {}
+    },
 }
+# MYSQL may require special isolation level depending on its setup
+if db_engine == 'django.db.backends.mysql':
+    DATABASES['default']['OPTIONS']['isolation_level'] = 'repeatable read'
 
 TEST_RUNNER = 'django.test.runner.DiscoverRunner'
 
