@@ -19,7 +19,7 @@
 #######################################################################
 
 from django.conf.urls import include, url
-from django.contrib.auth.views import login, logout
+from django.contrib.auth.views import LoginView, LogoutView
 from django.views.generic import TemplateView
 
 from orgwolf.views import (FeedbackView, AngularView, AccountAssociationView,
@@ -48,8 +48,8 @@ urlpatterns = [
     url(r'^user/current/?$', UserView.as_view(), name='current_user'),
 
     # Authentication stuff
-    url(r'^accounts/login/$', login, name='login'),
-    url(r'^accounts/logout/$', logout),
+    url(r'^accounts/login/$', LoginView.as_view(), name='login'),
+    url(r'^accounts/logout/$', LogoutView.as_view(), name="logout"),
 
     #Uncomment the admin/doc line below to enable admin documentation
     # url(r'^admin/doc/',
