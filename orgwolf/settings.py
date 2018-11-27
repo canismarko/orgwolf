@@ -122,7 +122,7 @@ db_user = os.environ.get('ORGWOLF_DB_USER', '')
 db_password = os.environ.get('ORGWOLF_DB_PASSWORD', '')
 db_host = os.environ.get('ORGWOLF_DB_HOST', '')
 db_port = os.environ.get('ORGWOLF_DB_PORT', '')
-db_conn_max_age = os.environ.get('ORGWOLF_DB_CONN_MAX_AGE', '')
+db_conn_max_age = os.environ.get('ORGWOLF_DB_CONN_MAX_AGE', '0')
 
 DATABASES = {
     'default': {
