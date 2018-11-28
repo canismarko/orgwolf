@@ -1,54 +1,56 @@
+{% load static %}
 <html>
 
   <head>
     <title>Jasmine Test Runner</title>
 
-    <link rel="shortcut icon" type="image/png" href="{{ STATIC_URL }}bower/jasmine/images/jasmine_favicon.png">
+    <link rel="shortcut icon" type="image/png" href="{% static 'bower/jasmine/images/jasmine_favicon.png' %}">
 
     <link rel="stylesheet" type="text/css"
-	  href="{{ STATIC_URL }}bower/jasmine/lib/jasmine-core/jasmine.css">
+	  href="{% static 'bower/jasmine/lib/jasmine-core/jasmine.css' %}">
 
   </head>
   <body>
     <!-- Jasmine javascript files -->
-    <script src="{{ STATIC_URL }}bower/jasmine/lib/jasmine-core/jasmine.js"></script>
-    <script src="{{ STATIC_URL }}bower/jasmine/lib/jasmine-core/jasmine-html.js"></script>
-    <script src="{{ STATIC_URL }}bower/jasmine/lib/jasmine-core/boot.js"></script>
+    <script src="{% static 'bower/jasmine/lib/jasmine-core/jasmine.js' %}"></script>
+    <script src="{% static 'bower/jasmine/lib/jasmine-core/jasmine-html.js' %}"></script>
+    <script src="{% static 'bower/jasmine/lib/jasmine-core/boot.js' %}"></script>
 
     <!-- Libraries -->
-    <script src="{{ STATIC_URL }}bower/jquery/dist/jquery.js"></script>
-    <script src="{{ STATIC_URL }}bower/bootstrap/dist/js/bootstrap.js"></script>
-    <script src="{{ STATIC_URL }}bower/bootstrap-switch/build/js/bootstrap-switch.js"></script>
-    <script src="{{ STATIC_URL }}bower/angular/angular.js"></script>
-    <script src="{{ STATIC_URL }}bower/angular-animate/angular-animate.js"></script>
-    <script src="{{ STATIC_URL }}bower/angular-mocks/angular-mocks.js"></script>
-    <script src="{{ STATIC_URL }}bower/angular-resource/angular-resource.js"></script>
-    <script src="{{ STATIC_URL }}bower/angular-sanitize/angular-sanitize.js"></script>
-    <script src="{{ STATIC_URL }}bower/angular-cookies/angular-cookies.js"></script>
-    <script src="{{ STATIC_URL }}bower/angular-route/angular-route.js"></script>
-    <script src="{{ STATIC_URL }}bower/AngularJS-Toaster/toaster.js"></script>
-    <script src="{{ STATIC_URL }}bower/angular-bootstrap/ui-bootstrap-tpls.js"></script>
-    <script src="{{ STATIC_URL }}bower/angular-ui-calendar/src/calendar.js"></script>
+    <script src="{% static 'bower/jquery/dist/jquery.js' %}"></script>
+    <script src="{% static 'bower/bootstrap/dist/js/bootstrap.js' %}"></script>
+    <script src="{% static 'bower/bootstrap-switch/build/js/bootstrap-switch.js' %}"></script>
+    <script src="{% static 'bower/angular/angular.js' %}"></script>
+    <script src="{% static 'bower/angular-animate/angular-animate.js' %}"></script>
+    <script src="{% static 'bower/angular-mocks/angular-mocks.js' %}"></script>
+    <script src="{% static 'bower/angular-resource/angular-resource.js' %}"></script>
+    <script src="{% static 'bower/angular-sanitize/angular-sanitize.js' %}"></script>
+    <script src="{% static 'bower/angular-cookies/angular-cookies.js' %}"></script>
+    <script src="{% static 'bower/angular-route/angular-route.js' %}"></script>
+    <script src="{% static 'bower/AngularJS-Toaster/toaster.js' %}"></script>
+    <script src="{% static 'bower/angular-bootstrap/ui-bootstrap-tpls.js' %}"></script>
+    <script src="{% static 'bower/angular-ui-calendar/src/calendar.js' %}"></script>
 
     <!-- Orgwolf files -->
-    <script src="{{ STATIC_URL }}gtd-models.js"></script>
-    <script src="{{ STATIC_URL }}gtd-services.js"></script>
-    <script src="{{ STATIC_URL }}gtd-directives.js"></script>
-    <script src="{{ STATIC_URL }}gtd-filters.js"></script>
-    <script src="{{ STATIC_URL }}gtd-main.js"></script>
-    <script src="{{ STATIC_URL }}wolfmail-models.js"></script>
-    <script src="{{ STATIC_URL }}wolfmail-services.js"></script>
-    <script src="{{ STATIC_URL }}wolfmail-directives.js"></script>
-    <script src="{{ STATIC_URL }}wolfmail-filters.js"></script>
-    <script src="{{ STATIC_URL }}wolfmail-ctrl.js"></script>
-    <script src="{{ STATIC_URL }}orgwolf-services.js"></script>
-    <script src="{{ STATIC_URL }}orgwolf-filters.js"></script>
-    <script src="{{ STATIC_URL }}orgwolf-directives.js"></script>
+    <script src="{% static 'orgwolf.js' %}"></script>
+    <!-- <script src="{% static 'gtd-models.js' %}"></script> -->
+    <!-- <script src="{% static 'gtd-services.js' %}"></script> -->
+    <!-- <script src="{% static 'gtd-directives.js' %}"></script> -->
+    <!-- <script src="{% static 'gtd-filters.js' %}"></script> -->
+    <!-- <script src="{% static 'gtd-main.js' %}"></script> -->
+    <!-- <script src="{% static 'wolfmail-models.js' %}"></script> -->
+    <!-- <script src="{% static 'wolfmail-services.js' %}"></script> -->
+    <!-- <script src="{% static 'wolfmail-directives.js' %}"></script> -->
+    <!-- <script src="{% static 'wolfmail-filters.js' %}"></script> -->
+    <!-- <script src="{% static 'wolfmail-ctrl.js' %}"></script> -->
+    <!-- <script src="{% static 'orgwolf/orgwolf-services.js' %}"></script> -->
+    <!-- <script src="{% static 'orgwolf/orgwolf-filters.js' %}"></script> -->
+    <!-- <script src="{% static 'orgwolf/orgwolf-directives.js' %}"></script> -->
 
     <!-- include spec files here... -->
-    <script src="{{ STATIC_URL }}gtd-tests.js"></script>
-    <script src="{{ STATIC_URL }}wolfmail-tests.js"></script>
-    <script src="{{ STATIC_URL }}orgwolf-tests.js"></script>
+    <script src="{% static 'gtd-tests.js' %}"></script>
+    <script src="{% static 'wolfmail-tests.js' %}"></script>
+    <script src="{% static 'orgwolf/orgwolf-tests.js' %}"></script>
 
   </body>
 </html>

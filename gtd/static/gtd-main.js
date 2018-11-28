@@ -6,18 +6,18 @@ var test_headings, owConfig, HeadingFactory, outlineCtrl, listCtrl;
 * Angular module for all GTD components
 *
 **************************************************/
-var owMain = angular.module(
+angular.module(
     'owMain',
     ['ngAnimate', 'ngResource', 'ngSanitize', 'ngRoute', 'ngCookies',
      'ui.bootstrap', 'ui.calendar', 'toaster',
      'owServices', 'owDirectives', 'owFilters']
-);
+)
 
 /*************************************************
 * Angular routing
 *
 **************************************************/
-owMain.config(['$routeProvider', '$locationProvider', function($routeProvider, $locationProvider) {
+.config(['$routeProvider', '$locationProvider', function($routeProvider, $locationProvider) {
     $locationProvider.html5Mode({enabled: true, requireBase: false});
     $routeProvider
 	.when('/gtd/actions/:context_id?/:context_slug?', {
@@ -40,9 +40,9 @@ owMain.config(['$routeProvider', '$locationProvider', function($routeProvider, $
 	.when('/', {
 	    redirectTo: '/gtd/projects/'
 	});
-}]);
+}])
 
-owMain.config(['$httpProvider', '$locationProvider', function ($httpProvider, $locationProvider) {
+.config(['$httpProvider', '$locationProvider', function ($httpProvider, $locationProvider) {
     // Add custom headers to $http objects
     $httpProvider.defaults.headers.common['X-Request-With'] = 'XMLHttpRequest';
     // Add django CSRF token to all $http objects
@@ -73,26 +73,26 @@ owMain.config(['$httpProvider', '$locationProvider', function ($httpProvider, $l
 	    xhr.setRequestHeader('X-CSRFToken', csrftoken);
 	}
     });
-}]);
+}])
 
 /*************************************************
 * Handler sends google analytics tracking on
 * angular route change
 **************************************************/
-owMain.run(['$rootScope', '$location', function($rootScope, $location) {
+.run(['$rootScope', '$location', function($rootScope, $location) {
     $rootScope.$on('$routeChangeSuccess', function() {
 	// Only active if django DEBUG == True
 	if ( typeof ga !== 'undefined' ) {
 	    ga('send', 'pageview', {'page': $location.path()});
 	}
     });
-}]);
+}])
 
 /*************************************************
 * Angular controller for capturing quick thoughts
 * to the inbox
 **************************************************/
-owMain.controller('inboxCapture', ['$scope', '$rootScope', 'owWaitIndicator', function ($scope, $rootScope, owWaitIndicator) {
+.controller('inboxCapture', ['$scope', '$rootScope', 'owWaitIndicator', function ($scope, $rootScope, owWaitIndicator) {
     $scope.capture = function(e) {
 	// Send a captured inbox item to the server for processing
 	var text, data, $textbox;
@@ -121,13 +121,13 @@ owMain.controller('inboxCapture', ['$scope', '$rootScope', 'owWaitIndicator', fu
 	    }
 	);
     };
-}]);
+}])
 
 /*************************************************
 * Angular project ouline appliance controller
 *
 **************************************************/
-owMain.controller('nodeOutline', ['$scope', '$rootScope', '$http', '$resource', '$filter', 'Heading', '$location', '$anchorScroll', 'owWaitIndicator', 'activeHeading', function outlineCtrl($scope, $rootScope, $http, $resource, $filter, Heading, $location, $anchorScroll, owWaitIndicator, activeHeading) {
+.controller('nodeOutline', ['$scope', '$rootScope', '$http', '$resource', '$filter', 'Heading', '$location', '$anchorScroll', 'owWaitIndicator', 'activeHeading', function outlineCtrl($scope, $rootScope, $http, $resource, $filter, Heading, $location, $anchorScroll, owWaitIndicator, activeHeading) {
     var TodoState, Scope, url, get_heading, Parent, Tree, parent_tree_id, parent_level, target_headings, targetId, main_headings, newButton, showAllButton;
     newButton = $('#add-heading');
     showAllButton = $('#show-all');
@@ -226,13 +226,13 @@ owMain.controller('nodeOutline', ['$scope', '$rootScope', '$http', '$resource', 
     $scope.$on('focus-area-changed', function(e, newFocusArea) {
 	$scope.activeFocusArea = newFocusArea;
     });
-}]);
+}])
 
 /*************************************************
 * Angular actions list controller
 *
 **************************************************/
-owMain.controller('nextActionsList', ['$sce', '$scope', '$resource', '$location', '$routeParams', '$filter', 'contexts', 'Heading', 'todoStates', 'activeState', 'owWaitIndicator', '$cookies',function listCtrl($sce, $scope, $resource, $location, $routeParams, $filter, contexts, Heading, todoStates, activeState, owWaitIndicator, $cookies) {
+.controller('nextActionsList', ['$sce', '$scope', '$resource', '$location', '$routeParams', '$filter', 'contexts', 'Heading', 'todoStates', 'activeState', 'owWaitIndicator', '$cookies',function listCtrl($sce, $scope, $resource, $location, $routeParams, $filter, contexts, Heading, todoStates, activeState, owWaitIndicator, $cookies) {
     var i, TodoState, Context, today, update_url, get_list, parent_id, todo_states;
     $scope.list_params = {field_group: 'actions_list'};
     $scope.showArchived = true;
@@ -435,13 +435,13 @@ owMain.controller('nextActionsList', ['$sce', '$scope', '$resource', '$location'
 	}
 	$navLink.attr('href', $location.absUrl());
     };
-}]);
+}])
 
 /*************************************************
 * Search controller
 *
 **************************************************/
-owMain.controller('search', ['$scope', '$location', 'Heading', function($scope, $location, Heading) {
+.controller('search', ['$scope', '$location', 'Heading', function($scope, $location, Heading) {
     var i, query, resultIds, result, reString, addToResults;
     $scope.rawResults = [];
     // Process search string into seperate queries
@@ -479,13 +479,13 @@ owMain.controller('search', ['$scope', '$location', 'Heading', function($scope, 
 	reString = reString.slice(1);
     }
     $scope.reString = reString;
-}]);
+}])
 
 /*************************************************
 * Calendar controller
 *
 **************************************************/
-owMain.controller('calendar', ['$scope', 'Heading', '$filter', '$modal', function($scope, Heading, $filter, $modal) {
+.controller('calendar', ['$scope', 'Heading', '$filter', '$modal', function($scope, Heading, $filter, $modal) {
     // Uses angular-ui-calendar from https://github.com/angular-ui/ui-calendar
     var date, d, m, y;
     // List of calendars that are actually shown

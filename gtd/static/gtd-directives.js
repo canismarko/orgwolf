@@ -1,3 +1,4 @@
+// import angular from "angular";
 /*globals angular, $, Aloha, tinyMCE, tinymce*/
 "use strict";
 

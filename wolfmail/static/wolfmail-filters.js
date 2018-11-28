@@ -1,10 +1,12 @@
 /*globals owFilters*/
 "use strict";
 
+angular.module('owFilters')
+
 /*************************************************
 * Filter that displays the "From" field
 **************************************************/
-owFilters.filter('format_sender', ['$sce', function($sce) {
+.filter('format_sender', ['$sce', function($sce) {
     return function(msg) {
 	var s;
 	if (msg.handler_path === 'plugins.deferred') {
@@ -19,12 +21,12 @@ owFilters.filter('format_sender', ['$sce', function($sce) {
 	}
 	return s;
     };
-}]);
+}])
 
 /*************************************************
 * Filter that formats the "Subject" field
 **************************************************/
-owFilters.filter('format_subject', ['$sce', function($sce) {
+.filter('format_subject', ['$sce', function($sce) {
     return function(msg) {
 	var s;
 	s = '';
@@ -46,24 +48,24 @@ owFilters.filter('format_subject', ['$sce', function($sce) {
 	}
 	return s;
     };
-}]);
+}])
 
 /*************************************************
 * Filter that displays various date fields
 **************************************************/
-owFilters.filter('format_date', function() {
+.filter('format_date', function() {
     return function(date_str) {
 	var d;
 	d = new Date(date_str);
 	return d.toDateString();
     };
-});
+})
 
 /*************************************************
 * Filter that shows a parent select option with
 *   tree indentation
 **************************************************/
-owFilters.filter('parent_label', function() {
+.filter('parent_label', function() {
     return function(parent) {
 	var s, i;
 	s = parent.title;

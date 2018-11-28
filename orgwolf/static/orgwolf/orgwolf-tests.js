@@ -1,5 +1,7 @@
 "use strict";
 
+var owFilters = angular.module('owFilters');
+
 describe('the static url filter', function() {
     var staticFilter;
     beforeEach(module('owFilters'));
