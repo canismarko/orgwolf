@@ -1,10 +1,14 @@
 const path = require('path');
+var webpack = require('webpack');
 
 module.exports = {
     mode: 'development',
-    entry: './orgwolf/static/orgwolf/main.js',
+    entry: {
+	orgwolf: './orgwolf/static/main-entry.js',
+	tests: './orgwolf/static/test-entry.js',
+    },
     output: {
-	filename: 'orgwolf.js',
+	filename: '[name].js',
 	path: path.resolve(__dirname, 'orgwolf', 'static',)
     },
     resolve: {
@@ -15,4 +19,29 @@ module.exports = {
 	    path.resolve(__dirname, 'wolfmail', 'static'),
 	],
     },
+    plugins: [
+	new webpack.ProvidePlugin({
+	    $: 'jquery',
+	    jQuery: 'jquery',
+	    'window.jQuery': 'jquery',
+	}),
+    ],
+    // webpack.config.js
+    module: {
+	rules: [
+	    {
+		test: /tinymce\/skins\/lightgray\/*/,
+		use: [
+		    {
+			loader: 'file-loader',
+			options: {
+			    // outputPath: 'tinymce/skins/lightgray',
+			    name: '[path][name].[ext]',
+			    context: 'node_modules/tinymce/',
+			}
+		    }
+		]
+	    }
+	]
+    }
 };

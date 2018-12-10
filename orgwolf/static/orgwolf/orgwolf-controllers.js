@@ -1,7 +1,20 @@
-/*globals angular */
+import 'angular';
+import moment from 'moment';
+window.moment = moment;
+import 'angular-sanitize';
+import 'angular-route';
+import 'angular-ui-bootstrap/ui-bootstrap';
+import 'angular-ui-calendar';
+import 'fullcalendar';
+import 'angularjs-toaster';
 "use strict";
 
-angular.module('owMain')
+angular.module(
+    'owMain',
+    ['ngAnimate', 'ngResource', 'ngSanitize', 'ngRoute', 'ngCookies',
+     'ui.bootstrap', 'ui.calendar', 'toaster',
+     'owServices', 'owDirectives', 'owFilters']
+)
 
 /*************************************************
 * Routing for site-wide urls (account settings, etc)
@@ -69,3 +82,14 @@ angular.module('owMain')
 	}
     };
 }]);
+
+/*************************************************
+* Add a method to the Date object for exporting
+* to standard string for dates
+*************************************************/
+Date.prototype.ow_date = function() {
+    var s;
+    s = this.getFullYear() + '-' + (this.getMonth()+1) + '-' + this.getDate();
+    s = this.toISOString().slice(0, 10);
+    return s;
+};

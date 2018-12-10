@@ -1,8 +1,11 @@
+import 'angular';
+import 'angular-mocks';
+
 describe('filters in wolfmail-filters.js:', function() {
 
     describe('the "format_sender" filter', function() {
 	var format_senderFilter;
-	beforeEach(module('owFilters'));
+	beforeEach(angular.mock.module('owFilters'));
 	beforeEach(inject(function(_format_senderFilter_) {
 	    format_senderFilter = _format_senderFilter_;
 	}));
@@ -30,7 +33,7 @@ describe('filters in wolfmail-filters.js:', function() {
 
     describe('the "format_subject" filter', function() {
 	var format_subjectFilter;
-	beforeEach(module('owFilters'));
+	beforeEach(angular.mock.module('owFilters'));
 	beforeEach(inject(function(_format_subjectFilter_) {
 	    format_subjectFilter = _format_subjectFilter_;
 	}));
@@ -68,7 +71,7 @@ describe('filters in wolfmail-filters.js:', function() {
 
     describe('the "format_date" filter', function() {
 	var format_dateFilter;
-	beforeEach(module('owFilters'));
+	beforeEach(angular.mock.module('owFilters'));
 	beforeEach( inject(function(_format_dateFilter_) {
 	    format_dateFilter = _format_dateFilter_;
 	}));
@@ -83,7 +86,7 @@ describe('filters in wolfmail-filters.js:', function() {
 
     describe('the "parent_label" filter', function() {
 	var parent_labelFilter;
-	beforeEach(module('owFilters'));
+	beforeEach(angular.mock.module('owFilters'));
 	beforeEach(inject(function(_parent_labelFilter_) {
 	    parent_labelFilter = _parent_labelFilter_;
 	}));
@@ -118,8 +121,8 @@ describe('filters in wolfmail-filters.js:', function() {
 }); // End of wolfmail-filters.js tests
 
 describe('directives in wolfmail-directives.js', function() {
-    var $compile, element, $rootScope, $httpBackend, $templateCache, Message;
-    beforeEach(module('owDirectives', 'owServices'));
+    var $compile, element, $rootScope, $httpBackend, $templateCache, Message, $scope;
+    beforeEach(angular.mock.module('owDirectives', 'owServices'));
 
     beforeEach(inject(function($injector) {
 	$templateCache = $injector.get('$templateCache');
@@ -184,7 +187,7 @@ describe('directives in wolfmail-directives.js', function() {
 
 describe('services in wolfmail-services.js', function() {
     var $httpBackend, $rootScope;
-    beforeEach(module('owServices'));
+    beforeEach(angular.mock.module('owServices'));
     beforeEach(inject(function($injector) {
 	$httpBackend = $injector.get('$httpBackend');
 	$rootScope = $injector.get('$rootScope');
@@ -210,7 +213,7 @@ describe('services in wolfmail-services.js', function() {
 	    expect(true).toBeTruthy();
 	});
 	it('archives a retrieved message', function() {
-	    var emitMessage, $scope;
+	    var emitMessage, $scope, msg;
 	    $scope = $rootScope.$new();
 	    $httpBackend.expectGET('/wolfmail/message/1').respond(200, {id: 1});
 	    msg = Message.get({id: 1});
@@ -225,7 +228,7 @@ describe('services in wolfmail-services.js', function() {
 	    expect(emitMessage).toBeTruthy();
 	});
 	it('creates a new node related to a message', function() {
-	    var emitHeading;
+	    var emitHeading, $scope, msg;
 	    $scope = $rootScope.$new();
 	    $httpBackend.expectGET('/wolfmail/message/1').respond(200, {id: 1});
 	    msg = Message.get({id: 1});
@@ -247,7 +250,7 @@ describe('services in wolfmail-services.js', function() {
 
 describe('wolfmail-ctrl.js', function() {
     var $controller, $rootScope, $scope, dummyMessages, $httpBackend;
-    beforeEach(module('owMain'));
+    beforeEach(angular.mock.module('owMain'));
     beforeEach(inject(function($injector) {
 	$controller = $injector.get('$controller');
 	$rootScope = $injector.get('$rootScope');

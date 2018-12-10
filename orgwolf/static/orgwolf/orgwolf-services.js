@@ -1,7 +1,12 @@
-/*globals angular, $*/
+import jQuery from 'jquery';
+import 'angular';
 "use strict";
 
-angular.module('owServices')
+angular.module(
+    'owServices',
+    ['ngResource', 'toaster']
+)
+
 .factory('activeState', ['$rootScope', function($rootScope) {
     // Holds the current active objects (user, focus area, context, etc)
     var activeState = {
@@ -9,11 +14,11 @@ angular.module('owServices')
     };
     $rootScope.$watch(function() {return activeState.user;}, function(newUser) {
 	if (newUser) {
-	    $('body').removeClass('ow-logged-out');
-	    $('body').addClass('ow-logged-in');
+	    jQuery('body').removeClass('ow-logged-out');
+	    jQuery('body').addClass('ow-logged-in');
 	} else {
-	    $('body').addClass('ow-logged-out');
-	    $('body').removeClass('ow-logged-in');
+	    jQuery('body').addClass('ow-logged-out');
+	    jQuery('body').removeClass('ow-logged-in');
 	}
     });
     return activeState;

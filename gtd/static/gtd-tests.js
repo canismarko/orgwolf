@@ -1,11 +1,13 @@
+import "angular";
+import "angular-mocks";
+
 // Jasmine tests for Getting Things Done javascript (mostly angular)
-var customMatchers;
 var customMatchers = {
     toHaveClass: function(utils) {
 	// Checks that element has HTML class ala jQuery().hasClass()
 	return {
 	    compare: function(element, cls) {
-		result = {};
+		var result = {};
 		result.pass = element.hasClass(cls);
 		return result;
 	    }
@@ -17,7 +19,7 @@ beforeEach(function() {
 });
 
 describe('filters in gtd-filters.js', function() {
-    beforeEach(module('owFilters'))
+    beforeEach(angular.mock.module('owFilters'))
     describe('the "is_target" filter', function () {
 	var is_targetFilter;
 	beforeEach(inject(function(_is_targetFilter_) {
@@ -50,9 +52,9 @@ describe('filters in gtd-filters.js', function() {
 	    headingStyleFilter = _headingStyleFilter_;
 	}));
 	it('determines heading color based on level', function() {
-	    lvlOneHeading = {level: 1};
-	    lvlTwoHeading = {level: 2};
-	    lvlSixHeading = {level: 6};
+	    var lvlOneHeading = {level: 1};
+	    var lvlTwoHeading = {level: 2};
+	    var lvlSixHeading = {level: 6};
 	    expect(headingStyleFilter(lvlOneHeading)).toEqual('color: rgb(80, 0, 0); ');
 	    expect(headingStyleFilter(lvlTwoHeading)).toEqual('color: rgb(0, 44, 19); ');
 	    expect(headingStyleFilter(lvlSixHeading)).toEqual('color: rgb(80, 0, 0); ');
@@ -65,7 +67,7 @@ describe('filters in gtd-filters.js', function() {
 	    todoStateStyleFilter = _todoStateStyleFilter_;
 	}));
 	it('translates the todo_state\'s color', function() {
-	    colorlessState = {
+	    var colorlessState = {
 		color: {
 		    red: 0,
 		    green: 0,
@@ -74,7 +76,7 @@ describe('filters in gtd-filters.js', function() {
 		}
 	    };
     	    expect(todoStateStyleFilter(colorlessState)).toEqual('color: rgba(0, 0, 0, 0); ');
-	    redState = {
+	    var redState = {
 		color: {
 		    red: 204,
 		    green: 0,
@@ -104,25 +106,25 @@ describe('filters in gtd-filters.js', function() {
 	    $httpBackend.verifyNoOutstandingExpectation();
 	});
 	it('puts nodes with an upcoming deadline at the top', function() {
-	    d = new Date();
+	    var d = new Date();
 	    // Set new future date within seven days
 	    // (slicing ensures leading zeroes)
 	    d.setDate(d.getDate() + 5);
 	    var futrYear = d.getFullYear();
 	    var futrMonth = ("0" + (d.getMonth() + 1)).slice (-2);
 	    var futrDay = ("0" + d.getDate()).slice(-2);
-	    future_str = futrYear + '-' + futrMonth + '-' + futrDay;
-	    unsorted_data = [{'deadline_date': null},
+	    var future_str = futrYear + '-' + futrMonth + '-' + futrDay;
+	    var unsorted_data = [{'deadline_date': null},
 			     {'deadline_date': future_str}];
-	    sorted_data = [{'deadline_date': future_str},
+	    var sorted_data = [{'deadline_date': future_str},
 			   {'deadline_date': null}];
 	    expect(listFilter(unsorted_data)).toEqual(sorted_data);
 	});
 	it('puts nodes with higher priority at the top', function() {
-	    unsorted_data = [{'priority': 'C'},
+	    var unsorted_data = [{'priority': 'C'},
 			     {'priority': 'B'},
 			     {'priority': 'A'}];
-	    sorted_data = [{'priority': 'A'},
+	    var sorted_data = [{'priority': 'A'},
 			   {'priority': 'B'},
 			   {'priority': 'C'}];
 	    expect(listFilter(unsorted_data)).toEqual(sorted_data);
@@ -144,16 +146,16 @@ describe('filters in gtd-filters.js', function() {
 	    orderFilter = _orderFilter_;
 	}));
 	it('sorts by criterion', function() {
-	    unsorted_data = [{'key': 'bravo'}, {'key': 'alpha'},
+	    var unsorted_data = [{'key': 'bravo'}, {'key': 'alpha'},
 			     {'key': 'delta'}, {'key': 'charlie'}];
-	    sorted_data = [{'key': 'alpha'}, {'key': 'bravo'},
+	    var sorted_data = [{'key': 'alpha'}, {'key': 'bravo'},
 			     {'key': 'charlie'}, {'key': 'delta'}];
 	    expect(orderFilter(unsorted_data, 'key')).toEqual(sorted_data);
 	});
 	it('puts relatives of activeHeading to the top', function() {
-	    unsorted = [{title: 'last', tree_id: 1},
+	    var unsorted = [{title: 'last', tree_id: 1},
 			{title: 'first', tree_id: 2}];
-	    sorted = orderFilter(unsorted, 'none', {tree_id: 2});
+	    var sorted = orderFilter(unsorted, 'none', {tree_id: 2});
 	    expect(sorted[0].title).toEqual('first');
 	})
     });
@@ -172,21 +174,21 @@ describe('filters in gtd-filters.js', function() {
 	    ];
 	}));
 	it('passes the array back if no parameters given', function() {
-	    result = currentListFilter(headings);
+	    var result = currentListFilter(headings);
 	    expect(result).toBe(headings);
 	});
 	it('filters by active todoState', function() {
-	    result = currentListFilter(headings, [1]);
+	    var result = currentListFilter(headings, [1]);
 	    expect(result.length).toEqual(1);
 	    expect(result[0]).toBe(headings[0]);
 	});
 	it('filters out headings that are also on the upcoming list', function() {
-	    upcomingList = [
+	    var upcomingList = [
 		{id: 2},
 		{id: 3},
 	    ];
 	    headings[1].deadline_date = '2014-03-08';
-	    result = currentListFilter(headings, [1, 2], upcomingList);
+	    var result = currentListFilter(headings, [1, 2], upcomingList);
 	    expect(result.length).toEqual(1);
 	    expect(result[0]).toBe(headings[0]);
 	});
@@ -198,7 +200,7 @@ describe('filters in gtd-filters.js', function() {
 		{id: 4, tree_id: 1, lft: 3, rght: 4},
 	    ];
 	    var activeParent = headings[0]
-	    result = currentListFilter(headings, null, [], activeParent);
+	    var result = currentListFilter(headings, null, [], activeParent);
 	    expect(result.length).toEqual(2);
 	    expect(result[0].id).toEqual(1);
 	    expect(result[1].id).toEqual(4);
@@ -209,8 +211,8 @@ describe('filters in gtd-filters.js', function() {
 	var deadline_strFilter, today, heading, due_date;
 	beforeEach(inject(function(_deadline_strFilter_) {
 	    deadline_strFilter = _deadline_strFilter_;
-	    today = new Date(2014, 02, 21, 18, 1, 1);
-	    due_date = new Date(2014, 02, 21, 18, 1, 1);
+	    today = new Date(2014, 2, 21, 18, 1, 1);
+	    due_date = new Date(2014, 2, 21, 18, 1, 1);
 	}));
 	it('returns "" for a heading without a due date', function() {
 	    heading = {deadline_date: null};
@@ -335,15 +337,15 @@ describe('filters in gtd-filters.js', function() {
 	    $httpBackend.flush();
 	}));
 	it('processes a heading with one focus area', function() {
-	    heading = {focus_areas: [1]};
+	    var heading = {focus_areas: [1]};
 	    expect(listFocusAreasFilter(heading)).toEqual('Work');
 	});
 	it('processes a heading with two focus areas', function() {
-	    heading = {focus_areas: [1, 2]};
+	    var heading = {focus_areas: [1, 2]};
 	    expect(listFocusAreasFilter(heading)).toEqual('Work and Home');
 	});
 	it('processes a heading with three focus areas', function() {
-	    heading = {focus_areas: [1, 2, 3]};
+	    var heading = {focus_areas: [1, 2, 3]};
 	    expect(listFocusAreasFilter(heading))
 		.toEqual('Work, Home and Health');
 	});
@@ -397,7 +399,7 @@ describe('filters in gtd-filters.js', function() {
 
 describe('directives in gtd-directives.js', function() {
     var $compile, $rootScope, $httpBackend, $templateCache, element, dummyStates;
-    beforeEach(module('owDirectives', 'owFilters', 'owServices'));
+    beforeEach(angular.mock.module('owDirectives', 'owFilters', 'owServices'));
     beforeEach(inject(function($injector) {
 	$compile = $injector.get('$compile');
 	$rootScope = $injector.get('$rootScope');
@@ -492,7 +494,7 @@ describe('directives in gtd-directives.js', function() {
 	});
 
 	describe('when a new node is being created ([ow-parent])', function() {
-	    var parentScope;
+	    var parentScope, parentFocusAreas;
 	    beforeEach(function() {
 		element = $compile(
 		    '<div ow-editable ow-parent="heading"></div>'
@@ -542,7 +544,7 @@ describe('directives in gtd-directives.js', function() {
 	    )($rootScope);
 	});
 	it('emits the "change-focus-area" event on changeFocusArea()', function() {
-	    var emittedStatus, targetFocusArea;
+	    var emittedStatus, targetFocusArea, emittedFocusArea;
 	    $rootScope.$digest();
 	    $childScope = element.isolateScope();
 	    expect($childScope).toBeDefined();
@@ -703,7 +705,7 @@ describe('directives in gtd-directives.js', function() {
 	describe('expandability DOM classes', function() {
 	    it('identifies a leaf node', function() {
 		$rootScope.$digest();
-		scope = element.isolateScope();
+		var scope = element.isolateScope();
 		expect(element.find('.ow-hoverable')).toHaveClass('leaf-node');
 		expect(scope.isLeafNode).toBeTruthy();
 	    });
@@ -712,7 +714,7 @@ describe('directives in gtd-directives.js', function() {
 		expect(element.find('.ow-hoverable')).toHaveClass('leaf-node');
 		$rootScope.heading.rght = 4;
 		$rootScope.$digest();
-		scope = element.isolateScope();
+		var scope = element.isolateScope();
 		expect(element.find('.ow-hoverable')).not.toHaveClass('leaf-node');
 		expect(scope.isLeafNode).toBeFalsy();
 	    });
@@ -740,7 +742,7 @@ describe('directives in gtd-directives.js', function() {
 	});
 	it('gets children when created if not root level', function() {
 	    // Prepare the DOM element
-	    $scope = $rootScope.$new();
+	    var $scope = $rootScope.$new();
 	    $scope.heading = {
 		id: 2,
 		lft: 2,
@@ -757,13 +759,13 @@ describe('directives in gtd-directives.js', function() {
 	    )($scope);
 	    $rootScope.$digest();
 	    $httpBackend.flush();
-	    scope = element.isolateScope();
+	    var scope = element.isolateScope();
 	    expect(typeof scope.getChildren).toEqual('function');
 	});
 	it('responds to the open-descendants signal', function() {
 	    $httpBackend.expectGET('/gtd/nodes?field_group=outline&parent_id=1').respond(200, []);
 	    $rootScope.$digest();
-	    $scope = element.isolateScope();
+	    var $scope = element.isolateScope();
 	    expect($scope.state).toBe(0);
 	    $rootScope.$broadcast('open-descendants');
 	    expect($scope.state).toBe(1);
@@ -772,7 +774,7 @@ describe('directives in gtd-directives.js', function() {
 	    $httpBackend.expectGET('/gtd/nodes?field_group=outline&parent_id=1').respond(200, []);
 	    $rootScope.heading.rght = 4;
 	    $rootScope.$digest();
-	    scope = element.isolateScope();
+	    var scope = element.isolateScope();
 	    expect(scope.state).toEqual(0);
 	    scope.toggleHeading({target: element});
 	    $httpBackend.flush();
@@ -788,7 +790,7 @@ describe('directives in gtd-directives.js', function() {
 	it('skips state 2 if heading is a leaf node', function() {
 	    $httpBackend.expectGET('/gtd/nodes?field_group=outline&parent_id=1').respond(200, []);
 	    $rootScope.$digest();
-	    scope = element.isolateScope();
+	    var scope = element.isolateScope();
 	    expect(scope.state).toEqual(0);
 	    scope.toggleHeading({target: element});
 	    $httpBackend.flush();
@@ -799,8 +801,8 @@ describe('directives in gtd-directives.js', function() {
 	it('broadcasts open-descendants on state 2', function() {
 	    $httpBackend.expectGET('/gtd/nodes?field_group=outline&parent_id=1').respond(200, []);
 	    $rootScope.$digest();
-	    scope = element.isolateScope();
-	    childScope = scope.$new();
+	    var scope = element.isolateScope();
+	    var childScope = scope.$new();
 	    var signalCaught = false;
 	    childScope.$on('open-descendants', function() {
 		signalCaught = true;
@@ -814,7 +816,7 @@ describe('directives in gtd-directives.js', function() {
 	it('allows the state to be toggled directly', function() {
 	    $httpBackend.expectGET('/gtd/nodes?field_group=outline&parent_id=1').respond(200, []);
 	    $rootScope.$digest();
-	    scope = element.isolateScope();
+	    var scope = element.isolateScope();
 	    expect(scope.state).toEqual(0);
 	    scope.toggleHeading(1);
 	    $httpBackend.flush();
@@ -826,9 +828,9 @@ describe('directives in gtd-directives.js', function() {
 }); // End of gtd-directives.js tests
 
 describe('services in gtd-services.js', function() {
-    beforeEach(module('owServices'));
+    beforeEach(angular.mock.module('owServices'));
     describe('the owWaitIndicator service', function() {
-	var waiting, $rootScope;
+	var waiting, $rootScope, waitIndicator;
 	beforeEach(inject(function($injector) {
 	    waitIndicator = $injector.get('owWaitIndicator');
 	    $rootScope = $injector.get('$rootScope');
@@ -920,7 +922,7 @@ describe('services in gtd-services.js', function() {
     });
 
     describe('the activeHeading.activate() method', function() {
-	var $httpBackend, activeNode;
+	var $httpBackend, activeHeading;
 	beforeEach(inject(function($injector) {
 	    $httpBackend = $injector.get('$httpBackend');
 	    activeHeading = $injector.get('activeHeading');
@@ -948,7 +950,7 @@ describe('services in gtd-services.js', function() {
 
 describe('controllers in gtd-main.js', function() {
     var dummyStates;
-    beforeEach(module('owMain'));
+    beforeEach(angular.mock.module('owMain'));
     beforeEach(function() {
 	dummyStates = [
 	    {id: 1},
@@ -959,7 +961,7 @@ describe('controllers in gtd-main.js', function() {
 	$httpBackend.whenGET(/\/gtd\/(context|focusareas)/).respond(200, []);
     }));
     describe('nextActionsList controller', function() {
-	var $httpBackend, actionsList, upcomingList;
+	var $httpBackend, actionsList, upcomingList, $scope;
 	beforeEach(inject(function($rootScope, $controller, _$httpBackend_) {
 	    $httpBackend = _$httpBackend_
 	    actionsList = [
@@ -1075,7 +1077,7 @@ describe('controllers in gtd-main.js', function() {
 	it('handles the "focus-area-changed" signal', function() {
 	    $controller('nodeOutline', {$scope: $scope});
 	    expect($scope.activeFocusArea).toBe(undefined);
-	    newFocusArea = {id: 1};
+	    var newFocusArea = {id: 1};
 	    $scope.$emit('focus-area-changed', newFocusArea);
 	    expect($scope.activeFocusArea).toBe(newFocusArea);
 	});
@@ -1217,7 +1219,8 @@ describe('controllers in gtd-main.js', function() {
 	    expect(true).toBeTruthy();
 	});
 	it('reschedules a time-specific node', function() {
-	    var newDate = new Date("2014-06-17T03:17:05.746Z");
+	    var newDate, expectedDate, expectedTime, expectedString;
+	    newDate = new Date("2014-06-17T03:17:05.746Z");
 	    expectedDate = '' + newDate.getFullYear() + '-' +
 		(newDate.getMonth() + 1) + '-' + newDate.getDate();
 	    expectedTime = '' + newDate.getHours() + ':' + newDate.getMinutes();
@@ -1282,7 +1285,7 @@ describe('controllers in gtd-main.js', function() {
 
 describe('site wide resources', function() {
     var headings, result;
-    beforeEach(module('owMain'));
+    beforeEach(angular.mock.module('owMain'));
 
     describe('Array.order_by method', function() {
 	beforeEach(function() {

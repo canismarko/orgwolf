@@ -1,17 +1,15 @@
-/*globals angular, $*/
+import 'angular';
+import "orgwolf-filters";
 "use strict";
 
-var owFilters = angular.module(
-    'owFilters',
-    ['ngSanitize', 'owServices']
-);
+angular.module('owFilters')
 
 /*************************************************
 * Filter that determines relationship to the
 * url paramater for target node
 *
 **************************************************/
-owFilters.filter('is_target', function() {
+.filter('is_target', function() {
     return function(obj, active) {
 	var answer = '';
 	if (active) {
@@ -26,13 +24,13 @@ owFilters.filter('is_target', function() {
 	}
 	return answer;
     };
-});
+})
 
 /*************************************************
 * Filter turns a string into a slug
 *
 **************************************************/
-owFilters.filter('slugify', function() {
+.filter('slugify', function() {
     return function(string) {
 	var s;
 	if (string !== undefined) {
@@ -42,13 +40,13 @@ owFilters.filter('slugify', function() {
 	}
 	return s;
     };
-});
+})
 
 /*************************************************
 * Filter that determines style of TodoState object
 *
 **************************************************/
-owFilters.filter('todoStateStyle', function() {
+.filter('todoStateStyle', function() {
     return function(obj) {
 	var style, c;
 	style = '';
@@ -62,13 +60,13 @@ owFilters.filter('todoStateStyle', function() {
 	}
 	return style;
     };
-});
+})
 
 /*************************************************
 * Filter that determines style of Node object
 *
 **************************************************/
-owFilters.filter('headingStyle', function() {
+.filter('headingStyle', function() {
     return function(obj) {
 	var style, colors, color_i;
 	style = '';
@@ -81,24 +79,24 @@ owFilters.filter('headingStyle', function() {
 	}
 	return style;
     };
-});
+})
 
 /*************************************************
 * Sanitizes text to safe HTML
 *
 **************************************************/
-owFilters.filter('asHtml', ['$sce', function($sce) {
+.filter('asHtml', ['$sce', function($sce) {
     return function(obj) {
 	var s = $sce.trustAsHtml(obj);
 	return s;
     };
-}]);
+}])
 
 /*************************************************
 * Filter that sorts the action list
 *
 **************************************************/
-owFilters.filter('sortActions', ['$sce', 'activeState', 'locations', function($sce, activeState, locations) {
+.filter('sortActions', ['$sce', 'activeState', 'locations', function($sce, activeState, locations) {
     return function(unoderedList) {
 	var ordered, deadline, other, i, today, activeLocations, locationIDs, activeLocation;
 	function importance(heading) {
@@ -149,7 +147,7 @@ owFilters.filter('sortActions', ['$sce', 'activeState', 'locations', function($s
 	});
 	return ordered;
     };
-}]);
+}])
 
 /*************************************************
 * Filter that sorts top level headings in the
@@ -157,7 +155,7 @@ owFilters.filter('sortActions', ['$sce', 'activeState', 'locations', function($s
 * a different filter).
 *
 **************************************************/
-owFilters.filter('order', ['$sce', 'activeState', function($sce, activeState) {
+.filter('order', ['$sce', 'activeState', function($sce, activeState) {
     return function(obj, criterion, activeHeading) {
 	var ordered, i;
 	if ( criterion === 'none' ) {
@@ -176,14 +174,14 @@ owFilters.filter('order', ['$sce', 'activeState', function($sce, activeState) {
 	}
 	return ordered;
     };
-}]);
+}])
 
 /*************************************************
 * Filter that only shows headings that are visible
 * based on list parameters.
 *
 **************************************************/
-owFilters.filter('currentList', function() {
+.filter('currentList', function() {
     return function(headings, todoStates, upcomingList, activeParent) {
 	var upcomingListIds;
 	// Filter by todoStates
@@ -218,7 +216,7 @@ owFilters.filter('currentList', function() {
 	}
 	return headings;
     };
-});
+})
 
 
 /*************************************************
@@ -226,7 +224,7 @@ owFilters.filter('currentList', function() {
 * date object.
 *
 **************************************************/
-owFilters.filter('toDateObj', ['$sce', function($sce) {
+.filter('toDateObj', ['$sce', function($sce) {
     return function(str) {
 	var milliseconds, tzOffset, d;
 	if( typeof str === 'string') {
@@ -238,13 +236,13 @@ owFilters.filter('toDateObj', ['$sce', function($sce) {
 	}
 	return d;
     };
-}]);
+}])
 
 /*************************************************
 * Filter that displays the deadline for a heading
 *
 **************************************************/
-owFilters.filter('deadline_str', ['$sce', function($sce) {
+.filter('deadline_str', ['$sce', function($sce) {
     return function(deadline, today) {
 	var str, date, time_delta, day_delta;
 	if ( typeof today === 'undefined' ) {
@@ -276,14 +274,14 @@ owFilters.filter('deadline_str', ['$sce', function($sce) {
 	}
 	return str;
     };
-}]);
+}])
 
 /*************************************************
 * Read start and end dates and determine duration
 * string.
 *
 **************************************************/
-owFilters.filter('duration', function() {
+.filter('duration', function() {
     return function(node) {
 	var str, days, hours, minutes, pluralize, start, end, diff;
 	// Calculate relevant duration values
@@ -329,14 +327,14 @@ owFilters.filter('duration', function() {
 	str = str.substring(0, str.length-2);
 	return str;
     };
-});
+})
 
 /*************************************************
 * Filter a list (of headings) by the active
 * focus area
 *
 **************************************************/
-owFilters.filter('currentFocusArea', ['$rootScope', function($rootScope) {
+.filter('currentFocusArea', ['$rootScope', function($rootScope) {
     return function(oldList, activeFocusArea) {
 	var i, newList, activeId;
 	// Get id of active focus area if not supplied by caller
@@ -371,14 +369,14 @@ owFilters.filter('currentFocusArea', ['$rootScope', function($rootScope) {
 	}
 	return newList;
     };
-}]);
+}])
 
 /*************************************************
 * Filter accepts a heading and returns a string of
 * its focus areas
 *
 **************************************************/
-owFilters.filter('listFocusAreas', ['focusAreas', function(focusAreas) {
+.filter('listFocusAreas', ['focusAreas', function(focusAreas) {
     return function(heading) {
 	var s, f, i, fa, activeFocusAreas, areaName;
 	// Build list of focus area names

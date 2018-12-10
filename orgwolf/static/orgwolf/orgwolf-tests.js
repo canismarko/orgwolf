@@ -1,10 +1,13 @@
 "use strict";
 
+import "angular";
+import "angular-mocks";
+
 var owFilters = angular.module('owFilters');
 
 describe('the static url filter', function() {
     var staticFilter;
-    beforeEach(module('owFilters'));
+    beforeEach(angular.mock.module('owFilters'));
     beforeEach(function() {
 	owFilters.value('staticUrl', '/static/');
     });
@@ -19,7 +22,7 @@ describe('the static url filter', function() {
 
 describe('the ow-nav navigation directive', function() {
     var $compile, $rootScope, element, $scope;
-    beforeEach(module('owDirectives'));
+    beforeEach(angular.mock.module('owDirectives'));
     beforeEach(inject(function($injector) {
 	$compile = $injector.get('$compile');
 	$rootScope = $injector.get('$rootScope');

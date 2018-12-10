@@ -1,10 +1,7 @@
 /*globals angular, GtdHeading, jQuery, navigator, window, alert*/
 "use strict";
 
-angular.module(
-    'owServices',
-    ['ngResource', 'toaster']
-)
+angular.module('owServices')
 
 /*************************************************
 * Factory returns an object for showing feedback

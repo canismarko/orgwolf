@@ -1,7 +1,13 @@
-/*globals owFilters */
+import 'angular';
+import 'angular-sanitize';
+import 'orgwolf-services';
+
 "use strict";
 
-angular.module('owFilters')
+angular.module(
+    'owFilters',
+    ['ngSanitize', 'owServices']
+)
 
 .value('staticUrl', null)
 

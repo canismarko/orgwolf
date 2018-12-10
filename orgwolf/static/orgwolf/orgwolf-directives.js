@@ -1,7 +1,13 @@
-/*globals angular, $ */
 "use strict";
+import jQuery from 'jquery';
+import "angular";
+import 'orgwolf-services';
+import 'gtd-services';
 
-angular.module('owDirectives')
+angular.module(
+    'owDirectives',
+    ['ngAnimate', 'ngResource', 'ngCookies', 'owServices', 'toaster']
+)
 
 .directive('owNavbar', ['$location', '$cookies', 'contexts', 'currentUser', function($location, $cookies, contexts, currentUser) {
     function link(scope, element, attrs) {
@@ -16,14 +22,14 @@ angular.module('owDirectives')
 	function setActiveLink() {
 	    var found, r, currPath, linkId;
 	    // Clear old active links
-	    $('ul.navbar-nav li').removeClass('active');
+	    jQuery('ul.navbar-nav li').removeClass('active');
 	    // Find and set new active link
 	    currPath = $location.path();
 	    for (linkId in regexps) {
 		if (regexps.hasOwnProperty(linkId)) {
 		    r = regexps[linkId].exec(currPath);
 		    if (r) {
-			$('#nav-' + linkId).addClass('active');
+			jQuery('#nav-' + linkId).addClass('active');
 		    }
 		}
 	    }

@@ -12,7 +12,8 @@ venv/
 htmlcov/
 
 # Collected static files
-static/
+^static/
+orgwolf/static/skins
 
 # Elastic Beanstalk Files
 .elasticbeanstalk/*

@@ -1,11 +1,34 @@
-// import angular from "angular";
-/*globals angular, $, Aloha, tinyMCE, tinymce*/
+import jQuery from "jquery";
+import 'jquery';
+import 'jquery-ui';
+window.jQuery = jQuery;
+import 'bootstrap/dist/js/bootstrap.js';
+import 'bootstrap-switch/build/js/bootstrap-switch.js';
+import "angular";
+import "angular-animate";
+import "angular-resource";
+import "angular-cookies";
+
+// TinyMCE imports
+import tinymce from 'tinymce/tinymce';
+import 'tinymce/themes/modern/theme';
+
+// Any plugins you want to use has to be imported
+import 'tinymce/plugins/link';
+import 'tinymce/plugins/hr';
+import 'tinymce/plugins/table';
+import 'tinymce/plugins/textcolor';
+
+// require('tinymce/skins/lightgray/content.inline.min.css');
+require.context('tinymce/skins', true, /.*/);
+
+
+var tinymcePlugins = 'hr link table textcolor';
+var tinymceToolbar = 'undo redo | styleselect | bold italic forecolor backcolor superscript subscript | alignleft aligncenter alignright alignjustify | bullist numlist outdent indent | hr link';
+
 "use strict";
 
-angular.module(
-    'owDirectives',
-    ['ngAnimate', 'ngResource', 'ngCookies', 'owServices', 'toaster']
-)
+angular.module('owDirectives')
 
 /*************************************************
 * Directive that turns checkboxes into switches
@@ -45,31 +68,19 @@ angular.module(
 .directive('owWaitFeedback', ['owWaitIndicator', function(owWaitIndicator) {
     // Directive creates the pieces that allow the user to edit a heading
     function link($scope, $element, attrs) {
-	var $mask;
-	$mask = $element.find('.mask');
-	$mask.hide();
-	$element.hide();
+	$scope.short_wait = false;
+	$scope.long_wait = false;
 	// Respond to each waiting list by showing the appropriate setting
 	$scope.$watchCollection(
 	    function() { return owWaitIndicator.waitLists.quick.length; },
 	    function(newLength) {
-		if (newLength > 0) {
-		    $element.show();
-		} else {
-		    $element.hide();
-		}
+		$scope.short_wait = (newLength > 0);
 	    }
 	);
 	$scope.$watchCollection(
 	    function() { return owWaitIndicator.waitLists.medium.length; },
 	    function(newLength) {
-		if (newLength > 0) {
-		    $element.show();
-		    $mask.show();
-		} else {
-		    $element.hide();
-		    $mask.hide();
-		}
+		$scope.long_wait = (newLength > 0);
 	    }
 	);
     }
@@ -143,8 +154,8 @@ angular.module(
 	$timeout(function() {
 	    if ( typeof tinymce !== 'undefined' ) {
 		tinymce.init({
-		    plugins: 'charmap fullscreen hr image link table textcolor',
-		    toolbar: 'undo redo | fullscreen | styleselect | bold italic forecolor backcolor superscript subscript | alignleft aligncenter alignright alignjustify | bullist numlist outdent indent | hr link image',
+		    plugins: tinymcePlugins,
+		    toolbar: tinymceToolbar,
 		    inline: true,
 		    tools: 'inserttable',
 		    mode: 'exact',
@@ -272,12 +283,12 @@ angular.module(
 	$timeout(function() {
 	    if ( typeof tinymce !== 'undefined' ) {
 		tinymce.init({
-		    plugins: 'charmap fullscreen hr image link table textcolor',
-		    toolbar: 'undo redo | fullscreen | styleselect | bold italic forecolor backcolor superscript subscript | alignleft aligncenter alignright alignjustify | bullist numlist outdent indent | hr link image',
+		    plugins: tinymcePlugins,
+		    toolbar: tinymceToolbar,
 		    inline: true,
 		    tools: 'inserttable',
 		    mode: 'exact',
-		    elements: scope.editorId,
+		    selector: '#' + scope.editorId,
 		    auto_focus: false
 		});
 	    }
