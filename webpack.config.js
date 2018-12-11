@@ -29,6 +29,7 @@ module.exports = {
     // webpack.config.js
     module: {
 	rules: [
+	    // For handling TinyMCE editor skins
 	    {
 		test: /tinymce\/skins\/lightgray\/*/,
 		use: [
@@ -41,7 +42,28 @@ module.exports = {
 			}
 		    }
 		]
-	    }
+	    },
+	    // For loading CSS files
+	    {
+		test: /\.(png|woff|woff2|eot|ttf|svg)$/,
+		exclude: /tinymce\/skins/,
+		loader: 'url-loader?limit=100000'
+	    },
+	    {
+	    	test: /\.css$/,
+	    	exclude: /tinymce\/skins/,
+	    	use: ['style-loader','css-loader'],
+	    },
+	    {
+	    	test: /\.less$/,
+	    	use: [{loader: 'style-loader'},
+	    	      {loader: 'css-loader'},
+	    	      {loader: 'less-loader', options: {
+	    		  strictMath: true,
+	    		  noIeCompat: true
+	    	      }
+	    	      }]
+	    },
 	]
     }
 };

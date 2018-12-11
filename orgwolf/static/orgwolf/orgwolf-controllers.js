@@ -6,7 +6,9 @@ import 'angular-route';
 import 'angular-ui-bootstrap/ui-bootstrap';
 import 'angular-ui-calendar';
 import 'fullcalendar';
+
 import 'angularjs-toaster';
+
 "use strict";
 
 angular.module(

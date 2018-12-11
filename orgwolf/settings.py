@@ -207,7 +207,9 @@ USE_TZ = True
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/1.10/howto/static-files/
-STATIC_URL = '/static/'
+_static_url = os.environ.get('ORGWOLF_STATIC_URL', '/static/')
+STATIC_URL = _static_url
+
 _static_root = os.environ.get('ORGWOLF_STATIC_ROOT', None)
 if _static_root is not None:
     STATIC_ROOT = _static_root

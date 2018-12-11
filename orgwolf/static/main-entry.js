@@ -1,9 +1,12 @@
-// Global dependencies until everything supports ECS6
-// import "angular";
-// window.angular = angular;
-// console.log(window.angular);
+// Style dependencies
 
-// Orgwolf internal dependencies
+import 'bootstrap/dist/css/bootstrap.css';
+import 'bootstrap-switch/build/css/bootstrap3/bootstrap-switch.css';
+import 'angularjs-toaster/toaster.css';
+import 'fullcalendar/dist/fullcalendar.css';
+import './orgwolf/orgwolf.less';
+
+// Orgwolf javascript modules
 import "orgwolf-directives.js";
 import "gtd-directives"
 import "wolfmail-directives.js"

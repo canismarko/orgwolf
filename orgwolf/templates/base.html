@@ -1,7 +1,7 @@
 {% load gtd_extras %}
 {% load static %}
 {% comment %}
-  Copyright 2012 Mark Wolf
+  Copyright 2012 Mark Wolfman
 
   This file is part of OrgWolf.
 
@@ -28,48 +28,17 @@
     {% if debug %}
     <link rel="icon"
 	  type="image/png"
-	  href="{% static 'orgwolf-icon-debug.png' %}" />
+	  href="{% static 'orgwolf/orgwolf-icon-debug.png' %}" />
     {% else %}
     <link rel="icon"
 	  type="image/png"
 	  href="{% static 'orgwolf/orgwolf-icon.ico' %}" />
     {% endif %}
+
     <link rel="apple-touch-icon"
 	  href="{% static 'orgwolf-icon-114.png' %}" />
-
-    {% if local_net %}
-    <link rel="stylesheet" type="text/css"
-	  href="{% static 'bower/bootstrap/dist/css/bootstrap.css' %}" />
-    <link rel="stylesheet" type="text/css"
-	  href="{% static 'bower/bootstrap-switch/build/css/bootstrap3/bootstrap-switch.css' %}" />
-    <link rel="stylesheet" type="text/css"
-	  href="{% static 'bower/AngularJS-Toaster/toaster.css' %}" />
-    <link rel="stylesheet" type="text/css"
-	  href="{% static 'bower/fullcalendar/fullcalendar.css' %}" />
-    {% else %}
-    <link rel="stylesheet" type="text/css" href="//cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.1.1/css/bootstrap.min.css" />
-    <link rel="stylesheet" type="text/css" href="//cdnjs.cloudflare.com/ajax/libs/bootstrap-switch/2.0.1/css/bootstrap3/bootstrap-switch.min.css" />
-    <link rel="stylesheet" type="text/css"
-	  href="//cdnjs.cloudflare.com/ajax/libs/angularjs-toaster/0.4.4/toaster.min.css" />
-    <link rel="stylesheet" type="text/css"
-	  href="//cdnjs.cloudflare.com/ajax/libs/fullcalendar/2.3.1/fullcalendar.css" />
-    {% endif %}
-
     <link rel="stylesheet" type="text/css"
 	  href="{% static 'orgwolf/social/auth-buttons.css' %}" />
-    {% if debug %}
-    <link rel="stylesheet/less" type="text/css"
-	  href="{% static 'orgwolf/orgwolf.less' %}" />
-    <link rel="stylesheet/less" type="text/css"
-	  href="{% static 'orgwolf/orgwolf-animations.less' %}" />
-    <script>
-      less = { logLevel: 1 }
-    </script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/less.js/1.7.0/less.min.js"></script>
-    {% else %}
-    <link rel="stylesheet" type="text/css"
-          href="{% static 'orgwolf/orgwolf.css' %}" />
-    {% endif %}
 
     <script src="{% static 'orgwolf.js' %}"></script>
 
@@ -98,7 +67,7 @@
 	ga('send', 'pageview');
 	{% endif %}
     });
-      var owFilters = angular.module('owFilters');
+    var owFilters = angular.module('owFilters');
     owFilters.value('staticUrl', '{% static '' %}');
 
     </script>

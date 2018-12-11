@@ -2,8 +2,11 @@ import jQuery from "jquery";
 import 'jquery';
 import 'jquery-ui';
 window.jQuery = jQuery;
+
 import 'bootstrap/dist/js/bootstrap.js';
+
 import 'bootstrap-switch/build/js/bootstrap-switch.js';
+
 import "angular";
 import "angular-animate";
 import "angular-resource";
@@ -19,7 +22,6 @@ import 'tinymce/plugins/hr';
 import 'tinymce/plugins/table';
 import 'tinymce/plugins/textcolor';
 
-// require('tinymce/skins/lightgray/content.inline.min.css');
 require.context('tinymce/skins', true, /.*/);
 
 
