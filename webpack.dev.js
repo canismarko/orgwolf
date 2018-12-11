@@ -7,7 +7,6 @@ module.exports = merge(common, {
 	rules: [
 	    {
 		test: /\.css$/,
-		exclude: /tinymce\/skins/,
 		use: ['style-loader','css-loader'],
 	    },
 	    {

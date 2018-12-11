@@ -12,21 +12,7 @@ import "angular-animate";
 import "angular-resource";
 import "angular-cookies";
 
-// TinyMCE imports
-import tinymce from 'tinymce/tinymce';
-import 'tinymce/themes/modern/theme';
-
-// Any plugins you want to use has to be imported
-import 'tinymce/plugins/link';
-import 'tinymce/plugins/hr';
-import 'tinymce/plugins/table';
-import 'tinymce/plugins/textcolor';
-
-require.context('tinymce/skins', true, /.*/);
-
-
-var tinymcePlugins = 'hr link table textcolor';
-var tinymceToolbar = 'undo redo | styleselect | bold italic forecolor backcolor superscript subscript | alignleft aligncenter alignright alignjustify | bullist numlist outdent indent | hr link';
+import SimpleMDE from 'simplemde';
 
 "use strict";
 
@@ -143,7 +129,7 @@ angular.module('owDirectives')
 * Directive that shows the details of a node
 *
 **************************************************/
-.directive('owDetails', ['$timeout', function($timeout) {
+.directive('owDetails', [function() {
     function link(scope, element, attrs) {
 	var i;
 	scope.editorId = 'edit-text-' + scope.heading.id;
@@ -152,38 +138,6 @@ angular.module('owDirectives')
 		// This avoids weird jumping around when actually editing the text
 		scope.headingText = newHeading.text;
 	    });
-	// TinyMCE text editor
-	$timeout(function() {
-	    if ( typeof tinymce !== 'undefined' ) {
-		tinymce.init({
-		    plugins: tinymcePlugins,
-		    toolbar: tinymceToolbar,
-		    inline: true,
-		    tools: 'inserttable',
-		    mode: 'exact',
-		    elements: scope.editorId,
-		    setup: function(editor) {
-			editor.on('change', function(e) {
-			    scope.$apply(function() {
-				scope.heading.text = editor.getContent();
-				scope.heading.$update();
-			    });
-			});
-		    }
-		});
-	    }
-	});
-	scope.editText = function(e) {
-	    e.stopPropagation();
-	    scope.textIsEditable = true;
-	    scope.textEditStatus = '';
-	};
-	scope.stopEditingText = function() {
-	    scope.textIsEditable = false;
-	    if ( typeof tinymce !== 'undefined' ) {
-		tinymce.remove('#' + scope.editorId);
-	    }
-	};
     }
     return {
 	link: link,
@@ -263,44 +217,39 @@ angular.module('owDirectives')
 	scope.save = function(e) {
 	    var newHeading;
 	    // When the user saves the edited heading
-	    scope.fields.text = tinyMCE.get(scope.editorId).getContent();
 	    if ( scope.heading ) {
 		newHeading = Heading.update(scope.fields);
 	    } else {
 		newHeading = Heading.create(scope.fields);
 	    }
 	    newHeading.$promise.then(function(data) {
-		scope.endEdit(newHeading);
+	    	scope.endEdit(newHeading);
 	    });
 	};
-	// TinyMCE text editor
-	scope.editorId = 'editable-text-';
-	if (scope.heading) {
-	    scope.editorId += scope.heading.id;
-	} else if (scope.parent) {
-	    scope.editorId += 'child-' + scope.parent.id;
-	} else {
-	    scope.editorId += 'new';
-	}
-	$timeout(function() {
-	    if ( typeof tinymce !== 'undefined' ) {
-		tinymce.init({
-		    plugins: tinymcePlugins,
-		    toolbar: tinymceToolbar,
-		    inline: true,
-		    tools: 'inserttable',
-		    mode: 'exact',
-		    selector: '#' + scope.editorId,
-		    auto_focus: false
-		});
-	    }
-	    // Focus on the title field
-	    element.find('#title').focus();
-	});
+	// Prepare the markdown editor
+	var textArea = element.find('.edit-text');
+	if ($(textArea).length > 0) {
+	    scope.simplemde = new SimpleMDE({
+	    element: $(textArea)[0],
+	    });
+	    scope.simplemde.codemirror.on("change", function() {
+		// Save the heading text when changed
+		if (scope.fields.text != scope.simplemde.value()) {
+		    scope.fields.text = scope.simplemde.value();
+		    scope.$apply();
+		}
+	    });
+	    scope.$watch('fields.text', function(newText, oldText, currScope) {
+		// Update the editor when the model changes
+		if (currScope.simplemde.value() != newText) {
+		    currScope.simplemde.value(newText);
+		}
+	    });
+	} // end of markdown editor preparation
+	// Process the callbacks for when editing is done
 	scope.cancelEdit = function(e) {
 	    scope.endEdit(e);
 	};
-	// Process the callbacks for when editing is done
 	scope.endEdit = function(e) {
 	    scope.$emit('finishEdit', e);
 	    scope.$parent.$parent.$eval(scope.finishCallback);

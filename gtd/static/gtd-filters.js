@@ -1,5 +1,6 @@
 import 'angular';
 import "orgwolf-filters";
+import showdown from 'showdown';
 "use strict";
 
 angular.module('owFilters')
@@ -86,9 +87,11 @@ angular.module('owFilters')
 *
 **************************************************/
 .filter('asHtml', ['$sce', function($sce) {
+    var converter = new showdown.Converter();
     return function(obj) {
-	var s = $sce.trustAsHtml(obj);
-	return s;
+	var html = converter.makeHtml(obj);
+	var html = $sce.trustAsHtml(html);
+	return html;
     };
 }])
 

@@ -20,6 +20,18 @@ beforeEach(function() {
 
 describe('filters in gtd-filters.js', function() {
     beforeEach(angular.mock.module('owFilters'))
+    describe('the "asHtml" filter', function() {
+	var asHtmlFilter;
+	beforeEach(inject(function(_asHtmlFilter_) {
+    	    asHtmlFilter = _asHtmlFilter_;
+	}));
+	it('converts markdown to to HTML', function() {
+	    var markdown, html;
+	    markdown = '# Hello';
+	    html = asHtmlFilter(markdown);
+	    expect(html.toString()).toEqual('<h1 id="hello">Hello</h1>');
+	});
+    });
     describe('the "is_target" filter', function () {
 	var is_targetFilter;
 	beforeEach(inject(function(_is_targetFilter_) {

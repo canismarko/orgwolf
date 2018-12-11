@@ -140,9 +140,8 @@
 	</div>
       </div><!-- / outer row -->
       <!-- Text editor -->
-      <div class="edit-text" id="{{ editorId }}"
-	   ng-bind-html="fields.text | asHtml">
-      </div>
+      <textarea class="edit-text" ng-model="fields.text">
+      </textarea>
     </div>
   </form>
 </div>

@@ -28,24 +28,9 @@ module.exports = {
     // webpack.config.js
     module: {
 	rules: [
-	    // For handling TinyMCE editor skins
-	    {
-		test: /tinymce\/skins\/lightgray\/*/,
-		use: [
-		    {
-			loader: 'file-loader',
-			options: {
-			    // outputPath: 'tinymce/skins/lightgray',
-			    name: '[path][name].[ext]',
-			    context: 'node_modules/tinymce/',
-			}
-		    }
-		]
-	    },
 	    // For loading CSS files
 	    {
 		test: /\.(png|woff|woff2|eot|ttf|svg)$/,
-		exclude: /tinymce\/skins/,
 		loader: 'url-loader?limit=100000'
 	    },
 	]

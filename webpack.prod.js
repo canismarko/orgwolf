@@ -38,7 +38,6 @@ module.exports = merge(common, {
 	rules: [
 	    {
 	    	test: /\.css$/,
-	    	exclude: /tinymce\/skins/,
 	    	use: [miniCssLoader,'css-loader'],
 	    },
 	    {

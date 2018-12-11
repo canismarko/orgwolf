@@ -242,17 +242,6 @@ dd.todo
     .auto-dim;
 }
 
-.editable-border() {
-    border-style: solid;
-    border-width: 3px;
-    border-color: rgba(0, 0, 0, 0);
-    margin-left: -3px;
-}
-.editable-border-active() {
-    .editable-border;
-    border-color: rgba(255, 255, 0, 100);
-}
-
 /* Drag n' drop features */
 .droppable-target {
     /* Hidden target that becomes visible when dragging is active */
@@ -306,7 +295,6 @@ dd.todo
     border-radius: 7px;
     padding-left: 5px;
     .ow-text {
-	.editable-border;
 	> *:first-child {
 	    margin-top: 0px;
 	}
@@ -340,9 +328,6 @@ dd.todo
 	    border-top-color: @primary-dark;
 	}
     }
-    &:hover .ow-text {
-	.editable-border-active;
-    }
     button {
 	.btn;
 	.btn-sm;
@@ -354,7 +339,7 @@ dd.todo
 	}
     }
     .ow-text {
-	min-height: 19px;
+	margin-top: 10px;
 	table, th, td {
 	    border-collapse: collapse;
 	    border-color: @primary-dark;
@@ -576,13 +561,12 @@ dd.todo
 	border-top-left-radius: 10px;
 	border-top-right-radius: 10px;
     }
-    .edit-text {
-	.editable-border;
-	margin-bottom: 10px;
-	min-height: 40px;
+    .editor-toolbar {
+	margin-top: 10px;
     }
-    &:hover .edit-text {
-	.editable-border-active;
+    .edit-text {
+	.form-control;
+	min-height: 100px;
     }
     input,select {
 	.form-control;

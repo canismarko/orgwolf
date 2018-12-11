@@ -81,7 +81,7 @@ class NodeSerializer(serializers.ModelSerializer):
         if obj.text:
             has_text = True
         return has_text
-
+    
     class Meta:
         model = Node
         fields = "__all__"
@@ -122,7 +122,7 @@ class NodeOutlineSerializer(NodeSerializer):
         fields = ['title', 'tag_string', 'lft', 'rght', 'tree_id', 'id',
                   'priority', 'focus_areas', 'level', 'archived',
                   'todo_state', 'repeats', 'scheduled_date',
-                  'read_only', 'has_text']
+                  'read_only', 'has_text', 'text']
 
 
 class CalendarSerializer(NodeSerializer):
