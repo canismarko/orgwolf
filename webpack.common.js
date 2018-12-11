@@ -2,7 +2,6 @@ const path = require('path');
 var webpack = require('webpack');
 
 module.exports = {
-    mode: 'development',
     entry: {
 	orgwolf: './orgwolf/static/main-entry.js',
 	tests: './orgwolf/static/test-entry.js',
@@ -48,21 +47,6 @@ module.exports = {
 		test: /\.(png|woff|woff2|eot|ttf|svg)$/,
 		exclude: /tinymce\/skins/,
 		loader: 'url-loader?limit=100000'
-	    },
-	    {
-	    	test: /\.css$/,
-	    	exclude: /tinymce\/skins/,
-	    	use: ['style-loader','css-loader'],
-	    },
-	    {
-	    	test: /\.less$/,
-	    	use: [{loader: 'style-loader'},
-	    	      {loader: 'css-loader'},
-	    	      {loader: 'less-loader', options: {
-	    		  strictMath: true,
-	    		  noIeCompat: true
-	    	      }
-	    	      }]
 	    },
 	]
     }

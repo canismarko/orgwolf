@@ -12,7 +12,7 @@ LESS = lessc --clean-css
 DIVIDER = @echo "========================="
 YUI = yuicompressor -v
 JSLINT = @jslint --color --white --terse
-WEBPACK = npx webpack --config webpack.config.js
+WEBPACK = npx webpack
 bold = `tput bold`
 normal = `tput sgr0`
 
@@ -23,7 +23,7 @@ normal = `tput sgr0`
 all: $(MIN_JS)
 
 serve:
-	$(WEBPACK) --watch
+	$(WEBPACK) --config webpack.dev.js --watch
 
 $(MIN_JS): $(GTD_JS) $(WM_JS) $(OW_JS) $(STATIC)jquery.cookie.js $(ORGWOLF_LESS)
-	$(WEBPACK) --mode=production
+	$(WEBPACK) --config webpack.prod.js

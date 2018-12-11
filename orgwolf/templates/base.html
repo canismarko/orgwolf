@@ -40,6 +40,11 @@
     <link rel="stylesheet" type="text/css"
 	  href="{% static 'orgwolf/social/auth-buttons.css' %}" />
 
+    {% if not debug %}
+    <link rel="stylesheet" type="text/css"
+	  href="{% static 'orgwolf.css' %}" />
+    {% endif %}
+
     <script src="{% static 'orgwolf.js' %}"></script>
 
     {% block script %}
