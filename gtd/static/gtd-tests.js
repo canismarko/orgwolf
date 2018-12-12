@@ -25,7 +25,7 @@ describe('filters in gtd-filters.js', function() {
 	beforeEach(inject(function(_asHtmlFilter_) {
     	    asHtmlFilter = _asHtmlFilter_;
 	}));
-	it('converts markdown to to HTML', function() {
+	it('converts markdown to HTML', function() {
 	    var markdown, html;
 	    markdown = '# Hello';
 	    html = asHtmlFilter(markdown);

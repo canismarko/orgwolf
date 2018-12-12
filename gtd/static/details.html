@@ -25,6 +25,5 @@
   FOCUS AREAS: {{ heading | listFocusAreas }}
 </div>
 
-<div class="ow-text">
-  {{ heading }}
+<div class="ow-text" ng-bind-html="heading.text | asHtml">
 </div>

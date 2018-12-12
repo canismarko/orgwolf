@@ -131,13 +131,8 @@ angular.module('owDirectives')
 **************************************************/
 .directive('owDetails', [function() {
     function link(scope, element, attrs) {
-	var i;
-	scope.editorId = 'edit-text-' + scope.heading.id;
+	// Get the full set of model fields
 	scope.heading.$get()
-	    .then(function(newHeading) {
-		// This avoids weird jumping around when actually editing the text
-		scope.headingText = newHeading.text;
-	    });
     }
     return {
 	link: link,

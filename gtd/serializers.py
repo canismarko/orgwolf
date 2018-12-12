@@ -122,7 +122,7 @@ class NodeOutlineSerializer(NodeSerializer):
         fields = ['title', 'tag_string', 'lft', 'rght', 'tree_id', 'id',
                   'priority', 'focus_areas', 'level', 'archived',
                   'todo_state', 'repeats', 'scheduled_date',
-                  'read_only', 'has_text', 'text']
+                  'read_only', 'has_text']
 
 
 class CalendarSerializer(NodeSerializer):

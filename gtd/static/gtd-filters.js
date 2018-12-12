@@ -86,11 +86,12 @@ angular.module('owFilters')
 * Sanitizes text to safe HTML
 *
 **************************************************/
-.filter('asHtml', ['$sce', function($sce) {
+.filter('asHtml', ['$sce', '$sanitize', function($sce, $sanitize) {
     var converter = new showdown.Converter();
-    return function(obj) {
-	var html = converter.makeHtml(obj);
-	var html = $sce.trustAsHtml(html);
+    return function(markdown) {
+	var html = markdown;
+	html = converter.makeHtml(html);
+	html = $sce.trustAsHtml(html);
 	return html;
     };
 }])
