@@ -9,7 +9,7 @@ import './orgwolf/orgwolf.less';
 
 // Orgwolf javascript modules
 import "orgwolf-directives.js";
-import "gtd-directives"
+import "gtd-directives.js"
 import "wolfmail-directives.js"
 
 import "orgwolf-services.js"
@@ -28,5 +28,3 @@ import "orgwolf-controllers.js";
 import "gtd-controllers.js"
 import "wolfmail-controllers.js"
 
-// // There's this random Jquery cookie plugin too
-// import "jquery.cookie.js"

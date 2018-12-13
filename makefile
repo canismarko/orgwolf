@@ -25,5 +25,5 @@ all: $(MIN_JS)
 serve:
 	$(WEBPACK) --config webpack.dev.js --watch
 
-$(MIN_JS): $(GTD_JS) $(WM_JS) $(OW_JS) $(STATIC)jquery.cookie.js $(ORGWOLF_LESS)
+$(MIN_JS): $(GTD_JS) $(WM_JS) $(OW_JS) $(ORGWOLF_LESS)
 	$(WEBPACK) --config webpack.prod.js

@@ -3,8 +3,8 @@ var webpack = require('webpack');
 
 module.exports = {
     entry: {
-	orgwolf: './orgwolf/static/main-entry.js',
-	tests: './orgwolf/static/test-entry.js',
+	orgwolf: './orgwolf/static/main-entry.ts',
+	tests: './orgwolf/static/test-entry.ts',
     },
     output: {
 	filename: '[name].js',
@@ -17,6 +17,7 @@ module.exports = {
 	    path.resolve(__dirname, 'gtd', 'static'),
 	    path.resolve(__dirname, 'wolfmail', 'static'),
 	],
+	extensions: ['.ts', '.js'],
     },
     plugins: [
 	new webpack.ProvidePlugin({
@@ -32,6 +33,12 @@ module.exports = {
 		test: /\.(png|woff|woff2|eot|ttf|svg)$/,
 		loader: 'url-loader?limit=100000'
 	    },
-	]
+	    // For converting typescript to javascript
+	    {
+		test: /\.ts$/,
+		use: 'ts-loader',
+		exclude: /node_modules/,
+	    },
+	],
     }
 };
