@@ -1,7 +1,7 @@
 // Style dependencies
 
 import 'bootstrap/dist/css/bootstrap.css';
-import 'bootstrap-switch/build/css/bootstrap3/bootstrap-switch.css';
+import 'bootstrap-switch/dist/css/bootstrap3/bootstrap-switch.css';
 import 'angularjs-toaster/toaster.css';
 import 'fullcalendar/dist/fullcalendar.css';
 import 'simplemde/dist/simplemde.min.css';

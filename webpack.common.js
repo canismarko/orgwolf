@@ -25,7 +25,6 @@ module.exports = {
 	    'window.jQuery': 'jquery',
 	}),
     ],
-    // webpack.config.js
     module: {
 	rules: [
 	    // For loading CSS files

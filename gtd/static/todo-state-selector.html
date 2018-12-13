@@ -4,6 +4,6 @@
 </span>
 <select class="todo-select non-opening"
 	ng-if="todoStateId && !heading.read_only" ng-model="$parent.todoStateId"
-	style="{{ todoState | todoStateStyle }}">
+	style="{{ todoState | todoStateStyle }}" convert-to-number>
   <option value="" class="default">None</option>
 </select>

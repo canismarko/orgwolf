@@ -1,11 +1,13 @@
 import jQuery from "jquery";
 import 'jquery';
-import 'jquery-ui';
 window.jQuery = jQuery;
+window.$ = jQuery;
+import 'jquery-ui-dist/jquery-ui';
 
 import 'bootstrap/dist/js/bootstrap.js';
 
-import 'bootstrap-switch/build/js/bootstrap-switch.js';
+import 'bootstrap-switch/dist/js/bootstrap-switch.js';
+
 
 import "angular";
 import "angular-animate";
@@ -17,36 +19,6 @@ import SimpleMDE from 'simplemde';
 "use strict";
 
 angular.module('owDirectives')
-
-/*************************************************
-* Directive that turns checkboxes into switches
-*
-**************************************************/
-.directive('owSwitch', function() {
-    function link($scope, $element, attrs, model) {
-	var $input;
-	$input = $element.find('input');
-	// Set switch state when model changes
-	function formatter(value) {
-	    $input.bootstrapSwitch('setState', value);
-	}
-	model.$formatters.push(formatter);
-	// Set model state when switch changes (compare to $modelValue)
-	$input.on('switch-change', function (e, data) {
-	    if (data.value !== model.$modelValue) {
-		$scope.$apply(function() {
-		    model.$setViewValue(data.value);
-		});
-	    }
-	});
-	// Attach switch plugin
-	$input.bootstrapSwitch();
-    }
-    return {
-	link: link,
-	require: '?ngModel',
-    };
-})
 
 /*************************************************
 * Directive modifies the DOM after calls to
@@ -243,10 +215,10 @@ angular.module('owDirectives')
 	} // end of markdown editor preparation
 	// Process the callbacks for when editing is done
 	scope.cancelEdit = function(e) {
-	    scope.endEdit(e);
+	    scope.endEdit(null);
 	};
-	scope.endEdit = function(e) {
-	    scope.$emit('finishEdit', e);
+	scope.endEdit = function(newHeading) {
+	    scope.$emit('finishEdit', newHeading);
 	    scope.$parent.$parent.$eval(scope.finishCallback);
 	};
     }
@@ -416,8 +388,10 @@ angular.module('owDirectives')
 		oldDate = scope.heading.scheduled_date;
 		scope.heading.$update()
 		    .then(function(response) {
-			scope.$emit('finishEdit', response.data,
-				    scope.todoState.closed);
+			if (scope.todoState != null) {
+			    scope.$emit('finishEdit', response.data,
+					scope.todoState.closed);
+			}
 			if (response.data.scheduled_date !== oldDate) {
 			    // Notify the user that the heading is rescheduled
 			    var s = 'Rescheduled for ';

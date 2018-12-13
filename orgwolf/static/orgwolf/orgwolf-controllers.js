@@ -5,6 +5,7 @@ import 'angular-sanitize';
 import 'angular-route';
 import 'angular-ui-bootstrap/ui-bootstrap';
 import 'angular-ui-calendar';
+import 'angular-bootstrap-switch';
 import 'fullcalendar';
 
 import 'angularjs-toaster';
@@ -14,7 +15,7 @@ import 'angularjs-toaster';
 angular.module(
     'owMain',
     ['ngAnimate', 'ngResource', 'ngSanitize', 'ngRoute', 'ngCookies',
-     'ui.bootstrap', 'ui.calendar', 'toaster',
+     'ui.bootstrap', 'ui.calendar', 'toaster', 'frapontillo.bootstrap-switch',
      'owServices', 'owDirectives', 'owFilters']
 )
 

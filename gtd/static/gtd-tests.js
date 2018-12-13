@@ -458,19 +458,6 @@ describe('directives in gtd-directives.js', function() {
 
     });
 
-    describe('the owSwitch directive', function() {
-	beforeEach(function() {
-	    $rootScope.modelValue = false;
-	    element = $compile(
-		'<div ow-switch ng-model="modelValue"><input ng-model="modelValue"></input></div>'
-	    )($rootScope);
-	});
-
-	it('attaches the bootstrap-switch plugin', function() {
-	    expect(element.children('div')).toHaveClass('has-switch');
-	});
-    });
-
     describe('the owCurrentDate directive', function() {
     });
 
@@ -971,6 +958,10 @@ describe('controllers in gtd-main.js', function() {
     });
     beforeEach(inject(function($httpBackend) {
 	$httpBackend.whenGET(/\/gtd\/(context|focusareas)/).respond(200, []);
+	$httpBackend.whenGET(/\/static\/actions-list.html/)
+	    .respond(200, '');
+	$httpBackend.whenGET(/\/static\/project-outline.html/)
+	    .respond(200, '');
     }));
     describe('nextActionsList controller', function() {
 	var $httpBackend, actionsList, upcomingList, $scope;

@@ -262,6 +262,10 @@ describe('wolfmail-ctrl.js', function() {
 	$httpBackend.whenGET(/\/wolfmail\/message\?.*/).respond(200, dummyMessages);
 	$httpBackend.whenGET(/\/gtd\/nodes.*/).respond(200, []);
     }));
+    beforeEach(inject(function($httpBackend) {
+	$httpBackend.whenGET(/\/static\/project-outline.html/)
+	    .respond(200, '');
+    }));
     describe('the owInbox controller', function() {
 	beforeEach(inject(function($rootScope, $controller, _$httpBackend_) {
 	    $controller('owInbox', {$scope: $scope});
