@@ -34,31 +34,31 @@
       <!-- Inbox -->
       <li id="nav-inbox">
 	<a href="/wolfmail/inbox/">
-	  <span class="glyphicon glyphicon-inbox"></span>
+	  <span class="fas fa-inbox"></span>
 	  Inbox
 	</a>
       </li>
       <!-- Project Outline -->
       <li id="nav-projects">
 	<a href="/gtd/projects/">
-	  <span class="glyphicon glyphicon-folder-open"></span>
+	  <span class="fas fa-folder-open"></span>
 	  Projects</a>
       </li>
       <!-- Next actions -->
       <li id="nav-actions">
 	<a href="/gtd/actions/" ng-hide="activeContext">
-	  <span class="glyphicon glyphicon-list"></span>
+	  <span class="fas fa-list"></span>
 	  Next Actions
 	</a>
 	<a href="/gtd/actions/{{ activeContext.id }}/{{ activeContext.name | slugify }}" ng-show="activeContext">
-	  <span class="glyphicon glyphicon-list"></span>
+	  <span class="fas fa-list"></span>
 	  {{ activeContext.name }} Actions
 	</a>
       </li>
       <!-- Calendar -->
       <li id="nav-calendar">
 	<a href="/calendar/">
-	  <span class="glyphicon glyphicon-calendar"></span>
+	  <span class="fas fa-calendar-alt"></span>
 	  Calendar</a>
       </li>
     </ul>
@@ -73,22 +73,22 @@
 
       <li class="dropdown ow-unauth-hide">
       	<a href="#" class="dropdown-toggle" data-toggle="dropdown">
-	  <span class="glyphicon glyphicon-user"></span>
+	  <span class="fas fa-user"></span>
 	  Account <b class="caret"></b>
       	</a>
       	<ul class="dropdown-menu">
       	  <li class="ow-staff-show">
       	    <a href="/admin/" target="_self">
-	      <span class="glyphicon glyphicon-wrench"></span>
+	      <i class="fas fa-tools"></i>
 	      Admin</a>
       	  </li>
       	  <li>
       	    <a href="/accounts/settings/">
-	      <span class="glyphicon glyphicon-cog"></span> Settings</a>
+	      <i class="fas fa-cog"></i> Settings</a>
       	  </li>
       	  <li>
       	    <a href="/accounts/logout/" id="logout">
-	      <span class="glyphicon glyphicon-log-out"></span> Logout</a>
+	      <i class="fas fa-sign-out-alt"></i> Logout</a>
       	  </li>
       	</ul>
       </li>

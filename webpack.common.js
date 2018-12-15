@@ -3,7 +3,7 @@ var webpack = require('webpack');
 
 module.exports = {
     entry: {
-	orgwolf: './orgwolf/static/main-entry.ts',
+	orgwolf: './orgwolf/static/main-entry.js',
 	tests: './orgwolf/static/test-entry.ts',
     },
     output: {
@@ -28,10 +28,30 @@ module.exports = {
     ],
     module: {
 	rules: [
-	    // For loading CSS files
+	    // For loading fonts and glyphs
+	    // {
+	    // 	test: /\.(png|woff|woff2|eot|ttf|svg)(\?v=[0-9]\.[0-9]\.[0-9])?$/,
+	    // 	loader: 'url-loader?limit=10000?name=[name].[ext]&publicPath=/static/'
+	    // 	// use: {
+	    // 	//     loader: "url-loader",
+	    // 	//     options: {
+	    // 	// 	limit=10000,
+	    // 	// 	name: '[name].[ext]',
+	    // 	// 	publicPath: '/static/',
+	    // 	//     }
+	    // 	// }
+	    // },
 	    {
-		test: /\.(png|woff|woff2|eot|ttf|svg)$/,
-		loader: 'url-loader?limit=100000'
+	    	test: /\.woff(2)?(\?v=[0-9]\.[0-9]\.[0-9])?$/,
+	    	loader: "url-loader?limit=10000&mimetype=application/font-woff&name=[name].[ext]&publicPath=/static/",
+	    },
+	    {
+	    	test: /\.(ttf|eot|svg)(\?v=[0-9]\.[0-9]\.[0-9])?$/,
+	    	loader: "file-loader?&name=[name].[ext]&publicPath=/static/"
+	    },
+	    {
+	    	test: /\.(png|jpg)$/,
+	    	loader: 'url-loader?limit=100000&name=[name].[ext]&publicPath=/static/'
 	    },
 	    // For converting typescript to javascript
 	    {

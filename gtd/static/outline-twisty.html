@@ -11,8 +11,7 @@
     {{heading.title}}
     <span ng-show="heading.has_text && state < 2">&hellip;</span>
   </div>
-  <span ng-if="heading.repeats"
-	class="repeat-icon non-opening"></span>
+  <i ng-if="heading.repeats" class="repeat-icon non-opening"></i>
 
   <span ng-repeat="tag in tags" class="tag non-opening">{{ tag }}</span>
 
@@ -20,23 +19,25 @@
 
     <button type="button" class="btn btn-default"
 	    ng-disabled="{{ heading.read_only }}"
-	    ng-click="edit($event)">
-      <span class="edit-icon" title="Edit"></span>
+	    ng-click="edit($event)" title="Edit">
+      <i class="edit-icon"></i>
     </button>
     <a href="/gtd/actions/?parent={{heading.id}}"
-       class="btn btn-default">
-      <span class="list-icon" title="View As List"></span>
+       class="btn btn-default" title="View As List">
+      <i class="action-icon"></i>
     </a>
 
     <button type="button" class="btn btn-default"
 	    ng-click="archive($event)"
-	    ng-disabled="{{ heading.read_only }}">
-      <span class="archive-icon" title="Archive/Unarchive"></span>
+	    ng-disabled="{{ heading.read_only }}"
+	    title="Archive/Unarchive" >
+      <i class="archive-icon"></i>
     </button>
 
     <button type="button" class="btn btn-default"
-	    ng-click="createChild($event)">
-      <span class="new-icon" title="New subheading"></span>
+	    ng-click="createChild($event)"
+	    title="New subheading">
+      <i class="new-icon" ></i>
     </button>
   </div>
   <span class="read-only-label non-opening"

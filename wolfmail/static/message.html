@@ -1,33 +1,33 @@
 <!-- Details of an individual message -->
 <div id="message-detail">
   <a href="/wolfmail/inbox/" class="back-button">
-    <span class="glyphicon glyphicon-arrow-left"></span>
+    <span class="fas fa-arrow-left"></span>
     Inbox
   </a>
 
   <div class="btn-group">
     <button class="btn btn-primary" ng-click="open_task_modal(msg)">
-      <span class="glyphicon glyphicon-unchecked"></span>
+      <i class="fas fa-unchecked"></i>
       New Task
     </button>
     <!-- <button class="btn btn-success" ng-click="create_task_modal(msg)"> -->
-    <!--   <span class="glyphicon glyphicon-check"></span> -->
+    <!--   <span class="fas fa-check-square"></span> -->
     <!--   Mark as 'DONE' -->
     <!-- </button> -->
     <button class="btn btn-info" ng-click="create_project_modal(msg)">
-      <span class="glyphicon glyphicon-folder-close"></span>
+      <i class="fas fa-folder"></i>
       New Project
     </button>
     <button class="btn btn-warning" ng-click="defer_modal(msg)">
-      <span class="glyphicon glyphicon-time"></span>
+      <i class="fas fa-clock"></i>
       Defer
     </button>
     <button class="btn btn-default" ng-click="archive_msg(msg)">
-      <span class="glyphicon glyphicon-save"></span>
+      <span class="fas fa-archive"></span>
       Archive
     </button>
     <button class="btn btn-danger" ng-click="delete_modal(msg)">
-      <span class="glyphicon glyphicon-trash"></span>
+      <span class="fas fa-trash"></span>
       Delete
     </button>
   </div>

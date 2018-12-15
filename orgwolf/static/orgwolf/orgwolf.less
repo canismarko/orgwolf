@@ -9,11 +9,15 @@
 
 /* Import bootstrap mixins, variables, etc */
 @import (reference) "../../../node_modules/bootstrap/less/bootstrap.less";
+@import "../../../node_modules/@fortawesome/fontawesome-free/less/fontawesome.less";
+@import "../../../node_modules/@fortawesome/fontawesome-free/less/solid.less";
 
 .opacify (@opacity) { /* 0 to 100 */
     opacity: (@opacity/100);
     filter:alpha(opacity=@opacity);
 }
+
+
 
 /* Modify content if user is anonymous */
 .ow-logged-out {
@@ -216,9 +220,18 @@ dd.todo
 }
 
 .repeat-icon {
+    .fas;
+    .fa-icon;
+    &:before {
+	content: @fa-var-redo;
+    }
     .auto-dim;
-    .glyphicon;
-    .glyphicon-repeat;
+}
+
+.random-action-btn {
+    .btn;
+    .btn-primary;
+    margin-top: 15px;
 }
 
 .action-buttons {
@@ -227,9 +240,14 @@ dd.todo
     .btn-labels {
 	display: none;
     }
-    span {
-	.glyphicon;
+    i {
+    	.fa-icon;
+    	.fas;
     }
+    .edit-icon:before { content: @fa-var-edit; }
+    .action-icon:before { content: @fa-var-list; }
+    .archive-icon:before { content: @fa-var-eye-slash; }
+    .new-icon:before { content: @fa-var-plus; }
 }
 
 .tag {
@@ -275,10 +293,6 @@ dd.todo
     .filter-button {
 	.btn-default;
 	.btn-xs;
-	.icon {
-	    .glyphicon;
-	    .glyphicon-filter;
-	}
     }
     &:hover {
 	background-color: @gray-lighter !important;
@@ -376,16 +390,20 @@ dd.todo
 /* Outline tree of headings in project view */
 #outline-appliance {
     .container;
-    #show-all
+    #show-all-btn
     {
-	span {
-	    .glyphicon;
-	    .glyphicon-eye-close;
+	i {
+	    .fas;
+	    .fa-icon;
 	}
-	&.active span {
-	    .glyphicon-eye-open;
+	&:not(.active) i:before {
+	    content: @fa-var-eye-slash;
+	}
+	&.active i:before {
+            content: @fa-var-eye;
 	}
     }
+
     .outline {
 	margin-left: 14px;
 	margin-top: 20px;
@@ -445,18 +463,15 @@ dd.todo
 	    }
 	    .action-buttons {
 		top: -1px;
-		span {
-		    &.edit-icon { .glyphicon-edit; }
-		    &.archive-icon { .glyphicon-eye-close; }
-		    &.list-icon {	.glyphicon-list; }
-		    &.new-icon { .glyphicon-plus; }
-		}
 	    }
 	    /* Twisty icon based on expandability */
 	    .twisty {
 		cursor: pointer;
-		.glyphicon;
-		.glyphicon-chevron-right;
+		.fas;
+		.fa-icon;
+		&:before {
+		    content: @fa-var-chevron-right;
+		}
 	    }
 	    &.expandable .twisty {
 		.opacify(100);
@@ -481,8 +496,8 @@ dd.todo
 	    }
 	}
 	.ow-hoverable[archived="true"] {
-	    .archive-btn {
-		.glyphicon-eye-open;
+	    .archive-icon:before {
+		content: @fa-var-eye;
 	    }
 	}
     }
@@ -512,10 +527,6 @@ dd.todo
 
 .refresh-btn {
     .make-md-column(2);
-    span.icon {
-	.glyphicon;
-	.glyphicon-refresh;
-    }
     button {
     	.btn;
     	.btn-default;
@@ -852,9 +863,6 @@ input,textarea {
 	}
 	.received {
 	    .make-md-column(2);
-	}
-	.glyphicon {
-	    cursor: pointer;
 	}
 	.dfrd {
 	    font-weight: bold;

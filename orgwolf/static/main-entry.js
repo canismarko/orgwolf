@@ -1,15 +1,19 @@
 // Style dependencies
 
+import '@fortawesome/fontawesome-free/js/fontawesome.js';
+import '@fortawesome/fontawesome-free/js/solid.js';
+
 import 'bootstrap/dist/css/bootstrap.css';
 import 'bootstrap-switch/dist/css/bootstrap3/bootstrap-switch.css';
 import 'angularjs-toaster/toaster.css';
 import 'fullcalendar/dist/fullcalendar.css';
-import 'simplemde/dist/simplemde.min.css';
+import 'easymde/dist/easymde.min.css';
 import './orgwolf/orgwolf.less';
 
 // Orgwolf javascript modules
 import "orgwolf-directives.js";
-import "gtd-directives.js"
+import "gtd-directives.js";
+import "random-action.js";
 import "wolfmail-directives.js"
 
 import "orgwolf-services.js"

@@ -41,33 +41,39 @@
 	<div class="action-buttons btn-group btn-group-xs">
 	  <button class="msg-task btn btn-primary"
 		  ng-click="open_task_modal(message)">
-	    <span class="glyphicon glyphicon-unchecked"
-		  data-title="New Task"></span>
+	    <span data-title="New Task">
+	      <i class="fas fa-square"></i>
+	    </span>
 	  </button>
 	  <button class="msg-project btn btn-info"
 		  ng-click="create_project_modal(message)">
-	    <span class="glyphicon glyphicon-folder-close"
-		  data-title="New Project"></span>
+	    <span data-title="New Project">
+	      <i class="fas fa-folder"></i>
+	    </span>
 	  </button>
 	  <button class="msg-complete btn btn-success"
 		  ng-click="completeTask(message)">
-	    <span class="glyphicon glyphicon-check"
-		  data-title="Mark as 'Done'"></span>
+	    <span data-title="Mark as 'Done'">
+	      <i class="fas fa-check-square"></i>
+	    </span>
 	  </button>
 	  <button class="msg-defer btn btn-warning"
 		  ng-click="defer_modal(message)">
-	    <span class="glyphicon glyphicon-time"
-		  data-title="Defer"></span>
+	    <span data-title="Defer">
+	      <i class="fas fa-clock"></i>
+	    </span>
 	  </button>
 	  <button class="msg-archive btn btn-default"
 		  ng-click="archive(message)">
-	    <span class="glyphicon glyphicon-save"
-		  data-title="Archive"></span>
+	    <span data-title="Archive">
+	      <i class="fas fa-archive"></i>
+	    </span>
 	  </button>
 	  <button class="msg-delete btn btn-danger"
 		  ng-click="delete_modal(message)">
-	    <span class="glyphicon glyphicon-trash"
-		  data-title="Delete"></span>
+	    <span data-title="Delete">
+	      <i class="fas fa-trash"></i>
+	    </span>
 	  </button>
 	</div><!-- /.action-buttons -->
 
@@ -88,12 +94,12 @@
 	   ow-message-heading
 	   ng-hide="isEditable">
 	<div>
-	  <span class="heading-icon glyphicon glyphicon-unchecked"></span>
+	  <span class="heading-icon fas fa-square"></span>
 	  <span ow-todo ow-heading="heading"></span>
 	  {{ heading.title }}
 	  <button class="btn btn-xs btn-default"
 		  ng-click="isEditable = !isEditable">
-	    <span class="glyphicon glyphicon-edit"></span>
+	    <span class="fas fa-edit"></span>
 	    Edit</button>
 	</div>
       </div>

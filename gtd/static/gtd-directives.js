@@ -14,7 +14,7 @@ import "angular-animate";
 import "angular-resource";
 import "angular-cookies";
 
-import SimpleMDE from 'simplemde';
+import EasyMDE from 'easymde';
 
 "use strict";
 
@@ -196,20 +196,20 @@ angular.module('owDirectives')
 	// Prepare the markdown editor
 	var textArea = element.find('.edit-text');
 	if ($(textArea).length > 0) {
-	    scope.simplemde = new SimpleMDE({
-	    element: $(textArea)[0],
+	    scope.editor = new EasyMDE({
+		element: $(textArea)[0],
 	    });
-	    scope.simplemde.codemirror.on("change", function() {
+	    scope.editor.codemirror.on("change", function() {
 		// Save the heading text when changed
-		if (scope.fields.text != scope.simplemde.value()) {
-		    scope.fields.text = scope.simplemde.value();
+		if (scope.fields.text != scope.editor.value()) {
+		    scope.fields.text = scope.editor.value();
 		    scope.$apply();
 		}
 	    });
 	    scope.$watch('fields.text', function(newText, oldText, currScope) {
 		// Update the editor when the model changes
-		if (currScope.simplemde.value() != newText) {
-		    currScope.simplemde.value(newText);
+		if (currScope.editor.value() != newText) {
+		    currScope.editor.value(newText);
 		}
 	    });
 	} // end of markdown editor preparation

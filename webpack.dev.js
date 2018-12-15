@@ -17,7 +17,7 @@ module.exports = merge(common, {
 	    		  strictMath: true,
 	    		  noIeCompat: true
 		      }
-		      }]
+		      }],
 	    },
 	]
     }

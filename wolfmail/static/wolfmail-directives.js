@@ -11,7 +11,7 @@ angular.module('owDirectives')
     function link(scope, element, attrs) {
 	var $element, $bTask, $bProject, $bComplete, $bDefer, $bArchive, $bDelete;
 	$element = $(element);
-	$element.find('.glyphicon').tooltip();
+	$element.find('span').tooltip();
 	scope.headings = [];
 	// Find buttons
 	$bTask = $element.find('.msg-task');
