@@ -120,7 +120,7 @@ angular.module('owDirectives')
 * is a new child.
 *
 **************************************************/
-.directive('owEditable', ['$resource', '$rootScope', '$timeout', 'owWaitIndicator', 'Heading', 'todoStates', 'focusAreas', 'toaster', 'toDateObjFilter', function($resource, $rootScope, $timeout, owWaitIndicator, Heading, todoStates, focusAreas, toaster, toDateObjFilter) {
+.directive('owEditable', ['$resource', '$rootScope', '$timeout', 'owWaitIndicator', 'Heading', 'todoStates', 'focusAreas', 'priorities', 'toaster', 'toDateObjFilter', function($resource, $rootScope, $timeout, owWaitIndicator, Heading, todoStates, focusAreas, priorities, toaster, toDateObjFilter) {
     // Directive creates the pieces that allow the user to edit a heading
     function link(scope, element, attrs) {
 	var defaultParent, $text, heading, $save, heading_id, parent, editorId;
@@ -159,12 +159,7 @@ angular.module('owDirectives')
 		scope.fields.focus_areas.push($rootScope.activeFocusArea.id);
 	    }
 	}
-	scope.priorities = [{sym: 'A',
-			     display: 'A - Critical'},
-			    {sym: 'B',
-			     display: 'B - High' },
-			    {sym: 'C',
-			     display: 'C - Default'}];
+	scope.priorities = priorities;
 	scope.time_units = [
 	    {value: 'd', label: 'Days'},
 	    {value: 'w', label: 'Weeks'},
@@ -638,23 +633,13 @@ angular.module('owDirectives')
 	scope.$watch(
 	    function() {return scope.heading.deadline_date;},
 	    function(newDeadline) {
-		var row_cls, due, today, deadline;
-		due = null;
+		var row_cls;
 		if ( newDeadline ) {
-		    today = new Date();
-		    deadline = new Date(newDeadline);
 		    scope.owDate = $filter('deadline_str')(newDeadline);
-		    due = deadline - today;
 		}
 		element.removeClass('overdue');
 		element.removeClass('upcoming');
-		if ( due === null ) {
-		    row_cls = '';
-		} else if ( due <= 0 ) {
-		    row_cls = 'overdue';
-		} else if ( 7*86400000 > due > 0 ) {
-		    row_cls = 'upcoming';
-		}
+		row_cls = $filter('deadline_class')(newDeadline);
 		element.addClass(row_cls);
 	    }
 	);

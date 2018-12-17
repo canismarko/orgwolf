@@ -120,7 +120,7 @@ angular.module('owMain')
                     scope.success = false;
                     scope.feedback = {};
                     $modal.modal('hide');
-                }, 1200);
+                }, 1200, false);
 	    })
 	    .error(function(data, status, headers) {
 		    console.log(data);

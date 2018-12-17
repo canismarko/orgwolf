@@ -13,7 +13,6 @@ import './orgwolf/orgwolf.less';
 // Orgwolf javascript modules
 import "orgwolf-directives.js";
 import "gtd-directives.js";
-import "random-action.js";
 import "wolfmail-directives.js"
 
 import "orgwolf-services.js"
@@ -30,5 +29,6 @@ import "wolfmail-filters.js"
 
 import "orgwolf-controllers.js";
 import "gtd-controllers.js"
+import "random-action.js";
 import "wolfmail-controllers.js"
 

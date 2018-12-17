@@ -122,8 +122,9 @@ body[debug="True"] {
 
 /* Things that are dimmed until the user hovers over them */
 .auto-dim {
-    .opacify(0);
-    /* .heading-row,.message-row,.ow-hoverable & { */
+    .heading-row &,.ow-hoverable &,.message-row & {
+	.opacify(0);
+    }
     .heading-row:hover &,.ow-hoverable:hover &,.message-row:hover & {
 	.opacify(100);
     }
@@ -234,6 +235,38 @@ dd.todo
     margin-top: 15px;
 }
 
+.random-action-modal {
+    .duration-timer {
+	margin-top: auto;
+	margin-bottom: auto;
+    }
+    dt, dd {
+	float: left;
+	margin-bottom: 5px;
+    }
+    dt {
+	clear: both;
+	margin-right: 5px;
+    }
+    dl { overflow: hidden; }
+    .overdue {
+	color: @alert-danger-text;
+	// background: @alert-danger-bg;
+	font-weight: bold;
+    }
+    .upcoming {
+	color: @alert-warning-text;
+	background: @alert-warning-bg;
+    }
+}
+
+.modal-success {
+    color: @alert-success-text;
+}
+.modal-failure {
+    color: @alert-warning-text;
+}
+
 .action-buttons {
     .auto-dim;
     cursor: default;
@@ -254,6 +287,8 @@ dd.todo
     .label;
     .label-default;
     .auto-dim;
+    margin-left: 2px;
+    margin-right: 2px;
 }
 
 .filter-button {
@@ -303,6 +338,57 @@ dd.todo
     .hidden-xs;
     font-weight: bold;
 }
+.ow-text {
+    margin-top: 10px;
+    table, th, td {
+	border-collapse: collapse;
+	border-color: @primary-dark;
+	border-style: solid;
+	border-width: 1px 0px;
+	padding: 0px 8px;
+	margin-bottom: 5px;
+    }
+    th, thead td {
+	color: white;
+	font-weight: bold;
+	background: @primary-dark-faded;
+    }
+    tr:nth-child(odd) {
+	background: rgba(255, 255, 255, 0.7);
+    }
+    tr:nth-child(even) {
+	background: @primary-light-pale;
+    }
+    h1 {
+	/* font-size: 24px; */
+	font-size: 130%;
+    }
+    h2 {
+	/* font-size: 22px; */
+	font-size: 120%;
+    }
+    h3 {
+	/* font-size: 20px; */
+	font-size: 110%;
+	font-weight: bold;
+    }
+    h4 {
+	/* font-size: 18px; */
+	font-size: 100%;
+	font-weight: bold;
+    }
+    h5 {
+	/* font-size: 14px; */
+	font-size: 100%;
+    }
+    h6 {
+	/* font-size: 12px; */
+	font-size: 90%
+    }
+    hr {
+	border-top-color: @primary-dark;
+    }
+}
 .details {
     color: black;
     background: linear-gradient(rgba(0,0,0,0), @primary-light-pale);
@@ -311,35 +397,6 @@ dd.todo
     .ow-text {
 	> *:first-child {
 	    margin-top: 0px;
-	}
-	h1 {
-	    /* font-size: 24px; */
-	    font-size: 130%;
-	}
-	h2 {
-	    /* font-size: 22px; */
-	    font-size: 120%;
-	}
-	h3 {
-	    /* font-size: 20px; */
-	    font-size: 110%;
-	    font-weight: bold;
-	}
-	h4 {
-	    /* font-size: 18px; */
-	    font-size: 100%;
-	    font-weight: bold;
-	}
-	h5 {
-	    /* font-size: 14px; */
-	    font-size: 100%;
-	}
-	h6 {
-	    /* font-size: 12px; */
-	    font-size: 90%
-	}
-	hr {
-	    border-top-color: @primary-dark;
 	}
     }
     button {
@@ -350,28 +407,6 @@ dd.todo
 	}
 	&.revert {
 	    .btn-danger;
-	}
-    }
-    .ow-text {
-	margin-top: 10px;
-	table, th, td {
-	    border-collapse: collapse;
-	    border-color: @primary-dark;
-	    border-style: solid;
-	    border-width: 1px 0px;
-	    padding: 0px 8px;
-	    margin-bottom: 5px;
-	}
-	th, thead td {
-	    color: white;
-	    font-weight: bold;
-	    background: @primary-dark-faded;
-	}
-	tr:nth-child(odd) {
-	    background: rgba(255, 255, 255, 0.7);
-	}
-	tr:nth-child(even) {
-	    background: @primary-light-pale;
 	}
     }
 }

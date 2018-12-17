@@ -227,7 +227,7 @@ angular.module('owMain')
 * Angular actions list controller
 *
 **************************************************/
-.controller('nextActionsList', ['$sce', '$scope', '$resource', '$location', '$routeParams', '$filter', 'contexts', 'Heading', 'todoStates', 'activeState', 'owWaitIndicator', '$cookies', function($sce, $scope, $resource, $location, $routeParams, $filter, contexts, Heading, todoStates, activeState, owWaitIndicator, $cookies) {
+.controller('nextActionsList', ['$sce', '$scope', '$resource', '$location', '$routeParams', '$filter', 'contexts', 'Heading', 'todoStates', 'activeState', 'owWaitIndicator', '$cookies', '$uibModal', function($sce, $scope, $resource, $location, $routeParams, $filter, contexts, Heading, todoStates, activeState, owWaitIndicator, $cookies, $uibModal) {
     var i, TodoState, Context, today, update_url, get_list, parent_id, todo_states;
     $scope.list_params = {field_group: 'actions_list'};
     $scope.showArchived = true;
@@ -430,6 +430,11 @@ angular.module('owMain')
 	}
 	$navLink.attr('href', $location.absUrl());
     };
+    // Handler for doing a random action from the list
+    // $scope.randomAction = function() {
+
+    // 	console.log("Random");
+    // };
 }])
 
 /*************************************************
@@ -480,7 +485,7 @@ angular.module('owMain')
 * Calendar controller
 *
 **************************************************/
-.controller('calendar', ['$scope', 'Heading', '$filter', '$modal', function($scope, Heading, $filter, $modal) {
+.controller('calendar', ['$scope', 'Heading', '$filter', '$uibModal', function($scope, Heading, $filter, $uibModal) {
     // Uses angular-ui-calendar from https://github.com/angular-ui/ui-calendar
     var date, d, m, y;
     // List of calendars that are actually shown
@@ -556,7 +561,7 @@ angular.module('owMain')
 	// Prepare and show the modal for editing the event
 	newScope = $scope.$new(true);
 	newScope.editableEvent = obj;
-	modal = $modal.open({
+	modal = $uibModal.open({
 	    scope: newScope,
 	    templateUrl: 'edit-modal',
 	    windowClass: 'calendar-edit'});

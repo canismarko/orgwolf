@@ -242,10 +242,33 @@ angular.module('owFilters')
     };
 }])
 
-/*************************************************
-* Filter that displays the deadline for a heading
+/**************************************************
+* Filters that displays the deadline for a heading
 *
-**************************************************/
+***************************************************/
+.filter('deadline_class', [function() {
+    return function(deadline, today) {
+	var deadlineClass, due, deadlineDate;
+	// Figure out what date we're comparing to
+	if ( typeof today === 'undefined' ) {
+	    today = new Date();
+	}
+	// Check for null values first
+	if ( !deadline ) {
+	    deadlineClass = '';
+	} else {
+	    deadlineDate = new Date(deadline);
+	    due = deadlineDate - today;
+	    if ( due <= 0 ) {
+		deadlineClass = 'overdue';
+	    } else if ( 7*86400000 > due > 0 ) {
+		deadlineClass = 'upcoming';
+	    }
+	}
+	return deadlineClass;
+    }
+}])
+
 .filter('deadline_str', ['$sce', function($sce) {
     return function(deadline, today) {
 	var str, date, time_delta, day_delta;
@@ -276,6 +299,31 @@ angular.module('owFilters')
 		str += 'in ' + day_delta + ' days';
 	    }
 	}
+	return str;
+    };
+}])
+
+
+/*************************************************
+* Accept a number of seconds and return a HH:mm:ss
+* string.
+*
+**************************************************/
+.filter('secondsToString', [function() {
+    return function(totalSeconds) {
+	var hours, minutes, seconds, str;
+	seconds = totalSeconds % 60;
+	minutes = Math.floor(totalSeconds / 60) % 60;
+	hours = Math.floor(totalSeconds / 3600);
+	str = '';
+	if (hours > 0) {
+	    str += String(hours) + ':';
+	}
+	str += String(minutes) + ':';
+	if (seconds < 10) {
+	    str += '0';
+	}
+	str += String(seconds);
 	return str;
     };
 }])

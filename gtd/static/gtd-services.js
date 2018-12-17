@@ -63,6 +63,7 @@ angular.module('owServices')
     // Interceptors for manipulating the responses
     toastOnly = {
 	'response': function(response) {
+	    // Announce a successful save
 	    toaster.pop('success', 'Saved');
 	    return response;
 	},
@@ -141,6 +142,15 @@ angular.module('owServices')
 	 }
 	},
     ]
+)
+
+/*************************************************
+* Descriptions of A/B/C style priorities
+**************************************************/
+.value('priorities', [
+    {sym: 'A', display: 'A - Critical'},
+    {sym: 'B', display: 'B - High'},
+    {sym: 'C', display: 'C - Default'}]
 )
 
 /*************************************************

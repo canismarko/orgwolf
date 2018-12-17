@@ -4,7 +4,7 @@ var webpack = require('webpack');
 module.exports = {
     entry: {
 	orgwolf: './orgwolf/static/main-entry.js',
-	tests: './orgwolf/static/test-entry.ts',
+	tests: './orgwolf/static/test-entry.js',
     },
     output: {
 	filename: '[name].js',

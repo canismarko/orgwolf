@@ -1,0 +1,89 @@
+<button class="random-action-btn" ng-click="openModal()">
+  <i class="fas fa-dice"></i> Random Action</button>
+
+<script type="text/ng-template" id="random-action-modal">
+  <div class="random-action-modal">
+    <div class="modal-header">
+      <h2 class="modal-title" id="modal-title">
+	<span style="{{ todoState | todoStateStyle }}">
+	  {{ todoState.abbreviation }}</span>
+	{{ heading.title }}
+      </h2>
+    </div>
+    <div class="modal-body" id="modal-body">
+      <dl>
+	<dt>State:</dt>
+	<dd><span style="{{ todoState| todoStateStyle }}">
+	    {{ todoState.display_text }}</span></dd>
+	<dt>Project:</dt>
+	<dd>{{ listHeading.root_name }}</dd>
+	<dt ng-if="priority">Priority:</dt>
+	<dd ng-if="priority" class="priority{{ priority.sym }}">
+	  <span class="priority">{{ priority.display }}</span></dd>
+	<dt ng-if="heading.deadline_date">Deadline:</dt>
+	<dd><span class="{{ heading.deadline_date | deadline_class }}">
+	  {{ heading.deadline_date | deadline_str }}</span></dd>
+      </dl>
+      <p>
+	<span ng-repeat="tag in tags" class="tag">{{ tag }}</span>
+      <p>
+      <div class="ow-text" ng-bind-html="heading.text | asHtml">
+      </div>
+    </div>
+    <div class="modal-footer">
+      <div class="duration-timer pull-left">Duration: {{ duration | secondsToString }}</div>
+      <button class="btn btn-success" type="button" ng-click="completeAction(heading)">
+	<i class="fas fa-check"></i> Mark as DONE</button>
+      <button class="btn btn-default" type="button" ng-click="planProject(heading)">
+	<i class="fas fa-folder-open"></i> Plan Project</button>
+      <button class="btn btn-link" type="button" ng-click="giveUp(heading)">
+	Give up</button>
+    </div>
+  </div>
+</script>
+
+<script type="text/ng-template" id="follow-up-modal">
+  <div class="modal-header modal-{{ outcome }}">
+    <h2 ng-if="outcome === 'success'"><i class="fas fa-smile"></i> Rock On!<h2>
+	<h2 ng-if="outcome !== 'success'"><i class="fas fa-frown"></i> Bummer&hellip;<h2>
+  </div>
+  <div class="modal-body" id="modal-body">
+    <div ng-if="outcome === 'success'">
+      <p ng-if="parentHeading">
+	This task was part of the project: <strong><em>{{
+	    parentHeading.title }}</em></strong>. Use the buttons below
+	to <strong>plan follow-up</strong> actions (or defer that for
+	later).
+      </p>
+      <p ng-if="!parentHeading">
+	This task was its own project, so there's no follow-up needed?
+      </p>
+    </div>
+    <div ng-if="outcome === 'failure'">
+      <p>
+	Looks like you didn't complete this task. Could it be that:
+	<ul>
+	  <li>It actually involves several actions
+	    <i class="fas fa-arrow-right"></i> Make it multiple actions.</li>
+	  <li>It's too long to complete in one sitting
+	    <i class="fas fa-arrow-right"></i> Make it multiple actions.</li>
+	  <li>It's not important enough to do now
+	    <i class="fas fa-arrow-right"></i> Cancel it or make it <em>Someday/Maybe</em></li>
+	  <li>It's not valid in this context
+	    <i class="fas fa-arrow-right"></i> Change the tags</li>
+	</ul>
+      </p>
+    </div>
+  </div>
+  <div class="modal-footer">
+    <div class="duration-timer pull-left">Duration: {{ duration | secondsToString }}</div>
+    <button class="btn btn-primary" ng-click="planProject(outcome)"
+	    ng-disabled="nextHeading === null">
+      <i class="fas fa-folder-open"></i> Plan Project</button>
+    <button class="btn btn-default" ng-click="planLater(outcome)"
+	    ng-disabled="nextHeading === null">
+      <i class="fas fa-clock"></i> Plan Later</button>
+    <button class="btn btn-link" type="button" ng-click="followUpModal.dismiss('completed')">
+      Dismiss</button>
+  </div>
+</script>
