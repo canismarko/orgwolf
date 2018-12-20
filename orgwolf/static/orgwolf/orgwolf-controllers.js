@@ -29,7 +29,19 @@ angular.module(
 	.when('/accounts/settings/', {
 	    templateUrl: '/static/settings.html',
 	    controller: 'settings',
+	})
+	.when('/accounts/login/', {
+	    templateUrl: '/static/orgwolf/login.html',
+	    controller: 'login',
 	});
+}])
+
+/***********************************************
+* Controller for logging into the site globally
+***********************************************/
+    .controller('login', ['$scope', function($scope) {
+	
+	
 }])
 
 .controller('settings', ['$scope', '$window', '$resource', '$http', 'toaster', function($scope, $window, $resource, $http, toaster) {

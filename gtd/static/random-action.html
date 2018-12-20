@@ -11,8 +11,10 @@
       </h2>
     </div>
     <div class="modal-body" id="modal-body">
-      <dl>
-	<dt>State:</dt>
+    <dl>
+      <dt>Urgency Score:</dt>
+      <dd>{{ heading | actionScore }}</dd>
+      <dt>State:</dt>
 	<dd><span style="{{ todoState| todoStateStyle }}">
 	    {{ todoState.display_text }}</span></dd>
 	<dt>Project:</dt>

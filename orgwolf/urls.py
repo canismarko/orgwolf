@@ -40,6 +40,8 @@ urlpatterns = [
     url(r'^search/?', AngularView.as_view(), name="search"),
     url(r'^calendar/?', AngularView.as_view()),
     url(r'^accounts/settings/?$', AngularView.as_view()),
+    url(r'^accounts/login/?$', AngularView.as_view()),
+    url(r'^accounts/logout/?$', AngularView.as_view()),
     
     # API entry points
     url(r'^feedback/?$', FeedbackView.as_view(), name='feedback'),

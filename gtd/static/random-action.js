@@ -4,9 +4,10 @@ import 'angular';
 import 'angular-ui-bootstrap';
 
 angular.module('owDirectives')
-.directive('owRandomAction', ['$uibModal', 'Heading', '$location', '$interval', 'toaster', 'todoStates', 'priorities', function($uibModal, Heading, $location, $interval, toaster, todoStates, priorities) {
+.directive('owRandomAction', ['$uibModal', 'Heading', '$location', '$interval', 'toaster', 'todoStates', 'priorities', '$filter', function($uibModal, Heading, $location, $interval, toaster, todoStates, priorities, $filter) {
     function link($scope, $element, attrs) {
 	var randIdx, doneTodoState, dfrdTodoState, startTime, durationStop;
+	var weights, totalWeight;
 	// Get the DONE todoState so we can complete actions later
 	doneTodoState = null;
 	dfrdTodoState = null;
@@ -26,7 +27,27 @@ angular.module('owDirectives')
 	// Handler for opening the modal dialog
 	$scope.openModal = function() {
 	    // Get a random item to do
+	    var cumulativeWeights, rollingTotal, rand;
 	    $scope.randIdx = Math.floor(Math.random() * $scope.headings.length);
+	    weights = $scope.headings.map($filter('actionScore'));
+	    totalWeight = weights.reduce(function(a, b) { return a+b; });
+	    // Get an array of weight points between 0 and 1.
+	    cumulativeWeights = []
+	    rollingTotal = 0;
+	    for (i=0; i<weights.length; i++) {
+		rollingTotal += weights[i]
+		cumulativeWeights[i] = (rollingTotal) / totalWeight;
+	    }
+	    // Get a random value from 0 to 1 and calculate a heading index
+	    rand = Math.random();
+	    rollingTotal = 0;
+	    for (i=0; i<cumulativeWeights.length; i++) {
+		if (rand < cumulativeWeights[i]) {
+		    randIdx = i;
+		    break;
+		}
+	    }
+	    $scope.randIdx = i;
 	    $scope.listHeading = $scope.headings[$scope.randIdx];
 	    // Get all the data for the heading and it's parent
 	    $scope.heading = Heading.get({id: $scope.listHeading.id});

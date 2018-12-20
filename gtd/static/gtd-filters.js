@@ -96,58 +96,73 @@ angular.module('owFilters')
     };
 }])
 
+
 /*************************************************
 * Filter that sorts the action list
 *
 **************************************************/
-.filter('sortActions', ['$sce', 'activeState', 'locations', function($sce, activeState, locations) {
-    return function(unoderedList) {
-	var ordered, deadline, other, i, today, activeLocations, locationIDs, activeLocation;
-	function importance(heading) {
-	    // Assign a weight to a given heading for sorting
-	    var weight, today, delta;
-	    weight = 0;
-	    // Check for upcoming deadlines
-	    if (heading.deadline_date) {
-		today = new Date();
-		deadline = new Date(heading.deadline_date);
-		delta = deadline - today;
-		if (delta < (7 * 24 * 3600 * 1000)) {
-		    weight += 3;
-		}
-	    }
-	    // Sort by priority
-	    var priorities = {'A': 3,
-			      'B': 2,
-			      'C': 1,
-			      undefined: 0};
-	    weight += priorities[heading.priority];
-	    // Put location-specific things higher up the list
-	    for (i=0; i<activeLocations.length; i+=1) {
-		activeLocation = activeLocations[i];
-		if (heading.tag_string.indexOf(activeLocation.tag_string) > -1) {
-		    // This heading requires the current location tag
-		    weight += 1;
-		    break;
-		}
-	    }
-	    return weight;
-	};
-	// Get active locations for sorting based on active context
-	activeLocations = [];
-	if (activeState.context) {
-	    locationIDs = activeState.context.locations_available;
-	    for (i=0; i<locationIDs.length; i+=1) {
-		// Find and check each location object
-		activeLocation = locations.filter(function(loc) {
-		    return loc.id == locationIDs[i];
-		})[0];
-		activeLocations.push(activeLocation)
+.filter('actionScore', ['activeState', function(activeState) {
+    var priorities, activeLocations, locationIDs, i, activeLocation;
+    // Point values for A-B-C priorities
+    var priorities = {'A': 3,
+		      'B': 2,
+		      'C': 1,
+		      undefined: 0,
+		      '': 0,
+		     };
+    // Get active locations for sorting based on active context
+    activeLocations = [];
+    if (activeState.context) {
+	locationIDs = activeState.context.locations_available;
+	for (i=0; i<locationIDs.length; i+=1) {
+	    // Find and check each location object
+	    activeLocation = locations.filter(function(loc) {
+		return loc.id == locationIDs[i];
+	    })[0];
+	    activeLocations.push(activeLocation)
+	}
+    }
+    return function(heading) {
+	var today, deadline, delta, oneDay, daysLeft, points;
+	var score = 1;
+	oneDay = 24 * 3600 * 1000;
+	// Higher A/B/C priorities get more points
+	score += priorities[heading.priority];
+	// Upcoming deadlines get more points
+	if (heading.deadline_date) {
+	    today = new Date();
+	    // Calculate days left, from 0 up to 7.
+	    deadline = new Date(heading.deadline_date);
+	    delta = (deadline - today) / oneDay;
+	    daysLeft = Math.min(Math.max(delta, 0), 7);
+	    // Convert days left to a score to add
+	    points = 3 * (7 - daysLeft)/7;
+	    score += points;
+	}
+	// Put location-specific things higher up the list
+	for (i=0; i<activeLocations.length; i+=1) {
+	    activeLocation = activeLocations[i];
+	    if (heading.tag_string.indexOf(activeLocation.tag_string) > -1) {
+		// This heading requires the current location tag
+		score += 1;
+		break;
 	    }
 	}
+	return score;
+    };
+}])
+
+/*************************************************
+* Filter that sorts the action list
+*
+**************************************************/
+.filter('sortActions', ['$filter', function($filter) {
+    return function(unoderedList) {
+	var actionScore, ordered;
 	// Sort by "importance value" of each heading
+	actionScore = $filter('actionScore');
 	ordered = unoderedList.sort(function(a, b) {
-	    return importance(b) - importance(a);
+	    return actionScore(b) - actionScore(a);
 	});
 	return ordered;
     };
@@ -156,7 +171,7 @@ angular.module('owFilters')
 /*************************************************
 * Filter that sorts top level headings in the
 * project view. (Actions list view is sorted by
-* a different filter).
+* a different filter: ``sortActions``).
 *
 **************************************************/
 .filter('order', ['$sce', 'activeState', function($sce, activeState) {
