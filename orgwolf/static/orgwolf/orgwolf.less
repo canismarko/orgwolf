@@ -220,6 +220,14 @@ dd.todo
     }
 }
 
+.back-icon {
+    .fas;
+    .fa-icon;
+    &:before {
+	content: @fa-var-arrow-left;
+    }
+}
+
 .repeat-icon {
     .fas;
     .fa-icon;
@@ -925,6 +933,50 @@ input,textarea {
     .container;
     .social-button {
 	cursor: pointer;
+    }
+}
+
+.logout-notice {
+    .alert;
+    .alert-success;
+    .text-center;
+    a,button {
+	.btn;
+	.btn-success;
+    }
+}
+
+/* Account login box */
+.login-box {
+    .make-sm-column(8);
+    .make-sm-column-offset(2);
+    .alert;
+    .alert-info;
+    form {
+	margin-top: 5px;
+	li,p {
+	    margin-left: 2px;
+	    .form-group;
+	}
+	input {
+	    .form-control;
+	    margin-right: 2px;
+	}
+	li,p,input {
+	    /* Inline vs standard form for different responsive devices */
+	    @media (min-width: @screen-md-min) {
+		display: inline;
+		width: auto;
+	    }
+	    @media (max-width: @screen-sm-max) {
+		display: block;
+		width: 100%;
+	    }
+	}
+	#login-button {
+	    .btn;
+	    .btn-primary;
+	}
     }
 }
 

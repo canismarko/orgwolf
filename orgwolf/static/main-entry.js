@@ -14,6 +14,8 @@ import './orgwolf/orgwolf.less';
 import "orgwolf-directives.js";
 import "gtd-directives.js";
 import "wolfmail-directives.js"
+import "random-action.js";
+import "login.js";
 
 import "orgwolf-services.js"
 import "gtd-services.js";
@@ -29,6 +31,5 @@ import "wolfmail-filters.js"
 
 import "orgwolf-controllers.js";
 import "gtd-controllers.js"
-import "random-action.js";
 import "wolfmail-controllers.js"
 

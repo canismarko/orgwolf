@@ -142,6 +142,8 @@ if db_engine == 'django.db.backends.mysql':
 
 TEST_RUNNER = 'django.test.runner.DiscoverRunner'
 
+LOGIN_REDIRECT_URL = 'home'
+
 # Enforce HTTPS
 if not DEBUG:
     SESSION_COOKIE_SECURE = True

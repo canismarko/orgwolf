@@ -11,16 +11,7 @@
 </div>
 
 <!-- Alert if the user is not logged in -->
-<div class="container ow-unauth-show" id="unauth-warn">
-  <div class="row">
-    <div class="alert alert-warning col-md-5 col-md-offset-3">
-      You are in <strong>demo mode</strong>; changes will not be
-      saved.<br />Please <strong>
-      <a href="/accounts/login/">
-	login</a></strong> to create a new account.
-    </div>
-  </div>
-</div>
+<div ow-login></div>
 
 <!-- Displays indicators if there's a noticeable wait time -->
 <div ow-wait-feedback class="wait-indicator" ng-show="long_wait">

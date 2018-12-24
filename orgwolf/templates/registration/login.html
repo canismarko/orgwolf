@@ -1,4 +1,4 @@
-{% extends 'base.html' %}
+{% load accounts %}
 {% comment %}
 Copyright 2012 Mark Wolf
 
@@ -18,19 +18,19 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 {% endcomment %}
 
-{% block nav %}
-<!-- Removed navbar for login pages -->
-{% endblock %}
-
-{% block search %}
-<!-- removed the search box for login pages -->
-{% endblock %}
-
-{% block content %}
-<div class="row">
-  <div class="login-frame col-md-5 col-mod-offset-1">
-    <h3>Already registered?<br />Login here...</h3>
-    {% include 'registration/login_form.html' %}
+<div ng-if="activeState.user === null">
+  <div class="row">
+    <div class="login-box">
+      <p>
+	You are in demo mode, <strong>changes will not be
+	  saved</strong>. Please login to view your projects.
+      </p>
+      <form action="{% url 'login' %}?next=" method="post">
+	{{ form.as_p }}
+	{% csrf_token %}
+	<button type="submit" name="login" id="login-button">
+	  Login</button>
+      </form>
+    </div>
   </div>
 </div>
-{% endblock %}
