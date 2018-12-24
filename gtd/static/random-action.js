@@ -18,12 +18,6 @@ angular.module('owDirectives')
 		dfrdTodoState = todoStates[i];
 	    }
 	}
-	// Keep track of how long we've been working on this item
-	$scope.duration = 0;
-	startTime = new Date();
-	durationStop = $interval(function() {
-	    $scope.duration = Math.round((new Date() - startTime) / 1000);
-	}, 1000);
 	// Handler for opening the modal dialog
 	$scope.openModal = function() {
 	    // Get a random item to do
@@ -66,6 +60,12 @@ angular.module('owDirectives')
 		    $scope.parentHeading = null;
 		}
 	    });
+	    // Keep track of how long we've been working on this item
+	    $scope.duration = 0;
+	    durationStop = $interval(function() {
+		$scope.duration = Math.round((new Date() - startTime) / 1000);
+	    }, 1000);
+	    startTime = new Date();
 	    // Load the actual modal dialog
 	    $scope.actionModal = $uibModal.open({
 	        ariaLabelledBy: 'modal-title',
