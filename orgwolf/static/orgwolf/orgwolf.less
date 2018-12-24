@@ -237,12 +237,6 @@ dd.todo
     .auto-dim;
 }
 
-.random-action-btn {
-    .btn;
-    .btn-primary;
-    margin-top: 15px;
-}
-
 .random-action-modal {
     .duration-timer {
 	margin-top: auto;
@@ -273,6 +267,22 @@ dd.todo
 }
 .modal-failure {
     color: @alert-warning-text;
+}
+
+.action-list-buttons {
+    margin-top: 15px;
+    .random-action-btn {
+	.btn;
+	.btn-primary;
+    }
+    .refresh-btn button {
+    	.btn;
+    	.btn-default;
+    }
+    > div {
+	display: inline;
+	margin-right: 5px;
+    }
 }
 
 .action-buttons {
@@ -568,13 +578,6 @@ dd.todo
     height: 0px;
 }
 
-.refresh-btn {
-    .make-md-column(2);
-    button {
-    	.btn;
-    	.btn-default;
-    }
-}
 /* Text styles for various statuses */
 .ow-hoverable[archived="true"],.archived-indicator {
     font-style: italic;
@@ -765,7 +768,7 @@ input,textarea {
 #gtd-list {
     .container;
     .date-widget {
-	.make-md-column(3);
+	.make-md-column(4);
 	h2 { margin-top: 0px; }
     }
     a {

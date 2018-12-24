@@ -7,9 +7,6 @@
 
     <!-- Current date widget -->
     <div class="date-widget" ow-current-date></div>
-    <div class="refresh-btn">
-      <button ng-click="refreshList()"><i class="fas fa-sync"></i> Refresh</button>
-    </div>
   </div>
   <!-- Hard scheduled List -->
   <div id="scheduled-list" ng-show="scheduledList.length">
@@ -56,8 +53,13 @@
     [<a class="cancel" ng-click="$emit('filter-parent', null)">&times;</a>]
   </div>
 
-  <!-- button for picking a random action to do -->
-  <div ow-random-action headings="visibleHeadings">
+  <!-- buttons for picking a random action, refresh lists, etc. -->
+  <div class="action-list-buttons">
+    <div ow-random-action headings="visibleHeadings">
+    </div>
+    <div class="refresh-btn">
+      <button ng-click="refreshList()"><i class="fas fa-sync"></i> Refresh</button>
+    </div>
   </div>
 
   <!-- Focus area tabs -->
