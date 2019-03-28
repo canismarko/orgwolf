@@ -10,6 +10,7 @@ orgwolf/static/aloha/
 orgwolf/static/bower/
 venv/
 htmlcov/
+.pytest_cache/
 
 # Collected static files
 ^static/

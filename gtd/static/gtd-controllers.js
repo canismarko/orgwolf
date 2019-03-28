@@ -240,9 +240,13 @@ angular.module('owMain')
 	$scope.contextName = $routeParams.context_slug;
 	$scope.list_params.context = $scope.activeContext;
 	contexts.$promise.then(function(contexts) {
-	    activeState.context = contexts.filter(function(context) {
+	    var newContext = contexts.filter(function(context) {
 		return context.id === $scope.activeContext;
 	    })[0];
+	    console.log(newContext);
+	    activeState.context = newContext;
+	    // $scope.activeContext = newContext;
+	    $cookies.activeContext = newContext.id;
 	});
     } else {
 	$scope.activeContext = null;
