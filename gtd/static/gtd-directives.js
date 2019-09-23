@@ -153,10 +153,12 @@ angular.module('owDirectives')
 	    scope.fields.focus_areas = scope.parent.focus_areas;
 	    scope.fields.priority = scope.parent.priority;
 	    scope.fields.parent = scope.parent.id;
+	    scope.fields.text = '';
 	} else {
 	    // ...or use defaults if no parent
 	    scope.fields.focus_areas = [];
 	    scope.fields.priority = 'C';
+	    scope.fields.text = '';
 	    // Set Scope if a tab is active
 	    if ($rootScope.activeFocusArea && $rootScope.activeFocusArea.id > 0) {
 		scope.fields.focus_areas.push($rootScope.activeFocusArea.id);
