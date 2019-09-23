@@ -2,6 +2,7 @@ import jQuery from "jquery";
 import 'jquery';
 window.jQuery = jQuery;
 window.$ = jQuery;
+import 'gtd-filters';
 import 'jquery-ui-dist/jquery-ui';
 
 import 'bootstrap/dist/js/bootstrap.js';
@@ -120,7 +121,7 @@ angular.module('owDirectives')
 * is a new child.
 *
 **************************************************/
-.directive('owEditable', ['$resource', '$rootScope', '$timeout', 'owWaitIndicator', 'Heading', 'todoStates', 'focusAreas', 'priorities', 'toaster', 'toDateObjFilter', function($resource, $rootScope, $timeout, owWaitIndicator, Heading, todoStates, focusAreas, priorities, toaster, toDateObjFilter) {
+.directive('owEditable', ['$resource', '$rootScope', '$timeout', 'owWaitIndicator', 'Heading', 'todoStates', 'focusAreas', 'priorities', 'toaster', 'toDateObjFilter', 'decodeHtmlFilter', function($resource, $rootScope, $timeout, owWaitIndicator, Heading, todoStates, focusAreas, priorities, toaster, toDateObjFilter, decodeHtml) {
     // Directive creates the pieces that allow the user to edit a heading
     function link(scope, element, attrs) {
 	var defaultParent, $text, heading, $save, heading_id, parent, editorId;
@@ -144,6 +145,8 @@ angular.module('owDirectives')
 		    field = dateFields[i];
 		    scope.fields[field] = toDateObjFilter(scope.fields[field]);
 		}
+		// Unescape the HTML so we can edit it
+		scope.fields['text'] = decodeHtml(scope.fields['text']);
 	    });
 	} else if ( scope.parent ) {
 	    // Else inherit some attributes from parent...

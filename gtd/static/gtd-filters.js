@@ -6,6 +6,22 @@ import showdown from 'showdown';
 angular.module('owFilters')
 
 /*************************************************
+* Filter that decodes HTML entities back into 
+* real characters. Warning: this is not safe for
+*  most purposes, it's intended for putting text
+* into a text area.
+*
+**************************************************/
+.filter('decodeHtml', function() {
+    return function(html) {
+	var e = document.createElement('textarea');
+	e.innerHTML = html;
+	// handle case of empty input
+	return e.childNodes.length === 0 ? "" : e.childNodes[0].nodeValue;
+    }
+})
+
+/*************************************************
 * Filter that determines relationship to the
 * url paramater for target node
 *
@@ -101,7 +117,7 @@ angular.module('owFilters')
 * Filter that sorts the action list
 *
 **************************************************/
-.filter('actionScore', ['activeState', function(activeState) {
+.filter('actionScore', ['activeState', 'locations', function(activeState, locations) {
     var priorities, activeLocations, locationIDs, i, activeLocation;
     // Point values for A-B-C priorities
     var priorities = {'A': 3,
@@ -119,12 +135,12 @@ angular.module('owFilters')
 	    activeLocation = locations.filter(function(loc) {
 		return loc.id == locationIDs[i];
 	    })[0];
-	    activeLocations.push(activeLocation)
+	    activeLocations.push(activeLocation);
 	}
     }
     return function(heading) {
-	var today, deadline, delta, oneDay, daysLeft, points;
-	var score = 1;
+	var today, deadline, delta, oneDay, daysLeft, points, score;
+	score = 1;
 	oneDay = 24 * 3600 * 1000;
 	// Higher A/B/C priorities get more points
 	score += priorities[heading.priority];

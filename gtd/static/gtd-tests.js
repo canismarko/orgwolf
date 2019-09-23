@@ -20,6 +20,15 @@ beforeEach(function() {
 
 describe('filters in gtd-filters.js', function() {
     beforeEach(angular.mock.module('owFilters'))
+    describe('the "decodeHtml" filter', function() {
+	var decodeHtmlFilter;
+	beforeEach(inject(function(_decodeHtmlFilter_) {
+    	    decodeHtmlFilter = _decodeHtmlFilter_;
+	}));
+	it('converts basic entities to real characters', function() {
+	    expect(decodeHtmlFilter('&lt;')).toEqual('<');
+	});
+    });
     describe('the "asHtml" filter', function() {
 	var asHtmlFilter;
 	beforeEach(inject(function(_asHtmlFilter_) {
@@ -108,7 +117,7 @@ describe('filters in gtd-filters.js', function() {
 	it('adds points for priority score', function() {
 	    var heading;
 	    heading = {priority: 'A'};
-	    expect(scoreFilter(heading)).toEqual(3);
+	    expect(scoreFilter(heading)).toEqual(4);
 	});
 	it('adds points for an upcoming deadline', function() {
 	    var heading, nextWeek;
@@ -116,7 +125,7 @@ describe('filters in gtd-filters.js', function() {
 	    nextWeek = new Date();
 	    nextWeek.setDate(nextWeek.getDate() + 6)
 	    heading = {deadline_date: nextWeek};
-	    expect(scoreFilter(heading)).toEqual(3/7);
+	    expect(scoreFilter(heading)).toEqual(3/7 + 1);
 	});
 	it('adds points for a past deadline', function() {
 	    var heading, yesterday;
@@ -124,7 +133,7 @@ describe('filters in gtd-filters.js', function() {
 	    yesterday = new Date();
 	    yesterday.setDate(yesterday.getDate() - 1);
 	    heading = {deadline_date: yesterday};
-	    expect(scoreFilter(heading)).toEqual(3);
+	    expect(scoreFilter(heading)).toEqual(4);
 	});
 	it('adds a point if there is an active location', function() {
 	    var heading;
@@ -135,10 +144,13 @@ describe('filters in gtd-filters.js', function() {
     })
 
     describe('the sortActions filter', function() {
-	var listFilter, activeState, $httpBackend;
+	var listFilter, activeState, $httpBackend, $rootScope, $scope, locations;
 	beforeEach(inject(function($injector) {
 	    listFilter = $injector.get('sortActionsFilter');
 	    activeState = $injector.get('activeState');
+	    locations = $injector.get('locations');
+	    $rootScope = $injector.get('$rootScope');
+	    $scope = $rootScope.$new();
 	    $httpBackend = $injector.get('$httpBackend');
 	    $httpBackend.whenGET('/gtd/locations').respond(200, [
 		{id: 1,
