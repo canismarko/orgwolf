@@ -124,7 +124,7 @@ angular.module('owDirectives')
 .directive('owEditable', ['$resource', '$rootScope', '$timeout', 'owWaitIndicator', 'Heading', 'todoStates', 'focusAreas', 'priorities', 'toaster', 'toDateObjFilter', 'decodeHtmlFilter', function($resource, $rootScope, $timeout, owWaitIndicator, Heading, todoStates, focusAreas, priorities, toaster, toDateObjFilter, decodeHtml) {
     // Directive creates the pieces that allow the user to edit a heading
     function link(scope, element, attrs) {
-	var defaultParent, $text, heading, $save, heading_id, parent, editorId;
+	var defaultParent, $text, heading, $save, $titleInput, heading_id, parent, editorId;
 	scope.focusAreas = focusAreas;
 	scope.todoStates = todoStates;
 	scope.fields = {};
@@ -154,11 +154,13 @@ angular.module('owDirectives')
 	    scope.fields.priority = scope.parent.priority;
 	    scope.fields.parent = scope.parent.id;
 	    scope.fields.text = '';
+	    scope.fields.title = '';
 	} else {
 	    // ...or use defaults if no parent
 	    scope.fields.focus_areas = [];
 	    scope.fields.priority = 'C';
 	    scope.fields.text = '';
+	    scope.fields.title = '';
 	    // Set Scope if a tab is active
 	    if ($rootScope.activeFocusArea && $rootScope.activeFocusArea.id > 0) {
 		scope.fields.focus_areas.push($rootScope.activeFocusArea.id);
@@ -221,6 +223,12 @@ angular.module('owDirectives')
 	    scope.$emit('finishEdit', newHeading);
 	    scope.$parent.$parent.$eval(scope.finishCallback);
 	};
+	// Focus the title element so it can be edited
+	$titleInput = element.find('#title');
+	console.log(scope.fields);
+	if ( scope.fields.title == '' ) {
+	    $titleInput.focus();
+	}
     }
     return {
 	link: link,
