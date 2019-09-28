@@ -1,7 +1,7 @@
-django==2.1.7
+django==2.1.12
 django-mptt==0.9.1
 httplib2
 python-dateutil
 pytz
-djangorestframework==3.9.0
+djangorestframework==3.9.4
 requests
