@@ -788,18 +788,18 @@ input,textarea {
     .table-heading,.heading-row {
 	/* Cell properties and layout */
 	.description {
-	    .make-md-column(5);
+	    .make-sm-column(5);
 	    min-height: 22px;
 	}
 	.buttons {
-	    .make-md-column(2);
+	    .make-sm-column(2);
 	}
 	.deadline {
-	    .make-md-column(2);
+	    .make-sm-column(2);
 	    min-height: 22px;
 	}
 	.project {
-	    .make-md-column(3);
+	    .make-sm-column(3);
 	}
     }
     .heading-row {
@@ -829,7 +829,7 @@ input,textarea {
 	.alert-warning;
     }
     /* Collapsed accordian row */
-    @media (max-width: 992px) {
+    @media (max-width: 768px) {
 	color: @primary;
 	a {
 	    color: @primary;
