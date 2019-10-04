@@ -333,16 +333,6 @@ class NodeManager(TreeManager):
         return self.all().owned(*args, **kwargs)
 
 
-# class NodeManager(TreeManager):
-#     """Object manager for for retrieving nodes."""
-#     def get_queryset(self):
-#         return NodeQuerySet(self.model)
-
-#     def __getattr__(self, name):
-#         """Ensure that methods of the queryset are callable by the manager"""
-#         return getattr(self.get_queryset(), name)
-
-
 @python_2_unicode_compatible
 class Node(MPTTModel):
     """
@@ -353,8 +343,6 @@ class Node(MPTTModel):
     auto_update = False
     auto_close = True
     objects = NodeManager()
-    # objects = TreeManager.from_queryset(NodeQuerySet)
-    # objects = NodeManager()
     # Database fields
     owner = models.ForeignKey(
         User,
@@ -420,17 +408,17 @@ class Node(MPTTModel):
         choices=(('High', 'HI'),
                  ('Low', 'LO')))
     focus_areas = models.ManyToManyField('FocusArea', blank=True)
-
+    
     # Info methods
     def is_todo(self):
         if self.todo_state:
             return True
         else:
             return False
-
+    
     def is_closed(self):
         return getattr(self.todo_state, 'closed', False)
-
+    
     def overdue(self, field, agenda_date=None, future=False):
         """Returns a string representing how many days ago
         the target_date was scheduled. Method will ignore
@@ -454,7 +442,7 @@ class Node(MPTTModel):
             else:
                 response = 'today'
         return response
-
+    
     def access_level(self, user):
         """Determines what level of access the give user has:
         - None
@@ -468,7 +456,7 @@ class Node(MPTTModel):
         elif self.owner == user:
             access = 'write'
         return access
-
+    
     def get_title(self):
         if self.title.strip(' ').strip('\t'):
             title = conditional_escape(self.title)
@@ -477,11 +465,11 @@ class Node(MPTTModel):
         if self.archived:
             title = '<span class="archived-text">{0}</span>'.format(title)
         return mark_safe(title)
-
+    
     def get_level(self):
         """Gets the node's level in the tree (1-indexed)."""
         return self.level + 1
-
+    
     def get_deferred_msg(self):
         """
         Encapsulate the deferred_message field to avoid DoesNotExist error.
@@ -492,11 +480,11 @@ class Node(MPTTModel):
         except Message.DoesNotExist:
             msg = None
         return msg
-
+    
     @staticmethod
     def get_all_projects():
         return Node.objects.filter(parent=None)
-
+    
     def get_primary_parent(self):
         """Return the root-level node corresponding to this node."""
         # Recursively step up through the parents
@@ -507,7 +495,7 @@ class Node(MPTTModel):
             else:
                 return child
         return find_immediate_parent(self)
-
+    
     def get_hierarchy_as_string(self):
         """Return a string showing the trail of ancestors
         leading up to this node"""
@@ -519,7 +507,7 @@ class Node(MPTTModel):
                                        node.get_title() )
             delimiter = ' >'
         return string
-
+    
     def as_html(self):
         """Return a string representing the todo state and title of this node,
         properly html escaped."""
@@ -528,14 +516,14 @@ class Node(MPTTModel):
             string += self.todo_state.as_html() + ' '
         string += self.get_title()
         return mark_safe(string)
-
+    
     def as_json(self):
         """Process the instance into a json string."""
         s = serializers.serialize('json', [self])
         # Remove list brackets
         s = s[1:-1]
         return s
-
+    
     def get_tags(self):
         tag_strings = self.tag_string.split(":")
         # Get rid of the empty first and last elements
@@ -583,7 +571,7 @@ class Node(MPTTModel):
         if count:
             qs = qs[page*count:(page+1)*count]
         return (qs, total)
-
+    
     def set_fields(self, fields):
         """
         Accepts a dictionary of fields and updates them on this instance.
@@ -599,7 +587,7 @@ class Node(MPTTModel):
             if (key in (datetime_fields + date_fields + time_fields)
                 and value == ''):
                 value = None
-            # Convert 'None' to None singleton
+        # Convert 'None' to None singleton
             if value == 'None':
                 value = None
             # Resolve foreign keys
@@ -649,7 +637,7 @@ class Node(MPTTModel):
             else:
                 # Set other things
                 setattr(self, key, value)
-
+    
     # Override superclass save methods
     def save(self, *args, **kwargs):
         if self.slug == '':
@@ -659,14 +647,14 @@ class Node(MPTTModel):
                 new_slug = new_slug[0:49]
             self.slug = slugify(new_slug)
         return super(Node, self).save(*args, **kwargs)
-
+    
     def __str__(self):
         if hasattr(self.todo_state, "abbreviation"):
             return "[{0}] {1}".format(self.todo_state.abbreviation,
                                       self.get_title())
         else:
             return self.get_title()
-
+    
     def __repr__(self):
         s = '<Node: {0}>'.format(self.title)
         return str(s.encode('utf8'))

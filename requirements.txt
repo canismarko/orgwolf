@@ -5,3 +5,5 @@ python-dateutil
 pytz
 djangorestframework==3.9.4
 requests
+pytest==5.2.0
+pytest-django==3.5.1

@@ -1785,15 +1785,16 @@ class UpcomingAPI(TestCase):
     upcoming deadlines.
     """
     fixtures = ['test-users.json', 'gtd-test.json', 'gtd-env.json']
-
+    
     def setUp(self):
         self.user = User.objects.get(pk=1)
+        self.factory = RequestFactory()
         self.assertTrue(
             self.client.login(username=self.user.username,
                               password='secret')
         )
         self.url = reverse('node_object')
-
+    
     def test_upcoming_deadlines(self):
         response = self.client.get(
             self.url,
@@ -1812,7 +1813,58 @@ class UpcomingAPI(TestCase):
             response,
             'PetSmart'
             )
-
+    
+    def test_get_upcoming(self):
+        """Test the specific ``get_upcoming`` API method."""
+        today = dt.date(2019, 10, 2)
+        dfrd = TodoState.objects.get(abbreviation='DFRD')
+        next_ = TodoState.objects.get(abbreviation='NEXT')
+        # Make a node that is due in 3 days but deferred until tomorrow
+        node_3days = Node(todo_state=dfrd,
+                          title='Due in 3 days, deferred tomorrow',
+                          deadline_date=(today + dt.timedelta(days=3)),
+                          scheduled_date=(today + dt.timedelta(days=1)),
+                          owner=self.user)
+        node_3days.save()
+        # Make a node that is due in 3 days and deferred until yesterday
+        node_yesterday = Node(todo_state=dfrd,
+                          title='Due in 3 days, deferred yesterday',
+                          deadline_date=(today + dt.timedelta(days=3)),
+                          scheduled_date=(today - dt.timedelta(days=1)),
+                          owner=self.user)
+        node_yesterday.save()
+        # Make a node that is due more than 1 week from now
+        node_next_week = Node(todo_state=dfrd,
+                              title='Due in 10 days.',
+                              deadline_date=(today + dt.timedelta(days=10)),
+                              owner=self.user)
+        node_next_week.save()
+        # Make a node that is overdue
+        node_last_week = Node(todo_state=next_,
+                              title='Due last week.',
+                              deadline_date=(today - dt.timedelta(days=5)),
+                              owner=self.user)
+        node_last_week.save()
+        # Messed up node that is overdue, but has a scheduled date in the future
+        node_messed = Node(todo_state=dfrd,
+                           title="Due last week, scheduled next week.",
+                           deadline_date=(today - dt.timedelta(days=7)),
+                           scheduled_date=(today + dt.timedelta(days=7)),
+                           owner=self.user)
+        node_messed.save()
+        # Retrieve the upcoming nodes from the view
+        view = NodeView()
+        request = self.factory.get(self.url, {'upcoming': today.strftime('%Y-%m-%d'),
+                                              'todo_state': dfrd.id})
+        request.user = self.user
+        upcoming_qs = view.get_upcoming(request=request)
+        # Check that the right nodes are in the returned queryset
+        self.assertNotIn(node_3days, upcoming_qs)
+        self.assertIn(node_yesterday, upcoming_qs)
+        self.assertNotIn(node_next_week, upcoming_qs)
+        self.assertIn(node_last_week, upcoming_qs)
+        self.assertIn(node_messed, upcoming_qs)
+    
     def test_db_optimization(self):
         """
         Make sure that the method uses the database efficiently when

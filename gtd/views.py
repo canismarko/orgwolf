@@ -145,7 +145,7 @@ class NodeView(APIView):
         nodes = nodes.select_related('owner')
         nodes = nodes.prefetch_related('users', 'focus_areas')
         return nodes
-
+    
     def get_actions_list(self, request, *args, **kwargs):
         """
         Fetches a queryset for the requested "Next Actions" list.
@@ -184,7 +184,7 @@ class NodeView(APIView):
         nodes = nodes.select_related('owner')
         nodes = nodes.prefetch_related('users', 'focus_areas')
         return nodes
-
+    
     def get_upcoming(self, request, *args, **kwargs):
         """
         Get QuerySet with deadlines coming up based on
@@ -195,16 +195,17 @@ class NodeView(APIView):
         target_date = dt.datetime.strptime(request.GET['upcoming'],
                                            '%Y-%m-%d').date()
         # Determine query filters for "Upcoming Deadlines" section
-        undone_Q = Q(todo_state__closed = False) | Q(todo_state = None)
+        undone_Q = Q(todo_state__closed=False) | Q(todo_state=None)
         deadline = target_date + dt.timedelta(days=deadline_period)
-        upcoming_deadline_Q = Q(deadline_date__lte = deadline) # TODO: fix this
-        deadline_nodes = all_nodes_qs.filter(undone_Q, upcoming_deadline_Q)
+        upcoming_deadline_Q = Q(deadline_date__lte=deadline)
+        scheduled_Q = ~Q(scheduled_date__gt=target_date) | Q(deadline_date__lte=target_date)
+        deadline_nodes = all_nodes_qs.filter(undone_Q, upcoming_deadline_Q, scheduled_Q)
         deadline_nodes = deadline_nodes.order_by("deadline_date")
         # DB optimization
         deadline_nodes = deadline_nodes.select_related('owner')
         deadline_nodes = deadline_nodes.prefetch_related('focus_areas')
         return deadline_nodes
-
+    
     def post(self, request, pk=None, *args, **kwargs):
         """
         Create a new Node, conducted through JSON format:
