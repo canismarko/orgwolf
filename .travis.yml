@@ -1,0 +1,29 @@
+language: python
+env:
+  matrix:
+  - IS_TRAVIS: true
+  global:
+  - secure: UIxiANd9p1eHg3DpJyRcOZOQ8yM5jRiz1wf8qrxuv6sP8wg9P92MC080gqzkqNl0YHS3QsdSjkfqSeqqFUDkLMqBa6mSQ8AfNFpNynEwq771/S0VVKiYCGZ4o46kmf4Cgtr4qJKGHaqH8Jbf0yzplcchreTmWCZlFAS2skLa8TnfcmBF5nd9InZqwUkNPml9Loj8ONnUWqFf65J7JR2NeHCREMEXWYFQsJ+q7fTggY/zDaH53hg1lNEkwBSsbNdDisHWBvIy/P1g9dHE+NIEt1ydyAcpjBqIoWE3bgTO1H2nctZNg5W2grKq6eNcjOU4ouXhE8tacQB9z9n8xVY0FEnbITEhJuEiaCsFBVIr0+v1Zdy+p054YxDbwOFto0e2yJTi7pQnue6Qg1gGwk/NBzPVXVWPprfucokhugPMqflqJpqkFyG4SZRf+XF8qaORta8XdUSQC5CCAvuRK1Xw8cITccld04qb+uv1cDx1XGOXJC5op9k7PicOCzoRkR0IiEzfcqcRjAt4OphpjE0mxPHUEI2LrF/ACWjKTL7g1hf1ckVxNcchUm3nLS3EjZ2jP/KN5sCWX3LN6ewN6coQcmmR6sId7p/2E1nKZUGBRd/XD8dGil9IvfVhv1aoC79H1VHOhcvcu53VH9IEdY1C1s25uAmNougpy8EDiMqs5YE=
+  - secure: Ssyze8Yzk0GnyZtrzAaYJdykKYKNfp6hHJUTpQNN2vzVx21SuEXLQ1FkKWToDBG3coPnLPhaiFSHeLxBak+NfouTqZClq9LEA1M0+qHOb9NUsJKm8SW7fFzF6jKiNhrePs7UK0IWB7Yu3n+WpTgI3RFuGFHpVI6keAG65dETNlyDocSy21W6McM8Eqzlq0shC9z1+4VadtAlJZCQcAU6ikMfRNbmtu1c0XhHS+FMNFVdYYaqHdxKHDG1TNdYCVW65igj11k5gAjbMZv+pjoJm+a1IvWl3rTmp6ewhA56VaqmAaOv20drT7UskHEVj9ei5ZRxdSvXdEDTNm+rVdJL/j29BSX/OorU1UeuHEYSN4yVPDfOV6k+b6fOyjkT0ofcZgEj5fVOnXFjUHAoebxG7LjslVBqB6sg6HbrRFtFd6o6eOPFBdXEx0CmkR2HoEXyLqel+azysrdQttDZiZi+TYIq1KoyIZqRsV6kO2uTb3/B43TqSDNEoj5dqll7PUM3RW9AvMrNF9hmTn5xeIBycXxuG8J+tT61V4isxIYI9Qd53irZPLmrAiAGiA2b6MtaZA8VrcWyScjrglySglMWnnCBeFSEiylLhIY9sDh82lw3Z+Q8Pf8hIEW4yrzmnnBhcdrHu5Yg5CgBTh9lSGMTLpuiVuriQ4qhDhRG2S0FFEI=
+sudo: false
+python:
+- '3.5'
+install:
+- echo $SIMON_HOST
+- if [[ "$TRAVIS_PYTHON_VERSION" == "2.7" ]]; then wget https://repo.continuum.io/miniconda/Miniconda2-latest-Linux-x86_64.sh
+  -O miniconda.sh; else wget https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh
+  -O miniconda.sh; fi
+- bash miniconda.sh -b -p $HOME/miniconda
+- export PATH="$HOME/miniconda/bin:$PATH"
+- hash -r
+- conda config --set always_yes yes --set changeps1 no
+- conda update -q conda
+- conda info -a
+- conda create -q -n test-environment python=$TRAVIS_PYTHON_VERSION pip
+- source activate test-environment
+- pip install -r requirements.txt
+- conda list
+script: py.test
+before_install:
+- openssl aes-256-cbc -K $encrypted_28837595bf14_key -iv $encrypted_28837595bf14_iv
+  -in travis-simon-key -out travis_rsa -d

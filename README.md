@@ -1,6 +1,8 @@
 OrgWolf
 =======
 
+[![Build Status](https://travis-ci.org/canismarko/orgwolf.svg?branch=master)](https://travis-ci.org/canismarko/orgwolf)
+
 OrgWolf is a web server for organizing your life. While it is functional by itself, it is best used in conjunction with client programs and plugins. # TODO: add url to list of clients.
 It is conceptually based on org-mode for emacs. While it aims to provide a comparable experience, OrgWolf does not require any org-mode knowledge and can happily be used without even knowing what emacs is.
 
