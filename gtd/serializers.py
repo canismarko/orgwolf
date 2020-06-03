@@ -86,6 +86,7 @@ class NodeSerializer(serializers.ModelSerializer):
         model = Node
         fields = "__all__"
 
+
 class NodeListSerializer(NodeSerializer):
     """Returns values relevant for next actions lists"""
     root_id = serializers.SerializerMethodField()

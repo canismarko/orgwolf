@@ -969,7 +969,7 @@ class ListAPI(TestCase):
         response = self.client.get(
             reverse('node_object'),
             {
-                'context': None,
+                'context': 0,
                 'parent': parent.pk,
             },
             HTTP_X_REQUESTED_WITH='XMLHttpRequest',
@@ -994,7 +994,8 @@ class ListAPI(TestCase):
                     'repeats']
         response = self.client.get(
             reverse('node_object'),
-            {'context': None},
+            {'field_group': 'actions_list'},
+            # {'context': None},
             content_type='application/json'
         )
         r = json.loads(response.content.decode())[0]
@@ -1619,12 +1620,12 @@ class NodeAPI(TestCase):
             'archived': False,
             'auto_update': False,
             'level': 0,
-            'parent': None,
+            # 'parent': None,
             'priority': 'B',
             'text': '',
             'title': 'New test project',
-            'todo_state': None,
-            'tree_id': None,
+            # 'todo_state': None,
+            # 'tree_id': None,
         }
         # Test that specifying a pk raises a 405 error
         response = self.client.post(

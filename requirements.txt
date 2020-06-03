@@ -1,4 +1,4 @@
-django==2.1.12
+django==2.2.10
 django-mptt==0.9.1
 httplib2
 python-dateutil
