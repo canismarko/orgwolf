@@ -149,12 +149,30 @@ angular.module('owDirectives')
 		scope.fields['text'] = decodeHtml(scope.fields['text']);
 	    });
 	} else if ( scope.parent ) {
-	    // Else inherit some attributes from parent...
-	    scope.fields.focus_areas = scope.parent.focus_areas;
-	    scope.fields.priority = scope.parent.priority;
-	    scope.fields.parent = scope.parent.id;
-	    scope.fields.text = '';
-	    scope.fields.title = '';
+	    // Initiate wait indicator
+	    owWaitIndicator.start_wait('quick', 'editable');
+	    // Refresh the parent object with more fields
+	    scope.parent = Heading.get({id: scope.parent.id});
+	    scope.parent.$promise.then(function() {
+		var field, dateFields, i;
+		owWaitIndicator.end_wait('editable');
+		dateFields = ['scheduled_date', 'deadline_date', 'end_date']
+		// Inherit some attributes from parent...
+		scope.fields.focus_areas = scope.parent.focus_areas;
+		scope.fields.priority = scope.parent.priority;
+		scope.fields.parent = scope.parent.id;
+		scope.fields.deadline_date = scope.parent.deadline_date;
+		scope.fields.deadline_time = scope.parent.deadline_time;
+		scope.fields.scheduled_date = scope.parent.scheduled_date;
+		scope.fields.scheduled_time = scope.parent.scheduled_time;
+		scope.fields.text = '';
+		scope.fields.title = '';
+		// Cycle through each field and convert the date
+		for (i=0; i<dateFields.length; i+=1) {
+		    field = dateFields[i];
+		    scope.fields[field] = toDateObjFilter(scope.fields[field]);
+		}
+	    });
 	} else {
 	    // ...or use defaults if no parent
 	    scope.fields.focus_areas = [];
