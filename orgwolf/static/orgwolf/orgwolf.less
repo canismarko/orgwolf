@@ -583,14 +583,21 @@ dd.todo
     font-style: italic;
     .opacify(80);
 }
-.priorityA .priority {
+.priorityA .priority, .priorityA .priority, .priorityA .priority {
     color: rgb(65, 65, 65);
+}
+.priorityA .todo-state-widget, .priorityA .heading-title, .priorityA .deadline, .priorityA .project {
+    font-weight: bold;
 }
 .priorityB .priority {
     color: rgb(124, 124, 124);
 }
 .priorityC .priority {
     color: rgb(165, 165, 165);
+}
+.priorityC .todo-state-widget, .priorityC .heading-title, .priorityC .deadline, .priorityC .project {
+    font-style: italic;
+    color: rgb(124, 124, 124) !important;
 }
 .ow-hoverable,.todo-state {
     &[actionable="true"] {
@@ -803,6 +810,9 @@ input,textarea {
 	}
     }
     .heading-row {
+	a.heading-title {
+	    color: inherit;
+	}
 	&.upcoming {
 	    background-color: @state-warning-bg;
 	}
