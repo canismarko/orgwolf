@@ -759,6 +759,15 @@ class ContextAPI(TestCase):
             4,
             hit_db,
         )
+    
+    def test_contexts_get_visible(self):
+        expected = self.contexts.filter(is_visible=True)
+        expected = ["%d - %s" % (c.id, c.name) for c in expected]
+        # Test through a request object
+        response = self.client.get('/gtd/contexts?is_visible=True')
+        actual = json.loads(response.content.decode())
+        actual = ["%d - %s" % (c['id'], c['name']) for c in actual]
+        self.assertEqual(actual, expected)
 
 
 class OverdueFilter(TestCase):

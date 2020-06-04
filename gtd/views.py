@@ -318,7 +318,12 @@ class FocusAreaView(APIView):
 class ContextView(APIView):
     """RESTful interaction with the gtd.context object"""
     def get(self, request, *args, **kwargs):
+        # Filter by GET parameters
+        params = dict(request.query_params)
+        if 'is_visible' in params:
+            params['is_visible'] = bool(params['is_visible'][0])
         contexts = Context.get_visible(request.user)
+        contexts = contexts.filter(**params)
         # Get some prefetched values to minimize database workload
         contexts = contexts.prefetch_related('locations_available')
         # Turn contexts into a serialized list

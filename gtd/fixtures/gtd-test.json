@@ -23,7 +23,8 @@
             7
         ], 
         "tools_available": [], 
-        "name": "Lou B", 
+        "name": "Lou B",
+	"is_visible": false,
         "locations_available": []
     }
 },

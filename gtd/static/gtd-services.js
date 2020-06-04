@@ -221,7 +221,7 @@ angular.module('owServices')
 *
 **************************************************/
 .factory('contexts', ['GtdObject', function(GtdObject) {
-    return GtdObject('/gtd/contexts', {});
+    return GtdObject('/gtd/contexts', {is_visible: true});
 }])
 
 /*************************************************

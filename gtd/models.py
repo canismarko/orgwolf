@@ -182,6 +182,7 @@ class Context(models.Model):
         'Contact',
         blank=True,
         related_name='including_contexts_set')
+    is_visible = models.BooleanField(default=True)
     
     def __str__(self):
         return self.name
