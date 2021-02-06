@@ -114,11 +114,12 @@ angular.module('owFilters')
 
 
 /*************************************************
-* Filter that sorts the action list
+* Filter that scores each action by priority
 *
 **************************************************/
-.filter('actionScore', ['activeState', 'locations', function(activeState, locations) {
-    var priorities, activeLocations, locationIDs, i, activeLocation;
+.filter('actionScore', ['$filter', function($filter) {
+    var priorities, needsActiveLocation;
+    needsActiveLocation = $filter('needsActiveLocation');
     // Point values for A-B-C priorities
     var priorities = {'A': 3,
 		      'B': 2,
@@ -126,18 +127,6 @@ angular.module('owFilters')
 		      undefined: 0,
 		      '': 0,
 		     };
-    // Get active locations for sorting based on active context
-    activeLocations = [];
-    if (activeState.context) {
-	locationIDs = activeState.context.locations_available;
-	for (i=0; i<locationIDs.length; i+=1) {
-	    // Find and check each location object
-	    activeLocation = locations.filter(function(loc) {
-		return loc.id == locationIDs[i];
-	    })[0];
-	    activeLocations.push(activeLocation);
-	}
-    }
     return function(heading) {
 	var today, deadline, delta, oneDay, daysLeft, points, score;
 	score = 1;
@@ -156,15 +145,44 @@ angular.module('owFilters')
 	    score += points;
 	}
 	// Put location-specific things higher up the list
+	if (needsActiveLocation(heading)) {
+	    score += 1;
+	}
+	return score;
+    };
+}])
+
+/*************************************************
+* Filter that determines if the heading needs the
+* current active loation
+*
+**************************************************/
+.filter('needsActiveLocation', ['activeState', 'locations', function(activeState, locations) {
+    return function(heading) {
+	var activeLocations, locationIDs, i, activeLocation, inActiveLocation;
+	// Get active locations for sorting based on active context
+	activeLocations = [];
+	inActiveLocation = false;
+	if (activeState.context) {
+	    locationIDs = activeState.context.locations_available;
+	    for (i=0; i<locationIDs.length; i+=1) {
+		// Find and check each location object
+		activeLocation = locations.filter(function(loc) {
+		    return loc.id == locationIDs[i];
+		})[0];
+		activeLocations.push(activeLocation);
+	    }
+	}
+	// Put location-specific things higher up the list
 	for (i=0; i<activeLocations.length; i+=1) {
 	    activeLocation = activeLocations[i];
 	    if (heading.tag_string.indexOf(activeLocation.tag_string) > -1) {
 		// This heading requires the current location tag
-		score += 1;
+		inActiveLocation = true
 		break;
 	    }
 	}
-	return score;
+	return inActiveLocation;
     };
 }])
 

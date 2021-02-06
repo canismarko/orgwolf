@@ -237,6 +237,16 @@ dd.todo
     .auto-dim;
 }
 
+.needs-active-location {
+    font-style: normal !important;
+    .fas;
+    .fa-icon;
+    &:before {
+	content: @fa-var-map-marker;
+    }
+    // .auto-dim;
+}
+
 .random-action-modal {
     .duration-timer {
 	margin-top: auto;
@@ -595,7 +605,7 @@ dd.todo
 .priorityC .priority {
     color: rgb(165, 165, 165);
 }
-.priorityC .todo-state-widget, .priorityC .heading-title, .priorityC .deadline, .priorityC .project {
+.priorityC .todo-state-widget, .priorityC .heading-title, .priorityC .deadline, .priorityC .project, .priorityC .needs-active-location {
     font-style: italic;
     color: rgb(85, 85, 85) !important;
 }

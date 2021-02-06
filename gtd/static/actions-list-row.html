@@ -1,4 +1,5 @@
-<div ng-hide="isEditable" ng-class="{completed: completed}">
+<div ng-hide="isEditable"
+     ng-class="{'completed': completed}">
   <div class="description">
     <span ow-todo ow-heading="heading">
       {{ todoState.abbreviation }}
@@ -15,6 +16,9 @@
 	  class="repeat-icon"></i>
     <span class="read-only-label"
 	  ng-show="heading.read_only"></span>
+    <i class="needs-active-location"
+       title="Action needs to current location."
+       ng-if="heading | needsActiveLocation"></i>
     <span ng-repeat="tag in tags" class="tag non-opening">{{ tag }}</span>
   </div>
   <div class="buttons">

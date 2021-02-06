@@ -243,7 +243,6 @@ angular.module('owMain')
 	    var newContext = contexts.filter(function(context) {
 		return context.id === $scope.activeContext;
 	    })[0];
-	    console.log(newContext);
 	    activeState.context = newContext;
 	    // $scope.activeContext = newContext;
 	    $cookies.activeContext = newContext.id;
@@ -434,11 +433,6 @@ angular.module('owMain')
 	}
 	$navLink.attr('href', $location.absUrl());
     };
-    // Handler for doing a random action from the list
-    // $scope.randomAction = function() {
-
-    // 	console.log("Random");
-    // };
 }])
 
 /*************************************************
