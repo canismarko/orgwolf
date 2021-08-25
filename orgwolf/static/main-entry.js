@@ -2,13 +2,15 @@
 
 import '@fortawesome/fontawesome-free/js/fontawesome.js';
 import '@fortawesome/fontawesome-free/js/solid.js';
+import '@fortawesome/fontawesome-free/scss/fontawesome.scss';
+import '@fortawesome/fontawesome-free/scss/solid.scss';
 
 import 'bootstrap/dist/css/bootstrap.css';
 import 'bootstrap-switch/dist/css/bootstrap3/bootstrap-switch.css';
 import 'angularjs-toaster/toaster.css';
 import 'fullcalendar/dist/fullcalendar.css';
 import 'easymde/dist/easymde.min.css';
-import './orgwolf/orgwolf.less';
+import './orgwolf/orgwolf.scss';
 
 // Orgwolf javascript modules
 import "orgwolf-directives.js";

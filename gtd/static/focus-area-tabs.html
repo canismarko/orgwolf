@@ -1,15 +1,17 @@
-<ul class="nav nav-tabs ow-focus-area-tabs">
+<ul class="nav-tabs">
   <li ng-click="changeFocusArea(allFocusArea)"
-      id="fa-tab-0">
-    <a href="#">All</a>
+      id="fa-tab-0" class="nav-tabs__item">
+    <a href="#" class="nav-tabs__link">All</a>
   </li>
   <li ng-repeat="fa in focusAreas"
       ng-click="changeFocusArea(fa)"
+      class="nav-tabs__item"
       id="fa-tab-{{ fa.id }}">
-    <a href="#">{{ fa.display }}</a>
+    <a href="#" class="nav-tabs__link">{{ fa.display }}</a>
   </li>
   <li ng-click="changeFocusArea(noneFocusArea)"
+      class="nav-tabs__item"
       id="fa-tab--1">
-    <a href="#">None</a>
+    <a href="#" class="nav-tabs__link">None</a>
   </li>
 </ul>

@@ -4,9 +4,9 @@
     <form name="new_node_form" novalidate>
       <div class="modal-content">
 	<div class="modal-header">
-	  <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
 	  <h4 class="modal-title" ng-if="modal_task">New Task</h4>
 	  <h4 class="modal-title" ng-if="!modal_task">New Project</h4>
+	  <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
 	</div>
 	<div class="modal-body">
 	  <div class="form-group">
@@ -35,11 +35,12 @@
 	  </div>
 	</div>
 	<div class="modal-footer">
-	  <button type="button" class="btn btn-default" data-dismiss="modal">Discard Changes</button>
-	  <button type="button" class="btn btn-primary"
+	  <button type="button" class="inbox-modal__button inbox-modal__button--confirm"
 		  ng-click="createNode(active_msg)" ng-disabled="new_node_form.$invalid">
 	    Create
 	  </button>
+	  <button type="button" class="inbox-modal__button inbox-modal__button--cancel"
+		  data-dismiss="modal">Cancel</button>
 	</div>
       </div><!-- /.modal-content -->
     </form>
@@ -51,8 +52,8 @@
   <div class="modal-dialog">
     <div class="modal-content">
       <div class="modal-header">
-	<button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
 	<h4 class="modal-title">Delete Message?</h4>
+	<button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
       </div>
       <div class="modal-body">
 	<p>
@@ -64,8 +65,8 @@
 	</p>
       </div>
       <div class="modal-footer">
-	<button type="button" class="btn btn-default" data-dismiss="modal">Don't Delete</button>
-	<button type="button" class="btn btn-danger" ng-click="delete_node()">Delete</button>
+	<button type="button" class="inbox-modal__button inbox-modal__button--delete" ng-click="delete_node()">Delete</button>
+	<button type="button" class="inbox-modal__button inbox-modal__button--cancel" data-dismiss="modal">Cancel</button>
       </div>
     </div><!-- /.modal-content -->
   </div><!-- /.modal-dialog -->
@@ -76,8 +77,8 @@
   <div class="modal-dialog">
     <div class="modal-content">
       <div class="modal-header">
-	<button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
 	<h4>Defer Message to Future</h4>
+	<button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
       </div>
       <div class="modal-body">
 	<label for="target-date">Scheduled Date:</label>
@@ -87,9 +88,10 @@
 	       ng-model="newDate" />
       </div>
       <div class="modal-footer">
-	<button type="button" class="btn btn-default" data-dismiss="modal">Don't Defer</button>
-	<button type="button" class="btn btn-primary"
+	<button type="button" class="inbox-modal__button inbox-modal__button--defer"
 		ng-click="deferMessage(active_msg)">Defer</button>
+	<button type="button" class="inbox-modal__button inbox-modal__button--cancel"
+		data-dismiss="modal">Cancel</button>
       </div>
     </div><!-- /.modal-content -->
   </div><!-- /.modal-dialog -->

@@ -39,7 +39,7 @@ angular.module(
             function setActiveLink() {
                 var found, r, currPath, linkId;
                 // Clear old active links
-                jQuery('ul.navbar-nav li').removeClass('active');
+                jQuery('.navbar__item').removeClass('active');
                 // Find and set new active link
                 currPath = $location.path();
                 for (linkId in regexps) {

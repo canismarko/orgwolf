@@ -41,10 +41,10 @@ module.exports = merge(common, {
 	    	use: [miniCssLoader,'css-loader'],
 	    },
 	    {
-	    	test: /\.less$/,
+	    	test: /\.s[ac]ss$/,
 	    	use: [miniCssLoader,
 	    	      {loader: 'css-loader'},
-	    	      {loader: 'less-loader', options: {
+	    	      {loader: 'sass-loader', options: {
 	    		  strictMath: true,
 	    		  noIeCompat: true
 	    	      }

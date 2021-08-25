@@ -1,14 +1,16 @@
-<form action="/search" method="get"
-      class="form-search form-inline ow-unauth-hide ng-pristine ng-valid"
-      role="form" _lpchecked="1">
-  <div class="input-group">
-    <input name="q" type="text" class="search-query input-medium form-control"
-	   ng-model="queryString" placeholder="Search...">
-    <span class="input-group-btn">
-      <button type="submit" class="btn btn-default">
-	<i class="fas fa-search"></i>
-	Search
-      </button>
-    </span>
-  </div>
-</form>
+<div class="search-box">
+  <form action="/search" method="get"
+	class="ow-unauth-hide ng-pristine ng-valid"
+	role="form" _lpchecked="1">
+    <div class="input-group">
+      <input name="q" type="text" class="search-box__input search-query input-medium"
+	     ng-model="queryString" placeholder="Search...">
+      <div class="input-group-append">
+	<button type="submit" class="search-box__button">
+	  <i class="search-box__icon"></i>
+	  Search
+	</button>
+      </span>
+    </div>
+  </form>
+</div>

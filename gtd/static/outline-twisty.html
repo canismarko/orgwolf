@@ -1,54 +1,53 @@
 <!-- Recursive template for tree of Tasks -->
-<div class="ow-hoverable"
+<div class="gtd-outline__heading gtd-outline__heading--level-{{ heading.level }}"
+     ng-class="{'gtd-outline__heading--archived': heading.archived}"
      ow-droppable
      ng-show="!isEditing"
      ng-click="toggleHeading($event)"
      style="{{ heading | headingStyle }}"
      archived="{{ heading.archived }}">
-  <span class="twisty"></span>
+  <span class="gtd-outline__twisty"></span>
   <span ow-todo ow-heading="heading"></span>
-  <div class="ow-title">
-    {{heading.title}}
-    <span ng-show="heading.has_text && state < 2">&hellip;</span>
+  <div class="gtd-outline__title">{{heading.title}}<span ng-show="heading.has_text && state < 2">&hellip;</span>
   </div>
-  <i ng-if="heading.repeats" class="repeat-icon non-opening"></i>
+  <i ng-if="heading.repeats" class="gtd-outline__icon gtd-outline__icon--repeats non-opening"></i>
 
-  <span ng-repeat="tag in tags" class="tag non-opening">{{ tag }}</span>
+  <span ng-repeat="tag in tags" class="gtd-outline__tag non-opening">{{ tag }}</span>
 
-  <div class="action-buttons btn-group btn-group-xs non-opening">
+  <div class="gtd-outline__button-group action-buttons btn-group btn-group-xs non-opening">
 
-    <button type="button" class="btn btn-default"
+    <button type="button" class="gtd-outline__button"
 	    ng-disabled="{{ heading.read_only }}"
 	    ng-click="edit($event)" title="Edit">
-      <i class="edit-icon"></i>
+      <i class="gtd-outline__button-icon gtd-outline__button-icon--edit"></i>
     </button>
     <a href="/gtd/actions/?parent={{heading.id}}"
-       class="btn btn-default" title="View As List">
-      <i class="action-icon"></i>
+       class="gtd-outline__button" title="View As List">
+      <i class="gtd-outline__button-icon gtd-outline__button-icon--action"></i>
     </a>
 
-    <button type="button" class="btn btn-default"
+    <button type="button" class="gtd-outline__button"
 	    ng-click="archive($event)"
 	    ng-disabled="{{ heading.read_only }}"
 	    title="Archive/Unarchive" >
-      <i class="archive-icon"></i>
+      <i class="gtd-outline__button-icon gtd-outline__button-icon--archive"></i>
     </button>
 
-    <button type="button" class="btn btn-default"
+    <button type="button" class="gtd-outline__button"
 	    ng-click="createChild($event)"
 	    title="New subheading">
-      <i class="new-icon" ></i>
+      <i class="gtd-outline__button-icon gtd-outline__button-icon--new" ></i>
     </button>
   </div>
-  <span class="read-only-label non-opening"
-	ng-if="heading.read_only"></span>
-</div><!-- /.ow-hoverable -->
+  <span class="gtd-outline__tag gtd-outline__tag--read-only non-opening"
+	ng-if="heading.read_only">Read only</span>
+</div><!-- /.gtd-outline__heading -->
 
 <div ow-editable ng-if="isEditing" ow-heading="heading"></div>
 
-<div ow-details class="details" ow-heading="heading" ng-if="state == 2"></div>
+<div ow-details class="gtd-outline__details" ow-heading="heading" ng-if="state == 2"></div>
 
-<div class="children" ng-if="state >= 1">
+<div class="gtd-outline__children" ng-if="state >= 1">
   <!-- Children -->
   <div ow-editable ow-parent="heading" ng-if="newChild"></div>
   <div ng-show="!loadedChildren && !isLeafNode">
@@ -56,10 +55,11 @@
   </div>
   <div ow-twisty ng-repeat="heading in children" ow-heading="heading"
        ow-draggable
+       class="gtd-outline__node"
        ng-if="!heading.archived || showArchived"></div>
-  <div class="archived-indicator"
+  <div class="gtd-outline__archived-indicator"
        ng-show="numArchived && !showArchived && !showGlobalArchived"
        ng-click="showArchived = !showArchived">
     ...plus {{ numArchived }} archived (click to show)
   </div>
-</div><!-- /.details -->
+</div><!-- /.gtd-outline__children -->

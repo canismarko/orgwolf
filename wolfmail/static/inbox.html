@@ -1,23 +1,22 @@
-<div id="inbox">
-  <div class="controls">
-    <!-- Search box -->
-    <div class="col-sm-5 col-md-4 pull-right"
-	 ng-include="'/static/search-box.html'">
-    </div>
+<div class="inbox">
+  <ul class="inbox-controls">
     <!-- Refresh button and date selector -->
-    <div class="date-widget" ow-current-date>
-    </div>
-    <div class="refresh-btn">
-      <button ng-click="get_messages()">
+    <li class="date-widget inbox-controls__item" ow-current-date></li>
+    <li class="inbox-controls__item">
+      <button class="inbox-controls__button" ng-click="get_messages()">
 	<i></i>
-	<span class="icon"></span>
+	<span class="inbox-controls__icon inbox-controls__icon--refresh"></span>
 	Refresh
       </button>
-    </div>
-  </div>
+    </li>
+    <!-- Search box -->
+    <li class="inbox-controls__item"
+	 ng-include="'/static/search-box.html'">
+    </li>
+  </ul>
 
   <!-- Message to show if inbox is empty -->
-  <div class="inbox-zero"
+  <div class="inbox__inbox-zero-message"
        ng-show="messages.length === 0 && messages.$resolved">
     <p>
       No messages in inbox. Congratulations on reaching
@@ -25,82 +24,84 @@
     </p>
   </div>
   <!-- Table shows the list of messages -->
-  <div class="message-list" ng-if="messages.length && messages.$resolved">
+  <div class="inbox-list" ng-if="messages.length && messages.$resolved">
 
-    <div class="table-heading">
-      <div class="action-buttons">Actions</div>
-      <div class="from">From</div>
-      <div class="subject">Subject</div>
-      <div class="received">Received</div>
+    <div class="inbox-list__row inbox-list__row--header">
+      <div class="inbox-list__col inbox-list__col--action-buttons">Actions</div>
+      <div class="inbox-list__col inbox-list__col--from">From</div>
+      <div class="inbox-list__col inbox-list__col--subject">Subject</div>
+      <div class="inbox-list__col inbox-list__col--received">Received</div>
     </div>
 
     <div ng-repeat="message in messages" unread="{{ message.unread }}"
 	 ow-handler="{{ message.handler_path }}"
-	 class="message-full-row"
+	 class="inbox-list__row-group"
 	 ow-message-row>
-      <div class="message-row">
-	<div class="action-buttons btn-group btn-group-xs">
-	  <button class="msg-task btn btn-primary"
-		  ng-click="open_task_modal(message)">
-	    <span data-title="New Task">
-	      <i class="fas fa-square"></i>
-	    </span>
-	  </button>
-	  <button class="msg-project btn btn-info"
-		  ng-click="create_project_modal(message)">
-	    <span data-title="New Project">
-	      <i class="fas fa-folder"></i>
-	    </span>
-	  </button>
-	  <button class="msg-complete btn btn-success"
-		  ng-click="completeTask(message)">
-	    <span data-title="Mark as 'Done'">
-	      <i class="fas fa-check-square"></i>
-	    </span>
-	  </button>
-	  <button class="msg-defer btn btn-warning"
-		  ng-click="defer_modal(message)">
-	    <span data-title="Defer">
-	      <i class="fas fa-clock"></i>
-	    </span>
-	  </button>
-	  <button class="msg-archive btn btn-default"
-		  ng-click="archive(message)">
-	    <span data-title="Archive">
-	      <i class="fas fa-archive"></i>
-	    </span>
-	  </button>
-	  <button class="msg-delete btn btn-danger"
-		  ng-click="delete_modal(message)">
-	    <span data-title="Delete">
-	      <i class="fas fa-trash"></i>
-	    </span>
-	  </button>
-	</div><!-- /.action-buttons -->
+      <div class="inbox-list__row">
+	<div class="inbox-list__col inbox-list__col--action-buttons">
+	  <div class="inbox-list__action-buttons">
+	    <button class="inbox-list__action-button inbox-list__action-button--new-task"
+		    ng-click="open_task_modal(message)">
+	      <span data-title="New Task">
+		<i class="inbox-list__icon inbox-list__icon--new-task"></i>
+	      </span>
+	    </button>
+	    <button class="inbox-list__action-button inbox-list__action-button--new-project"
+		    ng-click="create_project_modal(message)">
+	      <span data-title="New Project">
+		<i class="inbox-list__icon inbox-list__icon--new-project"></i>
+	      </span>
+	    </button>
+	    <button class="inbox-list__action-button inbox-list__action-button--complete"
+		    ng-click="completeTask(message)">
+	      <span data-title="Mark as 'Done'">
+		<i class="inbox-list__icon inbox-list__icon--complete"></i>
+	      </span>
+	    </button>
+	    <button class="inbox-list__action-button inbox-list__action-button--defer"
+		    ng-click="defer_modal(message)">
+	      <span data-title="Defer">
+		<i class="inbox-list__icon inbox-list__icon--defer"></i>
+	      </span>
+	    </button>
+	    <button class="inbox-list__action-button inbox-list__action-button--archive"
+		    ng-click="archive(message)">
+	      <span data-title="Archive">
+		<i class="inbox-list__icon inbox-list__icon--archive"></i>
+	      </span>
+	    </button>
+	    <button class="inbox-list__action-button inbox-list__action-button--delete"
+		    ng-click="delete_modal(message)">
+	      <span data-title="Delete">
+		<i class="inbox-list__icon inbox-list__icon--delete"></i>
+	      </span>
+	    </button>
+	  </div><!-- /.inbox-list__action-buttons -->
+	</div><!-- /.inbox-list__row--action-buttons -->
 
-	<div class="from">
+	<div class="inbox-list__col inbox-list__col--from">
 	  <span ng-bind-html="message | format_sender"></span>
 	  <span class="repeat-icon"
 		ng-show="message.repeats"></span>
 	</div>
-	<div class="subject">
+	<div class="inbox-list__col inbox-list__col--subject">
 	  <a href="{{ message.id }}"
 	     ng-bind-html="message | format_subject">
 	  </a>
 	</div>
-	<div class="received"
+	<div class="inbox-list__col inbox-list__col--received"
 	     ng-bind-html="message.rcvd_date | format_date"></div>
-      </div>
-      <div ng-repeat-start="heading in headings" class="message-heading"
+      </div><!-- /.inbox-list__row -->
+      <div ng-repeat-start="heading in headings" class="inbox-list__heading"
 	   ow-message-heading
 	   ng-hide="isEditable">
 	<div>
-	  <span class="heading-icon fas fa-square"></span>
+	  <span class="inbox-list__icon inbox-list__icon--heading"></span>
 	  <span ow-todo ow-heading="heading"></span>
 	  {{ heading.title }}
-	  <button class="btn btn-xs btn-default"
+	  <button class="inbox-list__heading-button"
 		  ng-click="isEditable = !isEditable">
-	    <span class="fas fa-edit"></span>
+	    <span class="inbox-list__icon inbox-list__icon--edit-heading"></span>
 	    Edit</button>
 	</div>
       </div>

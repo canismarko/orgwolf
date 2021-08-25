@@ -36,6 +36,16 @@ Proper git usage is outside the scope of this document. In the interest of helpi
 + `git commit -a` - create a new commit to "save" your changes
 + `git push` - upload your committed changes to origin. Note you need github write access to modify that repo.
 
+Development
+-----------
+
+The following steps can be useful for installing dependencies and running tests.
+
++ `pip install -e requirements.txt`
++ `pytest`
++ `npm install`
++ `npx webpack --config webpack.dev.js`
+
 Deployment
 ----------
 

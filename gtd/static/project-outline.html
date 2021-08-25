@@ -1,52 +1,47 @@
 <!-- Main container for the outline -->
-<div id="outline-appliance">
-  <div class="container">
-    <div class="row">
-
-      <!-- Search box -->
-      <div class="col-sm-5 col-md-4 pull-right"
-	   ng-include="'/static/search-box.html'">
-      </div>
-
-      <form id="sort-field"
-	    class="form-inline">
-	<div class="col-md-4">
-	  <div id="add-heading" class="btn btn-default"
-	       ng-click="addProject($event)">
-	    <i class="fas fa-plus"></i>
-	    New Project
-	  </div>
-	  <div id="show-all-btn" class="btn btn-default ow-unauth-hide"
-	       ng-click="showAll($event)">
-	    <i class="archived-icon"></i>
-	    Show Archived
-	  </div>
-	</div>
-	<div class="col-md-4 col-sm-3">
-	  <label for="sort-field" class="ow-unauth-hide">Sort:</label>
-	  <select name="sort-field" ng-model="sortField"
-		  class="form-control  ow-unauth-hide"
-		  ng-options="x.key as x.display for x in sortFields">
-	  </select>
-	</div>
+<div id="outline-appliance" class="projects-page">
+  <ul class="projects-controls">
+    <!-- Search box -->
+    <li class="projects-controls__item">
+      <button id="add-heading" class="projects-controls__button"
+	      ng-click="addProject($event)">
+	<i class="projects-controls__icon projects-controls__icon--new"></i> New Project
+      </button>
+    </li>
+    <li class="projects-controls__item">
+      <button id="show-all-btn" class="projects-controls__button projects-controls__button--show-all ow-unauth-hide" ng-click="showAll($event)">
+	<i class="projects-controls__icon projects-controls__icon--show-all"></i> Show Archived
+      </button>
+    </li>
+    <li class="projects-controls__item">
+      <form class="projects-controls__form">
+	<label for="sort-field" class="ow-unauth-hide">Sort:</label>
+	<select name="sort-field" ng-model="sortField"
+		class="projects-controls__select"
+		ng-options="x.key as x.display for x in sortFields">
+	</select>
       </form>
-    </div>
+    </li>
+    <li class="projects-controls__item"
+	ng-include="'/static/search-box.html'">
+    </li>
 
-  </div><!-- /.container -->
+  </ul>
 
   <div ow-focus-area-tabs active-focus-area="activeFocusArea">
   </div>
 
-  <div class="outline">
+  <div class="gtd-outline">
     <div ow-droppable class="droppable-target">
-    Convert to top-level project&hellip;</div>
+      Convert to top-level project&hellip;</div>
     <div ow-editable ng-if="newProject"></div>
     <div ow-twisty ow-heading="heading"
 	 ow-draggable
+	 class="gtd-outline__node"
 	 ng-repeat="heading in children | currentFocusArea:activeFocusArea | order:sortField:activeHeading.obj"
 	 ng-if="!heading.archived || showArchived"></div>
   </div>
 
-</div><!-- /#outline-appliance -->
+</div><!-- /.projects-page -->
 
 <!-- </script> -->

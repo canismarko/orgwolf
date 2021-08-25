@@ -14,12 +14,12 @@ angular.module('owDirectives')
 	$element.find('span').tooltip();
 	scope.headings = [];
 	// Find buttons
-	$bTask = $element.find('.msg-task');
-	$bProject = $element.find('.msg-project');
-	$bComplete = $element.find('.msg-complete');
-	$bDefer = $element.find('.msg-defer');
-	$bArchive = $element.find('.msg-archive');
-	$bDelete = $element.find('.msg-delete');
+	$bTask = $element.find('.inbox-list__action-button--new-task');
+	$bProject = $element.find('.inbox-list__action-button--new-project');
+	$bComplete = $element.find('.inbox-list__action-button--complete');
+	$bDefer = $element.find('.inbox-list__action-button--defer');
+	$bArchive = $element.find('.inbox-list__action-button--archive');
+	$bDelete = $element.find('.inbox-list__action-button--delete');
 	// Set button visibility for this row
 	if (attrs.owHandler === 'plugins.deferred') {
 	    // Deferred nodes

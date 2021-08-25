@@ -10,14 +10,11 @@ module.exports = merge(common, {
 		use: ['style-loader','css-loader'],
 	    },
 	    {
-		test: /\.less$/,
+		test: /\.s[ac]ss$/i,
 		use: [{loader: 'style-loader'},
 		      {loader: 'css-loader'},
-		      {loader: 'less-loader', options: {
-	    		  strictMath: true,
-	    		  noIeCompat: true
-		      }
-		      }],
+		      {loader: 'sass-loader'}
+		     ],
 	    },
 	]
     }

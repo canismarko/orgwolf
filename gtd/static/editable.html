@@ -1,47 +1,45 @@
 <div class="editable info" node-id="{{heading.pk}}">
-  <form novalidate class="heading-form" name="form">
-    <div class="header">
-      <i class="twisty fas fa-chevron-down" expandable="disabled"></i>
+  <form novalidate name="form">
+    <div class="editable__header">
+      <i class="editable__twisty" expandable="disabled"></i>
       <span ng-show="heading.title">{{ heading.title }}</span>
       <span ng-hide="heading.title">New Heading</span>
-      <button class="btn btn-primary btn-sm save-btn" ng-click="save($event)"
+      <button class="editable__button editable__button--save" ng-click="save($event)"
       	      ng-disabled="form.$invalid">
 	Save
       </button>
-      <button class="btn btn-default btn-sm" ng-click="cancelEdit($event)">
+      <button class="editable__button editable__button--cancel" ng-click="cancelEdit($event)">
 	Don't Save
       </button>
     </div>
-    <div class="body">
-      <div class="row">
-	<div class="title">
+    <div class="editable__body">
+      <div class="editable__row">
+	<div class="editable__col editable__col--title">
 	  <label for="title">Title:</label>
 	  <input type="text" ng-model="fields.title"
 		 id="title" required></input>
 	</div>
-	<div class="todo-state">
+	<div class="editable__col editable__col--todo-state">
 	  <label for="todo_state">Todo State:</label>
 	  <select id="todo_state" ng-model="fields.todo_state"
 		  ng-options="state.id as (state.abbreviation + ' - ' + state.display_text) for state in todoStates">
 	    <option value="">----------</option>
 	  </select>
 	</div>
-	<div class="tag-string">
+	<div class="editable__col editable__col--tag-string">
 	  <label for="tag_string">Tag String:</label>
 	  <input type="text" id="tag_string" placeholder="eg. :home:"
 		 ng-model="fields.tag_string"></input>
 	</div>
-	<div class="priority">
+	<div class="editable__col editable__col--priority">
 	  <label for="priority">Priority:</label>
 	  <select id="priority" ng-model="fields.priority"
 		  ng-options="x.sym as x.display for x in priorities">
 	  </select>
 	</div>
-	<div class="col-md-1">
-	</div>
       </div>
-      <div class="row">
-	<div class="col-md-3">
+      <div class="editable__row">
+	<div class="editable__col editable__col--scheduled">
 	  <label for="scheduled_date">Scheduled:</label>
 	  <div class="row">
 	    <div class="col-lg-9">
@@ -75,7 +73,7 @@
 	    </div>
 	  </div>
 	</div>
-	<div class="col-md-3">
+	<div class="editable__col editable__col--deadline">
 	  <label for="deadline_date">Deadline:</label>
 	  <div class="row">
 	    <div class="col-lg-9">
@@ -91,16 +89,17 @@
 	    </div>
 	  </div>
 	</div>
-	<div class="focus-area">
+	<div class="editable__col editable__col--focus-area">
 	  <label>Focus Areas:</label>
-	  <select id="focus-area" multiple class="form-control"
+	  <select id="focus-area" multiple class="editable__col--focus-area-select"
 		  ng-model="fields.focus_areas"
+		  
 		  ng-options="a.id as a.display for a in focusAreas">
 	  </select>
 	</div>
-	<div class="repeats-group">
-	  <div class="row">
-	    <div class="repeats">
+	<div class="editable__col editable__col--repeat-group">
+	  <div class="editable__row">
+	    <div class="editable__col editable__col--repeats">
 	      <label for="repeats">
 		<span class="repeat-icon"></span>
 		Repeats...
@@ -109,21 +108,23 @@
 		<input type="checkbox" bs-switch id="repeats" ng-model="fields.repeats" />
 	      </div>
 	    </div>
-	    <div class="repeats">
+	    <div class="editable__col editable__col--repeating-number">
 	      <label for="repeating_number">...every...
 	      </label>
-	      <input type="text" id="repeating_number" placeholder="number..."
+	      <input class="editable__repeat-input-group"
+		     placeholder="number..."  type="text"
+		     id="repeating_number"
 		     ng-model="fields.repeating_number"
 		     ow-disabled="{{ fields.repeats }}"
-		     ng-disabled="!fields.repeats">
+		     ng-disabled="!fields.repeats" >
 		   </input>
 		   <select id="repeating_unit"
 			   ng-model="fields.repeating_unit"
 			   ng-disabled="!fields.repeats"
 			   ng-options="unit.value as unit.label for unit in time_units">
-		   </select>
+			   </select>
 	    </div>
-	    <div class="repeats">
+	    <div class="editable__col editable__col--repeat-from-completion">
 	      <label for="repeat_from_completion">
 		...from...
 	      </label>
@@ -134,7 +135,6 @@
 	      </select>
 	    </div>
 	  </div><!-- /.row -->
-
 	</div>
       </div><!-- / outer row -->
       <!-- Text editor -->

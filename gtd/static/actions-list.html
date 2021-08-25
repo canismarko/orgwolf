@@ -1,20 +1,19 @@
-<div id="gtd-list">
-  <div class="row">
-    <!-- Search box -->
-    <div class="col-sm-5 col-md-4 pull-right"
-	 ng-include="'/static/search-box.html'">
-    </div>
-
+<div id="gtd-list" class="next-actions-page">
+  <div class="gtd-list__row row">
     <!-- Current date widget -->
     <div class="date-widget" ow-current-date></div>
+    <!-- Search box -->
+    <div ng-include="'/static/search-box.html'">
+    </div>
+
   </div>
   <!-- Hard scheduled List -->
-  <div id="scheduled-list" ng-show="scheduledList.length">
-    <div class="table-heading">
-      <div class="description">Description</div>
-      <div class="buttons"></div>
-      <div class="deadline">Scheduled</div>
-      <div class="project">Project</div>
+  <div id="scheduled-list" ng-show="scheduledList.length" class="gtd-list">
+    <div class="gtd-list__row">
+      <div class="gtd-list__col gtd-list__col--header gtd-list__col--description">Description</div>
+      <div class="gtd-list__col gtd-list__col--header gtd-list__col--buttons"></div>
+      <div class="gtd-list__col gtd-list__col--header gtd-list__col--deadline">Scheduled</div>
+      <div class="gtd-list__col gtd-list__col--header gtd-list__col--project">Project</div>
     </div>
 
     <div ow-list-row ng-repeat="heading in scheduledList" ow-heading="heading"
@@ -26,21 +25,26 @@
   <!-- List filtering control -->
   <h4 ng-if="context_name">{{ context_name }}</h4>
   <form action="" method="POST" id="list-filters"
-	class="form-inline ow-unauth-hide">
+	class="action-filters ow-unauth-hide">
     <!-- Context selection box -->
     <label for="context">Context:</label>
-    <select name="context" ng-model="activeContext" class="form-control"
+    <select name="context" ng-model="activeContext" class="action-filters__select"
 	    ng-options="x.id as x.name for x in contexts"
 	    ng-change="changeContext()">
 	    <option value="">None</option>
     </select>
     <!-- TodoState selection checkboxes -->
-    <label class="checkbox-inline" ng-repeat="state in todoStates"
-	   style="{{ state | todoStateStyle }}">
+    <div class="action-filters__check-group"
+	 ng-repeat="state in todoStates">
       <input type="checkbox" ow-state="{{ state.id }}"
+	     class="action-filters__check-box"
 	     ng-click="toggleTodoState(state)"
 	     ng-checked="activeStates.indexOf(state.id) > -1"></input>
-	     {{ state.abbreviation }}
+      <label  class="action-filters__check-label"
+	      style="{{ state | todoStateStyle }}">
+	{{ state.abbreviation }}
+      </label>
+    </div>
     </label>
   </form>
 
@@ -54,35 +58,36 @@
   </div>
 
   <!-- buttons for picking a random action, refresh lists, etc. -->
-  <div class="action-list-buttons">
-    <div ow-random-action headings="visibleHeadings">
-    </div>
-    <div class="refresh-btn">
-      <button ng-click="refreshList()"><i class="fas fa-sync"></i> Refresh</button>
-    </div>
-  </div>
+  <ul class="gtd-list__button-group">
+    <li class="gtd-list__button-item" ow-random-action headings="visibleHeadings" ></li>
+    <li class="gtd-list__button-item">
+      <button ng-click="refreshList()" class="gtd-list__button gtd-list__button--refresh"><i class="fas fa-sync"></i> Refresh</button>
+    </li>
+  </ul>
 
   <!-- Focus area tabs -->
   <div ow-focus-area-tabs>
   </div>
 
   <!-- Actionable Items Header -->
-  <div class="table-heading">
-    <div class="description">Description</div>
-    <div class="buttons"></div>
-    <div class="deadline">Deadline</div>
-    <div class="project">Project</div>
-  </div>
+  <div class="gtd-list">
+    <div class="gtd-list__row">
+      <div class="gtd-list__col gtd-list__col--header gtd-list__col--description">Description</div>
+      <div class="gtd-list__col gtd-list__col--header gtd-list__col--buttons"></div>
+      <div class="gtd-list__col gtd-list__col--header gtd-list__col--deadline">Deadline</div>
+      <div class="gtd-list__col gtd-list__col--header gtd-list__col--project">Project</div>
+    </div>
 
-  <div ow-list-row
-       ng-repeat="heading in visibleHeadings | currentFocusArea:activeFocusArea | sortActions"
-       ow-heading="heading" ow-date="{{ heading.deadline_date | deadline_str }}">
-  </div>
+    <div ow-list-row
+	 ng-repeat="heading in visibleHeadings | currentFocusArea:activeFocusArea | sortActions"
+	 ow-heading="heading" ow-date="{{ heading.deadline_date | deadline_str }}">
+    </div>
 
-  <div class="alert-empty"
-       ng-show="visibleHeadings.length === 0 && !isLoading">
-    No actions here. Try another Focus Area, Context or
-    TodoState combination.
-  </div>
+    <div class="gtd-list__empty-message"
+	 ng-show="visibleHeadings.length === 0 && !isLoading">
+      No actions here. Try another Focus Area, Context or
+      TodoState combination.
+    </div>
+  </div><!-- /.gtd-list -->
 
-</div><!-- /#gtd-list -->
+</div><!-- /.next-actions-page -->

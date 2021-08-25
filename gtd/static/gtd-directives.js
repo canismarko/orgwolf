@@ -373,15 +373,15 @@ angular.module('owDirectives')
 	scope.activeFocusArea = scope.allFocusArea;
 	$rootScope.activeFocusArea = scope.allFocusArea;
 	$timeout(function() {
-	    element.find('#fa-tab-0').addClass('active');
+	    element.find('#fa-tab-0').find('a').addClass('active');
 	});
 	// Tab click handler
 	scope.changeFocusArea = function(newFocusArea) {
 	    // Update UI
-	    element.find('#fa-tab-' + scope.activeFocusArea.id).removeClass('active');
+	    element.find('#fa-tab-' + scope.activeFocusArea.id).find('a').removeClass('active');
 	    scope.activeFocusArea = newFocusArea;
 	    $rootScope.activeFocusArea = newFocusArea;
-	    element.find('#fa-tab-' + scope.activeFocusArea.id).addClass('active');
+	    element.find('#fa-tab-' + scope.activeFocusArea.id).find('a').addClass('active');
 	    // Send the relevant signals
 	    $rootScope.$broadcast('focus-area-changed', newFocusArea);
 	};
@@ -473,11 +473,11 @@ angular.module('owDirectives')
 **************************************************/
 .directive('owTwisty', ['$compile', '$rootScope', 'Heading', 'activeHeading', function($compile, $rootScope, Heading, activeHeading) {
     function link(scope, element, attrs) {
-	var hoverable, get_children;
+	var hoverable, get_children, twistyElement;
 	scope.isEditing = false;
 	scope.loadedChildren = false;
 	scope.state = 0;
-	element.addClass('state-'+scope.state);
+	element.addClass('gtd-outline__node--state-'+scope.state);
 	scope.showArchived = $rootScope.showArchived;
 	// Get todo-states
 	if ($rootScope.todoStates) {
@@ -486,16 +486,12 @@ angular.module('owDirectives')
 	    scope.todoStates = [];
 	}
 	if ( scope.todoState && scope.todoState.actionable ) {
-	    element.find('.ow-hoverable').addClass('actionable');
+	    element.addClass('.gtd-outline__actionable');
 	}
 	scope.$on('toggle-archived', function(e, newState) {
 	    scope.showArchived = newState;
 	});
-	if ( scope.heading.level === 0 ) {
-	    element.find('.ow-hoverable').addClass('project');
-	}
-	element.addClass('heading');
-	hoverable = element.children('.ow-hoverable');
+	hoverable = element.children('.gtd-outline__heading');
 	// Process tag_string into tags
 	scope.tags = scope.heading.tag_string.slice(1, -1).split(':');
 	// Test for expandability
@@ -503,10 +499,10 @@ angular.module('owDirectives')
 	    'heading.rght - heading.lft',
 	    function(newDiff) {
 		if (newDiff > 1) {
-		    hoverable.removeClass('leaf-node');
+		    hoverable.removeClass('gtd-outline__heading--leaf-node');
 		    scope.isLeafNode = false;
 		} else {
-		    hoverable.addClass('leaf-node');
+		    hoverable.addClass('gtd-outline__heading--leaf-node');
 		    scope.isLeafNode = true;
 		}
 	    }
@@ -536,20 +532,24 @@ angular.module('owDirectives')
 	// Handlers for clicking on the heading (may be overridden by components)
 	scope.toggleHeading = function(newState) {
 	    // 0 is closed, 1 is partly open, 2 is fully open
-	    element.removeClass('state-' + scope.state);
+	    element.removeClass('gtd-outline__node--state-' + scope.state)
+	    // Check if the element is nested inside a non-opening parent
+	    var thisElement = $(newState.target);
+	    var isNonOpening = thisElement.is(".non-opening") || (thisElement.parents(".non-opening").length > 0);
 	    if ( /^\d+$/.test(newState) ) {
 		// Specific state is passed as an integer
 		scope.state = newState % 3;
 	    }
-	    else if ($(newState.target).is(':not(.non-opening)')) {
+	    else if (!isNonOpening) {
 		// Verify that something should be toggled
 		scope.state = (scope.state + 1) % 3;
 		// Skip state 1 for leaf nodes
+		console.log(scope.isLeafNode);
 		if (scope.isLeafNode && scope.state === 1) {
 		    scope.state = 2;
 		}
 	    }
-	    element.addClass('state-' + scope.state);
+	    element.addClass('gtd-outline__node--state-' + scope.state)
 	    // Get children if heading is now open
 	    if (scope.state > 0) {
 		scope.getChildren();
@@ -614,7 +614,7 @@ angular.module('owDirectives')
 			      activeObj.rght < scope.heading.rght);
 	    if (activeObj.id === scope.heading.id) {
 		// This is the actual heading
-		element.addClass('active-heading');
+		element.addClass('gtd-outline__node--active');
 	    } else if (isAncestor) {
 		// This is an ancestor of activeHeading and should be open
 		scope.toggleHeading(1);

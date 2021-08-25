@@ -1,6 +1,7 @@
 <div ng-hide="isEditable"
+     class="gtd-list__row"
      ng-class="{'completed': completed}">
-  <div class="description">
+  <div class="gtd-list__col gtd-list__col--description">
     <span ow-todo ow-heading="heading">
       {{ todoState.abbreviation }}
     </span>
@@ -13,36 +14,36 @@
     <span ng-show="heading.read_only" class="heading-title">
       {{ heading.title}}</span>
     <i ng-if="heading.repeats"
-	  class="repeat-icon"></i>
-    <span class="read-only-label"
-	  ng-show="heading.read_only"></span>
+       class="repeat-icon"></i>
+    <span class="gtd-list__badge gtd-list__badge--read-only"
+	  ng-show="heading.read_only">Read only</span>
     <i class="needs-active-location"
        title="Action needs to current location."
        ng-if="heading | needsActiveLocation"></i>
-    <span ng-repeat="tag in tags" class="tag non-opening">{{ tag }}</span>
+    <span ng-repeat="tag in tags" class="gtd-list__badge non-opening">{{ tag }}</span>
   </div>
-  <div class="buttons">
-    <div class="action-buttons btn-group">
-      <button class="btn btn-default btn-xs"
+  <div class="gtd-list__col gtd-list__col--buttons">
+    <div class="heading-buttons">
+      <button class="heading-buttons__button"
 	      ng-click="edit(heading)" ng-disabled="heading.read_only">
 	<i class="fas fa-edit"></i>
 	<span class="collapse-label">Edit</span>
       </button>
       <a href="/gtd/projects/#{{heading.id}}-{{heading.slug}}"
-	 class="btn btn-default btn-xs"
+	 class="heading-buttons__button"
 	 title="View this task in the project view">
 	<span class="fas fa-folder-open"></span>
 	<span class="collapse-label">Project</span>
       </a>
     </div>
   </div>
-  <div class="deadline">
+  <div class="gtd-list__col gtd-list__col--deadline">
     {{ owDate }}
   </div>
-  <div class="project">
+  <div class="gtd-list__col gtd-list__col--project">
     <span class="collapse-label">Project:</span>
     {{ heading.root_name }}
-    <button class="filter-button btn"
+    <button class="gtd-list__filter-button"
 	    ng-click="$emit('filter-parent', heading.root_id)">
       <i class="fas fa-filter"></i>
       Filter

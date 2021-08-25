@@ -1,100 +1,79 @@
 <!-- Navigation bar -->
-<nav class="navbar navbar-default" role="navigation" ow-navbar
+<nav class="navbar" role="navigation" ow-navbar
      ng-class="{'ow-logged-in': user.is_active, 'ow-is-staff': user.is_staff, 'ow-logged-out': !user.is_active, 'ow-not-staff': !user.is_staff}">
-  <div class="navbar-header">
-    <button type="button" class="navbar-toggle"
-	    data-toggle="collapse" data-target=".navbar-ex1-collapse">
-      <span class="sr-only">Toggle Navigation</span>
-      <span class="icon-bar"></span>
-      <span class="icon-bar"></span>
-      <span class="icon-bar"></span>
-    </button>
-    <a class="navbar-brand" id="logo" href="/">
-      <img src="{{ 'orgwolf/orgwolf-logo.png' | static }}" />
-    </a>
-  </div>
+  <a class="navbar__logo" href="#" id="logo">
+    <img src="{{ 'orgwolf/orgwolf-logo.png' | static }}" />
+  </a>
+  <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+    <span class="navbar-toggler-icon"></span>
+  </button>
 
-  <div class="collapse navbar-collapse navbar-ex1-collapse">
-
-    <form class="navbar-form navbar-left col-md-3"
-	  ng-controller="inboxCapture" ng-submit="capture($event)">
+  <div class="collapse navbar-collapse" id="navbarSupportedContent">
+    <form ng-controller="inboxCapture" ng-submit="capture($event)">
       <div class="input-group">
-	<input type="text" name="new_inbox_item" id="new_inbox_item"
-	       class="form-control"
-	       placeholder="To inbox..."></input>
-	<span class="input-group-btn">
-	  <button type="submit" class="btn btn-default">
-	    Save
-	  </button>
-	</span>
+	<input type="text" name="new_inbox_item" id="new_inbox_item" class="navbar__input form-control" placeholder="To inbox..."></input>      
+	<div class="input-group-append">
+	  <button type="submit" class="navbar__button">Save</button>
+	</div>
       </div>
     </form>
 
-    <ul class="nav navbar-nav">
+    <ul class="navbar__list">
       <!-- Inbox -->
-      <li id="nav-inbox">
-	<a href="/wolfmail/inbox/">
+      <li id="nav-inbox" class="navbar__item">
+	<a href="/wolfmail/inbox/" class="navbar__link">
 	  <span class="fas fa-inbox"></span>
 	  Inbox
 	</a>
       </li>
       <!-- Project Outline -->
-      <li id="nav-projects">
-	<a href="/gtd/projects/">
+      <li id="nav-projects" class="navbar__item">
+	<a href="/gtd/projects/" class="navbar__link">
 	  <span class="fas fa-folder-open"></span>
 	  Projects</a>
       </li>
       <!-- Next actions -->
-      <li id="nav-actions">
-	<a href="/gtd/actions/" ng-hide="activeContext">
+      <li id="nav-actions" class="navbar__item">
+	<a href="/gtd/actions/" class="navbar__link" ng-hide="activeContext">
 	  <span class="fas fa-list"></span>
 	  Next Actions
 	</a>
-	<a href="/gtd/actions/{{ activeContext.id }}/{{ activeContext.name | slugify }}" ng-show="activeContext">
+	<a href="/gtd/actions/{{ activeContext.id }}/{{ activeContext.name | slugify }}" class="navbar__link" ng-show="activeContext">
 	  <span class="fas fa-list"></span>
 	  {{ activeContext.name }} Actions
 	</a>
       </li>
       <!-- Calendar -->
-      <li id="nav-calendar">
-	<a href="/calendar/">
+      <li id="nav-calendar" class="navbar__item">
+	<a href="/calendar/" class="navbar__link">
 	  <span class="fas fa-calendar-alt"></span>
 	  Calendar</a>
       </li>
     </ul>
 
-    <ul class="nav navbar-nav navbar-right">
+    <ul class="navbar__list navbar__list--right">
+
+      <li class="navbar__item navbar__item--dropdown ow-unauth-hide">
+      	<a href="#" class="navbar__link navbar__link--dropdown" id="accountDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+	  <span class="navbar__account-icon"></span>
+	  Account
+      	</a>
+	<div class="navbar-dropdown dropdown-menu" aria-labelledby="accountDropdown">
+      	  <a href="/admin/" class="ow-staff-show navbar-dropdown__link" target="_self">
+	    <i class="fas fa-tools"></i>
+	    Admin</a>
+      	  <a href="/accounts/settings/" class="navbar-dropdown__link">
+	    <i class="fas fa-cog"></i> Settings</a>
+      	  <a href="/accounts/logout/" id="logout" target="_self" class="navbar-dropdown__link">
+	    <i class="fas fa-sign-out-alt"></i> Logout</a>
+	</div>
+      </li>
       <!-- Button for feedback form -->
-      <li class="pull-right ow-unauth-hide">
-	<a href="#" data-toggle="modal" data-target="#feedbackModal">
+      <li class="ow-unauth-hide navbar__item">
+	<a href="#" class="navbar__link" data-toggle="modal" data-target="#feedbackModal">
 	  Feedback
 	</a>
       </li>
-
-      <li class="dropdown ow-unauth-hide">
-      	<a href="#" class="dropdown-toggle" data-toggle="dropdown">
-	  <span class="fas fa-user"></span>
-	  Account <b class="caret"></b>
-      	</a>
-      	<ul class="dropdown-menu">
-      	  <li class="ow-staff-show">
-      	    <a href="/admin/" target="_self">
-	      <i class="fas fa-tools"></i>
-	      Admin</a>
-      	  </li>
-      	  <li>
-      	    <a href="/accounts/settings/">
-	      <i class="fas fa-cog"></i> Settings</a>
-      	  </li>
-      	  <li>
-      	    <a href="/accounts/logout/" id="logout" target="_self">
-	      <i class="fas fa-sign-out-alt"></i> Logout</a>
-      	  </li>
-      	</ul>
-      </li>
-      <!-- <li class="ow-unauth-show"> -->
-      <!-- 	Not authenticated -->
-      <!-- </li> -->
     </ul>
   </div>
 </nav><!-- </nav class="navbar"> -->

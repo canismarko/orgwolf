@@ -3,12 +3,11 @@
 
 STATIC = orgwolf/static/orgwolf/
 ORGWOLF_CSS = $(STATIC)orgwolf.css
-ORGWOLF_LESS = $(STATIC)orgwolf.less $(STATIC)orgwolf-animations.less
+ORGWOLF_LESS = $(STATIC)orgwolf.scss
 MIN_JS = orgwolf/static/orgwolf.js
 GTD_JS = gtd/static/gtd-models.js gtd/static/gtd-services.js gtd/static/gtd-directives.js gtd/static/gtd-filters.js gtd/static/gtd-controllers.js
 WM_JS = wolfmail/static/wolfmail-models.js wolfmail/static/wolfmail-services.js wolfmail/static/wolfmail-directives.js wolfmail/static/wolfmail-filters.js wolfmail/static/wolfmail-controllers.js
 OW_JS = $(STATIC)orgwolf-services.js $(STATIC)orgwolf-directives.js $(STATIC)orgwolf-filters.js $(STATIC)orgwolf-controllers.js
-LESS = lessc --clean-css
 DIVIDER = @echo "========================="
 YUI = yuicompressor -v
 JSLINT = @jslint --color --white --terse
