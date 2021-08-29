@@ -1,6 +1,8 @@
 /*globals angular, $ */
 "use strict";
 
+window.bootstrap = require('bootstrap/dist/js/bootstrap.bundle.js');
+
 angular.module('owDirectives')
 
 /*************************************************
@@ -80,8 +82,11 @@ angular.module('owDirectives')
 	// Find jQuery elements
 	$element = $(element);
 	scope.$task_modal = $element.find('.modal.task');
+	scope.task_modal = new bootstrap.Modal(scope.$task_modal);
 	scope.$delete_modal = $element.find('.modal.delete');
+	scope.delete_modal = new bootstrap.Modal(scope.$delete_modal);
 	scope.$defer_modal = $element.find('.modal.defer');
+	scope.defer_modal = new bootstrap.Modal(scope.$defer_modal);
 	// Object tracks the new node that's being created
 	if ( scope.new_node === undefined ) {
 	    scope.new_node = {};
@@ -97,7 +102,7 @@ angular.module('owDirectives')
 		// Show a modal for creating a new Node
 		scope.active_msg = msg;
 		scope.modal_task = true;
-		scope.$task_modal.modal();
+		scope.task_modal.show()
 	    }
 	};
 	scope.open_task_modal = function(msg) {
@@ -116,18 +121,19 @@ angular.module('owDirectives')
 	    scope.new_node.title = msg.subject;
 	    scope.active_msg = msg;
 	    scope.modal_task = false;
-	    scope.$task_modal.modal();
+	    scope.task_modal.show();
 	};
-	scope.defer_modal = function(msg) {
+	scope.show_defer_modal = function(msg) {
 	    // Show modal for rescheduling a Message for a future date
 	    var today;
-	    today = new Date();
+	    today = new Date().toISOString().split('T')[0];
+	    scope.$defer_modal.find('#target-date').val(today);
 	    scope.active_msg = msg;
-	    scope.$defer_modal.modal();
+	    scope.defer_modal.show();
 	};
-	scope.delete_modal = function(msg) {
+	scope.show_delete_modal = function(msg) {
 	    scope.active_msg = msg;
-	    scope.$delete_modal.modal();
+	    scope.delete_modal.show();
 	};
 	// Handlers for commiting actions
 	scope.archive = function(msg) {
@@ -135,9 +141,8 @@ angular.module('owDirectives')
 	};
 	scope.createNode = function(msg) {
 	    // Send the new Node to the API
-	    scope.$task_modal.modal('hide').one('hidden.bs.modal', function() {
-		msg.$createNode(scope.new_node);
-	    });
+	    scope.task_modal.hide();
+	    msg.$createNode(scope.new_node);
 	};
 	scope.change_project = function(project) {
 	    // Get a list of descendants for the selected project(tree)
@@ -150,31 +155,30 @@ angular.module('owDirectives')
 	    scope.new_node.parent = parent.id;
 	};
 	scope.deferMessage = function() {
+	    scope.defer_modal.hide();
 	    // Reschedule this message to appear in the future
 	    scope.new_node.target_date = scope.$defer_modal.find('#target-date').val();
-	    scope.$defer_modal.modal('hide').one('hidden.bs.modal', function() {
-		var newDate = dateFilter(scope.newDate, 'yyyy-MM-dd');
-		scope.active_msg.$defer({target_date: newDate})
-		    .then(function(message) {
-			var s = 'Deferred until ';
-			s += dateFilter(message.rcvd_date, 'yyyy-MM-dd');
-			toaster.pop('info', null, s);
-			console.log('rescheduled');
-			console.log(message);
-		    });
-	    });
+	    var newDate = dateFilter(scope.new_node.target_date, 'yyyy-MM-dd');
+	    scope.active_msg.$defer({target_date: newDate})
+		.then(function(message) {
+		    var s = 'Deferred until ';
+		    s += dateFilter(message.rcvd_date, 'yyyy-MM-dd');
+		    toaster.pop('info', null, s);
+		    console.log('rescheduled');
+		    console.log(message);
+		});
+	    
 	};
 	scope.delete_node = function() {
 	    // Delete the message in the database
-	    scope.$delete_modal.modal('hide').one('hidden.bs.modal', function() {
-		scope.active_msg.$delete().then(function() {
-		    scope.messages.splice(
-			scope.messages.indexOf(scope.active_msg),
-			1
-		    );
-		});
-		// scope.active_msg.delete_msg(scope.new_node);
+	    scope.delete_modal.hide();
+	    scope.active_msg.$delete().then(function() {
+		scope.messages.splice(
+		    scope.messages.indexOf(scope.active_msg),
+		    1
+		);
 	    });
+	    // scope.active_msg.delete_msg(scope.new_node);
 	};
     }
     return {

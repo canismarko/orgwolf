@@ -1,9 +1,9 @@
 <div id="gtd-list" class="next-actions-page">
-  <div class="gtd-list__row row">
+  <div class="gtd-list__row">
     <!-- Current date widget -->
-    <div class="date-widget" ow-current-date></div>
+    <div class="date-widget gtd-list__col gtd-list__col--date-widget" ow-current-date></div>
     <!-- Search box -->
-    <div ng-include="'/static/search-box.html'">
+    <div ng-include="'/static/search-box.html'" class="gtd-list__col gtd-list__col--search">
     </div>
 
   </div>
@@ -24,17 +24,19 @@
 
   <!-- List filtering control -->
   <h4 ng-if="context_name">{{ context_name }}</h4>
-  <form action="" method="POST" id="list-filters"
-	class="action-filters ow-unauth-hide">
-    <!-- Context selection box -->
-    <label for="context">Context:</label>
-    <select name="context" ng-model="activeContext" class="action-filters__select"
-	    ng-options="x.id as x.name for x in contexts"
-	    ng-change="changeContext()">
-	    <option value="">None</option>
-    </select>
+  <div action="" method="POST" id="list-filters"
+       class="action-filters ow-unauth-hide">
+    <div class="action-filters__item">
+      <!-- Context selection box -->
+      <label for="context" class="action-filters__select-label">Context:</label>
+      <select name="context" ng-model="activeContext" class="action-filters__select"
+	      ng-options="x.id as x.name for x in contexts"
+	      ng-change="changeContext()">
+	<option value="">None</option>
+      </select>
+    </div>
     <!-- TodoState selection checkboxes -->
-    <div class="action-filters__check-group"
+    <div class="action-filters__check-group action-filters__item"
 	 ng-repeat="state in todoStates">
       <input type="checkbox" ow-state="{{ state.id }}"
 	     class="action-filters__check-box"
@@ -45,8 +47,7 @@
 	{{ state.abbreviation }}
       </label>
     </div>
-    </label>
-  </form>
+  </div><!-- .action-filters -->
 
   <!-- Indicator for current active project -->
   <div ng-if="activeParent" class="active-parent">

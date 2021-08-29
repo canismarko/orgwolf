@@ -1,6 +1,8 @@
 import 'angular';
 "use strict";
 
+window.bootstrap = require('bootstrap/dist/js/bootstrap.bundle.js');
+
 angular.module('owMain')
 
 /*************************************************
@@ -108,24 +110,24 @@ angular.module('owMain')
 **************************************************/
 .directive('owFeedback', ['$http', '$timeout', function($http, $timeout) {
     function link(scope, element, attrs) {
-	var $modal;
-	$modal = element.find('#feedbackModal');
+	scope.$modal = element.find('#feedbackModal');
 	scope.feedback = {};
 	scope.send_feedback = function(feedback) {
 	    $http.post('/feedback/', {body: feedback.text})
-	    .success(function() {
-                // Confirmation feedback to the user
-                scope.success = true;
-		$timeout(function() {
-                    scope.success = false;
-                    scope.feedback = {};
-                    $modal.modal('hide');
-                }, 1200, false);
-	    })
-	    .error(function(data, status, headers) {
-		    console.log(data);
-	    });
+		.then(function onSuccess(response) {
+		    // Confirmation feedback to the user
+                    scope.success = true;
+		}, function onError(response) {
+		    console.log(response);
+		});
 	};
+	// Event listener clears the form when it is hidden
+	scope.$modal[0].addEventListener("hidden.bs.modal", function (event) {
+	    scope.success = false;
+	    scope.feedback = {};
+	    scope.form.$setPristine();
+	    scope.$apply();
+	});
     }
     return {
 	link: link,

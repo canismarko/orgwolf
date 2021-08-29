@@ -1,19 +1,19 @@
 <!-- Main container for the outline -->
 <div id="outline-appliance" class="projects-page">
-  <ul class="projects-controls">
+  <div class="projects-controls">
     <!-- Search box -->
-    <li class="projects-controls__item">
+    <div class="projects-controls__item">
       <button id="add-heading" class="projects-controls__button"
 	      ng-click="addProject($event)">
 	<i class="projects-controls__icon projects-controls__icon--new"></i> New Project
       </button>
-    </li>
-    <li class="projects-controls__item">
+    </div>
+    <div class="projects-controls__item">
       <button id="show-all-btn" class="projects-controls__button projects-controls__button--show-all ow-unauth-hide" ng-click="showAll($event)">
 	<i class="projects-controls__icon projects-controls__icon--show-all"></i> Show Archived
       </button>
-    </li>
-    <li class="projects-controls__item">
+    </div>
+    <div class="projects-controls__item">
       <form class="projects-controls__form">
 	<label for="sort-field" class="ow-unauth-hide">Sort:</label>
 	<select name="sort-field" ng-model="sortField"
@@ -21,12 +21,12 @@
 		ng-options="x.key as x.display for x in sortFields">
 	</select>
       </form>
-    </li>
-    <li class="projects-controls__item"
+    </div>
+    <div class="projects-controls__item"
 	ng-include="'/static/search-box.html'">
-    </li>
+    </div>
 
-  </ul>
+  </div>
 
   <div ow-focus-area-tabs active-focus-area="activeFocusArea">
   </div>

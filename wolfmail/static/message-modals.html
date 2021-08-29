@@ -6,7 +6,7 @@
 	<div class="modal-header">
 	  <h4 class="modal-title" ng-if="modal_task">New Task</h4>
 	  <h4 class="modal-title" ng-if="!modal_task">New Project</h4>
-	  <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+	  <button type="button" class="close" data-bs-dismiss="modal" aria-hidden="true">&times;</button>
 	</div>
 	<div class="modal-body">
 	  <div class="form-group">
@@ -40,7 +40,7 @@
 	    Create
 	  </button>
 	  <button type="button" class="inbox-modal__button inbox-modal__button--cancel"
-		  data-dismiss="modal">Cancel</button>
+		  data-bs-dismiss="modal">Cancel</button>
 	</div>
       </div><!-- /.modal-content -->
     </form>
@@ -53,7 +53,7 @@
     <div class="modal-content">
       <div class="modal-header">
 	<h4 class="modal-title">Delete Message?</h4>
-	<button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+	<button type="button" class="close" data-bs-dismiss="modal" aria-hidden="true">&times;</button>
       </div>
       <div class="modal-body">
 	<p>
@@ -66,7 +66,7 @@
       </div>
       <div class="modal-footer">
 	<button type="button" class="inbox-modal__button inbox-modal__button--delete" ng-click="delete_node()">Delete</button>
-	<button type="button" class="inbox-modal__button inbox-modal__button--cancel" data-dismiss="modal">Cancel</button>
+	<button type="button" class="inbox-modal__button inbox-modal__button--cancel" data-bs-dismiss="modal">Cancel</button>
       </div>
     </div><!-- /.modal-content -->
   </div><!-- /.modal-dialog -->
@@ -78,7 +78,7 @@
     <div class="modal-content">
       <div class="modal-header">
 	<h4>Defer Message to Future</h4>
-	<button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+	<button type="button" class="close" data-bs-dismiss="modal" aria-hidden="true">&times;</button>
       </div>
       <div class="modal-body">
 	<label for="target-date">Scheduled Date:</label>
@@ -91,7 +91,7 @@
 	<button type="button" class="inbox-modal__button inbox-modal__button--defer"
 		ng-click="deferMessage(active_msg)">Defer</button>
 	<button type="button" class="inbox-modal__button inbox-modal__button--cancel"
-		data-dismiss="modal">Cancel</button>
+		data-bs-dismiss="modal">Cancel</button>
       </div>
     </div><!-- /.modal-content -->
   </div><!-- /.modal-dialog -->

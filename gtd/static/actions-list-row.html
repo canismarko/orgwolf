@@ -5,13 +5,13 @@
     <span ow-todo ow-heading="heading">
       {{ todoState.abbreviation }}
     </span>
-    <span class="priority" ng-show="heading.priority">
+    <span class="gtd-list__priority" ng-show="heading.priority">
       [#{{ heading.priority }}]
     </span>
-    <a ng-click="edit(heading)" ng-hide="heading.read_only" class="heading-title">
+    <a ng-click="edit(heading)" ng-hide="heading.read_only" class="gtd-list__title">
       {{ heading.title}}
       <span ng-show="heading.has_text">&hellip;</a>
-    <span ng-show="heading.read_only" class="heading-title">
+    <span ng-show="heading.read_only" class="gtd-list__title--read-only">
       {{ heading.title}}</span>
     <i ng-if="heading.repeats"
        class="repeat-icon"></i>

@@ -4,7 +4,7 @@
   <a class="navbar__logo" href="#" id="logo">
     <img src="{{ 'orgwolf/orgwolf-logo.png' | static }}" />
   </a>
-  <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+  <button class="navbar-toggler" type="button" data-bg-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
     <span class="navbar-toggler-icon"></span>
   </button>
 
@@ -54,23 +54,23 @@
     <ul class="navbar__list navbar__list--right">
 
       <li class="navbar__item navbar__item--dropdown ow-unauth-hide">
-      	<a href="#" class="navbar__link navbar__link--dropdown" id="accountDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+      	<a href="#" class="navbar__link navbar__link--dropdown" id="accountDropdown" role="button" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
 	  <span class="navbar__account-icon"></span>
 	  Account
       	</a>
-	<div class="navbar-dropdown dropdown-menu" aria-labelledby="accountDropdown">
-      	  <a href="/admin/" class="ow-staff-show navbar-dropdown__link" target="_self">
+	<ul class="navbar-dropdown dropdown-menu" aria-labelledby="accountDropdown">
+	  <li><a href="/admin/" class="ow-staff-show navbar-dropdown__link" target="_self">
 	    <i class="fas fa-tools"></i>
-	    Admin</a>
-      	  <a href="/accounts/settings/" class="navbar-dropdown__link">
-	    <i class="fas fa-cog"></i> Settings</a>
-      	  <a href="/accounts/logout/" id="logout" target="_self" class="navbar-dropdown__link">
-	    <i class="fas fa-sign-out-alt"></i> Logout</a>
-	</div>
+	    Admin</a></li>
+      	  <li><a href="/accounts/settings/" class="navbar-dropdown__link">
+	      <i class="fas fa-cog"></i> Settings</a></li>
+      	  <li><a href="/accounts/logout/" id="logout" target="_self" class="navbar-dropdown__link">
+	      <i class="fas fa-sign-out-alt"></i> Logout</a></li>
+	</ul>
       </li>
       <!-- Button for feedback form -->
       <li class="ow-unauth-hide navbar__item">
-	<a href="#" class="navbar__link" data-toggle="modal" data-target="#feedbackModal">
+	<a href="#" class="navbar__link" data-bs-toggle="modal" data-bs-target="#feedbackModal">
 	  Feedback
 	</a>
       </li>

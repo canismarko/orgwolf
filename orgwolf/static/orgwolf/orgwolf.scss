@@ -72,12 +72,12 @@ $fa-font-path: "~@fortawesome/fontawesome-free/webfonts/";
 .heading-tag {
     &__badge {
 	@extend .badge;
-	@extend .badge-secondary;
+	@extend .bg-secondary;
 	cursor: default;
 	margin-right: 0.1rem;
 	margin-left: 0.1rem;
 	&--read-only {
-	    @extend .badge-info;
+	    @extend .bg-info;
 	}
     }
 }
@@ -128,16 +128,15 @@ $fa-font-path: "~@fortawesome/fontawesome-free/webfonts/";
 }
 
 /* Make it obvious if the server is in debug mode */
-// body[debug="True"] {
-//     nav {
-// 	background: $warning-bg;
-// 	border-color: $warning-border;
-//     }
-// }
+body[debug="True"] {
+    nav {
+	background: $warning-bg !important;
+	border-color: $warning-border !important;
+    }
+}
 
 /* No-javascript alert */
 .noscript {
-    @include make-container();
     .row {
 	/* margin-top: 50px; */
 	/* margin-bottom: 50px; */
@@ -167,9 +166,6 @@ $fa-font-path: "~@fortawesome/fontawesome-free/webfonts/";
     @extend .navbar-expand-md;
     @extend .navbar-light;
     @extend .bg-light;
-    // border-bottom-style: solid;
-    // border-bottom-color: $gray-light;
-    // border-bottom-width: 1px;
     &__logo {
 	@extend .navbar-brand;
 	img {
@@ -203,7 +199,6 @@ $fa-font-path: "~@fortawesome/fontawesome-free/webfonts/";
 	}
     }
     &-dropdown {
-	@extend .dropdown-menu;
 	&__link {
 	    @extend .dropdown-item;
 	}
@@ -211,7 +206,7 @@ $fa-font-path: "~@fortawesome/fontawesome-free/webfonts/";
     &__account-icon {
 	@extend .fas;
 	@include fa-icon;
-	:before { content: fa-content($fa-var-user); }
+	&:before { content: fa-content($fa-var-user); }
     }
     &__input {
 	@extend .form-control;
@@ -537,24 +532,25 @@ dd.todo
 
 /* Outline tree of headings in project view */
 .projects-page {
-    @include make-container();
-    @include media-breakpoint-up(md) {
-	@include make-container-max-widths();
-    }
     &__row {
 	@include make-row();
     }
 }
 .projects-controls {
-    @extend .list-group-inline;
+    @include make-row();
+    @extend .align-items-center;
     &__item {
-	@extend .list-group-item-inline;
+	@include make-col-ready();
+	@include media-breakpoint-up(md) {
+	    @include make-col-auto();
+	}
     }
     &__form {
-	@extend .form-inline;
     }
     &__select {
 	@extend .form-control;
+	display: inline-block;
+	width: auto;
     }
     &__button {
 	@extend .btn;
@@ -796,7 +792,7 @@ dd.todo
 	    }
 	}
 	&--focus-area-select {
-	    height: 400px;
+	    height: 180px;
 	}
 	&--repeat-group {
 	    @include media-breakpoint-up(md) {
@@ -963,10 +959,6 @@ input,textarea {
 
 /* Next actions list */
 .next-actions-page {
-    @include make-container();
-    @include media-breakpoint-up(md) {
-	@include make-container-max-widths();
-    }
 }
 .gtd-list {
     margin-bottom: 1.5rem;
@@ -976,6 +968,12 @@ input,textarea {
     }
     &__row {
 	@include make-row();
+    }
+    &__title {
+	cursor: pointer;
+	&--read-only {
+	    cursor: text;
+	}
     }
     &__badge {
 	@extend .heading-tag__badge;
@@ -989,6 +987,12 @@ input,textarea {
 	border-top: $table-border-width solid $table-border-color;
 	padding-top: 0.1rem;
 	padding-bottom: 0.1rem;
+	&--search,&--date-widget {
+	    @include media-breakpoint-up(md) {
+		border-top-style: none;
+		@include make-col-auto();
+	    }
+	}
 	&--header {
 	    font-weight: bold;
 	    border-bottom: (2 * $table-border-width) solid $table-border-color;
@@ -1093,11 +1097,19 @@ input,textarea {
 }
 
 .action-filters {
-    @extend .form-inline;
+    @include make-row();
+    @extend .align-items-center;
+    
     &__select {
 	@extend .form-control;
-	margin-left: 0.25rem;
-	margin-right: 1.5rem;
+	display: inline-block;
+	width: auto;
+    }
+    &__item {
+	@include make-col-ready();
+	@include media-breakpoint-up(md) {
+	    @include make-col-auto();
+	}
     }
     &__check-group {
 	@extend .form-check;
@@ -1116,10 +1128,6 @@ input,textarea {
 
 /* Wolfmail inbox */
 .inbox {
-    @include make-container();
-    @include media-breakpoint-up(md) {
-	@include make-container-max-widths();
-    }
     &__inbox-zero-message {
 	@extend .container;
 	@extend .alert;
@@ -1260,6 +1268,9 @@ input,textarea {
 	&--defer {
 	    @extend .btn-warning;
 	}
+	&--close {
+	    @extend .btn-close;
+	}
     }
 }
 
@@ -1329,7 +1340,6 @@ input,textarea {
 	margin-top: 5px;
 	li,p {
 	    margin-left: 2px;
-	    @extend .form-group;
 	}
 	input {
 	    @extend .form-control;
