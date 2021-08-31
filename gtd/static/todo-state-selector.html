@@ -6,4 +6,7 @@
 	ng-if="todoStateId && !heading.read_only" ng-model="$parent.todoStateId"
 	style="{{ todoState | todoStateStyle }}" convert-to-number>
   <option value="" class="default">None</option>
+  <option ng-repeat="todoState in todoStates" value="{{ todoState.id }}"
+	  ng-selected="todoState.id == todoStateId"
+	  style="{{ todoState | todoStateStyle }}">{{ todoState.abbreviation }}</option>
 </select>

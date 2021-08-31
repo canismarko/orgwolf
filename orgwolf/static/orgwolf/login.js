@@ -1,13 +1,19 @@
 "use strict";
-import * as angular from 'angular';
 
-angular.module('owDirectives')
+import "angular";
 
-/********************************************************************
+angular.module('orgwolf')
+    .directive('owLogin', owLogin);
+
+
+owLogin = ['activeState'];
+
+
+function owLogin(activeState) {
+	/********************************************************************
 / Directive that shows the user a login prompt and handles the login
 / transaction.
 /*******************************************************************/
-    .directive('owLogin', ['activeState', function(activeState) {
 	function link($scope, $elem, $attrs) {
 	    $scope.activeState = activeState;
 	}
@@ -16,4 +22,4 @@ angular.module('owDirectives')
 	scope: {},
 	templateUrl: '/accounts/login/',
     };
-}]);
+}

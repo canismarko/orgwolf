@@ -19,7 +19,7 @@
   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 {% endcomment %}
 <!DOCTYPE html>
-<html lang="en" xmlns="http://www.w3.org/1999/xhtml" ng-app="owMain">
+<html lang="en" xmlns="http://www.w3.org/1999/xhtml" ng-app="orgwolf">
   <head>
     <meta http-equiv="content-type" content="text/html; charset=utf8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
@@ -50,16 +50,15 @@
     {% block script %}
     <script type="text/javascript">
       // Save some user data and the todo states
-      angular.module('owServices')
+      angular.module('orgwolf')
       {% if request.user.is_authenticated %}
-      .run(function(activeState) {
-	  activeState.user = {{ request.user.id }};
-      })
+          .run(function(activeState) {
+      	      activeState.user = {{ request.user.id }};
+	  })
       {% endif %}
-      .value('todoStatesList',
-	  {% todo_states_json %}
-      )
-
+          .value('todoStatesList',
+      	      {% todo_states_json %}
+	  );
       document.addEventListener("DOMContentLoaded", function(event) {
 	// Google analytics
 	{% if not debug %}
@@ -71,9 +70,9 @@
 	ga('create', 'UA-47040758-1', 'orgwolf.com');
 	ga('send', 'pageview');
 	{% endif %}
-    });
-    var owFilters = angular.module('owFilters');
-    owFilters.value('staticUrl', '{% static '' %}');
+        });
+      var owFilters = angular.module('orgwolf');
+      owFilters.value('staticUrl', '{% static '' %}');
 
     </script>
     {% endblock %}
