@@ -2,9 +2,6 @@
 
 import "angular";
 
-angular.module("orgwolf.gtd")
-    .value('priorities', priorities);
-
 var priorities = [
     /*************************************************
      * Descriptions of A/B/C style priorities
@@ -13,3 +10,6 @@ var priorities = [
     {sym: 'B', display: 'B - High'},
     {sym: 'C', display: 'C - Default'}
 ];
+
+angular.module("orgwolf.gtd")
+    .value('priorities', priorities);

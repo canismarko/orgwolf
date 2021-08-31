@@ -26,7 +26,6 @@ function owEditable($resource, $rootScope, $timeout, owWaitIndicator, Heading, t
 
     // Directive creates the pieces that allow the user to edit a heading
     function link(scope, element, attrs) {
-	console.log("Heere");
 	var defaultParent, $text, heading, $save, $titleInput, heading_id, parent, editorId;
 	scope.focusAreas = focusAreas;
 	scope.todoStates = todoStates;
@@ -146,7 +145,6 @@ function owEditable($resource, $rootScope, $timeout, owWaitIndicator, Heading, t
 	};
 	// Focus the title element so it can be edited
 	$titleInput = element.find('#title');
-	console.log(scope.fields);
 	if ( scope.fields.title == '' ) {
 	    $titleInput.focus();
 	}

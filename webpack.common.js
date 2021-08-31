@@ -28,30 +28,17 @@ module.exports = {
     ],
     module: {
 	rules: [
-	    // For loading fonts and glyphs
-	    // {
-	    // 	test: /\.(png|woff|woff2|eot|ttf|svg)(\?v=[0-9]\.[0-9]\.[0-9])?$/,
-	    // 	loader: 'url-loader?limit=10000?name=[name].[ext]&publicPath=/static/'
-	    // 	// use: {
-	    // 	//     loader: "url-loader",
-	    // 	//     options: {
-	    // 	// 	limit=10000,
-	    // 	// 	name: '[name].[ext]',
-	    // 	// 	publicPath: '/static/',
-	    // 	//     }
-	    // 	// }
-	    // },
 	    {
 	    	test: /\.woff(2)?(\?v=[0-9]\.[0-9]\.[0-9])?$/,
-	    	loader: "url-loader?limit=10000&mimetype=application/font-woff&name=[name].[ext]&publicPath=/static/",
+		type: "asset/inline",
 	    },
 	    {
 	    	test: /\.(ttf|eot|svg)(\?v=[0-9]\.[0-9]\.[0-9])?$/,
-	    	loader: "file-loader?&name=[name].[ext]&publicPath=/static/"
+		type: "asset/inline",
 	    },
 	    {
 	    	test: /\.(png|jpg)$/,
-	    	loader: 'url-loader?limit=100000&name=[name].[ext]&publicPath=/static/'
+		type: "asset/inline",
 	    },
 	    // For converting typescript to javascript
 	    {

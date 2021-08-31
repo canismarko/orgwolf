@@ -11,7 +11,7 @@ import 'bootstrap-switch/dist/css/bootstrap3/bootstrap-switch.css';
 import 'angularjs-toaster/toaster.css';
 import 'fullcalendar/dist/fullcalendar.css';
 import 'easymde/dist/easymde.min.css';
-import './orgwolf/orgwolf.scss';
+import 'orgwolf.scss';
 
 // Orgwolf javascript modules
 
