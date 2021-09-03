@@ -766,6 +766,13 @@ dd.todo
 	border-top-left-radius: 10px;
 	border-top-right-radius: 10px;
     }
+    &__switch {
+	@extend .form-switch;
+	@extend .form-check;
+	> input {
+	    @extend .form-check-input;
+	}
+    }
     &__button {
 	@extend .btn;
 	@extend .btn-sm;

@@ -7,7 +7,7 @@ import '@fortawesome/fontawesome-free/scss/solid.scss';
 
 import 'bootstrap/dist/js/bootstrap.bundle.min.js';
 import 'bootstrap/dist/css/bootstrap.css';
-import 'bootstrap-switch/dist/css/bootstrap3/bootstrap-switch.css';
+// import 'bootstrap-switch/dist/css/bootstrap3/bootstrap-switch.css';
 import 'angularjs-toaster/toaster.css';
 import 'fullcalendar/dist/fullcalendar.css';
 import 'easymde/dist/easymde.min.css';

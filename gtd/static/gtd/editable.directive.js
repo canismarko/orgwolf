@@ -6,7 +6,6 @@ import "angular";
 import "angular-animate";
 import "angular-resource";
 import 'bootstrap/dist/js/bootstrap.js';
-import 'bootstrap-switch/dist/js/bootstrap-switch.js';
 
 angular.module('orgwolf.gtd')
     .directive('owEditable', owEditable);
