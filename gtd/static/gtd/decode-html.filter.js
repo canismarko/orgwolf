@@ -1,6 +1,8 @@
 "use strict";
 
-angular.module('orgwolf.gtd')
+import "angular";
+
+angular.module('orgwolf')
     .filter('decodeHtml', decodeHtml);
 
 

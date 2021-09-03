@@ -2,4 +2,4 @@
 
 import "angular";
 
-angular.module("orgwolf.wolfmail", ["ngRoute"]);
+angular.module("orgwolf.wolfmail", ["orgwolf.gtd", "ngRoute", "ngResource"]);

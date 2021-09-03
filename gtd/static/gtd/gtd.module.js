@@ -18,7 +18,6 @@ import "./todo.directive.js";
 import "./search.controller.js";
 import "./calendar.controller.js";
 import "./todo-state-style.filter.js";
-import "./decode-html.filter.js";
 import "./slugify.filter.js";
 import "./needs-active-location.filter.js";
 import "./deadline-class.filter.js";

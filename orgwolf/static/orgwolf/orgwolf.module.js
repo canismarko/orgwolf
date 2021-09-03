@@ -16,6 +16,7 @@ import "./orgwolf.config.js";
 import "./date.model.js";
 import "./static.filter.js";
 import "./as-html.filter.js";
+import "./decode-html.filter.js";
 import "./to-date-obj.filter.js";
 import "./current-date.directive.js";
 import "./convert-to-number.directive.js";

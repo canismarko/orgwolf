@@ -5,8 +5,6 @@ import "angular";
 angular.module("orgwolf.wolfmail")
     .factory('Message', Message);
 
-
-
 Message.$inject = ['$resource', '$rootScope'];
 
 

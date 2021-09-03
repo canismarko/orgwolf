@@ -51,7 +51,7 @@ function owTodo($rootScope, $filter, todoStates, toaster) {
 		// changed programatically
 		if (newHeadingStateId !== scope.todoStateId) {
 		    scope.todoState = todoStates.getState(scope.heading.todo_state);
-		    scope.todoStateId = String(newHeadingStateId);
+		    scope.todoStateId = newHeadingStateId;
 		}
 		// Attach a tooltip with the states text
 		if (scope.todoState) {

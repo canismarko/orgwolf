@@ -1,6 +1,6 @@
 <!-- Recursive template for tree of Tasks -->
 <div class="gtd-outline__heading gtd-outline__heading--level-{{ heading.level }}"
-     ng-class="{'gtd-outline__heading--archived': heading.archived}"
+     ng-class="{'gtd-outline__heading--archived': heading.archived, 'gtd-outline__heading--leaf-node': (heading.rght-heading.lft)==1}"
      ow-droppable
      ng-show="!isEditing"
      ng-click="toggleHeading($event)"

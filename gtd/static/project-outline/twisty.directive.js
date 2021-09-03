@@ -37,19 +37,6 @@ function owTwisty($compile, $rootScope, Heading, activeHeading) {
 	hoverable = element.children('.gtd-outline__heading');
 	// Process tag_string into tags
 	scope.tags = scope.heading.tag_string.slice(1, -1).split(':');
-	// Test for expandability
-	scope.$watch(
-	    'heading.rght - heading.lft',
-	    function(newDiff) {
-		if (newDiff > 1) {
-		    hoverable.removeClass('gtd-outline__heading--leaf-node');
-		    scope.isLeafNode = false;
-		} else {
-		    hoverable.addClass('gtd-outline__heading--leaf-node');
-		    scope.isLeafNode = true;
-		}
-	    }
-	);
 	// Handler for getting the children of this heading
 	scope.getChildren = function() {
 	    if (!scope.loadedChildren) {
@@ -74,6 +61,7 @@ function owTwisty($compile, $rootScope, Heading, activeHeading) {
 	}
 	// Handlers for clicking on the heading (may be overridden by components)
 	scope.toggleHeading = function(newState) {
+	    var isLeafNode
 	    // 0 is closed, 1 is partly open, 2 is fully open
 	    element.removeClass('gtd-outline__node--state-' + scope.state)
 	    // Check if the element is nested inside a non-opening parent
@@ -87,7 +75,8 @@ function owTwisty($compile, $rootScope, Heading, activeHeading) {
 		// Verify that something should be toggled
 		scope.state = (scope.state + 1) % 3;
 		// Skip state 1 for leaf nodes
-		if (scope.isLeafNode && scope.state === 1) {
+		isLeafNode = (scope.heading.rght - scope.heading.lft) == 1;
+		if (isLeafNode && scope.state === 1) {
 		    scope.state = 2;
 		}
 	    }
