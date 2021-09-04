@@ -1,3 +1,5 @@
+@use 'sass:math';
+
 /* Colors */
 $primary: #3C1366; /* Purple */
 $primary-dark: #260745; /* Purple */
@@ -28,7 +30,7 @@ $fa-font-path: "~@fortawesome/fontawesome-free/webfonts/";
 
 
 @mixin opacify ($opacity) { /* 0 to 100 */
-    opacity: ($opacity/100);
+    opacity: math.div($opacity, 100);
     filter: alpha(opacity=$opacity);
 }
 

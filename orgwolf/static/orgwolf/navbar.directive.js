@@ -52,4 +52,4 @@ function owNavbar($location, $cookies, contexts, currentUser) {
         scope: true,
         link: link
     };
-}]);
+}
