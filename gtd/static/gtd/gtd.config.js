@@ -6,4 +6,5 @@ import 'angular-resource';
 import 'angularjs-toaster';
 import 'angular-ui-calendar';
 
-angular.module("orgwolf.gtd", ["ngRoute", "ngResource", "toaster", "ui.calendar", "ui.bootstrap"]);
+angular.module("orgwolf.gtd", ["orgwolf.tools",
+			       "ngRoute", "ngResource", "toaster", "ui.calendar", "ui.bootstrap"]);

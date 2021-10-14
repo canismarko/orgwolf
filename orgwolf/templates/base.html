@@ -36,7 +36,7 @@
     {% endif %}
 
     <link rel="apple-touch-icon"
-	  href="{% static 'orgwolf-icon-114.png' %}" />
+	  href="{% static 'orgwolf/orgwolf-icon-114.png' %}" />
     <link rel="stylesheet" type="text/css"
 	  href="{% static 'orgwolf/social/auth-buttons.css' %}" />
 
@@ -71,7 +71,7 @@
 	ga('send', 'pageview');
 	{% endif %}
         });
-      var owFilters = angular.module('orgwolf');
+      var owFilters = angular.module('orgwolf.tools');
       owFilters.value('staticUrl', '{% static '' %}');
 
     </script>

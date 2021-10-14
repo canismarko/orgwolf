@@ -410,80 +410,14 @@ eval("__webpack_require__.r(__webpack_exports__);\n/* harmony import */ var angu
 
 /***/ }),
 
-/***/ "./orgwolf/static/orgwolf/as-html.filter.spec.js":
-/*!*******************************************************!*\
-  !*** ./orgwolf/static/orgwolf/as-html.filter.spec.js ***!
-  \*******************************************************/
-/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
-
-"use strict";
-eval("__webpack_require__.r(__webpack_exports__);\n/* harmony import */ var angular__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! angular */ \"./node_modules/angular/index.js\");\n/* harmony import */ var angular__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(angular__WEBPACK_IMPORTED_MODULE_0__);\n/* harmony import */ var angular_mocks__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! angular-mocks */ \"./node_modules/angular-mocks/angular-mocks.js\");\n/* harmony import */ var angular_mocks__WEBPACK_IMPORTED_MODULE_1___default = /*#__PURE__*/__webpack_require__.n(angular_mocks__WEBPACK_IMPORTED_MODULE_1__);\n\n\n\ndescribe('the \"asHtml\" filter', function() {\n    var asHtmlFilter;\n    beforeEach(angular.mock.module('orgwolf'))\n    beforeEach(inject(function(_asHtmlFilter_) {\n    \tasHtmlFilter = _asHtmlFilter_;\n    }));\n    it('converts markdown to HTML', function() {\n\tvar markdown, html;\n\tmarkdown = '# Hello';\n\thtml = asHtmlFilter(markdown);\n\texpect(html.toString()).toEqual('<h1 id=\"hello\">Hello</h1>');\n    });\n});\n\n\n//# sourceURL=webpack://orgwolf/./orgwolf/static/orgwolf/as-html.filter.spec.js?");
-
-/***/ }),
-
-/***/ "./orgwolf/static/orgwolf/decode-html.filter.spec.js":
-/*!***********************************************************!*\
-  !*** ./orgwolf/static/orgwolf/decode-html.filter.spec.js ***!
-  \***********************************************************/
-/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
-
-"use strict";
-eval("__webpack_require__.r(__webpack_exports__);\n/* harmony import */ var angular__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! angular */ \"./node_modules/angular/index.js\");\n/* harmony import */ var angular__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(angular__WEBPACK_IMPORTED_MODULE_0__);\n/* harmony import */ var angular_mocks__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! angular-mocks */ \"./node_modules/angular-mocks/angular-mocks.js\");\n/* harmony import */ var angular_mocks__WEBPACK_IMPORTED_MODULE_1___default = /*#__PURE__*/__webpack_require__.n(angular_mocks__WEBPACK_IMPORTED_MODULE_1__);\n\n\n\ndescribe('the \"decodeHtml\" filter', function() {\n    var decodeHtmlFilter;\n    beforeEach(angular.mock.module('orgwolf'))\n    beforeEach(inject(function(_decodeHtmlFilter_) {\n    \tdecodeHtmlFilter = _decodeHtmlFilter_;\n    }));\n    it('converts basic entities to real characters', function() {\n\texpect(decodeHtmlFilter('&lt;')).toEqual('<');\n    });\n});\n\n\n//# sourceURL=webpack://orgwolf/./orgwolf/static/orgwolf/decode-html.filter.spec.js?");
-
-/***/ }),
-
-/***/ "./orgwolf/static/orgwolf/navbar.directive.spec.js":
-/*!*********************************************************!*\
-  !*** ./orgwolf/static/orgwolf/navbar.directive.spec.js ***!
-  \*********************************************************/
-/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
-
-"use strict";
-eval("__webpack_require__.r(__webpack_exports__);\n/* harmony import */ var angular__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! angular */ \"./node_modules/angular/index.js\");\n/* harmony import */ var angular__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(angular__WEBPACK_IMPORTED_MODULE_0__);\n/* harmony import */ var angular_mocks__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! angular-mocks */ \"./node_modules/angular-mocks/angular-mocks.js\");\n/* harmony import */ var angular_mocks__WEBPACK_IMPORTED_MODULE_1___default = /*#__PURE__*/__webpack_require__.n(angular_mocks__WEBPACK_IMPORTED_MODULE_1__);\n\n\n\n\n\n\ndescribe('the ow-nav navigation directive', function() {\n    var $compile, $rootScope, element, $scope;\n    beforeEach(angular.mock.module('orgwolf'));\n    beforeEach(inject(function($injector) {\n\t$compile = $injector.get('$compile');\n\t$rootScope = $injector.get('$rootScope');\n\telement = $compile('<div ow-navbar></div>')($rootScope);\n    }));\n    it('recognizes changes to the url', function() {\n\t$scope = element.scope();\n\t$scope.$broadcast('$locationChangeSuccess');\n\texpect(true).toBeTruthy();\n    });\n});\n\n\n//# sourceURL=webpack://orgwolf/./orgwolf/static/orgwolf/navbar.directive.spec.js?");
-
-/***/ }),
-
 /***/ "./orgwolf/static/orgwolf/orgwolf.module.spec.js":
 /*!*******************************************************!*\
   !*** ./orgwolf/static/orgwolf/orgwolf.module.spec.js ***!
   \*******************************************************/
-/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+/***/ (() => {
 
 "use strict";
-eval("__webpack_require__.r(__webpack_exports__);\n/* harmony import */ var _as_html_filter_spec_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./as-html.filter.spec.js */ \"./orgwolf/static/orgwolf/as-html.filter.spec.js\");\n/* harmony import */ var _decode_html_filter_spec_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./decode-html.filter.spec.js */ \"./orgwolf/static/orgwolf/decode-html.filter.spec.js\");\n/* harmony import */ var _static_filter_spec_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./static.filter.spec.js */ \"./orgwolf/static/orgwolf/static.filter.spec.js\");\n/* harmony import */ var _wait_feedback_directive_spec_js__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./wait-feedback.directive.spec.js */ \"./orgwolf/static/orgwolf/wait-feedback.directive.spec.js\");\n/* harmony import */ var _navbar_directive_spec_js__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ./navbar.directive.spec.js */ \"./orgwolf/static/orgwolf/navbar.directive.spec.js\");\n/* harmony import */ var _wait_indicator_factory_spec_js__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ./wait-indicator.factory.spec.js */ \"./orgwolf/static/orgwolf/wait-indicator.factory.spec.js\");\n\n\n\n\n\n\n\n\n\n\n\n\n\n//# sourceURL=webpack://orgwolf/./orgwolf/static/orgwolf/orgwolf.module.spec.js?");
-
-/***/ }),
-
-/***/ "./orgwolf/static/orgwolf/static.filter.spec.js":
-/*!******************************************************!*\
-  !*** ./orgwolf/static/orgwolf/static.filter.spec.js ***!
-  \******************************************************/
-/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
-
-"use strict";
-eval("__webpack_require__.r(__webpack_exports__);\n/* harmony import */ var angular__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! angular */ \"./node_modules/angular/index.js\");\n/* harmony import */ var angular__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(angular__WEBPACK_IMPORTED_MODULE_0__);\n/* harmony import */ var angular_mocks__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! angular-mocks */ \"./node_modules/angular-mocks/angular-mocks.js\");\n/* harmony import */ var angular_mocks__WEBPACK_IMPORTED_MODULE_1___default = /*#__PURE__*/__webpack_require__.n(angular_mocks__WEBPACK_IMPORTED_MODULE_1__);\n\n\n\n\n\n\ndescribe('the static url filter', function() {\n    var staticFilter;\n    beforeEach(angular.mock.module('orgwolf'));\n    beforeEach(function() {\n\tangular.module('orgwolf').value('staticUrl', '/static/');\n    });\n    beforeEach(inject(function(_staticFilter_) {\n    \tstaticFilter = _staticFilter_\n    }));\n    it('appends the passed string to the static url', function() {\n\texpect(typeof staticFilter('file.txt')).toEqual('string');\n\texpect(staticFilter('file.txt')).toEqual('/static/file.txt');\n    });\n});\n\n\n//# sourceURL=webpack://orgwolf/./orgwolf/static/orgwolf/static.filter.spec.js?");
-
-/***/ }),
-
-/***/ "./orgwolf/static/orgwolf/wait-feedback.directive.spec.js":
-/*!****************************************************************!*\
-  !*** ./orgwolf/static/orgwolf/wait-feedback.directive.spec.js ***!
-  \****************************************************************/
-/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
-
-"use strict";
-eval("__webpack_require__.r(__webpack_exports__);\n/* harmony import */ var angular__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! angular */ \"./node_modules/angular/index.js\");\n/* harmony import */ var angular__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(angular__WEBPACK_IMPORTED_MODULE_0__);\n/* harmony import */ var angular_mocks__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! angular-mocks */ \"./node_modules/angular-mocks/angular-mocks.js\");\n/* harmony import */ var angular_mocks__WEBPACK_IMPORTED_MODULE_1___default = /*#__PURE__*/__webpack_require__.n(angular_mocks__WEBPACK_IMPORTED_MODULE_1__);\n\n\n\n\n\ndescribe('the owWaitFeedback directive', function() {\n    beforeEach(function() {\n    \telement = $compile(\n    \t    '<div ow-wait-feedback><</div>'\n    \t)($rootScope);\n    });\n    it(\"has no tests\");\n});\n\n\n//# sourceURL=webpack://orgwolf/./orgwolf/static/orgwolf/wait-feedback.directive.spec.js?");
-
-/***/ }),
-
-/***/ "./orgwolf/static/orgwolf/wait-indicator.factory.spec.js":
-/*!***************************************************************!*\
-  !*** ./orgwolf/static/orgwolf/wait-indicator.factory.spec.js ***!
-  \***************************************************************/
-/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
-
-"use strict";
-eval("__webpack_require__.r(__webpack_exports__);\n/* harmony import */ var angular__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! angular */ \"./node_modules/angular/index.js\");\n/* harmony import */ var angular__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(angular__WEBPACK_IMPORTED_MODULE_0__);\n/* harmony import */ var angular_mocks__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! angular-mocks */ \"./node_modules/angular-mocks/angular-mocks.js\");\n/* harmony import */ var angular_mocks__WEBPACK_IMPORTED_MODULE_1___default = /*#__PURE__*/__webpack_require__.n(angular_mocks__WEBPACK_IMPORTED_MODULE_1__);\n\n\n\n\n\ndescribe('the owWaitIndicator service', function() {\n    var waiting, $rootScope, waitIndicator;\n    beforeEach(angular.mock.module('orgwolf'));\n    beforeEach(inject(function($injector) {\n\twaitIndicator = $injector.get('owWaitIndicator');\n\t$rootScope = $injector.get('$rootScope');\n    }));\n    it('adds a new short wait period to the list', function() {\n\twaitIndicator.start_wait('quick', 'test');\n\texpect(waitIndicator.waitLists['quick'].length).toEqual(1);\n    });\n    it('clears a short wait period from the list', function() {\n\t// Add two similar waiting periods...\n\twaitIndicator.start_wait('quick', 'tests');\n\twaitIndicator.start_wait('quick', 'tests');\n\t// ...then remove them\n\twaitIndicator.end_wait('quick', 'tests');\n\texpect(waitIndicator.waitLists['quick'].length).toEqual(0);\n    });\n    it('adds a new medium wait period to the list', function() {\n\twaitIndicator.start_wait('medium', 'test');\n\texpect(waitIndicator.waitLists['medium'].length).toEqual(1);\n    });\n    it('clears a medium wait period from the list', function() {\n\t// Add two similar waiting periods...\n\twaitIndicator.start_wait('medium', 'tests');\n\twaitIndicator.start_wait('medium', 'tests');\n\t// ...then remove them\n\twaitIndicator.end_wait('medium', 'tests');\n\texpect(waitIndicator.waitLists['medium'].length).toEqual(0);\n    });\n    it('clears all wait lists if no duration is given', function() {\n\twaitIndicator.start_wait('quick', 'tests');\n\twaitIndicator.start_wait('medium', 'tests');\n\twaitIndicator.end_wait('tests');\n\texpect(waitIndicator.waitLists['quick'].length).toEqual(0);\n\texpect(waitIndicator.waitLists['medium'].length).toEqual(0);\n    });\n});\n\n\n//# sourceURL=webpack://orgwolf/./orgwolf/static/orgwolf/wait-indicator.factory.spec.js?");
+eval("\n\n\n//# sourceURL=webpack://orgwolf/./orgwolf/static/orgwolf/orgwolf.module.spec.js?");
 
 /***/ }),
 
@@ -494,7 +428,84 @@ eval("__webpack_require__.r(__webpack_exports__);\n/* harmony import */ var angu
 /***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
 
 "use strict";
-eval("__webpack_require__.r(__webpack_exports__);\n/* harmony import */ var orgwolf_module_spec_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! orgwolf.module.spec.js */ \"./orgwolf/static/orgwolf/orgwolf.module.spec.js\");\n/* harmony import */ var gtd_gtd_module_spec_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! gtd/gtd.module.spec.js */ \"./gtd/static/gtd/gtd.module.spec.js\");\n/* harmony import */ var project_outline_project_outline_module_spec_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! project-outline/project-outline.module.spec.js */ \"./gtd/static/project-outline/project-outline.module.spec.js\");\n/* harmony import */ var action_list_action_list_module_spec_js__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! action-list/action-list.module.spec.js */ \"./gtd/static/action-list/action-list.module.spec.js\");\n/* harmony import */ var weekly_review_weekly_review_module_spec_js__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! weekly-review/weekly-review.module.spec.js */ \"./gtd/static/weekly-review/weekly-review.module.spec.js\");\n/* harmony import */ var wolfmail_wolfmail_module_spec_js__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! wolfmail/wolfmail.module.spec.js */ \"./wolfmail/static/wolfmail/wolfmail.module.spec.js\");\n\n\n\n\n\n\n// import 'gtd-tests';\n// import 'orgwolf-tests';\n// import 'wolfmail-tests';\n\n\n\n//# sourceURL=webpack://orgwolf/./orgwolf/static/test-entry.js?");
+eval("__webpack_require__.r(__webpack_exports__);\n/* harmony import */ var orgwolf_orgwolf_module_spec_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! orgwolf/orgwolf.module.spec.js */ \"./orgwolf/static/orgwolf/orgwolf.module.spec.js\");\n/* harmony import */ var orgwolf_orgwolf_module_spec_js__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(orgwolf_orgwolf_module_spec_js__WEBPACK_IMPORTED_MODULE_0__);\n/* harmony import */ var tools_tools_module_spec_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! tools/tools.module.spec.js */ \"./orgwolf/static/tools/tools.module.spec.js\");\n/* harmony import */ var gtd_gtd_module_spec_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! gtd/gtd.module.spec.js */ \"./gtd/static/gtd/gtd.module.spec.js\");\n/* harmony import */ var project_outline_project_outline_module_spec_js__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! project-outline/project-outline.module.spec.js */ \"./gtd/static/project-outline/project-outline.module.spec.js\");\n/* harmony import */ var action_list_action_list_module_spec_js__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! action-list/action-list.module.spec.js */ \"./gtd/static/action-list/action-list.module.spec.js\");\n/* harmony import */ var weekly_review_weekly_review_module_spec_js__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! weekly-review/weekly-review.module.spec.js */ \"./gtd/static/weekly-review/weekly-review.module.spec.js\");\n/* harmony import */ var wolfmail_wolfmail_module_spec_js__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! wolfmail/wolfmail.module.spec.js */ \"./wolfmail/static/wolfmail/wolfmail.module.spec.js\");\n\n\n\n\n\n\n\n// import 'gtd-tests';\n// import 'orgwolf-tests';\n// import 'wolfmail-tests';\n\n\n\n//# sourceURL=webpack://orgwolf/./orgwolf/static/test-entry.js?");
+
+/***/ }),
+
+/***/ "./orgwolf/static/tools/as-html.filter.spec.js":
+/*!*****************************************************!*\
+  !*** ./orgwolf/static/tools/as-html.filter.spec.js ***!
+  \*****************************************************/
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+
+"use strict";
+eval("__webpack_require__.r(__webpack_exports__);\n/* harmony import */ var angular__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! angular */ \"./node_modules/angular/index.js\");\n/* harmony import */ var angular__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(angular__WEBPACK_IMPORTED_MODULE_0__);\n/* harmony import */ var angular_mocks__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! angular-mocks */ \"./node_modules/angular-mocks/angular-mocks.js\");\n/* harmony import */ var angular_mocks__WEBPACK_IMPORTED_MODULE_1___default = /*#__PURE__*/__webpack_require__.n(angular_mocks__WEBPACK_IMPORTED_MODULE_1__);\n\n\n\ndescribe('the \"asHtml\" filter', function() {\n    var asHtmlFilter;\n    beforeEach(angular.mock.module('orgwolf.tools'))\n    beforeEach(inject(function(_asHtmlFilter_) {\n    \tasHtmlFilter = _asHtmlFilter_;\n    }));\n    it('converts markdown to HTML', function() {\n\tvar markdown, html;\n\tmarkdown = '# Hello';\n\thtml = asHtmlFilter(markdown);\n\texpect(html.toString()).toEqual('<h1 id=\"hello\">Hello</h1>');\n    });\n});\n\n\n//# sourceURL=webpack://orgwolf/./orgwolf/static/tools/as-html.filter.spec.js?");
+
+/***/ }),
+
+/***/ "./orgwolf/static/tools/decode-html.filter.spec.js":
+/*!*********************************************************!*\
+  !*** ./orgwolf/static/tools/decode-html.filter.spec.js ***!
+  \*********************************************************/
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+
+"use strict";
+eval("__webpack_require__.r(__webpack_exports__);\n/* harmony import */ var angular__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! angular */ \"./node_modules/angular/index.js\");\n/* harmony import */ var angular__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(angular__WEBPACK_IMPORTED_MODULE_0__);\n/* harmony import */ var angular_mocks__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! angular-mocks */ \"./node_modules/angular-mocks/angular-mocks.js\");\n/* harmony import */ var angular_mocks__WEBPACK_IMPORTED_MODULE_1___default = /*#__PURE__*/__webpack_require__.n(angular_mocks__WEBPACK_IMPORTED_MODULE_1__);\n\n\n\ndescribe('the \"decodeHtml\" filter', function() {\n    var decodeHtmlFilter;\n    beforeEach(angular.mock.module('orgwolf.tools'))\n    beforeEach(inject(function(_decodeHtmlFilter_) {\n    \tdecodeHtmlFilter = _decodeHtmlFilter_;\n    }));\n    it('converts basic entities to real characters', function() {\n\texpect(decodeHtmlFilter('&lt;')).toEqual('<');\n    });\n});\n\n\n//# sourceURL=webpack://orgwolf/./orgwolf/static/tools/decode-html.filter.spec.js?");
+
+/***/ }),
+
+/***/ "./orgwolf/static/tools/navbar.directive.spec.js":
+/*!*******************************************************!*\
+  !*** ./orgwolf/static/tools/navbar.directive.spec.js ***!
+  \*******************************************************/
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+
+"use strict";
+eval("__webpack_require__.r(__webpack_exports__);\n/* harmony import */ var angular__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! angular */ \"./node_modules/angular/index.js\");\n/* harmony import */ var angular__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(angular__WEBPACK_IMPORTED_MODULE_0__);\n/* harmony import */ var angular_mocks__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! angular-mocks */ \"./node_modules/angular-mocks/angular-mocks.js\");\n/* harmony import */ var angular_mocks__WEBPACK_IMPORTED_MODULE_1___default = /*#__PURE__*/__webpack_require__.n(angular_mocks__WEBPACK_IMPORTED_MODULE_1__);\n\n\n\n\n\n\ndescribe('the ow-nav navigation directive', function() {\n    var $compile, $rootScope, element, $scope;\n    beforeEach(angular.mock.module('orgwolf.tools'));\n    beforeEach(inject(function($injector) {\n\t$compile = $injector.get('$compile');\n\t$rootScope = $injector.get('$rootScope');\n\telement = $compile(\n\t    '<div ow-navbar>' + \n\t    '<div class=\"navbar__item\"><a class=\"active\"></a></div>' + \n\t    '</div>')($rootScope);\n    }));\n    it('disables active nav links when the url changes', function() {\n\t$scope = element.scope();\n\t$scope.$broadcast('$locationChangeSuccess');\n\texpect(element[0].outerHTML).not.toContain('active');\n    });\n});\n\n\n//# sourceURL=webpack://orgwolf/./orgwolf/static/tools/navbar.directive.spec.js?");
+
+/***/ }),
+
+/***/ "./orgwolf/static/tools/static.filter.spec.js":
+/*!****************************************************!*\
+  !*** ./orgwolf/static/tools/static.filter.spec.js ***!
+  \****************************************************/
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+
+"use strict";
+eval("__webpack_require__.r(__webpack_exports__);\n/* harmony import */ var angular__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! angular */ \"./node_modules/angular/index.js\");\n/* harmony import */ var angular__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(angular__WEBPACK_IMPORTED_MODULE_0__);\n/* harmony import */ var angular_mocks__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! angular-mocks */ \"./node_modules/angular-mocks/angular-mocks.js\");\n/* harmony import */ var angular_mocks__WEBPACK_IMPORTED_MODULE_1___default = /*#__PURE__*/__webpack_require__.n(angular_mocks__WEBPACK_IMPORTED_MODULE_1__);\n\n\n\n\n\n\ndescribe('the static url filter', function() {\n    var staticFilter;\n    beforeEach(angular.mock.module('orgwolf.tools'));\n    beforeEach(function() {\n\tangular.module('orgwolf.tools').value('staticUrl', '/static/');\n    });\n    beforeEach(inject(function(_staticFilter_) {\n    \tstaticFilter = _staticFilter_\n    }));\n    it('appends the passed string to the static url', function() {\n\texpect(typeof staticFilter('file.txt')).toEqual('string');\n\texpect(staticFilter('file.txt')).toEqual('/static/file.txt');\n    });\n});\n\n\n//# sourceURL=webpack://orgwolf/./orgwolf/static/tools/static.filter.spec.js?");
+
+/***/ }),
+
+/***/ "./orgwolf/static/tools/tools.module.spec.js":
+/*!***************************************************!*\
+  !*** ./orgwolf/static/tools/tools.module.spec.js ***!
+  \***************************************************/
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+
+"use strict";
+eval("__webpack_require__.r(__webpack_exports__);\n/* harmony import */ var _as_html_filter_spec_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./as-html.filter.spec.js */ \"./orgwolf/static/tools/as-html.filter.spec.js\");\n/* harmony import */ var _decode_html_filter_spec_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./decode-html.filter.spec.js */ \"./orgwolf/static/tools/decode-html.filter.spec.js\");\n/* harmony import */ var _static_filter_spec_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./static.filter.spec.js */ \"./orgwolf/static/tools/static.filter.spec.js\");\n/* harmony import */ var _wait_feedback_directive_spec_js__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./wait-feedback.directive.spec.js */ \"./orgwolf/static/tools/wait-feedback.directive.spec.js\");\n/* harmony import */ var _navbar_directive_spec_js__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ./navbar.directive.spec.js */ \"./orgwolf/static/tools/navbar.directive.spec.js\");\n/* harmony import */ var _wait_indicator_factory_spec_js__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ./wait-indicator.factory.spec.js */ \"./orgwolf/static/tools/wait-indicator.factory.spec.js\");\n\n\n\n\n\n\n\n\n\n\n\n\n\n//# sourceURL=webpack://orgwolf/./orgwolf/static/tools/tools.module.spec.js?");
+
+/***/ }),
+
+/***/ "./orgwolf/static/tools/wait-feedback.directive.spec.js":
+/*!**************************************************************!*\
+  !*** ./orgwolf/static/tools/wait-feedback.directive.spec.js ***!
+  \**************************************************************/
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+
+"use strict";
+eval("__webpack_require__.r(__webpack_exports__);\n/* harmony import */ var angular__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! angular */ \"./node_modules/angular/index.js\");\n/* harmony import */ var angular__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(angular__WEBPACK_IMPORTED_MODULE_0__);\n/* harmony import */ var angular_mocks__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! angular-mocks */ \"./node_modules/angular-mocks/angular-mocks.js\");\n/* harmony import */ var angular_mocks__WEBPACK_IMPORTED_MODULE_1___default = /*#__PURE__*/__webpack_require__.n(angular_mocks__WEBPACK_IMPORTED_MODULE_1__);\n\n\n\n\n\ndescribe('the owWaitFeedback directive', function() {\n    beforeEach(function() {\n    \telement = $compile(\n    \t    '<div ow-wait-feedback><</div>'\n    \t)($rootScope);\n    });\n    it(\"has no tests\");\n});\n\n\n//# sourceURL=webpack://orgwolf/./orgwolf/static/tools/wait-feedback.directive.spec.js?");
+
+/***/ }),
+
+/***/ "./orgwolf/static/tools/wait-indicator.factory.spec.js":
+/*!*************************************************************!*\
+  !*** ./orgwolf/static/tools/wait-indicator.factory.spec.js ***!
+  \*************************************************************/
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+
+"use strict";
+eval("__webpack_require__.r(__webpack_exports__);\n/* harmony import */ var angular__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! angular */ \"./node_modules/angular/index.js\");\n/* harmony import */ var angular__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(angular__WEBPACK_IMPORTED_MODULE_0__);\n/* harmony import */ var angular_mocks__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! angular-mocks */ \"./node_modules/angular-mocks/angular-mocks.js\");\n/* harmony import */ var angular_mocks__WEBPACK_IMPORTED_MODULE_1___default = /*#__PURE__*/__webpack_require__.n(angular_mocks__WEBPACK_IMPORTED_MODULE_1__);\n\n\n\n\n\ndescribe('the owWaitIndicator service', function() {\n    var waiting, $rootScope, waitIndicator;\n    beforeEach(angular.mock.module('orgwolf.tools'));\n    beforeEach(inject(function($injector) {\n\twaitIndicator = $injector.get('owWaitIndicator');\n\t$rootScope = $injector.get('$rootScope');\n    }));\n    it('adds a new short wait period to the list', function() {\n\twaitIndicator.start_wait('quick', 'test');\n\texpect(waitIndicator.waitLists['quick'].length).toEqual(1);\n    });\n    it('clears a short wait period from the list', function() {\n\t// Add two similar waiting periods...\n\twaitIndicator.start_wait('quick', 'tests');\n\twaitIndicator.start_wait('quick', 'tests');\n\t// ...then remove them\n\twaitIndicator.end_wait('quick', 'tests');\n\texpect(waitIndicator.waitLists['quick'].length).toEqual(0);\n    });\n    it('adds a new medium wait period to the list', function() {\n\twaitIndicator.start_wait('medium', 'test');\n\texpect(waitIndicator.waitLists['medium'].length).toEqual(1);\n    });\n    it('clears a medium wait period from the list', function() {\n\t// Add two similar waiting periods...\n\twaitIndicator.start_wait('medium', 'tests');\n\twaitIndicator.start_wait('medium', 'tests');\n\t// ...then remove them\n\twaitIndicator.end_wait('medium', 'tests');\n\texpect(waitIndicator.waitLists['medium'].length).toEqual(0);\n    });\n    it('clears all wait lists if no duration is given', function() {\n\twaitIndicator.start_wait('quick', 'tests');\n\twaitIndicator.start_wait('medium', 'tests');\n\twaitIndicator.end_wait('tests');\n\texpect(waitIndicator.waitLists['quick'].length).toEqual(0);\n\texpect(waitIndicator.waitLists['medium'].length).toEqual(0);\n    });\n});\n\n\n//# sourceURL=webpack://orgwolf/./orgwolf/static/tools/wait-indicator.factory.spec.js?");
 
 /***/ }),
 

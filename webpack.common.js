@@ -13,7 +13,7 @@ module.exports = {
     resolve: {
 	modules: [
 	    path.resolve(__dirname, 'node_modules'),
-	    path.resolve(__dirname, 'orgwolf', 'static', 'orgwolf'),
+	    path.resolve(__dirname, 'orgwolf', 'static'),
 	    path.resolve(__dirname, 'gtd', 'static'),
 	    path.resolve(__dirname, 'wolfmail', 'static'),
 	],

@@ -4,4 +4,5 @@ import "angular";
 import "angular-sanitize";
 import 'angular-ui-bootstrap';
 
-angular.module("orgwolf.projectOutline", ["orgwolf.gtd", "ngSanitize", "ui.bootstrap", "orgwolf.weeklyReview"]);
+angular.module("orgwolf.projectOutline", ["orgwolf.tools", "orgwolf.gtd", "orgwolf.weeklyReview",
+					  "ngSanitize", "ui.bootstrap"]);

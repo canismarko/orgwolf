@@ -3,4 +3,5 @@
 import "angular";
 import "angular-cookies";
 
-angular.module("orgwolf.actionList", ["orgwolf", "orgwolf.gtd", "ngCookies", "ui.bootstrap"]);
+angular.module("orgwolf.actionList", ["orgwolf", "orgwolf.gtd", "orgwolf.tools",
+				      "ngCookies", "ui.bootstrap"]);

@@ -78,14 +78,14 @@ function weeklyReviewFactory($http, $resource) {
 	    });
         }
 
-        moveTask(nodeId: bigint, priority: String) {
+        moveTask(nodeId: number, priority: String) {
             // Move a task from one priority list to another
             this.removeTask(nodeId, false);
             this.addTask(nodeId, priority, false);
             this.obj.$update();
         }
 
-        removeTask(newNode: bigint, update: boolean = true) {
+        removeTask(newNode: number, update: boolean = true) {
             // Find the list that the node is on, and remove it
             let nodeIndex: number, taskLists, dirty: boolean;
             taskLists = [this.obj.extra_tasks, this.obj.primary_tasks,
@@ -142,7 +142,7 @@ function weeklyReviewFactory($http, $resource) {
 	     *   the database.
 	     */
             // Determine which task list to use
-            let taskList: Array<bigint>;
+            let taskList: Array<number>;
             switch (priority) {
                 case "primary":
                     taskList = this.obj.primary_tasks;
