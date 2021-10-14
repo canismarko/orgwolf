@@ -23,6 +23,7 @@ import math
 import operator
 import json
 import datetime as dt
+import pytz
 import dateutil.parser
 
 from django.contrib.auth.models import AnonymousUser
@@ -36,10 +37,11 @@ from django.utils.html import conditional_escape
 from django.utils.safestring import mark_safe
 
 from mptt.managers import TreeManager
+import gtd.exceptions
 from mptt.models import MPTTModel, TreeForeignKey
-from orgwolf import settings
 from orgwolf.models import Color, OrgWolfUser as User
 from wolfmail.models import Message
+
 
 @python_2_unicode_compatible
 class TodoState(models.Model):
@@ -118,7 +120,7 @@ class TodoState(models.Model):
         html = conditional_escape(self.abbreviation)
         if self.color().get_alpha() > 0:
             html = '<span style="color: ' + self.color().rgba_string() + '">' + html + '</span>'
-        if not self.closed: # Bold if not a closed TodoState
+        if not self.closed:  # Bold if not a closed TodoState
             html = '<strong>' + html + '</strong>'
         return mark_safe(html)
 
@@ -686,3 +688,87 @@ class NodeRepetition(models.Model):
         string += self.original_todo_state.abbreviation
         string += ' --> ' + self.new_todo_state.abbreviation
         return string
+
+
+class WeeklyReview(models.Model):
+    """The results of doing a weekly review of projects and actions.
+    
+    The main output is selecting nodes that are the top priority for
+    the week (*primary_tasks*), along with other nodes that should be
+    done if possible (*secondary_tasks* and *tertiary_tasks*). These
+    should be limited to five for each category, but this is not
+    enforced at the model level.
+    
+    A weekly review expires a week after being completed, so should be
+    redone every week.
+    
+    """
+    primary_tasks = models.ManyToManyField(
+        to='Node',
+        related_name="weekly_review_set_as_primary", blank=True)
+    secondary_tasks = models.ManyToManyField(
+        to='Node',
+        related_name="weekly_review_set_as_secondary", blank=True)
+    tertiary_tasks = models.ManyToManyField(
+        to='Node',
+        related_name="weekly_review_set_as_tertiary", blank=True)
+    extra_tasks = models.ManyToManyField(
+        to='Node',
+        related_name="weekly_review_set_as_extra", blank=True)
+    opened = models.DateTimeField(auto_now_add=True)
+    finalized = models.DateTimeField(blank=True, null=True)
+    expires = models.DateTimeField(blank=True, null=True)
+    is_active = models.BooleanField(default=False)
+    owner = models.ForeignKey(
+        User, blank=True, null=True,
+        on_delete=models.CASCADE)
+    
+    time_to_live = dt.timedelta(days=7)
+    
+    # def save(self, _now=None, *args, **kwargs):
+    #     """Write the review to the database.
+        
+    #     *_now* is meant for testing. If *None*, will default the
+    #      ``dt.datetime.utcnow()``
+    #     """
+    #     # Deactivate the weekly review if it's expired
+    #     if _now is None:
+    #         _now = dt.datetime.now(tz=dt.timezone.utc)
+    #     if self.expires is not None:
+    #         is_expired = (_now - self.expires) > self.time_to_live
+    #         self.is_active = self.is_active and not is_expired
+    #     # # Check that we don't have more than one active weekly review
+    #     # n_active = type(self).objects.filter(is_active=True, finalized__isnull=(self.finalized is None)).count()
+    #     # if self.is_active and n_active > 0:
+    #     #     raise gtd.exceptions.TooManyActiveWeeklyReviews()
+    #     return super().save(*args, **kwargs)
+    
+    @classmethod
+    def get_visible(cls, user=AnonymousUser()):
+        """Return a queryset of WeeklyReview objects that the user can use."""
+        query = Q(owner=None)
+        if not user.is_anonymous:
+            query = query | Q(owner=user)
+        return cls.objects.filter(query)
+
+    @property
+    def all_tasks(self):
+        """Queryset for all tasks in this review, whether they are prioritized
+        or not.
+        
+        """
+        tasks = self.primary_tasks.all().union(
+            self.secondary_tasks.all(),
+            self.tertiary_tasks.all(),
+            self.extra_tasks.all(),
+        )
+        return tasks
+
+    def __str__(self):
+        s = f"Weekly Review"
+        if self.is_active:
+            if self.finalized:
+                s += " (active)"
+            else:
+                s += " (open)"
+        return s

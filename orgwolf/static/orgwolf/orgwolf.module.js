@@ -10,9 +10,13 @@ import 'angular';
 // import 'angular-ui-calendar';
 // import 'angular-bootstrap-switch';
 // import 'fullcalendar';
-// import 'angularjs-toaster';
+import "angular-animate";
+import 'angularjs-toaster';
 
 import "./orgwolf.config.js";
+import "./orgwolf.routes.js";
+
+import "./navbar.directive.js";
 import "./date.model.js";
 import "./static.filter.js";
 import "./as-html.filter.js";
@@ -28,4 +32,3 @@ import "./current-user.factory.js";
 import "./google-analytics.controller.js";
 import "./login.controller.js";
 import "./settings.controller.js";
-import "./orgwolf.routes.js";

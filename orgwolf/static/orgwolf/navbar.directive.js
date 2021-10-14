@@ -14,19 +14,20 @@ function owNavbar($location, $cookies, contexts, currentUser) {
             'actions': new RegExp('^/gtd/actions'),
             'inbox': new RegExp('^/wolfmail/inbox/'),
             'projects': new RegExp('^/gtd/projects/'),
-            'calendar': new RegExp('^/calendar/')
+            'calendar': new RegExp('^/calendar/'),
+	    'review': new RegExp('^/gtd/review/')
         };
         function setActiveLink() {
             var found, r, currPath, linkId;
             // Clear old active links
-            jQuery('.navbar__item').removeClass('active');
+            jQuery('.navbar__item > a').removeClass('active');
             // Find and set new active link
             currPath = $location.path();
             for (linkId in regexps) {
                 if (regexps.hasOwnProperty(linkId)) {
                     r = regexps[linkId].exec(currPath);
                     if (r) {
-                        jQuery('#nav-' + linkId).addClass('active');
+                        jQuery('#nav-' + linkId).children("a").addClass('active');
                     }
                 }
             }

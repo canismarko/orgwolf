@@ -1,0 +1,123 @@
+<!-- Options for creating a new weekly review -->
+<div ng-if="!openReview.isOpen" class="weekly-review__message-box"
+     ng-class="{'weekly-review__message-box--new': !activeReview.isActive}">
+  <p ng-if="!activeReview.isActive">You have no active weekly
+  reviews. <strong>Click the button</strong> below to start
+  prioritizing your projects.</p>
+  <button class="weekly-review__button weekly-review__button--new" ng-click="openReview.create()">New Weekly Review</button>
+</div>
+
+<!-- Show the current open weekly review -->
+<div ng-if="openReview.isOpen" class="weekly-review weekly-review__box weekly-review__box--open">
+  <h2>Review In Progress</h2>
+  <div class="weekly-review__message-box weekly-review__message-box--empty" ng-if="openReview.taskCount === 0">You haven't added any projects yet. Visit the <a href="/gtd/projects">projects page</a> to add some.</div>
+  <div class="row">
+    <div class="col-md-6">
+      <div ow-droppable-task class="weekly-review__task-box"
+	   ow-review="openReview" ow-task-priority="primary">
+	<h3>A: Do First
+	  <span class="weekly-review__list-count"
+		ng-class="{'weekly-review__list-count--invalid': !listIsValid.primary}">
+	    [{{ openReview.primary_tasks.length }}/{{ taskLimits.primary }}]</span>
+	</h3>
+	<ul class="weekly-review__task-list">
+	  <li ng-repeat="task in openReview.primary_tasks"
+	      ow-draggable-task ow-task="task"
+	      class="weekly-review__task"><span class="weekly-review__grip"></span> {{ task.title }}</li>
+	</ul>
+      </div>
+      <div ow-droppable-task class="weekly-review__task-box"
+	   ow-review="openReview" ow-task-priority="secondary">
+	<h3>B: Do Second
+	  <span class="weekly-review__list-count"
+		ng-class="{'weekly-review__list-count--invalid': !listIsValid.secondary}">
+	    [{{ openReview.secondary_tasks.length }}/{{ taskLimits.secondary }}]</span>
+	</h3>
+	<ul class="weekly-review__task-list">
+	  <li ng-repeat="task in openReview.secondary_tasks"
+	      ow-draggable-task ow-task="task"
+	      class="weekly-review__task"><span class="weekly-review__grip"></span> {{ task.title }}</li>
+	</ul>
+      </div>
+      <div ow-droppable-task class="weekly-review__task-box"
+	   ow-review="openReview" ow-task-priority="tertiary">
+	<h3>C: Do if there's time
+	  <span class="weekly-review__list-count"
+		ng-class="{'weekly-review__list-count--invalid': !listIsValid.tertiary}">
+	    [{{ openReview.tertiary_tasks.length }}/{{ taskLimits.tertiary }}]</span>
+	</h3>
+	<ul class="weekly-review__task-list">
+	  <li ng-repeat="task in openReview.tertiary_tasks"
+	      ow-draggable-task ow-task="task"
+	      class="weekly-review__task"><span class="weekly-review__grip"></span> {{ task.title }}</li>
+	</ul>
+      </div>
+    </div>
+    <div class="col-md-6">
+      <div ow-droppable-task class="weekly-review__task-box"
+	   ow-review="openReview" ow-task-priority="extra">
+	<h3>Uncategorized
+	  <span class="weekly-review__list-count"
+		ng-class="{'weekly-review__list-count--invalid': !listIsValid.extra}">
+	    [{{ openReview.extra_tasks.length }}]</span>
+	</h3>
+	<ul class="weekly-review__task-list">
+	  <li ng-repeat="task in openReview.extra_tasks"
+	      ow-draggable-task ow-task="task"
+	      class="weekly-review__task"><span class="weekly-review__grip"></span> {{ task.title }}</li>
+	</ul>
+      </div>
+      <div ow-droppable-task class="weekly-review__task-box weekly-review__task-box--remove"
+	   ow-review="openReview" ow-task-priority="remove">
+	<h3><span class="weekly-review__icon weekly-review__icon--remove"></span> Remove</h3>
+      </div>
+    </div>
+  </div>
+  <button class="weekly-review__button weekly-review__button--finalize"
+	  ng-disabled="!listIsValid.primary || !listIsValid.secondary || !listIsValid.tertiary || !listIsValid.extra || openReview.taskCount === 0"
+	  ng-click="openReview.finalize()">
+    Finish</button>
+  <button class="weekly-review__button weekly-review__button--cancel"
+	  ng-click="openReview.cancel()">Cancel</button>
+</div>
+
+<hr ng-if="activeReview && openReview.isOpen" />
+
+<div ng-if="activeReview.isActive" class="weekly-review">
+  <h2>Current Active Review</h2>
+  <div class="weekly-review__message-box"
+       ng-class="{'weekly-review__message-box--expired': activeReview.isExpired}">
+    <p>Expires: {{ activeReview.obj.expires | date:'EEE yyyy-MM-dd HH:mm' }}</p>
+    <p ng-if="activeReview.isExpired">This weekly review has
+      <strong>expired</strong>.
+      <span ng-if="openReview.isOpen">Finish the weekly review above
+	that's already in progress.</span>
+      <span ng-if="!openReview.isOpen">Start a new weekly review using the above button.</p>
+  </div>
+  <div class="row">
+    <div class="col-md-6">
+      <h3>Do First</h3>
+      <ul class="weekly-review__task-list">
+	<li ng-repeat="task in activeReview.primary_tasks"
+	    class="weekly_review__task">{{ task.title }}</li>
+      </ul>
+      <h3>Do Second</h3>
+      <ul class="weekly-review__task-list">
+	<li ng-repeat="task in activeReview.secondary_tasks"
+	    class="weekly_review__task">{{ task.title }}</li>
+      </ul>
+      <h3>Do if there's time</h3>
+      <ul class="weekly-review__task-list">
+	<li ng-repeat="task in activeReview.tertiary_tasks"
+	    class="weekly_review__task">{{ task.title }}</li>
+      </ul>
+    </div>
+    <div class="col-md-6">
+      <h3>Uncategorized</h3>
+      <ul class="weekly-review__task-list">
+	<li ng-repeat="task in activeReview.extra_tasks"
+	    class="weekly_review__task">{{ task.title }}</li>
+      </ul>
+    </div>
+  </div>
+</div>

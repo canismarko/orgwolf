@@ -22,7 +22,14 @@ import datetime as dt
 
 from rest_framework import serializers
 
-from gtd.models import Context, FocusArea, Node, TodoState, Tag
+from gtd.models import Context, FocusArea, Node, TodoState, Tag, WeeklyReview
+
+
+class WeeklyReviewSerializer(serializers.ModelSerializer):
+    # extra_tasks = NodeSerializer(many=True)
+    class Meta:
+        model = WeeklyReview
+        fields = "__all__"
 
 
 class FocusAreaSerializer(serializers.ModelSerializer):

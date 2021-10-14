@@ -1,0 +1,2 @@
+class TooManyActiveWeeklyReviews(RuntimeError):
+    pass

@@ -6,10 +6,10 @@ angular.module('orgwolf.projectOutline')
     .directive('owTwisty', owTwisty);
 
 
-owTwisty.$inject = ['$compile', '$rootScope', 'Heading', 'activeHeading'];
+owTwisty.$inject = ['$compile', '$rootScope', 'Heading', 'activeHeading', 'openReview'];
 
 
-function owTwisty($compile, $rootScope, Heading, activeHeading) {
+function owTwisty($compile, $rootScope, Heading, activeHeading, openReview) {
 	/*************************************************
 	 * Directive forms a node in an outline (and takes
 	 * care of any child nodes).
@@ -155,6 +155,26 @@ function owTwisty($compile, $rootScope, Heading, activeHeading) {
 		}
 	    }
 	});
+	// Handlers for adding/removing the node from the pending weekly review
+	scope.openReview = openReview;
+	scope.isInOpenReview = false;
+	scope.$watch(
+	    // Update the DOM if the review object changes
+	    function() { return scope.openReview.hasTask(scope.heading.id) },
+	    function(hasTask) { scope.isInOpenReview = hasTask; }
+	);
+	scope.updateReview = function(newState) {
+	    if (newState) {
+		scope.openReview.addTask(scope.heading.id);
+	    } else {
+		scope.openReview.removeTask(scope.heading.id);
+	    }
+	};
+	// scope.$watch(function() { console.log(scope.isInOpenReview); return scope.isInOpenReview }, function(newState) {
+	//     // Update the review object if the checkbox changes
+	//     console.log("HERE: ", newState);
+	// });
+	    
     }
     // Special compile function that avoids a recursive dead-lock
     function compile(tElement, tAttr) {

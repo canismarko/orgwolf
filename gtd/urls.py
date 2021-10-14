@@ -35,6 +35,8 @@ urlpatterns = [
     url(r'^projects/?$', AngularView.as_view(), name='projects'),
     url(r'^actions(?:/\d+/[-A-Za-z0-9_]+)?/?$',
         AngularView.as_view(), name='list_display'),
+    url(r'^review(?:/\d+/[-A-Za-z0-9_]+)?/?$',
+        AngularView.as_view(), name='weekly_review'),
     
     # Urls for api entry points
     url(r'^nodes(?:/(?P<pk>\d+))?/?$',
@@ -44,4 +46,12 @@ urlpatterns = [
     url(r'^focusareas/?$', gtd_views.FocusAreaView.as_view(), name='focus_area_api'),
     url(r'^contexts/?$', gtd_views.ContextView.as_view(), name='context_api',),
     url(r'^locations/?$', gtd_views.LocationView.as_view(), name='location_api',),
+    url(r'^weeklyreviews(?:/(?P<pk>\d+))?/?$',
+        gtd_views.WeeklyReviewView.as_view(), name="weekly_review_api",),
+    url(r'^weeklyreviews/activereview/?$',
+        gtd_views.WeeklyReviewActiveView.as_view(), {'finalized': True}, name="weekly_review_active_api",),
+    url(r'^weeklyreviews/openreview/?$',
+        gtd_views.WeeklyReviewActiveView.as_view(), {'finalized': False}, name="weekly_review_open_api",),
+    url(r'^weeklyreviews/(?P<pk>\d+)/nodes/?$',
+        gtd_views.WeeklyReviewNodesView.as_view(), name="weekly_review_nodes_api",),
 ]

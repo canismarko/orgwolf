@@ -1,12 +1,15 @@
 <!-- Recursive template for tree of Tasks -->
 <div class="gtd-outline__heading gtd-outline__heading--level-{{ heading.level }}"
      ng-class="{'gtd-outline__heading--archived': heading.archived, 'gtd-outline__heading--leaf-node': (heading.rght-heading.lft)==1}"
-     ow-droppable
+     ow-droppable-heading
      ng-show="!isEditing"
      ng-click="toggleHeading($event)"
      style="{{ heading | headingStyle }}"
      archived="{{ heading.archived }}">
   <span class="gtd-outline__twisty"></span>
+  <span class="gtd-outline__review-checkbox non-opening" ng-if="openReview.isOpen">
+    <input type="checkbox" ng-model="isInOpenReview" ng-change="updateReview(isInOpenReview)">
+  </span>
   <span ow-todo ow-heading="heading"></span>
   <div class="gtd-outline__title">{{heading.title}}<span ng-show="heading.has_text && state < 2">&hellip;</span>
   </div>
@@ -54,7 +57,7 @@
     Loading...
   </div>
   <div ow-twisty ng-repeat="heading in children" ow-heading="heading"
-       ow-draggable
+       ow-draggable-heading
        class="gtd-outline__node"
        ng-if="!heading.archived || showArchived"></div>
   <div class="gtd-outline__archived-indicator"

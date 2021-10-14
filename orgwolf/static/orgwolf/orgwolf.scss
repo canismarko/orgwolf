@@ -19,10 +19,9 @@ $warning-text: #856404;
 $success-bg: #d4edda;
 $success-border: #c3e6cb;
 $success-text: #155724;
-/* @primary-light: #B17BE8; /\* lavender *\/ */
-/* @primary-light-pale: #D1BBE8; */
+$text-danger: #dc3545;
 
-/* Import bootstrap mixins, variables, etc */
+/* Import SASS mixins, variables, etc */
 @import "../../../node_modules/bootstrap/scss/bootstrap.scss";
 $fa-font-path: "~@fortawesome/fontawesome-free/webfonts/";
 @import '~@fortawesome/fontawesome-free/scss/fontawesome.scss';
@@ -1132,6 +1131,86 @@ input,textarea {
     &__check-label {
 	@extend .form-check-label;
 	margin-top: 1px;
+    }
+}
+
+/* Weekly review page */
+.weekly-review {
+    &__message-box {
+	margin-bottom: 1rem;
+	@extend .alert;
+	&--new,&--empty {
+	    @extend .alert-warning;
+	}
+	&--expired {
+	    @extend .alert-danger;
+	}
+    }
+    &__task-box {
+	border-radius: 5px;
+	border-style: dashed;
+	border-color: rgba(21, 87, 36, 0);
+	border-width: 2px;
+	margin: 0.5rem 0rem 0.5rem 0rem;
+	padding: 0.25rem;
+	&--remove {
+	    visibility: hidden;
+	}
+	& h3 {
+	    margin: 0;
+	}
+	
+    }
+    &__droppable-target {
+	border-color: rgba(21, 87, 36, 1);
+	visibility: visible !important;
+	&--over {
+	    background: rgba(195, 230, 203, 1)
+	}
+    }
+    &__grip {
+	@include opacify(50);
+	@extend .fas;
+	@include fa-icon();
+	&:before {
+	    content: fa-content($fa-var-grip-vertical);
+	}
+    }
+    &__task {
+	cursor: pointer;
+    }
+    &__box--open {
+	@extend .alert;
+	@extend .alert-success;
+    }
+    &__button {
+	@extend .btn;
+	&--finalize {
+	    @extend .btn-success;
+	}
+	&--cancel {
+	    @extend .btn-link;
+	}
+	&--new {
+	    @extend .btn-primary
+	}
+    }
+    &__task-list {
+	list-style-type: none;
+	padding-left: 1rem;
+	margin-top: 0.5rem;
+    }
+    &__icon {
+	@extend .fas;
+	@include fa-icon();
+	&--remove:before {
+	    content: fa-content($fa-var-trash);
+	}
+    }
+    &__list-count {
+	&--invalid {
+	    color: $text-danger;
+	}
     }
 }
 

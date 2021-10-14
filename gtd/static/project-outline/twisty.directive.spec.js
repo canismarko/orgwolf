@@ -23,6 +23,10 @@ describe('the owTwisty directive', function() {
 	$templateCache.put('/static/outline-twisty.html',
 			   '<div class="ow-hoverable"></div>');
 	$templateCache.put('/static/project-outline.html', '');
+	$httpBackend.whenGET("/gtd/weeklyreviews?finalized=null&is_active=true")
+	    .respond([]);
+	$httpBackend.whenGET("/gtd/weeklyreviews/openreview/")
+	    .respond([], 404);	
 	// Prepare the DOM element
 	element = $compile(
 	    '<div ow-twisty ow-heading="heading" ng-click="toggleHeading($event)"></div>'

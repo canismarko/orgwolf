@@ -25,6 +25,7 @@ from the command line.
 
 from __future__ import unicode_literals, absolute_import, print_function
 import datetime as dt
+import pytz
 import json
 
 from django.contrib.auth.models import AnonymousUser
@@ -35,24 +36,141 @@ from django.db.models import Q
 from django.db.models.query import QuerySet
 from django.http import Http404
 from django.template.defaultfilters import slugify
-from django.test import TestCase
+from django.test import TestCase, Client
 from django.test.client import RequestFactory
 from django.utils.html import conditional_escape
 from django.utils.timezone import get_current_timezone
 from django.views.generic import View
 from rest_framework.renderers import JSONRenderer
 
-from gtd.models import Node, TodoState
+from gtd.exceptions import TooManyActiveWeeklyReviews
+from gtd.models import Node, TodoState, WeeklyReview
 from gtd.models import Context, FocusArea
 from gtd.serializers import (NodeSerializer, NodeListSerializer,
                              CalendarSerializer, CalendarDeadlineSerializer)
 from gtd.shortcuts import order_nodes, load_fixture
 from gtd.templatetags.gtd_extras import escape_html
 from gtd.templatetags.gtd_extras import breadcrumbs
-from gtd.views import NodeView, LocationView
+from gtd.views import NodeView, LocationView, WeeklyReviewActiveView, WeeklyReviewNodesView, WeeklyReviewView
 from orgwolf.models import OrgWolfUser as User
 from plugins.deferred import MessageHandler as DeferredMessageHandler
 from wolfmail.models import Message
+
+
+class WeeklyReviewTests(TestCase):
+    today = dt.datetime(2021, 9, 4, tzinfo=dt.timezone.utc)
+    fixtures = ['test-users.json', 'gtd-env.json', 'gtd-test.json']
+
+    def setUp(self):
+        self.factory = RequestFactory()
+        self.client = Client()
+        self.client.login(username="test", password="secret")
+        self.user = User.objects.get(username='test')
+    
+    def test_all_tasks(self):
+        """Test the ``WeeklyReview.all_tasks()`` method."""
+        # Create a weekly review with some tasks
+        nodes = Node.objects.all()
+        review = WeeklyReview()
+        review.save()
+        review.primary_tasks.add(nodes[0])
+        review.secondary_tasks.add(nodes[1])
+        review.tertiary_tasks.add(nodes[2])
+        review.extra_tasks.add(nodes[3])
+        # Check the method
+        all_tasks = review.all_tasks
+        self.assertIn(nodes[0], all_tasks)
+        self.assertIn(nodes[1], all_tasks)
+        self.assertIn(nodes[2], all_tasks)
+        self.assertIn(nodes[3], all_tasks)
+        self.assertNotIn(nodes[4], all_tasks)
+    
+    def test_active_review_view(self):
+        view_ = WeeklyReviewActiveView.as_view()
+        # Unauthenticated request should fail
+        request = self.factory.get(reverse('weekly_review_active_api'))
+        response = view_(request)
+        self.assertEqual(response.status_code, 403)
+        # Authenticated request should fail if the item cannot be found
+        request = self.factory.get(reverse('weekly_review_active_api'), )
+        request.user = self.user
+        response = view_(request)
+        self.assertEqual(response.status_code, 204)
+        # Now add an open review and verify that it succeeds
+        now = pytz.utc.localize(dt.datetime.now())
+        new_review = WeeklyReview(is_active=True, finalized=now, owner=self.user)
+        new_review.save()
+        request = self.factory.get(reverse('weekly_review_active_api'))
+        request.user = self.user
+        response = view_(request)
+        self.assertEqual(response.status_code, 200)
+        response.render()
+        response_obj = json.loads(response.content.decode())
+        finalized = pytz.utc.localize(dt.datetime.fromisoformat(response_obj['finalized'][:-1]))
+        self.assertEqual(finalized, now)
+        self.assertTrue(response_obj['is_active'])
+    
+    def test_open_review_view(self):
+        view_ = WeeklyReviewActiveView.as_view()
+        # Unauthenticated request should fail
+        request = self.factory.get(reverse('weekly_review_open_api'))
+        response = view_(request, finalized=False)
+        self.assertEqual(response.status_code, 403)
+        # Test an open review and verify that it succeeds
+        new_review = WeeklyReview(is_active=True, finalized=None, owner=self.user)
+        new_review.save()
+        request = self.factory.get(reverse('weekly_review_open_api'), )
+        request.user = self.user
+        response = view_(request, finalized=False)
+        self.assertEqual(response.status_code, 200)
+        response.render()
+        response_obj = json.loads(response.content.decode())
+        self.assertIs(response_obj['finalized'], None)
+        self.assertTrue(response_obj['is_active'])
+
+    def test_weekly_review_nodes(self):
+        # Prepare a weekly review
+        nodes = Node.objects.all()[:2]
+        review = WeeklyReview()
+        review.save()
+        review.primary_tasks.set([nodes[0]])
+        # Prepare the view
+        view_ = WeeklyReviewNodesView.as_view()
+        url = reverse('weekly_review_nodes_api', kwargs=dict(pk=review.pk))
+        request = self.factory.get(url)
+        # print(review.primary_tasks, review.secondary_tasks, review.tertiary_tasks)
+        response = view_(request, pk=review.pk)
+        response.render()
+        content = response.content.decode("utf-8")
+        # Check that the response has the right nodes (and no extras)
+        self.assertIn(f'"id":{nodes[0].id}', content)
+        # self.assertNotIn(f'"id":{nodes[1].id}', content)
+
+    def test_finalize_weekly_review(self):
+        """Check that when finalizing a weekly review via the API, all other
+        finalized nodes get deactivated.
+        
+        """
+        # Prepare new weekly reviews
+        now = dt.datetime(2021, 10, 12, 17, 19, tzinfo=dt.timezone.utc)
+        stale_reviews = [
+            WeeklyReview(is_active=True, finalized=now, owner=self.user),
+            WeeklyReview(is_active=True, finalized=now, owner=self.user),
+        ]
+        [wr.save() for wr in stale_reviews]
+        open_review = WeeklyReview(is_active=True, owner=self.user)
+        open_review.save()
+        # Call the view to finalize the open review
+        view_ = WeeklyReviewView.as_view()
+        url = reverse('weekly_review_api', kwargs=dict(pk=open_review.pk))
+        response = self.client.put(url, data=json.dumps({"finalized": now.isoformat()}),
+                                   content_type="application/json")
+        # Refresh the objects and check that the review was finalized
+        open_review = WeeklyReview.objects.get(pk=open_review.pk)
+        self.assertEqual(open_review.finalized, now)
+        stale_reviews = [WeeklyReview.objects.get(pk=wr.pk) for wr in stale_reviews]
+        self.assertFalse(stale_reviews[0].is_active)
+        self.assertFalse(stale_reviews[1].is_active)
 
 
 class NodeMutators(TestCase):

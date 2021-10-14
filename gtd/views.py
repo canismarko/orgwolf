@@ -40,13 +40,13 @@ from django.views.generic import View
 from django.views.generic.detail import DetailView
 from rest_framework.views import APIView
 from rest_framework.response import Response
-from rest_framework import mixins, generics
+from rest_framework import mixins, generics, status
 
 from gtd.forms import NodeForm
-from gtd.models import TodoState, Node, Context, FocusArea, Location
+from gtd.models import TodoState, Node, Context, FocusArea, Location, WeeklyReview
 from gtd.shortcuts import get_todo_abbrevs, order_nodes
 from gtd.serializers import (ContextSerializer, FocusAreaSerializer,
-                             TagSerializer,
+                             TagSerializer, WeeklyReviewSerializer,
                              TodoStateSerializer, NodeSerializer,
                              NodeListSerializer, NodeOutlineSerializer,
                              CalendarSerializer, CalendarDeadlineSerializer)
@@ -343,3 +343,122 @@ class LocationView(generics.ListAPIView):
         is_public = Q(public=True)
         qs = Location.objects.filter(by_user | is_public)
         return qs
+
+
+class WeeklyReviewActiveView(APIView):
+    """Get the most recent active (open and finalized) weekly review."""
+    serializer_class = WeeklyReviewSerializer
+    
+    def get(self, request, finalized=True):
+        # Just return an error if not authenticated
+        if not request.user.is_authenticated:
+            return Response(status=status.HTTP_403_FORBIDDEN)
+        # See if an active weekly review can be found
+        all_reviews = WeeklyReview.objects.all()
+        if finalized:
+            all_reviews = all_reviews.exclude(finalized=None)
+        else:
+            all_reviews = all_reviews.filter(finalized=None)
+        try:
+            active_review = all_reviews.get(is_active=True, owner=request.user)
+        except WeeklyReview.DoesNotExist:
+            response = Response(status=status.HTTP_204_NO_CONTENT)
+        else:
+            serializer = self.serializer_class(active_review)
+            response = Response(serializer.data)
+        return response
+
+
+class WeeklyReviewView(generics.ListAPIView, mixins.DestroyModelMixin, mixins.CreateModelMixin):
+    """RESTful interaction with the gtd.WeeklyReview object"""
+    queryset = WeeklyReview.objects.all()
+    serializer_class = WeeklyReviewSerializer
+    query_fields = {"is_active": bool,
+                    "finalized": lambda x: x}  # Fields with single values that can be queried
+    pk = None
+    
+    def get(self, request, pk=None, *args, **kwargs):
+        if pk is not None:
+            review = WeeklyReview.objects.get(pk=pk)
+            serializer = self.serializer_class(review, many=False)
+        else:
+            reviews = self.get_request_queryset(request)
+            serializer = self.serializer_class(reviews, many=True)
+        return Response(serializer.data)
+    
+    def get_request_queryset(self, request):
+        params = dict(request.query_params)
+        reviews = WeeklyReview.get_visible(request.user).prefetch_related('extra_tasks')
+        # Parse out the valid query parameters
+        for field, fieldtype in self.query_fields.items():
+            if field in params.keys():
+                new_val = params[field][0]
+                if new_val == "null":
+                    params[field] = None
+                else:
+                    params[field] = fieldtype(new_val)
+        reviews = reviews.filter(**params)
+        return reviews
+
+    def put(self, request, pk, *args, **kwargs):
+        if pk is None:
+            # Throw error response if user is trying to
+            # PUT without specifying a pk
+            return HttpResponseNotAllowed(['GET', 'POST'])
+        data = request.data.copy()
+        # Check the permissions
+        review = get_object_or_404(WeeklyReview, pk=pk)
+        if review.owner != request.user:
+            # Not authorized
+            return HttpResponse(
+                json.dumps({'status': 'failure',
+                            'reason': 'unauthorized'}),
+                status=401)
+        # Update and return the Node
+        serializer = WeeklyReviewSerializer(review, data=data)
+        if serializer.is_valid():
+            # Check if we should auto-deactivate all other weekly reviews
+            was_finalized = (review.finalized is None and
+                             serializer.validated_data.get('finalized') is not None)
+            # Save the updated object to the database
+            serializer.save()
+            # Deactivate the other weekly reviews
+            if was_finalized:
+                for wr in WeeklyReview.objects.filter(is_active=True).exclude(finalized=None).exclude(id=review.id):
+                    wr.is_active = False
+                    wr.save()
+            # Return the saved data
+            return Response(serializer.data)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+    def delete(self, request, pk, *args, **kwargs):
+        if request.user.is_authenticated:
+            return self.destroy(request, *args, **kwargs)
+
+    def destroy(self, request, *args, **kwargs):
+        instance = self.get_object()
+        if instance.owner == request.user:
+            self.perform_destroy(instance)
+            return Response(status=status.HTTP_204_NO_CONTENT)
+
+    def post(self, request, *args, **kwargs):
+        if request.user.is_authenticated:
+            return self.create(request, *args, **kwargs)
+
+    def create(self, request, *args, **kwargs):
+        data = request.data.copy()
+        if request.user.is_authenticated:
+            data['owner'] = request.user.pk
+            serializer = self.get_serializer(data=data)
+            serializer.is_valid(raise_exception=True)
+            self.perform_create(serializer)
+            headers = self.get_success_headers(serializer.data)
+            return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
+
+
+class WeeklyReviewNodesView(generics.ListAPIView):
+    serializer_class = NodeSerializer
+    def get_queryset(self):
+        review = WeeklyReview.objects.get(pk=self.kwargs['pk'])
+        nodes = review.all_tasks
+        return nodes

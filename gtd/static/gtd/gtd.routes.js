@@ -1,6 +1,6 @@
 "use strict";
 
-import 'angular';
+import { module as ngModule } from 'angular';
 
 angular.module('orgwolf.gtd')
     .config(addRoutes);
@@ -16,6 +16,10 @@ function addRoutes($routeProvider, $locationProvider) {
      **************************************************/
     $locationProvider.html5Mode({enabled: true, requireBase: false});
     $routeProvider
+	.when('/gtd/review/', {
+	    template: "<ow-weekly-review></ow-weekly-review>\n",
+	    // controller: 'weeklyReview',
+	})
 	.when('/gtd/actions/:context_id?/:context_slug?', {
 	    templateUrl: '/static/actions-list.html',
 	    controller: 'nextActionsList',

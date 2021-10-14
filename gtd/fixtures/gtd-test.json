@@ -891,5 +891,18 @@
         "repeating_number": null, 
         "repeats": false
     }
+},
+{
+    "pk": 1, 
+    "model": "gtd.weeklyreview", 
+    "fields": {
+	"primary_tasks": [],
+	"secondary_tasks": [],
+	"tertiary_tasks": [],
+	"opened": "2021-09-04T01:16:45.704Z",
+	"finalized": null,
+	"expires": null,
+	"is_active": false
+    }
 }
 ]

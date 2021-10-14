@@ -69,7 +69,7 @@ function nextActionsList($sce, $scope, $resource, $location, $routeParams, $filt
 	// Retrieve the full parent object
 	if (newParentId) {
 	    $scope.activeParent = Heading.get({id: newParentId});
-	    $scope.activeParent.$promise.then($scope.setVisibleHeadings);
+	    $scope.activeParent.$promise.then($scope.setVisibleHeadings());
 	} else {
 	    $scope.activeParent = null;
 	    $scope.setVisibleHeadings();

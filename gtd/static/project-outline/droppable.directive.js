@@ -4,10 +4,10 @@ import "angular";
 import 'jquery-ui-dist/jquery-ui';
 
 angular.module('orgwolf.projectOutline')
-    .directive('owDroppable', owDroppable);
+    .directive('owDroppableHeading', droppableHeading);
 
 
-function owDroppable() {
+function droppableHeading() {
     /*************************************************
      * Directive that a heading drag-n-drop droppable
      * for ow-draggable elements
