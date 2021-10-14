@@ -7,10 +7,10 @@ angular.module("orgwolf.wolfmail")
     .directive('owMsgActions', owMsgActions);
 
 
-owMsgActions = ['Heading', 'dateFilter', 'toaster'];
+owMsgActions = ['Heading', 'dateFilter', 'owNotifier'];
 
 
-function owMsgActions(Heading, dateFilter, toaster) {
+function owMsgActions(Heading, dateFilter, owNotifier) {
     /*************************************************
      * Directive that handles actions on messages
      *
@@ -102,7 +102,7 @@ function owMsgActions(Heading, dateFilter, toaster) {
 		.then(function(message) {
 		    var s = 'Deferred until ';
 		    s += dateFilter(message.rcvd_date, 'yyyy-MM-dd');
-		    toaster.pop('info', null, s);
+		    owNotifier.info(s);
 		    console.log('rescheduled');
 		    console.log(message);
 		});

@@ -1,7 +1,6 @@
 "use strict";
 
 import { module as ngModule } from 'angular';
-import { Notyf } from "notyf";
 
 ngModule('orgwolf.weeklyReview')
     .controller('weeklyReview', weeklyReview);
@@ -15,7 +14,6 @@ function weeklyReview($scope, weeklyReview, openReview, activeReview) {
      * Weekly review controller
      *
      **************************************************/
-    const notyf = new Notyf();
     // Set default values
     $scope.activeReview = activeReview;
     $scope.openReview = openReview;

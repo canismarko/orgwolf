@@ -8,7 +8,7 @@ angular.module('orgwolf',
 		'orgwolf.weeklyReview',
 		// 'ngAnimate', 'ngResource', 'ngCookies', 'ngRoute',
 		// 'ui.bootstrap', 'ui.calendar', 'frapontillo.bootstrap-switch'
-		// 'ngSanitize', 'toaster'
+		// 'ngSanitize'
 	       ]);
 
 

@@ -5,11 +5,10 @@ import {module as ngModule} from "angular";
 ngModule("orgwolf.tools")
     .controller('settings', settings);
 
+settings.$inject = ['$scope', '$window', '$resource', '$http', 'owNotifier'];
 
-settings.$inject = ['$scope', '$window', '$resource', '$http', 'toaster'];
 
-
-function settings($scope, $window, $resource, $http, toaster) {
+function settings($scope, $window, $resource, $http, owNotifier) {
     var Provider, Account, isReadyToSave;
     Provider = $resource('/providers/');
     $scope.providers = Provider.query();
@@ -21,7 +20,7 @@ function settings($scope, $window, $resource, $http, toaster) {
     $scope.linkedAccounts = Account.query();
     $scope.disconnectAccount = function(account) {
 	account.$delete().then(function() {
-	    toaster.pop('success', 'Deleted');
+	    owNotifier.success('Deleted');
 	    $scope.$emit('refresh-data');
 	});
     };
@@ -44,18 +43,18 @@ function settings($scope, $window, $resource, $http, toaster) {
 	if (isReadyToSave && !result.error) {
 	    data = {"access_token": result.access_token, "code": result.code,
 		    "handler_path": "plugins.google"};
-	    toaster.pop('info', 'Saving...');
+	    owNotifier.info('Saving...');
 	    Account.save({}, data).$promise.then(
 		function(response) {
 		    // Success callback
-		    toaster.pop('success', 'Saved');
+		    owNotifier.success('Saved');
 		    $scope.$emit('refresh-data');
 		},
 		function(response) {
 		    if (response.data.reason === 'duplicate') {
-			toaster.pop('error', 'Not saved', 'Duplicate Account');
+			owNotifier.error('Not saved. Duplicate Account')
 		    } else {
-			toaster.pop('error', 'Not saved', 'An error occured. Please check your internet connection and try again.');
+			owNotifier.error('Not saved. Check the debug console for more information.');
 			console.log(response);
 		    }
 		}

@@ -5,25 +5,24 @@ import { module as $module } from "angular";
 $module("orgwolf.gtd")
     .factory('Heading', Heading);
 
-Heading.$inject = ['$http', '$resource', 'toaster'];
+Heading.$inject = ['$http', '$resource', 'owNotifier'];
 
 
-function Heading($http, $resource, toaster) {
+function Heading($http, $resource, owNotifier) {
     /*************************************************
      * Factory creates GtdHeading objects
      *
      **************************************************/
-    var toastOnly, res;
+    var notifyOnly, res;
     // Interceptors for manipulating the responses
-    toastOnly = {
+    notifyOnly = {
         'response': function(response) {
             // Announce a successful save
-            toaster.pop('success', 'Saved');
+	    owNotifier.success("Saved");
             return response;
         },
         'responseError': function(reason) {
-            toaster.pop('error', "Error, not saved!",
-                "Check your internet connection and try again");
+	    owNotifier.error("Not saved! Check the debug console for more infomation.");
             console.log('Save failed:');
             console.log(reason);
         },
@@ -36,8 +35,8 @@ function Heading($http, $resource, toaster) {
             field_group: '@field_group'
         },
         {
-            'update': { method: 'PUT', interceptor: toastOnly },
-            'create': { method: 'POST', interceptor: toastOnly },
+            'update': { method: 'PUT', interceptor: notifyOnly },
+            'create': { method: 'POST', interceptor: notifyOnly },
         }
     );
     return res;

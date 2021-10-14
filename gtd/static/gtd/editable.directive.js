@@ -11,10 +11,10 @@ angular.module('orgwolf.gtd')
     .directive('owEditable', owEditable);
 
 
-owEditable.$inject = ['$resource', '$rootScope', '$timeout', 'owWaitIndicator', 'Heading', 'todoStates', 'focusAreas', 'priorities', 'toaster', 'toDateObjFilter', 'decodeHtmlFilter'];
+owEditable.$inject = ['$resource', '$rootScope', '$timeout', 'owWaitIndicator', 'Heading', 'todoStates', 'focusAreas', 'priorities', 'toDateObjFilter', 'decodeHtmlFilter'];
 
 
-function owEditable($resource, $rootScope, $timeout, owWaitIndicator, Heading, todoStates, focusAreas, priorities, toaster, toDateObjFilter, decodeHtml) {
+function owEditable($resource, $rootScope, $timeout, owWaitIndicator, Heading, todoStates, focusAreas, priorities, toDateObjFilter, decodeHtml) {
     /*************************************************
      * Directive that lets a user edit a node.
      * The ow-heading attr indicates that heading is

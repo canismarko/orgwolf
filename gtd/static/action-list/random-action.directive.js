@@ -7,10 +7,10 @@ angular.module('orgwolf.actionList')
     .directive('owRandomAction', owRandomAction);
 
 
-owRandomAction.$inject = ['$uibModal', 'Heading', '$location', '$interval', 'toaster', 'todoStates', 'priorities', '$filter'];
+owRandomAction.$inject = ['$uibModal', 'Heading', '$location', '$interval', 'owNotifier', 'todoStates', 'priorities', '$filter'];
 
 
-function owRandomAction($uibModal, Heading, $location, $interval, toaster, todoStates, priorities, $filter) {
+function owRandomAction($uibModal, Heading, $location, $interval, owNotifier, todoStates, priorities, $filter) {
     function link($scope, $element, attrs) {
 	var randIdx, doneTodoState, dfrdTodoState, startTime, durationStop;
 	var weights, totalWeight;
@@ -141,7 +141,7 @@ function owRandomAction($uibModal, Heading, $location, $interval, toaster, todoS
 			    // Notify the user that the heading is rescheduled
 			    var s = 'Rescheduled for ';
 			    s += response.data.scheduled_date;
-			    toaster.pop('info', null, s);
+			    owNotifier.info(s);
 			}
 		    });
 	    }

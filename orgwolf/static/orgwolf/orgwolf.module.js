@@ -3,7 +3,6 @@
 import 'angular';
 
 import "angular-animate";
-// import 'angularjs-toaster';
 
 import "./orgwolf.config.js";
 import "./orgwolf.routes.js";

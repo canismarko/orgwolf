@@ -8,14 +8,11 @@ import '@fortawesome/fontawesome-free/scss/solid.scss';
 import 'bootstrap/dist/js/bootstrap.bundle.min.js';
 import 'bootstrap/dist/css/bootstrap.css';
 import 'notyf/notyf.min.css';
-// import 'bootstrap-switch/dist/css/bootstrap3/bootstrap-switch.css';
-import 'angularjs-toaster/toaster.css';
 import '@fullcalendar/common/main.min.css';
 import 'easymde/dist/easymde.min.css';
 import 'orgwolf/orgwolf.scss';
 
 // Orgwolf javascript modules
-
 import "orgwolf/orgwolf.module.js";
 import "tools/tools.module.js";
 import "gtd/gtd.module.js";

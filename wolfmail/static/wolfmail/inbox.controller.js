@@ -6,10 +6,10 @@ angular.module("orgwolf.wolfmail")
     .controller('owInbox', owInbox)
 
 
-owInbox.$inject = ['$scope', '$rootScope', '$resource', 'Message', 'Heading', 'owWaitIndicator', 'toaster', 'toDateObjFilter'];
+owInbox.$inject = ['$scope', '$rootScope', '$resource', 'Message', 'Heading', 'owWaitIndicator', 'owNotifier', 'toDateObjFilter'];
 
 
-function owInbox($scope, $rootScope, $resource, Message, Heading, owWaitIndicator, toaster, toDateObjFilter) {
+function owInbox($scope, $rootScope, $resource, Message, Heading, owWaitIndicator, owNotifier, toDateObjFilter) {
     /*************************************************
      * Angular inbox controller
      *
@@ -41,7 +41,7 @@ function owInbox($scope, $rootScope, $resource, Message, Heading, owWaitIndicato
 	    owWaitIndicator.end_wait('get-messages');
 	});
 	$scope.messages.$promise['catch'](function() {
-	    toaster.pop('error', "Error getting messages.", "Check your internet connection and try again");
+	    owNotifier.error("Error getting messages. Check the debug console for more information.");
 	});
     };
     $rootScope.$on('refresh_messages', $scope.get_messages);

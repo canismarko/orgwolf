@@ -5,6 +5,9 @@ import 'angular';
 import "./tools.config.js"
 
 import "./date.model.js";
+
+
+import "./notifier.factory.ts";
 import "./wait-indicator.factory.js";
 import "./active-state.factory.js";
 import "./current-user.factory.js";

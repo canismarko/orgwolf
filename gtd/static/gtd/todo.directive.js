@@ -6,10 +6,10 @@ angular.module('orgwolf.gtd')
     .directive('owTodo', owTodo);
 
 
-owTodo.$inject = ['$rootScope', '$filter', 'todoStates', 'toaster'];
+owTodo.$inject = ['$rootScope', '$filter', 'todoStates', 'owNotifier'];
 
 
-function owTodo($rootScope, $filter, todoStates, toaster) {
+function owTodo($rootScope, $filter, todoStates, owNotifier) {
     /*************************************************
      * Directive that lets a user change the todo state
      * with a popover menu
@@ -39,7 +39,7 @@ function owTodo($rootScope, $filter, todoStates, toaster) {
 			    // Notify the user that the heading is rescheduled
 			    var s = 'Rescheduled for ';
 			    s += response.data.scheduled_date;
-			    toaster.pop('info', null, s);
+			    owNotifier.info(s);
 			}
 		    });
 	    }
