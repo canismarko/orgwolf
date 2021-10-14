@@ -4,7 +4,7 @@ django-filter==2.4.0
 httplib2
 python-dateutil
 pytz
-djangorestframework==3.9.4
+djangorestframework==3.11.2
 requests
 pytest==5.2.0
 pytest-django==3.5.1
