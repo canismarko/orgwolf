@@ -39,7 +39,7 @@ module.exports = merge(common, {
 	    },
 	    {
 	    	test: /\.s[ac]ss$/,
-	    	use: [miniCssLoader,pack, 'css-loader', 'sass-loader']
+	    	use: [miniCssLoader, 'css-loader', 'sass-loader']
 	    },
 	],
     }

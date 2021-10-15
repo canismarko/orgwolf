@@ -4,7 +4,7 @@ angular.module('orgwolf.projectOutline')
     .filter('order', order);
 
 
-order = ['$sce', 'activeState'];
+order.$inject = ['$sce', 'activeState'];
 
 
 function order($sce, activeState) {

@@ -7,7 +7,7 @@ ngModule("orgwolf.wolfmail")
     .directive('owMsgActions', owMsgActions);
 
 
-owMsgActions = ['Heading', 'dateFilter', 'owNotifier'];
+owMsgActions.$inject = ['Heading', 'dateFilter', 'owNotifier'];
 
 
 function owMsgActions(Heading, dateFilter, owNotifier) {
