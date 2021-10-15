@@ -16,7 +16,7 @@ import "./editable.directive.js";
 import "./focus-area-tabs.directive.js";
 import "./todo.directive.js";
 import "./search.controller.js";
-import "./calendar.controller.ts";
+// import "./calendar.controller.ts";
 import "./todo-state-style.filter.js";
 import "./slugify.filter.js";
 import "./needs-active-location.filter.js";

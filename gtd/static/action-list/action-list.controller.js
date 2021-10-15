@@ -7,10 +7,10 @@ angular.module('orgwolf.actionList')
     .controller('nextActionsList', nextActionsList);
 
 
-nextActionsList.$inject = ['$sce', '$scope', '$resource', '$location', '$routeParams', '$filter', 'contexts', 'Heading', 'todoStates', 'activeState', 'owWaitIndicator', '$cookies', '$uibModal'];
+nextActionsList.$inject = ['$sce', '$scope', '$resource', '$location', '$routeParams', '$filter', 'contexts', 'Heading', 'todoStates', 'activeState', 'owWaitIndicator', '$cookies'];
 
 
-function nextActionsList($sce, $scope, $resource, $location, $routeParams, $filter, contexts, Heading, todoStates, activeState, owWaitIndicator, $cookies, $uibModal) {
+function nextActionsList($sce, $scope, $resource, $location, $routeParams, $filter, contexts, Heading, todoStates, activeState, owWaitIndicator, $cookies) {
     /*************************************************
      * Angular actions list controller
      *

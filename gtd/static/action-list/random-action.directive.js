@@ -1,16 +1,16 @@
 "use strict";
 
-import 'angular';
-import 'angular-ui-bootstrap';
+import {module as ngModule} from 'angular';
+import {Modal} from "bootstrap";
 
 angular.module('orgwolf.actionList')
     .directive('owRandomAction', owRandomAction);
 
 
-owRandomAction.$inject = ['$uibModal', 'Heading', '$location', '$interval', 'owNotifier', 'todoStates', 'priorities', '$filter'];
+owRandomAction.$inject = ['Heading', '$location', '$interval', 'owNotifier', 'todoStates', 'priorities', '$filter'];
 
 
-function owRandomAction($uibModal, Heading, $location, $interval, owNotifier, todoStates, priorities, $filter) {
+function owRandomAction(Heading, $location, $interval, owNotifier, todoStates, priorities, $filter) {
     function link($scope, $element, attrs) {
 	var randIdx, doneTodoState, dfrdTodoState, startTime, durationStop;
 	var weights, totalWeight;
@@ -24,6 +24,10 @@ function owRandomAction($uibModal, Heading, $location, $interval, owNotifier, to
 		dfrdTodoState = todoStates[i];
 	    }
 	}
+	$scope.$randomModal = $element.find("#randomActionModal")[0];
+	$scope.randomTaskModal = Modal.getOrCreateInstance($scope.$randomModal);
+	$scope.$followUpModal = $element.find("#followUpModal")[0];
+	$scope.followUpModal = Modal.getOrCreateInstance($scope.$followUpModal);
 	// Handler for opening the modal dialog
 	$scope.openModal = function() {
 	    // Get a random item to do
@@ -73,14 +77,16 @@ function owRandomAction($uibModal, Heading, $location, $interval, owNotifier, to
 	    }, 1000);
 	    startTime = new Date();
 	    // Load the actual modal dialog
-	    $scope.actionModal = $uibModal.open({
-	        ariaLabelledBy: 'modal-title',
-	        ariaDescribedBy: 'modal-body',
-	        templateUrl: 'random-action-modal',
-	        scope: $scope,
-	        appendTo: $element,
-		backdrop: 'static',
-	    });
+	    console.log("Opening the random modal");
+	    $scope.randomTaskModal.show();
+	    // $scope.actionModal = $uibModal.open({
+	    //     ariaLabelledBy: 'modal-title',
+	    //     ariaDescribedBy: 'modal-body',
+	    //     templateUrl: 'random-action-modal',
+	    //     scope: $scope,
+	    //     appendTo: $element,
+	    // 	backdrop: 'static',
+	    // });
 	};
 	// Handler for when the user wants to plan the project
 	$scope.planProject = function(heading) {
@@ -101,7 +107,7 @@ function owRandomAction($uibModal, Heading, $location, $interval, owNotifier, to
 		parent: $scope.nextHeading.id,
 	    };
 	    Heading.create(newFields).$promise.then(function(response) {
-		$scope.followUpModal.dismiss('deferred');
+		$scope.followUpModal.hide();
 	    });
 	}
 	// Handler for when the user fails to complete the action
@@ -113,15 +119,9 @@ function owRandomAction($uibModal, Heading, $location, $interval, owNotifier, to
 	$scope.followUp = function() {
 	    // Get rid of the old action modal
 	    $interval.cancel(durationStop);
-	    $scope.actionModal.dismiss($scope.outcome);
+	    $scope.randomTaskModal.hide();
 	    // Create a new modal for following up on the project
-	    $scope.followUpModal = $uibModal.open({
-	        ariaLabelledBy: 'modal-title',
-	        ariaDescribedBy: 'modal-body',
-	        templateUrl: 'follow-up-modal',
-	        scope: $scope,
-	        appendTo: $element,
-	    });
+	    $scope.followUpModal.show();
 	};
 	// Prepare the handler for when the user has finished the action
 	$scope.completeAction = function(heading) {

@@ -1,4 +1,4 @@
-const merge = require('webpack-merge');
+const { merge } = require('webpack-merge');
 const common = require('./webpack.common.js');
 
 // Minify and combine CSS
@@ -35,17 +35,11 @@ module.exports = merge(common, {
 	rules: [
 	    {
 	    	test: /\.css$/,
-	    	use: [miniCssLoader,'css-loader'],
+	    	use: [miniCssLoader, 'css-loader'],
 	    },
 	    {
 	    	test: /\.s[ac]ss$/,
-	    	use: [miniCssLoader,
-	    	      {loader: 'css-loader'},
-	    	      {loader: 'sass-loader', options: {
-	    		  strictMath: true,
-	    		  noIeCompat: true
-	    	      }
-	    	      }]
+	    	use: [miniCssLoader,pack, 'css-loader', 'sass-loader']
 	    },
 	],
     }

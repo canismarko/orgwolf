@@ -15,6 +15,6 @@ import "./heading.factory.spec.js";
 import "./todo-states.factory.spec.js";
 
 import "./search.controller.spec.js";
-import "./calendar.controller.spec.js";
+// import "./calendar.controller.spec.js";
 
 import "./array.model.spec.js";

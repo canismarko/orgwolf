@@ -134,6 +134,9 @@ body[debug="True"] {
 	background: $warning-bg !important;
 	border-color: $warning-border !important;
     }
+    navbar__item--tests {
+	display: block !important;
+    }
 }
 
 /* No-javascript alert */
@@ -191,6 +194,9 @@ body[debug="True"] {
 	@extend .nav-item;
 	&--dropdown {
 	    @extend .dropdown;
+	}
+	&--tests {
+	    display: none;
 	}
     }
     &__link {
@@ -348,6 +354,21 @@ dd.todo
 	content: fa-content($fa-var-map-marker);
     }
     // .auto-dim;
+}
+
+.random_action {
+    &__modal {
+	@extend .modal;
+    }
+    &__dialog {
+	@extend .modal-dialog;
+    }
+    &__content {
+	@extend .modal-content;
+    }
+    &__header {
+	@extend .modal-header;
+    }
 }
 
 .random-action-modal {

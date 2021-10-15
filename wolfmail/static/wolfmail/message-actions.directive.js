@@ -1,9 +1,9 @@
 "use strict";
 
-import "angular";
-import {Modal} from 'bootstrap/dist/js/bootstrap.bundle.min.js';;
+import {module as ngModule} from "angular";
+import {Modal} from 'bootstrap';
 
-angular.module("orgwolf.wolfmail")
+ngModule("orgwolf.wolfmail")
     .directive('owMsgActions', owMsgActions);
 
 

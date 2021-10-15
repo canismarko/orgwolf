@@ -1,8 +1,8 @@
 "use strict";
 
-import "angular";
+import {module as ngModule} from "angular";
 
-angular.module("orgwolf.wolfmail")
+ngModule("orgwolf.wolfmail")
     .directive('owMessageRow', owMessageRow);
 
 

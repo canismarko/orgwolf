@@ -1,16 +1,18 @@
-// Style dependencies
-
+// Fonts
 import '@fortawesome/fontawesome-free/js/fontawesome.js';
 import '@fortawesome/fontawesome-free/js/solid.js';
 import '@fortawesome/fontawesome-free/scss/fontawesome.scss';
 import '@fortawesome/fontawesome-free/scss/solid.scss';
 
-import 'bootstrap/dist/js/bootstrap.bundle.min.js';
-import 'bootstrap/dist/css/bootstrap.css';
+// Style dependencies
+import 'bootstrap/dist/css/bootstrap.min.css';
 import 'notyf/notyf.min.css';
 import '@fullcalendar/common/main.min.css';
 import 'easymde/dist/easymde.min.css';
 import 'orgwolf/orgwolf.scss';
+
+// External JS dependencies
+import { Dropdown, Modal } from 'bootstrap';
 
 // Orgwolf javascript modules
 import "orgwolf/orgwolf.module.js";

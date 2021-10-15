@@ -6,4 +6,4 @@ import 'angular-resource';
 import 'angular-ui-calendar';
 
 angular.module("orgwolf.gtd", ["orgwolf.tools",
-			       "ngRoute", "ngResource", "ui.calendar", "ui.bootstrap"]);
+			       "ngRoute", "ngResource", "ui.calendar"]);
