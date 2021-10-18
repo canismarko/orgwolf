@@ -23,7 +23,21 @@
 	<ul class="weekly-review__task-list">
 	  <li ng-repeat="task in openReview.primary_tasks"
 	      ow-draggable-task ow-task="task"
-	      class="weekly-review__task"><span class="weekly-review__grip"></span> {{ task.title }}</li>
+	      class="weekly-review__task"><span class="weekly-review__grip"></span> {{ task.title }}
+	    <div class="heading-buttons">
+	      <button class="heading-buttons__button"
+		      ng-click="edit(heading)" ng-disabled="heading.read_only">
+		<i class="fas fa-edit"></i>
+		<span class="collapse-label">Edit</span>
+	      </button>
+	      <a href="/gtd/projects/#{{heading.id}}-{{heading.slug}}"
+		 class="heading-buttons__button"
+		 title="View this task in the project view">
+		<span class="fas fa-folder-open"></span>
+		<span class="collapse-label">Project</span>
+	      </a>
+	  </div>
+	  </li>
 	</ul>
       </div>
       <div ow-droppable-task class="weekly-review__task-box"

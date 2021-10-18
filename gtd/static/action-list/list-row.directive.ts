@@ -33,32 +33,36 @@ function owListRow($rootScope, todoStates, $filter) {
                 if (newDeadline) {
                     scope.owDate = $filter('deadline_str')(newDeadline);
                 }
-                element.removeClass('overdue');
-                element.removeClass('upcoming');
+                element.removeClass('gtd-list__action-row--overdue');
+                element.removeClass('gtd-list__action-row--upcoming');
                 row_cls = $filter('deadline_class')(newDeadline);
-                element.addClass(row_cls);
+		if (row_cls != "") {
+                    element.addClass('gtd-list__action-row--' + row_cls);
+		}
             }
         );
         // CSS class based on archived status
         scope.$watch(
-            'heading.fields.archived',
+            'heading.archived',
             function(archived) {
                 if (archived) {
                     element.addClass('archived');
-                }
+                } else {
+		    element.removeClass('archived');
+		}
             }
         );
         // CSS class based on priority
         scope.$watch(
-            'heading.fields.priority',
+            'heading.priority',
             function(new_priority, old_priority) {
                 // Remove old CSS class
                 if (old_priority) {
-                    element.removeClass('priority-' + old_priority);
+                    element.removeClass('gtd-list__action-row--priority-' + old_priority);
                 }
                 // And add new one
                 if (new_priority) {
-                    element.addClass('priority-' + new_priority);
+                    element.addClass('gtd-list__action-row--priority-' + new_priority);
                 }
             }
         );

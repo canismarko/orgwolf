@@ -995,6 +995,23 @@ input,textarea {
 	@extend .alert;
 	@extend .alert-warning;
     }
+    &__action-row {
+	&--overdue {
+	    background: $error-bg;
+	    color: $error-text;
+	}
+	&--upcoming {
+	    background: $warning-bg;
+	    color: $warning-text;
+	}
+	&--priority-A {
+	    font-weight: bold;
+	}
+	&--priority-C {
+	    @include opacify(80);
+	    font-style: italic;
+	}
+    }
     &__row {
 	@include make-row();
     }

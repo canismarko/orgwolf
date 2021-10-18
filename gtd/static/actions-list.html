@@ -81,7 +81,8 @@
 
     <div ow-list-row
 	 ng-repeat="heading in visibleHeadings | currentFocusArea:activeFocusArea | sortActions"
-	 ow-heading="heading" ow-date="{{ heading.deadline_date | deadline_str }}">
+	 ow-heading="heading" ow-date="{{ heading.deadline_date | deadline_str }}"
+	 class="gtd-list__action-row">
     </div>
 
     <div class="gtd-list__empty-message"
