@@ -55,7 +55,8 @@
     <a id="active_parent"
        href="/gtd/projects/#{{activeParent.id}}-{{activeParent.slug}}">
       {{ activeParent.title }}</a>
-    [<a class="cancel" ng-click="$emit('filter-parent', null)">&times;</a>]
+    <a class="active-parent__button--cancel"
+       ng-click="$emit('filter-parent', null)"></a>
   </div>
 
   <!-- buttons for picking a random action, refresh lists, etc. -->

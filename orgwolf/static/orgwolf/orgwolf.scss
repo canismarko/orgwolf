@@ -989,7 +989,20 @@ input,textarea {
 }
 
 /* Next actions list */
-.next-actions-page {
+.active-parent {
+    margin-top: 15px;
+    // .cancel:hover { text-decoration: none; }
+    &__button--cancel {
+	@extend .fas;
+	@include fa-icon;
+	@extend .btn;
+	@extend .btn-link;
+	text-decoration: none;
+	padding-left: 0.3em;
+	&:before {
+	    content: fa-content($fa-var-times);
+	}
+    }
 }
 .gtd-list {
     margin-bottom: 1.5rem;
@@ -1079,10 +1092,6 @@ input,textarea {
     }
     .archived div {
 	text-decoration: line-through;
-    }
-    .active-parent {
-	margin-top: 15px;
-	.cancel:hover { text-decoration: none; }
     }
     &__button-group {
 	@extend .list-group-inline;
