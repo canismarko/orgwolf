@@ -22,22 +22,8 @@
 	</h3>
 	<ul class="weekly-review__task-list">
 	  <li ng-repeat="task in openReview.primary_tasks"
-	      ow-draggable-task ow-task="task"
-	      class="weekly-review__task"><span class="weekly-review__grip"></span> {{ task.title }}
-	    <div class="heading-buttons">
-	      <button class="heading-buttons__button"
-		      ng-click="edit(heading)" ng-disabled="heading.read_only">
-		<i class="fas fa-edit"></i>
-		<span class="collapse-label">Edit</span>
-	      </button>
-	      <a href="/gtd/projects/#{{heading.id}}-{{heading.slug}}"
-		 class="heading-buttons__button"
-		 title="View this task in the project view">
-		<span class="fas fa-folder-open"></span>
-		<span class="collapse-label">Project</span>
-	      </a>
-	  </div>
-	  </li>
+	      ow-review-task ow-task="task" ow-draggable
+	      class="weekly-review__task"></li>
 	</ul>
       </div>
       <div ow-droppable-task class="weekly-review__task-box"
@@ -49,8 +35,8 @@
 	</h3>
 	<ul class="weekly-review__task-list">
 	  <li ng-repeat="task in openReview.secondary_tasks"
-	      ow-draggable-task ow-task="task"
-	      class="weekly-review__task"><span class="weekly-review__grip"></span> {{ task.title }}</li>
+	      ow-review-task ow-task="task" ow-draggable
+	      class="weekly-review__task"></li>
 	</ul>
       </div>
       <div ow-droppable-task class="weekly-review__task-box"
@@ -62,8 +48,8 @@
 	</h3>
 	<ul class="weekly-review__task-list">
 	  <li ng-repeat="task in openReview.tertiary_tasks"
-	      ow-draggable-task ow-task="task"
-	      class="weekly-review__task"><span class="weekly-review__grip"></span> {{ task.title }}</li>
+	      ow-review-task ow-task="task" ow-draggable
+	      class="weekly-review__task"></li>
 	</ul>
       </div>
     </div>
@@ -77,8 +63,8 @@
 	</h3>
 	<ul class="weekly-review__task-list">
 	  <li ng-repeat="task in openReview.extra_tasks"
-	      ow-draggable-task ow-task="task"
-	      class="weekly-review__task"><span class="weekly-review__grip"></span> {{ task.title }}</li>
+	      ow-review-task ow-task="task" ow-draggable
+	      class="weekly-review__task"></li>
 	</ul>
       </div>
       <div ow-droppable-task class="weekly-review__task-box weekly-review__task-box--remove"
@@ -95,7 +81,7 @@
 	  ng-click="openReview.cancel()">Cancel</button>
 </div>
 
-<hr ng-if="activeReview && openReview.isOpen" />
+<!-- <hr ng-if="activeReview && openReview.isOpen" /> -->
 
 <div ng-if="activeReview.isActive" class="weekly-review">
   <h2>Current Active Review</h2>
@@ -112,25 +98,29 @@
     <div class="col-md-6">
       <h3>Do First</h3>
       <ul class="weekly-review__task-list">
-	<li ng-repeat="task in activeReview.primary_tasks"
-	    class="weekly_review__task">{{ task.title }}</li>
+	<li ng-repeat="task in openReview.primary_tasks"
+	    ow-review-task ow-task="task"
+	    class="weekly-review__task"></li>
       </ul>
       <h3>Do Second</h3>
       <ul class="weekly-review__task-list">
-	<li ng-repeat="task in activeReview.secondary_tasks"
-	    class="weekly_review__task">{{ task.title }}</li>
+	<li ng-repeat="task in openReview.secondary_tasks"
+	    ow-review-task ow-task="task"
+	    class="weekly-review__task"></li>
       </ul>
       <h3>Do if there's time</h3>
       <ul class="weekly-review__task-list">
-	<li ng-repeat="task in activeReview.tertiary_tasks"
-	    class="weekly_review__task">{{ task.title }}</li>
+	<li ng-repeat="task in openReview.tertiary_tasks"
+	    ow-review-task ow-task="task"
+	    class="weekly-review__task"></li>
       </ul>
     </div>
     <div class="col-md-6">
       <h3>Uncategorized</h3>
       <ul class="weekly-review__task-list">
-	<li ng-repeat="task in activeReview.extra_tasks"
-	    class="weekly_review__task">{{ task.title }}</li>
+	<li ng-repeat="task in openReview.primary_tasks"
+	    ow-review-task ow-task="task"
+	    class="weekly-review__task"></li>
       </ul>
     </div>
   </div>

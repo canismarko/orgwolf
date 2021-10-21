@@ -70,6 +70,7 @@
     },
     "dependencies": {
         "@types/jqueryui": "^1.12.16",
+        "html-loader": "^2.1.2",
         "uuid": "^8.3.2"
     }
 }

@@ -1,0 +1,27 @@
+<span ng-if="isDraggable" class="weekly-review__grip"></span>
+
+<span class="weekly-review__task-title"
+      ng-class="{'weekly-review__task-title--draggable': isDraggable}">
+  {{ task.title }}
+</span>
+
+<div class="weekly-review__task-buttons">
+  <!-- <button class="weekly-review__task-button" -->
+  <!-- 	  ng-click="editTask(task)" ng-disabled="task.read_only" -->
+  <!-- 	  title="Edit this task"> -->
+  <!--   <i class="fas fa-edit"></i> -->
+  <!--   <\!-- <span class="collapse-label">Edit</span> -\-> -->
+  <!-- </button> -->
+  <a href="/gtd/projects/#{{task.id}}-{{task.slug}}"
+     class="heading-buttons__button"
+     title="View this task in the project view">
+    <span class="fas fa-folder-open"></span>
+    <!-- <span class="collapse-label">Project</span> -->
+  </a>
+  <a href="/gtd/actions/?parent={{task.id}}"
+     class="heading-buttons__button"
+     title="View this task in the project view">
+    <span class="fas fa-list"></span>
+    <!-- <span class="collapse-label">Actions</span> -->
+  </a>
+</div>

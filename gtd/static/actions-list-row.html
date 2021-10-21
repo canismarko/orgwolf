@@ -25,13 +25,14 @@
   <div class="gtd-list__col gtd-list__col--buttons">
     <div class="heading-buttons">
       <button class="heading-buttons__button"
-	      ng-click="edit(heading)" ng-disabled="heading.read_only">
+	      ng-click="edit(heading)" ng-disabled="heading.read_only"
+	      title="Edit this action">
 	<i class="fas fa-edit"></i>
 	<span class="collapse-label">Edit</span>
       </button>
       <a href="/gtd/projects/#{{heading.id}}-{{heading.slug}}"
 	 class="heading-buttons__button"
-	 title="View this task in the project view">
+	 title="View this action in the project view">
 	<span class="fas fa-folder-open"></span>
 	<span class="collapse-label">Project</span>
       </a>

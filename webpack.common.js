@@ -46,6 +46,18 @@ module.exports = {
 		use: 'ts-loader',
 		exclude: /node_modules/,
 	    },
+	    {
+		test: /\.html$/,
+		exclude: /\.lazy\.html$/,
+		use: [
+		    {
+			loader: 'html-loader',
+			options: {
+			    minimize: true,
+			},
+		    },
+		],
+	    },
 	],
     }
 };

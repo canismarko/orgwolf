@@ -39,10 +39,12 @@ $fa-font-path: "~@fortawesome/fontawesome-free/webfonts/";
 
 @mixin auto-dim ($parent) {
     #{$parent} & {
-	@include opacify(0);
+	// @include opacify(0);
+	visibility: hidden;
     }
     #{$parent}:hover & {
-	@include opacify(100);
+	visibility: visible;
+	// @include opacify(100);
     }
 }
 
@@ -409,7 +411,7 @@ dd.todo
     &__button {
 	@extend .btn;
 	@extend .btn-xs;
-	@extend .btn-outline-secondary;
+	@extend .btn-outline-primary;
     }
 }
 // .action-buttons {
@@ -1069,7 +1071,7 @@ input,textarea {
     &__filter-button {
 	@extend .btn;
 	@extend .btn-xs;
-	@extend .btn-outline-secondary;
+	@extend .btn-outline-primary;
 	@extend .auto-dim;
     }
     .collapse-label {
@@ -1207,15 +1209,27 @@ input,textarea {
 	}
     }
     &__grip {
+	@include auto-dim(".weekly-review__task");
 	@include opacify(50);
 	@extend .fas;
 	@include fa-icon();
 	&:before {
 	    content: fa-content($fa-var-grip-vertical);
 	}
-    }
-    &__task {
 	cursor: pointer;
+    }
+    &__task-title {
+	cursor: text;
+	&--draggable {
+	    cursor: pointer;
+	}
+    }
+    &__task-buttons {
+	@extend .heading-buttons;
+	@include auto-dim('.weekly-review__task');
+    }
+    &__task-button {
+	@extend .heading-buttons__button;
     }
     &__box--open {
 	@extend .alert;
