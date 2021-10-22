@@ -25,9 +25,10 @@ $text-danger: #dc3545;
 /* Import SASS mixins, variables, etc */
 @import "../../../node_modules/bootstrap/scss/bootstrap.scss";
 $fa-font-path: "~@fortawesome/fontawesome-free/webfonts/";
-@import '~@fortawesome/fontawesome-free/scss/fontawesome.scss';
-@import '~@fortawesome/fontawesome-free/scss/solid.scss';
-@import '~@fortawesome/fontawesome-free/scss/regular.scss';
+@import '~@fortawesome/fontawesome-free/scss/fontawesome';
+// @import '~@fortawesome/fontawesome-free/scss/regular';
+@import '~@fortawesome/fontawesome-free/scss/solid';
+
 
 
 @mixin opacify ($opacity) { /* 0 to 100 */
@@ -1230,7 +1231,7 @@ input,textarea {
 	cursor: pointer;
     }
     &__checkbox {
-	@extend .far;
+	@extend .fa-solid;
 	@include fa-icon();
 	&--incomplete:before {
 	    content: fa-content($fa-var-square);
