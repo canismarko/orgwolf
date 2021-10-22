@@ -2,6 +2,7 @@
 
 import "./weekly-review.config.ts";
 
+import "./review-expiration.filter.ts";
 import "./weekly-review.component.ts";
 import "./review-task.directive.ts";
 import "./droppable-task.directive.ts";

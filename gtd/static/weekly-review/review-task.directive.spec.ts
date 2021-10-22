@@ -13,6 +13,7 @@ describe('the reviewTask directive', function() {
     }));
     beforeEach(function() {
         $templateCache.put('/static/project-outline.html', '');
+	$templateCache.put('/static/weekly-review/review-task.html', '');
         // Prepare the DOM element
 	element = $compile(
             '<div ow-review-task ow-task="task" ow-draggable></div>'
@@ -23,12 +24,14 @@ describe('the reviewTask directive', function() {
 	element = $compile(
             '<div ow-review-task ow-task="task"></div>'
         )($rootScope);
+	$rootScope.$digest();
 	$scope = element.isolateScope();
         expect($scope.isDraggable).toBeFalsy();
 	// Try a draggable version
 	element = $compile(
             '<div ow-review-task ow-task="task" ow-draggable></div>'
         )($rootScope);
+	$rootScope.$digest();
 	$scope = element.isolateScope();
         expect($scope.isDraggable).toBeTruthy();
     });

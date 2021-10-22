@@ -87,7 +87,7 @@
   <h2>Current Active Review</h2>
   <div class="weekly-review__message-box"
        ng-class="{'weekly-review__message-box--expired': activeReview.isExpired}">
-    <p>Expires: {{ activeReview.obj.expires | date:'EEE yyyy-MM-dd HH:mm' }}</p>
+    <p>Expires: {{ activeReview.obj.expires | reviewExpiration }}</p>
     <p ng-if="activeReview.isExpired">This weekly review has
       <strong>expired</strong>.
       <span ng-if="openReview.isOpen">Finish the weekly review above

@@ -14,12 +14,7 @@ function reviewTask() {
      **************************************************/
     function link(scope, element, attrs) {
         let attr = element.attr('ow-draggable');
-	console.log('===');
-	console.log(element);
-	console.log(attr);
         scope.isDraggable = (typeof attr !== "undefined" && attr !== false);
-	console.log(scope.isDraggable);
-	console.log('---');
 	scope.color = 5;
 	if (scope.isDraggable) {
             $(element).draggable({

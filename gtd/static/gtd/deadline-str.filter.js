@@ -1,9 +1,9 @@
 "use strict";
 
-import "angular";
+import {module as ngModule} from "angular";
 
 
-angular.module('orgwolf.gtd')
+ngModule('orgwolf.gtd')
     .filter('deadline_str', deadlineStr);
 
 
