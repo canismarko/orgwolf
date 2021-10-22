@@ -1,7 +1,9 @@
 <span ng-if="isDraggable" class="weekly-review__grip"></span>
+<span ng-if="!isDraggable" class="weekly-review__checkbox"
+      ng-class="{'weekly-review__checkbox--incomplete': !task.archived, 'weekly-review__checkbox--complete': task.archived}"></span>
 
 <span class="weekly-review__task-title"
-      ng-class="{'weekly-review__task-title--draggable': isDraggable}">
+      ng-class="{'weekly-review__task-title--draggable': isDraggable, 'weekly-review__task-title--completed': task.archived}">
   {{ task.title }}
 </span>
 

@@ -7,6 +7,7 @@ $primary-dark-faded: #361D4F;
 $primary-light: #D1BBE8;
 $primary-light-pale: rgb(239, 230, 247);
 
+$gray: #6e7f91;
 $gray-light: #ced4da;
 $gray-lighter: #e9ecef;
 
@@ -26,6 +27,7 @@ $text-danger: #dc3545;
 $fa-font-path: "~@fortawesome/fontawesome-free/webfonts/";
 @import '~@fortawesome/fontawesome-free/scss/fontawesome.scss';
 @import '~@fortawesome/fontawesome-free/scss/solid.scss';
+@import '~@fortawesome/fontawesome-free/scss/regular.scss';
 
 
 @mixin opacify ($opacity) { /* 0 to 100 */
@@ -1227,10 +1229,26 @@ input,textarea {
 	}
 	cursor: pointer;
     }
+    &__checkbox {
+	@include opacify(50);
+	@extend .far;
+	@include fa-icon();
+	&--incomplete:before {
+	    content: fa-content($fa-var-square);
+	}
+	&--complete:before {
+	    content: fa-content($fa-var-check-square);
+	}
+    }
     &__task-title {
 	cursor: text;
 	&--draggable {
 	    cursor: pointer;
+	}
+	&--completed {
+	    color: $gray;
+	    font-style: italic;
+	    text-decoration: line-through;
 	}
     }
     &__task-buttons {
