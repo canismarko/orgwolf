@@ -1230,13 +1230,13 @@ input,textarea {
 	cursor: pointer;
     }
     &__checkbox {
-	@include opacify(50);
 	@extend .far;
 	@include fa-icon();
 	&--incomplete:before {
 	    content: fa-content($fa-var-square);
 	}
 	&--complete:before {
+	    color: $gray;
 	    content: fa-content($fa-var-check-square);
 	}
     }

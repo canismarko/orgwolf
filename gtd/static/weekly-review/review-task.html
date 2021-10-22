@@ -3,9 +3,7 @@
       ng-class="{'weekly-review__checkbox--incomplete': !task.archived, 'weekly-review__checkbox--complete': task.archived}"></span>
 
 <span class="weekly-review__task-title"
-      ng-class="{'weekly-review__task-title--draggable': isDraggable, 'weekly-review__task-title--completed': task.archived}">
-  {{ task.title }}
-</span>
+      ng-class="{'weekly-review__task-title--draggable': isDraggable, 'weekly-review__task-title--completed': task.archived}">{{ task.title }}</span>
 
 <div class="weekly-review__task-buttons">
   <!-- <button class="weekly-review__task-button" -->
