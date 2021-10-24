@@ -25,7 +25,13 @@
     <div class="projects-controls__item"
 	ng-include="'/static/search-box.html'">
     </div>
+  </div>
 
+  <div ng-if="openReview.isOpen" class="projects-page__review-notice">
+    You have an open weekly reivew. <strong>Select high-priority
+    projects/tasks</strong> for this upcoming week,
+    then <a href="/gtd/review/" title="Weekly review page">finish the
+      weekly review</a>.
   </div>
 
   <div ow-focus-area-tabs active-focus-area="activeFocusArea">

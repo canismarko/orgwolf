@@ -6,10 +6,10 @@ angular.module('orgwolf.projectOutline')
     .controller('nodeOutline', nodeOutline);
 
 
-nodeOutline.$inject = ['$scope', '$rootScope', '$http', '$resource', '$filter', 'Heading', '$location', '$anchorScroll', 'owWaitIndicator', 'activeHeading'];
+nodeOutline.$inject = ['$scope', '$rootScope', '$http', '$resource', '$filter', 'Heading', '$location', '$anchorScroll', 'owWaitIndicator', 'activeHeading', 'openReview'];
 
 
-function nodeOutline($scope, $rootScope, $http, $resource, $filter, Heading, $location, $anchorScroll, owWaitIndicator, activeHeading) {
+function nodeOutline($scope, $rootScope, $http, $resource, $filter, Heading, $location, $anchorScroll, owWaitIndicator, activeHeading, openReview) {
     /*************************************************
      * Angular project ouline appliance controller
      *
@@ -17,6 +17,7 @@ function nodeOutline($scope, $rootScope, $http, $resource, $filter, Heading, $lo
     var TodoState, Scope, url, get_heading, Parent, Tree, parent_tree_id, parent_level, target_headings, targetId, main_headings, newButton, showAllButton;
     newButton = jQuery('#add-heading');
     showAllButton = jQuery('#show-all-btn');
+    $scope.openReview = openReview;
     // Check if the user is requesting a specific node in the URL
     activeHeading.activate($location.hash().split('-')[0]);
     $scope.activeHeading = activeHeading;

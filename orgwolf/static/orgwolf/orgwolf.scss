@@ -562,6 +562,11 @@ dd.todo
     &__row {
 	@include make-row();
     }
+    &__review-notice {
+	@extend .alert;
+	@extend .alert-success;
+	margin-top: 1rem;
+    }
 }
 .projects-controls {
     @include make-row();
@@ -1035,6 +1040,7 @@ input,textarea {
     }
     &__title {
 	cursor: pointer;
+	text-decoration: none;
 	&--read-only {
 	    cursor: text;
 	}
