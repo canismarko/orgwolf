@@ -78,22 +78,44 @@ function weeklyReviewFactory($http, $resource) {
 	    });
         }
 
-        moveTask(nodeId: number, priority: String) {
+        moveTask(nodeId: number, priority: string) {
+	    let dirty: boolean = false;
             // Move a task from one priority list to another
-            this.removeTask(nodeId, false);
-            this.addTask(nodeId, priority, false);
-            this.obj.$update();
+            dirty = this.removeTask(nodeId, false, [priority]) || dirty;
+            dirty = this.addTask(nodeId, priority, false) || dirty;
+	    // Update the database if needed
+	    if (dirty) {
+		this.obj.$update();
+	    }
         }
 
-        removeTask(newNode: number, update: boolean = true) {
-            // Find the list that the node is on, and remove it
+        removeTask(nodeId: number, update: boolean = true, skipPriorities: Array<string> = []) {
+	    /**
+	     * Remove a task from task lists.
+	     * 
+	     * @param   {number}        nodeId         ID of the node to remove from lists.
+	     * @param   {boolean}       update         If true, update the node on the backend if the object was changed.
+	     * @param   {Array[string]} skipPriorities Which lists to ignore. Useful if you plan to re-add later. Valid choices: are "primary", "secondary", "tertiary", "extra.
+	     * @returns {boolean}       dirty          True if the object was changed, false otherwise.
+	     */
             let nodeIndex: number, taskLists, dirty: boolean;
-            taskLists = [this.obj.extra_tasks, this.obj.primary_tasks,
-            this.obj.secondary_tasks, this.obj.tertiary_tasks];
+	    // Determine which lists to check
+            taskLists = {
+		'primary': this.obj.primary_tasks,
+		'secondary': this.obj.secondary_tasks,
+		'tertiary': this.obj.tertiary_tasks,
+		'extra': this.obj.extra_tasks
+	    };
+	    for (let priority of skipPriorities) {
+		delete taskLists[priority];
+	    }
+	    // Find the list that the node is on, and remove it
             dirty = false;
-            for (let taskList of taskLists) {
-                if (taskList.includes(newNode)) {
-                    nodeIndex = taskList.indexOf(newNode);
+	    let taskList;
+            for (let listName in taskLists) {
+		taskList = taskLists[listName];
+                if (taskList.includes(nodeId)) {
+                    nodeIndex = taskList.indexOf(nodeId);
                     taskList.splice(nodeIndex, 1);
                     dirty = true;
                 }
@@ -101,6 +123,7 @@ function weeklyReviewFactory($http, $resource) {
             if (dirty && update) {
                 this.obj.$update();
             }
+	    return dirty;
         }
 
         hasTask(nodeId: number): boolean {
@@ -131,15 +154,16 @@ function weeklyReviewFactory($http, $resource) {
 	    return taskInList
         }
 
-        addTask(newNode: number, priority: String = "extra", update: boolean = true) {
+        addTask(newNode: number, priority: String = "extra", update: boolean = true): boolean {
 	    /**
 	     * Add the node to a task list (defaults to extra_tasks)
 	     *
-	     * @param {number}  newNode  The ID of the node to add.
-	     * @param {String}  priority Which list to add it to:
+	     * @param {number}   newNode  The ID of the node to add.
+	     * @param {String}   priority Which list to add it to:
 	     *   primary, secondary, tertiary, extra
-	     * @param {boolean} update   Whether to send the change to
+	     * @param {boolean}  update   Whether to send the change to
 	     *   the database.
+	     * @return {boolean} dirty   Whether the underlying object was modified.
 	     */
             // Determine which task list to use
             let taskList: Array<number>;
@@ -158,13 +182,16 @@ function weeklyReviewFactory($http, $resource) {
                     break;
             }
             // Add this node to the list if not present
+	    let dirty: boolean = false;
             if (!taskList.includes(newNode)) {
                 taskList.push(newNode);
+		dirty = true;
                 if (update) {
                     this.obj.$update();
                 }
 		this._nodes = null;
             }
+	    return dirty;
         }
         get nodes() {
             if (this.obj !== null && this.obj.id !== undefined) {

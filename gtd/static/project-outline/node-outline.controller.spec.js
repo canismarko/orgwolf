@@ -7,10 +7,8 @@ describe('the nodeOutline controller', function() {
     var $scope, $controller, $httpBackend, $location, $templateCache;
     beforeEach(angular.mock.module("orgwolf"));
     beforeEach(inject(function($injector) {
-	var nodesUrl = '/gtd/nodes?archived=false&field_group=outline&parent_id=0';
 	// Set up backend stuffs
 	$httpBackend = $injector.get('$httpBackend');
-	$httpBackend.whenGET(nodesUrl).respond(200, []);
 	$location = $injector.get('$location');
 	$controller = $injector.get('$controller');
 	$scope = $injector.get('$rootScope').$new();
@@ -18,6 +16,9 @@ describe('the nodeOutline controller', function() {
     }));
     beforeEach(function() {
 	$templateCache.put('/static/project-outline.html', '');
+	let nodesUrl = '/gtd/nodes?archived=false&field_group=outline&parent_id=0';
+	$httpBackend.whenGET(nodesUrl).respond(200, []);
+	$httpBackend.whenGET('/gtd/weeklyreviews/openreview/').respond(204);
     });
     // Reset httpBackend calls
     afterEach(function() {

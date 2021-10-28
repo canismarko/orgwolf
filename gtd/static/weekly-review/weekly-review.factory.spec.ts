@@ -85,8 +85,20 @@ describe('the weeklyReview factory object', function() {
 	    $httpBackend.verifyNoOutstandingExpectation();
 	    $httpBackend.verifyNoOutstandingRequest();
 	});
+	it("returns a dirty flag", function() {
+	    let dirty: boolean = undefined;
+	    weeklyReview.query();
+            $httpBackend.flush();
+            // Check adding a task that doesn't exist
+	    expect(weeklyReview.obj.extra_tasks).not.toContain(27);
+            dirty = weeklyReview.addTask(27, "primary", false);
+	    expect(dirty).toEqual(true);
+	    // Check adding a duplicate task
+	    dirty = weeklyReview.addTask(27, "primary", false);
+	    expect(dirty).toEqual(false);
+	});
     });
-    describe("the *removeTask* method", function() {
+    describe("the *removeTask()* method", function() {
         it("doesn't hit the backend if the *update* argument is false", function() {
             weeklyReview.query();
             $httpBackend.flush();
@@ -95,6 +107,19 @@ describe('the weeklyReview factory object', function() {
             weeklyReview.removeTask(13, false);
             $httpBackend.verifyNoOutstandingRequest();
         });
+	it("returns a dirty flag", function() {
+	    let dirty = undefined;
+	    weeklyReview.query();
+            $httpBackend.flush();
+            // Check something that should be dirty
+            expect(weeklyReview.obj.extra_tasks).toContain(13);
+            dirty = weeklyReview.removeTask(13, false);
+	    expect(dirty).toEqual(true);
+	    // Check something that shouldn't be dirty
+	    dirty = undefined;
+	    dirty = weeklyReview.removeTask(999, false);
+	    expect(dirty).toEqual(false);
+	})
         it("removes nodes to the lists of tasks", function() {
             weeklyReview.query();
             $httpBackend.flush();
@@ -111,6 +136,14 @@ describe('the weeklyReview factory object', function() {
             $httpBackend.flush();
             $httpBackend.verifyNoOutstandingExpectation();
         });
+	it("ignores some lists if given via the *skipPriorities* argument", function() {
+	    weeklyReview.query();
+            $httpBackend.flush();
+            // Don't actually remove a task from the extra tasks list
+            expect(weeklyReview.obj.extra_tasks).toContain(13);
+	    weeklyReview.removeTask(13, false, ['extra']);
+	    expect(weeklyReview.obj.extra_tasks).toContain(13);
+	});
     });
     describe("the *hasTask* method", function() {
 	beforeEach(function() {
@@ -181,6 +214,16 @@ describe('the weeklyReview factory object', function() {
             $httpBackend.flush();
             $httpBackend.verifyNoOutstandingExpectation();
         });
+	it("doesn't hit the backend if the task doesn't actually move", function() {
+	    weeklyReview.query();
+            $httpBackend.flush();
+            // "move" a task from primary list to primary list
+	    let taskId: number = weeklyReview.obj.primary_tasks[0];
+	    weeklyReview.moveTask(taskId, "primary");
+            expect(weeklyReview.obj.primary_tasks).toContain(taskId);
+	    $httpBackend.verifyNoOutstandingRequest();
+            $httpBackend.verifyNoOutstandingExpectation();
+	});
     });
     describe("the *finalize()* method", function() {
         beforeEach(function() {
