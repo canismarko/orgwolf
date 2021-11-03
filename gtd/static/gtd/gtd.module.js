@@ -28,3 +28,4 @@ import "./current-focus-area.filter.ts";
 import "./list-focus-areas.filter.js";
 import "./highlight-search.filter.js";
 import "./highlight-search-text.filter.js";
+import "./priority.filter.ts";

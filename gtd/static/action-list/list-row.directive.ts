@@ -8,10 +8,10 @@ module('orgwolf.actionList')
     .directive('owListRow', owListRow);
 
 
-owListRow.$inject = ['$rootScope', 'todoStates', '$filter'];
+owListRow.$inject = ['$rootScope', 'todoStates', '$filter', 'activeReview'];
 
 
-function owListRow($rootScope, todoStates, $filter) {
+function owListRow($rootScope, todoStates, $filter, activeReview) {
     /*************************************************
      * Directive sets the parameters of next
      * actions table row
@@ -20,7 +20,7 @@ function owListRow($rootScope, todoStates, $filter) {
         var node_pk, $element;
         $element = $(element);
         element.addClass("heading-row");
-        element.addClass('priority' + (scope.heading.priority || 'B'));
+        scope.activeReview = activeReview;
         // Get heading's todoState
         scope.todoState = todoStates.getState(scope.heading.todo_state);
         // Process tag_string into tags
@@ -36,9 +36,9 @@ function owListRow($rootScope, todoStates, $filter) {
                 element.removeClass('gtd-list__action-row--overdue');
                 element.removeClass('gtd-list__action-row--upcoming');
                 row_cls = $filter('deadline_class')(newDeadline);
-		if (row_cls != "") {
+                if (row_cls != "") {
                     element.addClass('gtd-list__action-row--' + row_cls);
-		}
+                }
             }
         );
         // CSS class based on archived status
@@ -48,21 +48,7 @@ function owListRow($rootScope, todoStates, $filter) {
                 if (archived) {
                     element.addClass('archived');
                 } else {
-		    element.removeClass('archived');
-		}
-            }
-        );
-        // CSS class based on priority
-        scope.$watch(
-            'heading.priority',
-            function(new_priority, old_priority) {
-                // Remove old CSS class
-                if (old_priority) {
-                    element.removeClass('gtd-list__action-row--priority-' + old_priority);
-                }
-                // And add new one
-                if (new_priority) {
-                    element.addClass('gtd-list__action-row--priority-' + new_priority);
+                    element.removeClass('archived');
                 }
             }
         );
@@ -88,6 +74,6 @@ function owListRow($rootScope, todoStates, $filter) {
             heading: '=owHeading',
             owDate: '@',
         },
-        templateUrl: '/static/actions-list-row.html',
+        templateUrl: '/static/action-list/action-list-row.html',
     };
 }

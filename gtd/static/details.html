@@ -18,7 +18,9 @@
 </div>
 
 <div>
-  PRIORITY: {{ heading.priority }}
+  PRIORITY:
+  <span ng-if="heading.priority()">{{ heading.priority() }}</span>
+  <span ng-if="!heading.priority()">Normal</span>
 </div>
 
 <div ng-show="heading.focus_areas.length > 0">

@@ -6,6 +6,7 @@ import "angular";
 angular.module('orgwolf',
 	       ['orgwolf.tools', 'orgwolf.wolfmail', 'orgwolf.projectOutline', 'orgwolf.actionList',
 		'orgwolf.weeklyReview',
+		'ngRoute',
 		// 'ngAnimate', 'ngResource', 'ngCookies', 'ngRoute',
 		// 'ui.bootstrap', 'ui.calendar', 'frapontillo.bootstrap-switch'
 		// 'ngSanitize'

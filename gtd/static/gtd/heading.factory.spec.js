@@ -14,6 +14,8 @@ describe('the Heading service', function() {
     beforeEach(function() {
 	$templateCache.put('/static/project-outline.html', '');
 	// Create a mocked Heading object
+	$httpBackend.whenGET("/gtd/weeklyreviews/activereview/")
+	    .respond(204);
 	$httpBackend.when('GET', '/gtd/nodes/1')
 	    .respond(201, {
 		id: 1,

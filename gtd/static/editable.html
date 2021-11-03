@@ -31,11 +31,11 @@
 	  <input type="text" id="tag_string" placeholder="eg. :home:"
 		 ng-model="fields.tag_string"></input>
 	</div>
-	<div class="editable__col editable__col--priority">
-	  <label for="priority">Priority:</label>
-	  <select id="priority" ng-model="fields.priority"
-		  ng-options="x.sym as x.display for x in priorities">
-	  </select>
+	<div class="editable__col editable__col--archived">
+	  <label for="archived">Archived:</label>
+	  <div class="editable__switch" >
+	    <input type="checkbox" id="archived" ng-model="fields.archived" />
+	  </div>
 	</div>
       </div>
       <div class="editable__row">

@@ -40,10 +40,12 @@ describe('the owListRow directive', function() {
 	    rght: 2,
 	    tag_string: ''
 	}
-	$templateCache.put('/static/actions-list-row.html',
+	$templateCache.put('/static/action-list/action-list-row.html',
 	    		   '<div></div>');
 	$templateCache.put('/static/project-outline.html', '');
 	$httpBackend.whenGET('/gtd/todostates').respond(201, dummyStates);
+	$httpBackend.whenGET("/gtd/weeklyreviews/activereview/")
+	    .respond(204);
 	// Prepare the DOM element
 	element = $compile(
 	    '<div ow-list-row ow-heading="heading" ow-date="Due today"></div>'

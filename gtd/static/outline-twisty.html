@@ -11,7 +11,7 @@
     <input type="checkbox" ng-model="isInOpenReview" ng-change="updateReview(isInOpenReview)">
   </span>
   <span ow-todo ow-heading="heading"></span>
-  <div class="gtd-outline__title">{{heading.title}}<span ng-show="heading.has_text && state < 2">&hellip;</span>
+  <div class="gtd-outline__title gtd-outline__title--priority-{{ heading.priority() }}">{{heading.title}}<span ng-show="heading.has_text && state < 2">&hellip;</span>
   </div>
   <i ng-if="heading.repeats" class="gtd-outline__icon gtd-outline__icon--repeats non-opening"></i>
 

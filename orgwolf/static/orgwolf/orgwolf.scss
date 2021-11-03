@@ -825,7 +825,7 @@ dd.todo
 		@include make-col(3);
 	    }
 	}
-	&--tag-string, &--priority, &--focus-area {
+	&--tag-string, &--archived, &--focus-area {
 	    @include media-breakpoint-up(md) {
 		@include make-col(2);
 	    }
@@ -1014,9 +1014,15 @@ input,textarea {
 }
 .gtd-list {
     margin-bottom: 1.5rem;
-    &__empty-message {
+    &__message {
+	margin-top: 0.75rem;
 	@extend .alert;
-	@extend .alert-warning;
+	&--expired {
+	    @extend .alert-danger;
+	}
+	&--empty {
+	    @extend .alert-warning;
+	}
     }
     &__action-row {
 	&--overdue {
@@ -1027,22 +1033,28 @@ input,textarea {
 	    background: $warning-bg;
 	    color: $warning-text;
 	}
-	&--priority-A {
-	    font-weight: bold;
-	}
-	&--priority-C {
-	    @include opacify(80);
-	    font-style: italic;
-	}
     }
     &__row {
 	@include make-row();
+	&--completed {
+	    text-decoration: line-through;
+	};
+	&--priority-A,&--priority-B,&--priority-C {
+	    font-weight: bold;
+	}
+	&--priority- {
+	    @include opacify(80);
+	    font-style: italic;
+	}
     }
     &__title {
 	cursor: pointer;
 	text-decoration: none;
 	&--read-only {
 	    cursor: text;
+	}
+	&--priority-A,&--priority-B,&--priority-C {
+	    font-weight: bold;
 	}
     }
     &__badge {
@@ -1068,6 +1080,11 @@ input,textarea {
 	    border-bottom: (2 * $table-border-width) solid $table-border-color;
 	    border-top: 0px;
 	}
+	&--state {
+	    @include media-breakpoint-up(md) {
+		@include make-col(1);
+	    }
+	}
 	&--description {
 	    @include media-breakpoint-up(md) {
 		@include make-col(5);
@@ -1075,7 +1092,7 @@ input,textarea {
 	}
 	&--buttons {
 	    @include media-breakpoint-up(md) {
-		@include make-col(2);
+		@include make-col(1);
 	    }
 	}
 	&--deadline {

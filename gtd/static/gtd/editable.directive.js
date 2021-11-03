@@ -11,10 +11,10 @@ angular.module('orgwolf.gtd')
     .directive('owEditable', owEditable);
 
 
-owEditable.$inject = ['$resource', '$rootScope', '$timeout', 'owWaitIndicator', 'Heading', 'todoStates', 'focusAreas', 'priorities', 'toDateObjFilter', 'decodeHtmlFilter'];
+owEditable.$inject = ['$resource', '$rootScope', '$timeout', 'owWaitIndicator', 'Heading', 'todoStates', 'focusAreas', 'toDateObjFilter', 'decodeHtmlFilter'];
 
 
-function owEditable($resource, $rootScope, $timeout, owWaitIndicator, Heading, todoStates, focusAreas, priorities, toDateObjFilter, decodeHtml) {
+function owEditable($resource, $rootScope, $timeout, owWaitIndicator, Heading, todoStates, focusAreas, toDateObjFilter, decodeHtml) {
     /*************************************************
      * Directive that lets a user edit a node.
      * The ow-heading attr indicates that heading is
@@ -60,7 +60,7 @@ function owEditable($resource, $rootScope, $timeout, owWaitIndicator, Heading, t
 		dateFields = ['scheduled_date', 'deadline_date', 'end_date']
 		// Inherit some attributes from parent...
 		scope.fields.focus_areas = scope.parent.focus_areas;
-		scope.fields.priority = scope.parent.priority;
+		scope.fields.archived = false;
 		scope.fields.parent = scope.parent.id;
 		scope.fields.deadline_date = scope.parent.deadline_date;
 		scope.fields.deadline_time = scope.parent.deadline_time;
@@ -77,7 +77,6 @@ function owEditable($resource, $rootScope, $timeout, owWaitIndicator, Heading, t
 	} else {
 	    // ...or use defaults if no parent
 	    scope.fields.focus_areas = [];
-	    scope.fields.priority = 'C';
 	    scope.fields.text = '';
 	    scope.fields.title = '';
 	    // Set Scope if a tab is active
@@ -85,7 +84,6 @@ function owEditable($resource, $rootScope, $timeout, owWaitIndicator, Heading, t
 		scope.fields.focus_areas.push($rootScope.activeFocusArea.id);
 	    }
 	}
-	scope.priorities = priorities;
 	scope.time_units = [
 	    {value: 'd', label: 'Days'},
 	    {value: 'w', label: 'Weeks'},

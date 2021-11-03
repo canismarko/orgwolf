@@ -32,6 +32,8 @@ describe('nextActionsList controller', function() {
 	];
 	$httpBackend.whenGET('/gtd/todostates').respond(200, dummyStates);
 	$httpBackend.whenGET('/gtd/contexts?is_visible=true').respond(200, []);
+	$httpBackend.whenGET("/gtd/weeklyreviews/activereview/")
+	    .respond(204);
 	$httpBackend.whenGET('/gtd/focusareas?is_visible=true').respond(200, [
 	    {id: 1, display: 'Work'},
 	    {id: 2, display: 'Home'}
@@ -43,7 +45,7 @@ describe('nextActionsList controller', function() {
 	$httpBackend.whenGET(/\/gtd\/nodes\?field_group=actions_list&scheduled_date__lte=[-0-9]+&todo_state=8/)
 	    .respond(201, []);
 	$templateCache.put('/static/project-outline.html', '');
-	$templateCache.put('/static/actions-list.html', '');
+	$templateCache.put('/static/action-list/action-list.html', '');
     });
     // Reset httpBackend calls
     afterEach(function() {

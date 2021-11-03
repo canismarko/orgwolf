@@ -20,6 +20,8 @@ describe('the search controller', function() {
 	$location = _$location_;
 	$httpBackend = _$httpBackend_;
 	$httpBackend.whenGET(/\/gtd\/(context|focusareas)/).respond(200, []);
+	$httpBackend.whenGET("/gtd/weeklyreviews/activereview/")
+	    .respond(204);
 	$templateCache = _$templateCache_;
 	$templateCache.put('/static/project-outline.html', '');
     }));

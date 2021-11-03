@@ -91,7 +91,7 @@ class NodeSerializer(serializers.ModelSerializer):
     
     class Meta:
         model = Node
-        fields = "__all__"
+        exclude = ['priority']
 
 
 class NodeListSerializer(NodeSerializer):
@@ -101,7 +101,7 @@ class NodeListSerializer(NodeSerializer):
     class Meta:
         model = Node
         fields = ['id', 'title', 'todo_state', 'tag_string',
-                  'slug', 'focus_areas', 'root_id', 'root_name', 'priority',
+                  'slug', 'focus_areas', 'root_id', 'root_name',
                   'deadline_date', 'deadline_time',
                   'scheduled_date', 'scheduled_time',
                   'tree_id', 'lft', 'rght',
@@ -128,7 +128,7 @@ class NodeOutlineSerializer(NodeSerializer):
     class Meta:
         model = Node
         fields = ['title', 'tag_string', 'lft', 'rght', 'tree_id', 'id',
-                  'priority', 'focus_areas', 'level', 'archived',
+                  'focus_areas', 'level', 'archived',
                   'todo_state', 'repeats', 'scheduled_date',
                   'read_only', 'has_text']
 

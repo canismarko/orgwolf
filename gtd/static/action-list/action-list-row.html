@@ -1,12 +1,14 @@
 <div ng-hide="isEditable"
-     class="gtd-list__row"
-     ng-class="{'completed': completed}">
-  <div class="gtd-list__col gtd-list__col--description">
+     class="gtd-list__row gtd-list__row--priority-{{ heading.priority() }}"
+     ng-class="{'gtd-list__row--completed': completed}">
+  <div class="gtd-list__col gtd-list__col--state">
     <span ow-todo ow-heading="heading">
       {{ todoState.abbreviation }}
     </span>
-    <span class="gtd-list__priority" ng-show="heading.priority">
-      [#{{ heading.priority }}]
+  </div>
+  <div class="gtd-list__col gtd-list__col--description">
+    <span class="gtd-list__priority" ng-show="heading.priority()">
+      [#{{ heading.priority() }}]
     </span>
     <a ng-click="edit(heading)" ng-hide="heading.read_only" class="gtd-list__title">
       {{ heading.title}}

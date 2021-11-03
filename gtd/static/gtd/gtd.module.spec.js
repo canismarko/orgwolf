@@ -7,6 +7,7 @@ import "./current-focus-area.filter.spec.js";
 import "./list-focus-areas.filter.spec.js";
 import "./highlight-search.filter.spec.js";
 import "./highlight-search-text.filter.spec.js";
+import "./priority.filter.spec.ts";
 
 import "./editable.directive.spec.js";
 import "./focus-area-tabs.directive.spec.js";

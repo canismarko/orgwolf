@@ -43,13 +43,17 @@ describe('the sortActions filter', function() {
 	expect(listFilter(unsorted_data)).toEqual(sorted_data);
     });
     it('puts nodes with higher priority at the top', function() {
-	var unsorted_data = [{'priority': 'C'},
-			     {'priority': 'B'},
-			     {'priority': 'A'}];
-	var sorted_data = [{'priority': 'A'},
-			   {'priority': 'B'},
-			   {'priority': 'C'}];
-	expect(listFilter(unsorted_data)).toEqual(sorted_data);
+	var unsorted_data = [
+	    {'priority': _ => 'C',
+	     id: 1},
+	    {'priority': _ => 'B',
+	     id: 2},
+	    {'priority': _ => 'A',
+	     id: 3}
+	];
+	var sorted_data_ids = [3, 2, 1];
+	var filtered_ids = Array.from(listFilter(unsorted_data), obj => obj.id);
+	expect(filtered_ids).toEqual(sorted_data_ids);
     });
     it('puts location-specific tasks at the top', function() {
 	var unsortedList, sortedList, homeHeading, otherHeading;

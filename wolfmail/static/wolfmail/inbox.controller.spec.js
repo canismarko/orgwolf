@@ -16,6 +16,8 @@ describe('the owInbox controller', function() {
 	dummyMessages = [{id: 1}];
 	$httpBackend.whenGET(/\/wolfmail\/message\?.*/).respond(200, dummyMessages);
 	$httpBackend.whenGET(/\/gtd\/nodes.*/).respond(200, []);
+	$httpBackend.whenGET("/gtd/weeklyreviews/activereview/")
+	    .respond(204);
 	$templateCache.put('/static/project-outline.html', '');
     });
     it('removes the message in response to  "message-archived" signal', function() {

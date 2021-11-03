@@ -18,6 +18,8 @@ describe('the nodeOutline controller', function() {
 	$templateCache.put('/static/project-outline.html', '');
 	let nodesUrl = '/gtd/nodes?archived=false&field_group=outline&parent_id=0';
 	$httpBackend.whenGET(nodesUrl).respond(200, []);
+	$httpBackend.whenGET("/gtd/weeklyreviews/activereview/")
+	    .respond(204);
 	$httpBackend.whenGET('/gtd/weeklyreviews/openreview/').respond(204);
     });
     // Reset httpBackend calls

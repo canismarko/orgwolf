@@ -7,20 +7,20 @@
     </div>
 
   </div>
-  <!-- Hard scheduled List -->
-  <div id="scheduled-list" ng-show="scheduledList.length" class="gtd-list">
-    <div class="gtd-list__row">
-      <div class="gtd-list__col gtd-list__col--header gtd-list__col--description">Description</div>
-      <div class="gtd-list__col gtd-list__col--header gtd-list__col--buttons"></div>
-      <div class="gtd-list__col gtd-list__col--header gtd-list__col--deadline">Scheduled</div>
-      <div class="gtd-list__col gtd-list__col--header gtd-list__col--project">Project</div>
-    </div>
+  <!-- <\!-- Hard scheduled List -\-> -->
+  <!-- <div id="scheduled-list" ng-show="scheduledList.length" class="gtd-list"> -->
+  <!--   <div class="gtd-list__row"> -->
+  <!--     <div class="gtd-list__col gtd-list__col--header gtd-list__col--description">Description</div> -->
+  <!--     <div class="gtd-list__col gtd-list__col--header gtd-list__col--buttons"></div> -->
+  <!--     <div class="gtd-list__col gtd-list__col--header gtd-list__col--deadline">Scheduled</div> -->
+  <!--     <div class="gtd-list__col gtd-list__col--header gtd-list__col--project">Project</div> -->
+  <!--   </div> -->
 
-    <div ow-list-row ng-repeat="heading in scheduledList" ow-heading="heading"
-	 ow-date="{{ heading.scheduled_date}} {{ heading.scheduled_time }}">
-    </div>
-    <!-- end repeating scheduled list -->
-  </div><!-- /#scheduled-list -->
+  <!--   <div ow-list-row ng-repeat="heading in scheduledList" ow-heading="heading" -->
+  <!-- 	 ow-date="{{ heading.scheduled_date}} {{ heading.scheduled_time }}"> -->
+  <!--   </div> -->
+  <!--   end repeating scheduled list -->
+  <!-- </div><\!-- /#scheduled-list -\-> -->
 
   <!-- List filtering control -->
   <h4 ng-if="context_name">{{ context_name }}</h4>
@@ -67,6 +67,15 @@
     </li>
   </ul>
 
+  <!-- Alert for expired weekly review -->
+  <div class="gtd-list__message gtd-list__message--expired" ng-if="activeReview.isExpired">
+    <p>
+      The active weekly review has
+      expired. Please <a href="/gtd/review/">create a new one</a>.
+    </p>
+  </div>
+      
+
   <!-- Focus area tabs -->
   <div ow-focus-area-tabs>
   </div>
@@ -74,10 +83,15 @@
   <!-- Actionable Items Header -->
   <div class="gtd-list">
     <div class="gtd-list__row">
+      <div class="gtd-list__col gtd-list__col--header gtd-list__col--state">State</div>
       <div class="gtd-list__col gtd-list__col--header gtd-list__col--description">Description</div>
       <div class="gtd-list__col gtd-list__col--header gtd-list__col--buttons"></div>
-      <div class="gtd-list__col gtd-list__col--header gtd-list__col--deadline">Deadline</div>
+      <div class="gtd-list__col gtd-list__col--header gtd-list__col--deadline">Date</div>
       <div class="gtd-list__col gtd-list__col--header gtd-list__col--project">Project</div>
+    </div>
+
+    <div ow-list-row ng-repeat="heading in scheduledList" ow-heading="heading"
+	 ow-date="{{ heading.scheduled_date}} {{ heading.scheduled_time }}">
     </div>
 
     <div ow-list-row
@@ -86,7 +100,7 @@
 	 class="gtd-list__action-row">
     </div>
 
-    <div class="gtd-list__empty-message"
+    <div class="gtd-list__message gtd-list__message--empty"
 	 ng-show="visibleHeadings.length === 0 && !isLoading">
       No actions here. Try another Focus Area, Context or
       TodoState combination.

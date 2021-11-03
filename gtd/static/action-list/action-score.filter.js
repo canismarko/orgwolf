@@ -19,17 +19,27 @@ function actionScore($filter) {
 		      'B': 2,
 		      'C': 1,
 		      undefined: 0,
+		      null: 0,
 		      '': 0,
 		     };
     return function(heading) {
-	var today, deadline, delta, oneDay, daysLeft, points, score;
+	let today, deadline, delta, oneDay, daysLeft, points, score, priority;
 	if (heading === undefined) {
 	    score = 0;
 	} else {
 	    score = 1;
 	    oneDay = 24 * 3600 * 1000;
 	    // Higher A/B/C priorities get more points
-	    score += priorities[heading.priority];
+	    try {
+		priority = heading.priority();
+	    } catch(e) {
+		if (e instanceof TypeError) {
+		    priority = undefined;
+		} else {
+		    throw e;
+		}
+	    }
+	    score += priorities[priority];
 	    // Upcoming deadlines get more points
 	    if (heading.deadline_date) {
 		today = new Date();

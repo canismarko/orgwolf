@@ -21,7 +21,7 @@ function addRoutes($routeProvider, $locationProvider) {
 	    // controller: 'weeklyReview',
 	})
 	.when('/gtd/actions/:context_id?/:context_slug?', {
-	    templateUrl: '/static/actions-list.html',
+	    templateUrl: '/static/action-list/action-list.html',
 	    controller: 'nextActionsList',
 	    reloadOnSearch: false,
 	})

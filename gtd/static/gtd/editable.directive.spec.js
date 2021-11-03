@@ -46,6 +46,8 @@ describe('the owEditable directive', function() {
 	]);
 	$httpBackend.whenGET('/gtd/nodes/1')
 	    .respond(200, parentHeading);
+	$httpBackend.whenGET("/gtd/weeklyreviews/activereview/")
+	    .respond(204);
 	$httpBackend.whenGET('/static/project-outline.html')
 	    .respond(200, '');
     }));
@@ -70,7 +72,6 @@ describe('the owEditable directive', function() {
 	    $rootScope.$digest();
 	    $httpBackend.flush();
 	    expect(element.isolateScope().fields.focus_areas).toEqual(parentHeading.focus_areas);
-	    expect(element.isolateScope().fields.priority).toEqual('A');
 	});
     });
 
@@ -82,7 +83,6 @@ describe('the owEditable directive', function() {
 	    // Simulate the $scope that is return from get_parent() for a top-level node
 	    $rootScope.$digest();
 	    expect(element.isolateScope().fields.focus_areas).toEqual([]);
-	    expect(element.isolateScope().fields.priority).toEqual('C');
 	});
 
 	it('adds the ow-editable class (for animations)', function() {
