@@ -15,8 +15,8 @@ function actionScore($filter) {
     var priorities, needsActiveLocation;
     needsActiveLocation = $filter('needsActiveLocation');
     // Point values for A-B-C priorities
-    var priorities = {'A': 3,
-		      'B': 2,
+    var priorities = {'A': 6,
+		      'B': 3,
 		      'C': 1,
 		      undefined: 0,
 		      null: 0,

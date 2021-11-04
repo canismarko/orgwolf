@@ -17,7 +17,7 @@ describe('the actionScore filter', function() {
     it('adds points for priority score', function() {
 	var heading;
 	heading = {priority: _ => 'A'};
-	expect(scoreFilter(heading)).toEqual(4);
+	expect(scoreFilter(heading)).toEqual(7);
     });
     it('adds points for an upcoming deadline', function() {
 	var heading, nextWeek;
