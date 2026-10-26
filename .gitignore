@@ -24,3 +24,6 @@ orgwolf/static/skins
 # Node.js modules
 node_modules/
 package-lock.json
+# pixi environments
+.pixi/*
+!.pixi/config.toml

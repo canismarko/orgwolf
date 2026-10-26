@@ -1,0 +1,73 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "orgwolf"
+version = "2026.10.0"
+dependencies = [
+    "django==2.2.10",
+    "django-mptt==0.9.1",
+    "django-filter==2.4.0",
+    "httplib2",
+    "python-dateutil",
+    "pytz",
+    "djangorestframework==3.9.4",
+    "requests",
+]
+requires-python = "~=3.7"
+authors = [
+  {name = "Mark Wolfman", email = "mark@magicacid.com"}
+]
+maintainers = [
+  {name = "Mark Wolfman", email = "mark@magicacid.com"}
+]
+description = "Getting Things Done framework"
+readme = "README.md"
+license = "GPL-3.0"
+# license-files = ["LICEN[CS]E.*"]
+keywords = []
+classifiers = [
+  "Development Status :: 4 - Beta",
+  "Programming Language :: Python"
+]
+
+[project.optional-dependencies]
+# gui = ["PyQt5"]
+# cli = [
+#   "rich",
+#   "click",
+# ]
+# all = ["spam-eggs[gui, cli]"]
+
+[dependency-groups]
+dev = [
+  "pytest>=5.2.0",
+  "pytest-django>=4",
+]
+
+[project.urls]
+Homepage = "https://example.com"
+Documentation = "https://readthedocs.org"
+Repository = "https://github.com/me/spam.git"
+"Bug Tracker" = "https://github.com/me/spam/issues"
+Changelog = "https://github.com/me/spam/blob/master/CHANGELOG.md"
+
+# [project.scripts]
+# spam-cli = "spam:main_cli"
+
+[tool.pixi.workspace]
+channels = ["conda-forge"]
+platforms = ["linux-64"]
+
+[tool.pixi.dependencies]
+python = ">=3.7,<3.8"
+
+[tool.pixi.pypi-dependencies]
+orgwolf = { path = ".", editable = true }
+
+[tool.pixi.environments]
+default = { solve-group = "default" }
+dev = { features = ["dev"], solve-group = "default" }
+
+[tool.pixi.tasks]
